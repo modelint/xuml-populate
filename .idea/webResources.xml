@@ -5,7 +5,7 @@
       <entry url="file://$PROJECT_DIR$">
         <entryData>
           <resourceRoots>
-            <path value="file://$PROJECT_DIR$/model_markup" />
+            <path value="file://$PROJECT_DIR$/class-model-dsl/grammar" />
           </resourceRoots>
         </entryData>
       </entry>
