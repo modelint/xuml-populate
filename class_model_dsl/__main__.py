@@ -2,11 +2,22 @@
 xUML class model parser
 
 """
+import logging
+import logging.config
 import sys
 import argparse
 from pathlib import Path
 from class_model_dsl.xuml.class_model import ClassModel
 from class_model_dsl import version
+
+_logpath = Path("mp.log")
+
+def get_logger():
+    """Initiate the logger"""
+    log_conf_path = Path(__file__).parent / 'log.conf'  # Logging configuration is in this file
+    logging.config.fileConfig(fname=log_conf_path, disable_existing_loggers=False)
+    return logging.getLogger(__name__)  # Create a logger for this module
+
 
 # Configure the expected parameters and actions for the argparse module
 def parse(cl_input):
@@ -19,6 +30,11 @@ def parse(cl_input):
 
 
 def main():
+
+    # Start logging
+    logger = get_logger()
+    logger.info(f'Model parser version: {version}')
+
     # Parse the command line args
     args = parse(sys.argv[1:])
 
@@ -35,6 +51,9 @@ def main():
         ClassModel(
             path=model_path
         )
+
+    logger.info("No problemo")  # We didn't die on an exception, basically
+
 
 if __name__ == "__main__":
     main()
