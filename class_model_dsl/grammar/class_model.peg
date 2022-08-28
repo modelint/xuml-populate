@@ -6,7 +6,7 @@
 // Attribute and method structure is not parsed since it is simply rendered without
 // further interpretation on a class diagram
 
-comment r'//.*'
+//comment r'//.*'
 nl = "\n" // New line
 sp = " " // Single space
 delim = r'[ _]' // Delimiter used inside of names

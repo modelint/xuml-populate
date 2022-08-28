@@ -1,12 +1,11 @@
 """ model_parser.py – First attempt to parse class block """
 
-from flatland.flatland_exceptions import ModelGrammarFileOpen, ModelInputFileOpen, ModelInputFileEmpty
-from flatland.flatland_exceptions import ModelParseError
-from flatland.input.model_visitor import SubsystemVisitor
+from class_model_dsl.mp_exceptions import ModelGrammarFileOpen, ModelInputFileOpen, ModelInputFileEmpty, ModelParseError
+from class_model_dsl.parse.model_visitor import SubsystemVisitor
 from arpeggio import visit_parse_tree, NoMatch
 from arpeggio.cleanpeg import ParserPEG
 from collections import namedtuple
-from flatland.input.nocomment import nocomment
+from class_model_dsl.parse.nocomment import nocomment
 import os
 from pathlib import Path
 
@@ -24,10 +23,10 @@ class ModelParser:
         - model_grammar -- The model grammar text read from the system grammar file
         - model_text -- The input model text read from the user supplied text file
     """
-    grammar_file_name = "model_markup/model.peg"
+    grammar_file_name = "grammar/model.peg"
     grammar_file = Path(__file__).parent.parent / grammar_file_name
-    root_rule_name = 'subsystem'  # We don't draw a diagram larger than a single subsystem
-    xuml_model_dir = Path(__file__).parent.parent / "examples" / "xuml_models"
+    root_rule_name = 'subsystem'
+    xuml_model_dir = Path(__file__).parent.parent / "input"
 
     def __init__(self, model_file_path, debug=True):
         """

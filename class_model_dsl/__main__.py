@@ -1,5 +1,5 @@
 """
-xUML class diagram parser
+xUML class model parser
 
 """
 import sys
