@@ -23,7 +23,7 @@ class ModelParser:
         - model_grammar -- The model grammar text read from the system grammar file
         - model_text -- The input model text read from the user supplied text file
     """
-    grammar_file_name = "grammar/model.peg"
+    grammar_file_name = "grammar/class_model.peg"
     grammar_file = Path(__file__).parent.parent / grammar_file_name
     root_rule_name = 'subsystem'
     xuml_model_dir = Path(__file__).parent.parent / "input"
@@ -98,6 +98,6 @@ class ModelParser:
 
 
 if __name__ == "__main__":
-    markup_path = Path(__file__).parent.parent / 'Test/aircraft_tree1.xmm'
+    markup_path = Path(__file__).parent.parent / 'input/ca1.xmm'
     x = ModelParser(model_file_path=markup_path, debug=True)
     x.parse()
