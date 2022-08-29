@@ -1,15 +1,11 @@
 """ model_parser.py – First attempt to parse class block """
 
 from class_model_dsl.mp_exceptions import ModelGrammarFileOpen, ModelInputFileOpen, ModelInputFileEmpty, ModelParseError
-from class_model_dsl.parse.model_visitor import SubsystemVisitor
+from class_model_dsl.parse.model_visitor import MetadataVisitor
 from arpeggio import visit_parse_tree, NoMatch
 from arpeggio.cleanpeg import ParserPEG
-from collections import namedtuple
-from class_model_dsl.parse.nocomment import nocomment
 import os
 from pathlib import Path
-
-Subsystem = namedtuple('Subsystem', 'name classes rels metadata')
 
 class ModelParser:
     """
@@ -25,7 +21,7 @@ class ModelParser:
     """
     grammar_file_name = "grammar/class_model.peg"
     grammar_file = Path(__file__).parent.parent / grammar_file_name
-    root_rule_name = 'subsystem'
+    root_rule_name = 'metadata'
     xuml_model_dir = Path(__file__).parent.parent / "input"
 
     def __init__(self, model_file_path, debug=True):
@@ -40,20 +36,20 @@ class ModelParser:
 
         # Read the grammar file
         try:
-            self.model_grammar = nocomment(open(ModelParser.grammar_file, 'r').read())
+            self.model_grammar = open(ModelParser.grammar_file, 'r').read()
         except OSError as e:
             raise ModelGrammarFileOpen(ModelParser.grammar_file)
 
         # Read the model file
         try:
-            self.model_text = nocomment(open(self.model_file_path, 'r').read())
+            self.model_text = open(self.model_file_path, 'r').read()
         except OSError as e:
             raise ModelInputFileOpen(self.model_file_path)
 
         if not self.model_text:
             raise ModelInputFileEmpty(self.model_file_path)
 
-    def parse(self) -> Subsystem:
+    def parse(self):
         """
         Parse the model file and return the content
         :return:  The abstract syntax tree content of interest
@@ -67,14 +63,14 @@ class ModelParser:
         except NoMatch as e:
             raise ModelParseError(self.model_file_path.name, e) from None
         # Transform that into a result that is better organized with grammar artifacts filtered out
-        result = visit_parse_tree(parse_tree, SubsystemVisitor(debug=self.debug))
+        result = visit_parse_tree(parse_tree, MetadataVisitor(debug=self.debug))
         # Make it even nicer using easy to reference named tuples
         if self.debug:
             # Transform dot files into pdfs
             peg_tree_dot = Path("peggrammar_parse_tree.dot")
             peg_model_dot = Path("peggrammar_parser_model.dot")
-            parse_tree_dot = Path("subsystem_parse_tree.dot")
-            parser_model_dot = Path("subsystem_peg_parser_model.dot")
+            parse_tree_dot = Path("metadata_parse_tree.dot")
+            parser_model_dot = Path("metadata_peg_parser_model.dot")
 
             parse_tree_file = str(ModelParser.xuml_model_dir / self.model_file_path.stem) + "_parse_tree.pdf"
             model_file = str(ModelParser.xuml_model_dir / self.model_file_path.stem) + "_model.pdf"
@@ -86,15 +82,8 @@ class ModelParser:
             peg_tree_dot.unlink(missing_ok=True)
             peg_model_dot.unlink(missing_ok=True)
         # Return the refined model data, checking sequence length
-        metadata = result.results.get('metadata', None)  # Optional section
-        subsys_name = result.results['subsystem_header'][0]  # Required by model parser
-        class_data = result.results['class_set'][0]  # Required by model parser
-        rel_data = result.results.get('rel_section', None)  # Optional section
-        # You can draw classes without rels, but not the other way around!
-        return Subsystem(
-            name=subsys_name, classes=class_data, rels=None if not rel_data else rel_data[0],
-            metadata=None if not metadata else metadata[0]
-        )
+        # metadata = result.results.get('metadata', None)  # Optional section
+        return result
 
 
 if __name__ == "__main__":
