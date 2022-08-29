@@ -17,8 +17,8 @@ class MetadataVisitor(PTNodeVisitor):
     #     return None
 
 
-    def visit_comment(self, node, children):
-        return None
+    # def visit_comment(self, node, children):
+    #     return None
 
     # Metadata
     def visit_text_item(self, node, children):

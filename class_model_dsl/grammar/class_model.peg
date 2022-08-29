@@ -7,19 +7,24 @@
 // further interpretation on a class diagram
 
 //ig_line = r'\s*(///.*)?'
-nl = "\n" // New line
-comment = r'#.*' nl
-sp = " " // Single space
-delim = r'[ _]' // Delimiter used inside of names
-indent = "    "  // Need indent for clarity and to signal unstructured lines of text
-lword = r'[a-z][a-z]*' // Lower case only word (used in relationship phrase)
-iword = r'[A-Z][A-Za-z0-9]*' // Initial cap word (used in Class and Subsystem names)
-block_end = "--" nl?  // Signifies end of a block (within section)
+
+
+// Root rule
+metadata = metadata_header data_item* block_end EOF
 
 // Metadata
-text_item = ':' sp* r'.*' // Field content can be any text
-resource_item = '>' sp* (iword / lword) (delim (iword / lword))* // Resource is a name
-item_name = iword (delim (iword / lword))* // Meta data item starts with initial cap
-data_item = indent item_name sp* (resource_item / text_item) nl // Metadata item
 metadata_header = "metadata" nl // Metadata header
-metadata = metadata_header (comment / data_item)* block_end EOF
+data_item = indent item_name sp* (resource_item / text_item) nl // Metadata item
+item_name = iword delim word* // Meta data item starts with initial cap
+resource_item = '>' sp* word (delim word)* // Resource is a name
+text_item = ':' sp* r'.*' // Field content can be any text
+
+// Words and delimiters
+word = iword / lword
+iword = r'[A-Z][A-Za-z0-9]*' // Initial cap word (used in Class and Subsystem names)
+lword = r'[a-z][a-z]*' // Lower case only word (used in relationship phrase)
+delim = r'[ _]' // Delimiter used inside of names
+indent = "    "  // Need indent for clarity and to signal unstructured lines of text
+block_end = "--" nl?  // Signifies end of a block (within section)
+nl = "\n" // New line
+sp = " "
