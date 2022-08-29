@@ -4,6 +4,7 @@ from class_model_dsl.mp_exceptions import ModelGrammarFileOpen, ModelInputFileOp
 from class_model_dsl.parse.model_visitor import MetadataVisitor
 from arpeggio import visit_parse_tree, NoMatch
 from arpeggio.cleanpeg import ParserPEG
+from class_model_dsl.parse.nocomment import nocomment
 import os
 from pathlib import Path
 
@@ -36,13 +37,13 @@ class ModelParser:
 
         # Read the grammar file
         try:
-            self.model_grammar = open(ModelParser.grammar_file, 'r').read()
+            self.model_grammar = nocomment(open(ModelParser.grammar_file, 'r').read())
         except OSError as e:
             raise ModelGrammarFileOpen(ModelParser.grammar_file)
 
         # Read the model file
         try:
-            self.model_text = open(self.model_file_path, 'r').read()
+            self.model_text = nocomment(open(self.model_file_path, 'r').read())
         except OSError as e:
             raise ModelInputFileOpen(self.model_file_path)
 
