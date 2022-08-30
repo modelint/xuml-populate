@@ -40,6 +40,24 @@ class SubsystemVisitor(PTNodeVisitor):
         block = class_attrs if len(children) == 2 else class_attrs | children[2]
         return block
 
+    def visit_class_name(self, node, children):
+        name = ''.join(children)
+        return {'name': name }
+
+    def visit_keyletter(self, node, children):
+        """Abbreviated keyletter name of class"""
+        return { 'keyletter': children[0] }
+
+    def visit_import(self, node, children):
+        """Imported class marker"""
+        d = {'import': children[0]}
+        return d
+
+    def visit_class_header(self, node, children):
+        """Beginning of class section, includes name, optional keyletter and optional import marker"""
+        items = {k: v for d in children for k, v in d.items()}
+        return items
+
     def visit_attr_block(self, node, children):
         """Attribute text (unparsed)"""
         # TODO: Parse these eventually

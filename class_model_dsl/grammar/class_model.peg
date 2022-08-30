@@ -12,9 +12,10 @@
 // Subsystem
 // The only thing required is a subsystem name and a set of possibly empty classes
 subsystem = metadata? subsystem_header class_set EOF
+subsystem_header = "subsystem" sp icaps_name (',' sp+ acword)? nl  // Declares the name of the subsystem
 
 // Metadata
-metadata = metadata_header data_item* block_end EOF
+metadata = metadata_header data_item*
 metadata_header = "metadata" nl // Metadata header
 data_item = indent item_name sp* (resource_item / text_item) nl // Metadata item
 item_name = iword delim word* // Meta data item starts with initial cap
