@@ -1,7 +1,7 @@
 """ model_parser.py – First attempt to parse class block """
 
 from class_model_dsl.mp_exceptions import ModelGrammarFileOpen, ModelInputFileOpen, ModelInputFileEmpty, ModelParseError
-from class_model_dsl.parse.model_visitor import MetadataVisitor
+from class_model_dsl.parse.model_visitor import SubsystemVisitor
 from arpeggio import visit_parse_tree, NoMatch
 from arpeggio.cleanpeg import ParserPEG
 from class_model_dsl.parse.nocomment import nocomment
@@ -22,7 +22,7 @@ class ModelParser:
     """
     grammar_file_name = "grammar/class_model.peg"
     grammar_file = Path(__file__).parent.parent / grammar_file_name
-    root_rule_name = 'metadata'
+    root_rule_name = 'subsystem'
     xuml_model_dir = Path(__file__).parent.parent / "input"
 
     def __init__(self, model_file_path, debug=True):
@@ -64,7 +64,7 @@ class ModelParser:
         except NoMatch as e:
             raise ModelParseError(self.model_file_path.name, e) from None
         # Transform that into a result that is better organized with grammar artifacts filtered out
-        result = visit_parse_tree(parse_tree, MetadataVisitor(debug=self.debug))
+        result = visit_parse_tree(parse_tree, SubsystemVisitor(debug=self.debug))
         # Make it even nicer using easy to reference named tuples
         if self.debug:
             # Transform dot files into pdfs

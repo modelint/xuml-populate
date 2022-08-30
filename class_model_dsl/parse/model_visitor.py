@@ -2,25 +2,20 @@
 
 from arpeggio import PTNodeVisitor
 
-class MetadataVisitor(PTNodeVisitor):
+class SubsystemVisitor(PTNodeVisitor):
 
-    # Elements
-    def visit_nl(self, node, children):
-        return None
-
-    def visit_sp(self, node, children):
-        return None
-
-    # Comments
-    # def visit_ig_line(self, node, children):
-    #     print("Ignoring line")
-    #     return None
-
-
-    # def visit_comment(self, node, children):
-    #     return None
+    # Root
+    def visit_subsystem(self, node, children):
+        """All classes and relationships in the subsystem"""
+        return children
 
     # Metadata
+    def visit_metadata(self, node, children):
+        """Meta data section"""
+        print("check")
+        items = {k: v for c in children for k, v in c.items()}
+        return items
+
     def visit_text_item(self, node, children):
         return children[0], False  # Item, Not a resource
 
@@ -33,10 +28,26 @@ class MetadataVisitor(PTNodeVisitor):
     def visit_data_item(self, node, children):
         return { children[0]: children[1] }
 
-    # Root
-    def visit_metadata(self, node, children):
-        """Meta data section"""
-        print("check")
-        items = {k: v for c in children for k, v in c.items()}
-        return items
+    # Classes
+    def visit_class_set(self, node, children):
+        """All of the classes"""
+        return children
 
+    def visit_class_block(self, node, children):
+        """A complete class with attributes, methods, state model"""
+        # TODO: No state models yet
+        class_attrs = children[0] | children[1]
+        block = class_attrs if len(children) == 2 else class_attrs | children[2]
+        return block
+
+    def visit_attr_block(self, node, children):
+        """Attribute text (unparsed)"""
+        # TODO: Parse these eventually
+        return {"attributes": children}
+
+    # Elements
+    def visit_nl(self, node, children):
+        return None
+
+    def visit_sp(self, node, children):
+        return None

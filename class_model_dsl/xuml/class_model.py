@@ -22,6 +22,6 @@ class ClassModel:
         except MPIOException as e:
             sys.exit(e)
         try:
-            self.metadata = self.model.parse()
+            self.subsystem = self.model.parse()
         except ModelParseError as e:
             sys.exit(e)

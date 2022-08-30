@@ -9,18 +9,37 @@
 //ig_line = r'\s*(///.*)?'
 
 
-// Root rule
-metadata = metadata_header data_item* block_end EOF
+// Subsystem
+// The only thing required is a subsystem name and a set of possibly empty classes
+subsystem = metadata? subsystem_header class_set EOF
 
 // Metadata
+metadata = metadata_header data_item* block_end EOF
 metadata_header = "metadata" nl // Metadata header
 data_item = indent item_name sp* (resource_item / text_item) nl // Metadata item
 item_name = iword delim word* // Meta data item starts with initial cap
 resource_item = '>' sp* word (delim word)* // Resource is a name
 text_item = ':' sp* r'.*' // Field content can be any text
 
+// Classes
+class_set = class_block*  // All classes in the subsystem
+class_block = class_header attr_block
+class_header = "class" sp class_name keyletter? import? nl
+class_name = icaps_name
+keyletter = ',' sp+ acword
+import = sp+ '<import:' icaps_name '>' // Import marker and name of origin subsystem
+class_name = icaps_name
+
+// Attributes
+attr_block = attr_header body_line+ block_end // A set of attributes
+attr_header = "attributes" nl
+
 // Words and delimiters
+body_line = indent r'.*' nl // An unstructured line of text
 word = iword / lword
+icaps_name = iword (delim iword)*  // A name using initial caps only
+keyletter = ',' sp+ acword
+acword = r'[A-Z][A-Z0-9_]*' // All caps words for class abbreviations
 iword = r'[A-Z][A-Za-z0-9]*' // Initial cap word (used in Class and Subsystem names)
 lword = r'[a-z][a-z]*' // Lower case only word (used in relationship phrase)
 delim = r'[ _]' // Delimiter used inside of names

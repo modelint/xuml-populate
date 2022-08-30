@@ -7,4 +7,10 @@ metadata
     Organization : Model Integration, LLC / www.modelint.com
     Copyright notice > MIT
     Organization logo > mint
+subsystem Class And Attribute
+class Alias
+attributes
+    Name : Alias Name {I}
+    Class {I2, R29}
+    Domain {I, I2, R29}
 --
