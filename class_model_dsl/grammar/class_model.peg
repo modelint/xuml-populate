@@ -32,17 +32,24 @@ import = sp+ '<import:' icaps_name '>' // Import marker and name of origin subsy
 class_name = icaps_name
 
 // Attributes
-attr_block = attr_header body_line+ block_end // A set of attributes
+attr_block = attr_header attribute+ block_end // A set of attributes
 attr_header = "attributes" nl
+attribute = indent attr_name (' : ' type_name)? (sp attr_tags)? nl
+attr_name = icaps_name
+type_name = icaps_name
+attr_tags = '{' (itag / rtag) (',' sp (itag / rtag))* '}' // {I, I2, R29c} for example
+itag = 'I' ordinal // Identifier number, both I and I1 mean the same thing
+rtag = 'R' ordinal 'c'? // Relationship number and optional c constraint signifier
 
 // Words and delimiters
-body_line = indent r'.*' nl // An unstructured line of text
+//body_line = indent r'.*' nl // An unstructured line of text
 word = iword / lword
 icaps_name = iword (delim word)*  // A name using initial caps only
 keyletter = ',' sp+ acword
 acword = r'[A-Z][A-Z0-9_]*' // All caps words for class abbreviations
 iword = r'[A-Z][A-Za-z0-9]*' // Initial cap word (used in Class and Subsystem names)
 lword = r'[a-z][a-z]*' // Lower case only word (used in relationship phrase)
+ordinal = r'[1-9][0-9]*' // A counting number starting at 1
 delim = r'[ _]' // Delimiter used inside of names
 indent = "    "  // Need indent for clarity and to signal unstructured lines of text
 block_end = "--" nl?  // Signifies end of a block (within section)

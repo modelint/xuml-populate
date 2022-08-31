@@ -57,10 +57,31 @@ class SubsystemVisitor(PTNodeVisitor):
         items = {k: v for d in children for k, v in d.items()}
         return items
 
+    # Attributes
     def visit_attr_block(self, node, children):
         """Attribute text (unparsed)"""
-        # TODO: Parse these eventually
         return {"attributes": children}
+
+    def visit_attr_name(self, node, children):
+        name = ''.join(children)
+        return {'name': name }
+
+    def visit_attr_tags(self, node, children):
+        """Beginning of class section, includes name, optional keyletter and optional import marker"""
+        items = {k: v for d in children for k, v in d.items()}
+        return items
+
+    def visit_rtag(self, node, children):
+        """Referential attribute tag"""
+        rnum = children[0]
+        constraint = len(children) > 1
+        rtag = {'R': (rnum, constraint) }
+        return rtag
+
+    def visit_itag(self, node, children):
+        """Identifier attribute tag"""
+        itag = { 'I': 1 if not children else children[0] }
+        return itag
 
     # Elements
     def visit_acword(self, node, children):
@@ -71,6 +92,9 @@ class SubsystemVisitor(PTNodeVisitor):
         """Model element name"""
         name = ''.join(children)
         return name
+
+    # def visit_ordinal(self, node, children):
+    #     return children[0]
 
     def visit_nl(self, node, children):
         return None

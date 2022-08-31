@@ -10,7 +10,5 @@ metadata
 subsystem Class And Attribute
 class Alias <import:Class and Attribute>
 attributes
-    Name : Alias Name {I}
-    Class {I2, R29}
-    Domain {I, I2, R29}
+    Domain {I29, R22}
 --
