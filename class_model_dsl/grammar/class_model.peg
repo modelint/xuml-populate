@@ -38,7 +38,7 @@ attr_header = "attributes" nl
 // Words and delimiters
 body_line = indent r'.*' nl // An unstructured line of text
 word = iword / lword
-icaps_name = iword (delim iword)*  // A name using initial caps only
+icaps_name = iword (delim word)*  // A name using initial caps only
 keyletter = ',' sp+ acword
 acword = r'[A-Z][A-Z0-9_]*' // All caps words for class abbreviations
 iword = r'[A-Z][A-Za-z0-9]*' // Initial cap word (used in Class and Subsystem names)

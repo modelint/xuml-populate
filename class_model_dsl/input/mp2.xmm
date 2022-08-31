@@ -1,0 +1,16 @@
+metadata
+    Title : Class and Attribute Subsystem / Shlaer-Mellor Metamodel
+    Author : Leon Starr
+    Document ID : mint.sm-meta.class.td.1
+    Version : 4.7.3
+    Modification date : August 19, 2022
+    Organization : Model Integration, LLC / www.modelint.com
+    Copyright notice > MIT
+    Organization logo > mint
+subsystem Class And Attribute
+class Alias <import:Class and Attribute>
+attributes
+    Name : Alias Name {I}
+    Class {I2, R29}
+    Domain {I, I2, R29}
+--

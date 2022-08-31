@@ -12,7 +12,6 @@ class SubsystemVisitor(PTNodeVisitor):
     # Metadata
     def visit_metadata(self, node, children):
         """Meta data section"""
-        print("check")
         items = {k: v for c in children for k, v in c.items()}
         return items
 
@@ -64,6 +63,15 @@ class SubsystemVisitor(PTNodeVisitor):
         return {"attributes": children}
 
     # Elements
+    def visit_acword(self, node, children):
+        """All caps word"""
+        return node.value  # No children since this is a literal
+
+    def visit_icaps_name(self, node, children):
+        """Model element name"""
+        name = ''.join(children)
+        return name
+
     def visit_nl(self, node, children):
         return None
 
