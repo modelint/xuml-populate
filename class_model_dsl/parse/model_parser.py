@@ -78,10 +78,10 @@ class ModelParser:
             os.system(f'dot -Tpdf {parse_tree_dot} -o {parse_tree_file}')
             os.system(f'dot -Tpdf {parser_model_dot} -o {model_file}')
             # Cleanup unneeded dot files, we just use the PDFs for now
-            parse_tree_dot.unlink(missing_ok=True)
-            parser_model_dot.unlink(missing_ok=True)
-            peg_tree_dot.unlink(missing_ok=True)
-            peg_model_dot.unlink(missing_ok=True)
+            # parse_tree_dot.unlink(missing_ok=True)
+            # parser_model_dot.unlink(missing_ok=True)
+            # peg_tree_dot.unlink(missing_ok=True)
+            # peg_model_dot.unlink(missing_ok=True)
         # Return the refined model data, checking sequence length
         # metadata = result.results.get('metadata', None)  # Optional section
         return result
