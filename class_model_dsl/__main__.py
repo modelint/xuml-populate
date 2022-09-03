@@ -47,7 +47,7 @@ def main():
     if args.model:
         model_path = Path(args.model)
 
-        # Generate the xuml class diagram (we don't do anything with the returned variable yet)
+        # Parse the model
         ClassModel(
             path=model_path
         )

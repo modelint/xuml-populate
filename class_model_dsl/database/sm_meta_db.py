@@ -31,30 +31,6 @@ def Create_relvars():
     SMmetaDB.MetaData.create_all(SMmetaDB.Engine)
 
 
-def Populate():
-    """
-    Assign a value to each SM Meta relvar (table). A value consists of a set of relations.
-    In Sqlalchemy terms, the tables are all updated with initial row data.
-    """
-    # We need to append each population subirectory to our module search path
-    # because when we iterate through the file names in our relvar dictionary
-    # we don't know which file is in which subdirectory. So we can't just
-    # refer to each population module by the same path
-    here = Path(__file__).parent / "population"  # Adjacent population directory
-    pop_dirs = [  # Subdirectories organizing all population modules
-        here / "connector", here / "decorator", here / "drawing", here / "node", here / "sheet"
-    ]
-    # Convert each Path object to a string and tack it on the end of our module search path
-    sys.path.extend([str(p) for p in pop_dirs])
-
-    # Iterate through the relvar dictionary to get each population and the table it goes into
-    for instances, relvar in SMmetaDB.Relvars.items():
-        # Set i to the initial population of row values (set of relation values)
-        i = __import__(instances + '_instances')  # Each population filename ends with '_instances.py'
-        if i.population:  # A computed relations may start with an empty population, so skip the insert if empty
-            SMmetaDB.Connection.execute(relvar.insert(), i.population)  # Sqlalchemy populates the table schema
-
-
 class SMmetaDB:
     """
     SM meta database containing all predefined metamodel data.
@@ -113,7 +89,6 @@ class SMmetaDB:
         if self.rebuild:
             self.logger.info(f"Re-creating database file at: {db_path_str}")
             Create_relvars()
-            Populate()
         else:
             # Just interrogate the existing database to get all the relvar/table names
             SMmetaDB.MetaData.reflect()

@@ -1,0 +1,38 @@
+BEGIN (implicit)
+PRAGMA main.table_info("Class")
+[raw sql] ()
+Col ('cid', 'name', 'type', 'notnull', 'dflt_value', 'pk')
+PRAGMA temp.table_info("Class")
+[raw sql] ()
+Col ('cid', 'name', 'type', 'notnull', 'dflt_value', 'pk')
+PRAGMA main.table_info("Attribute")
+[raw sql] ()
+Col ('cid', 'name', 'type', 'notnull', 'dflt_value', 'pk')
+PRAGMA temp.table_info("Attribute")
+[raw sql] ()
+Col ('cid', 'name', 'type', 'notnull', 'dflt_value', 'pk')
+
+CREATE TABLE "Class" (
+	"Name" TEXT NOT NULL, 
+	CONSTRAINT "I" PRIMARY KEY ("Name")
+)
+
+
+[no key 0.00005s] ()
+
+CREATE TABLE "Attribute" (
+	"Name" TEXT NOT NULL, 
+	"Class" TEXT NOT NULL, 
+	PRIMARY KEY ("Name", "Class"), 
+	CONSTRAINT "R20" FOREIGN KEY("Class") REFERENCES "Class" ("Name")
+)
+
+
+[no key 0.00008s] ()
+COMMIT
+INSERT INTO "Class" ("Name") VALUES (?)
+[generated in 0.00011s] ('Alias',)
+COMMIT
+INSERT INTO "Attribute" ("Name", "Class") VALUES (?, ?)
+[generated in 0.00008s] ('Name', 'Alias')
+COMMIT

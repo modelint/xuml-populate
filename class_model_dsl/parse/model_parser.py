@@ -5,8 +5,11 @@ from class_model_dsl.parse.model_visitor import SubsystemVisitor
 from arpeggio import visit_parse_tree, NoMatch
 from arpeggio.cleanpeg import ParserPEG
 from class_model_dsl.parse.nocomment import nocomment
+from collections import namedtuple
 import os
 from pathlib import Path
+
+Subsystem = namedtuple('Subsystem', 'name classes rels metadata')
 
 class ModelParser:
     """
@@ -83,8 +86,15 @@ class ModelParser:
             # peg_tree_dot.unlink(missing_ok=True)
             # peg_model_dot.unlink(missing_ok=True)
         # Return the refined model data, checking sequence length
+        metadata = result.results.get('metadata', None)  # Optional section
+        subsys_name = result.results['subsystem_header'][0]  # Required by model parser
+        class_data = result.results['class_set'][0]  # Required by model parser
+        rel_data = result.results.get('rel_section', None)  # Optional section
         # metadata = result.results.get('metadata', None)  # Optional section
-        return result
+        return Subsystem(
+            name=subsys_name, classes=class_data, rels=None if not rel_data else rel_data[0],
+            metadata=None if not metadata else metadata[0]
+        )
 
 
 if __name__ == "__main__":
