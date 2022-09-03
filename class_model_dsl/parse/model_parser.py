@@ -70,8 +70,8 @@ class ModelParser:
             # Transform dot files into pdfs
             peg_tree_dot = Path("peggrammar_parse_tree.dot")
             peg_model_dot = Path("peggrammar_parser_model.dot")
-            parse_tree_dot = Path("metadata_parse_tree.dot")
-            parser_model_dot = Path("metadata_peg_parser_model.dot")
+            parse_tree_dot = Path("subsystem_parse_tree.dot")
+            parser_model_dot = Path("subsystem_peg_parser_model.dot")
 
             parse_tree_file = str(ModelParser.xuml_model_dir / self.model_file_path.stem) + "_parse_tree.pdf"
             model_file = str(ModelParser.xuml_model_dir / self.model_file_path.stem) + "_model.pdf"

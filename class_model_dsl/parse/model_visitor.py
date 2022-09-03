@@ -62,25 +62,39 @@ class SubsystemVisitor(PTNodeVisitor):
         """Attribute text (unparsed)"""
         return {"attributes": children}
 
+    def visit_attribute(self, node, children):
+        """An attribute with its tags and optional explicit type"""
+        items = {k: v for d in children for k, v in d.items()}
+        return items
+
     def visit_attr_name(self, node, children):
         name = ''.join(children)
         return {'name': name }
 
     def visit_attr_tags(self, node, children):
         """Beginning of class section, includes name, optional keyletter and optional import marker"""
-        items = {k: v for d in children for k, v in d.items()}
-        return items
+        tdict = {'I': [], 'R': []}
+        for c in children:
+            for k, v in c.items():
+                tdict[k].append(v)
+        return tdict
+
+    def visit_attr_tag(self, node, children):
+        """Beginning of class section, includes name, optional keyletter and optional import marker"""
+        item = children[0]
+        return item
 
     def visit_rtag(self, node, children):
         """Referential attribute tag"""
-        rnum = children[0]
+        rnum = int(children[0])
         constraint = len(children) > 1
         rtag = {'R': (rnum, constraint) }
         return rtag
 
     def visit_itag(self, node, children):
         """Identifier attribute tag"""
-        itag = { 'I': 1 if not children else children[0] }
+        itag = { 'I': 1 if not children else int(children[0]) }
+        print("bp")
         return itag
 
     # Elements

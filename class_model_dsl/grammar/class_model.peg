@@ -37,8 +37,9 @@ attr_header = "attributes" nl
 attribute = indent attr_name (' : ' type_name)? (sp attr_tags)? nl
 attr_name = icaps_name
 type_name = icaps_name
-attr_tags = '{' (itag / rtag) (',' sp (itag / rtag))* '}' // {I, I2, R29c} for example
-itag = 'I' ordinal // Identifier number, both I and I1 mean the same thing
+attr_tags = '{' attr_tag (',' sp attr_tag )* '}' // {I, I2, R29c} for example
+attr_tag = itag / rtag
+itag = 'I' ordinal? // Identifier number, both I and I1 mean the same thing
 rtag = 'R' ordinal 'c'? // Relationship number and optional c constraint signifier
 
 // Words and delimiters
