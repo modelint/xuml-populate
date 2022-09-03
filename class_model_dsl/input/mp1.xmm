@@ -10,7 +10,7 @@ metadata
 subsystem Class And Attribute
 class Alias
 attributes
-    Domain {I, I2, R29, R33}
     Name : Alias Name {I}
     Class {I2, R29}
+    Domain {I, I2, R29, R33}
 --

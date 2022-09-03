@@ -34,7 +34,6 @@ class SubsystemVisitor(PTNodeVisitor):
 
     def visit_class_block(self, node, children):
         """A complete class with attributes, methods, state model"""
-        # TODO: No state models yet
         class_attrs = children[0] | children[1]
         block = class_attrs if len(children) == 2 else class_attrs | children[2]
         return block
@@ -72,11 +71,10 @@ class SubsystemVisitor(PTNodeVisitor):
         return {'name': name }
 
     def visit_attr_tags(self, node, children):
-        """Beginning of class section, includes name, optional keyletter and optional import marker"""
-        tdict = {'I': [], 'R': []}
-        for c in children:
-            for k, v in c.items():
-                tdict[k].append(v)
+        """Tag values organized in a list by tag"""
+        tdict = {}  # Tag dictionary of value lists per tag
+        for tag in ['I', 'R']:  # Identifier and referential attr tags
+            tdict[tag] = [c[tag] for c in children if tag in c]  # Create list of values per tag from children
         return tdict
 
     def visit_attr_tag(self, node, children):
