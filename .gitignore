@@ -1,2 +1,5 @@
 *.dot
 *.log
+*.pyc
+*.pdf
+*.db
