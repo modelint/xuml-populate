@@ -9,6 +9,14 @@ from class_model_dsl.parse.model_parser import ModelParser
 from class_model_dsl.mp_exceptions import ModelParseError, MPIOException
 from class_model_dsl.database.sm_meta_db import SMmetaDB
 
+# Table header attributes for each metamodel class
+# This is used when inserting a tuple into a metammodel relvar
+header = {
+    'Class': ('Name', 'Domain', ),
+    'Domain': ('Name', ),
+    'Attribute': ('Name', 'Class', 'Domain', )
+    }
+
 class ClassModel:
 
     def __init__(self, path: Path):
@@ -34,11 +42,23 @@ class ClassModel:
     def Populate(self):
         """Populate the database from the parsed input"""
 
-        class_name = self.subsystem.classes[0]['name']
+        # Insert the domain
+        domain_name = self.subsystem.domain
+        domain_t = self.db.MetaData.tables['Domain']
+        self.db.Connection.execute(domain_t.insert(), [{'Name': domain_name}])
+
+        # Insert classes
         class_t = self.db.MetaData.tables['Class']
         attr_t = self.db.MetaData.tables['Attribute']
-        attr_name = 'Name'
-        self.db.Connection.execute(class_t.insert(), [{'Name': class_name}])
-        self.db.Connection.execute(attr_t.insert(), [{'Name': attr_name, 'Class': class_name }])
+        class_relation = []
+        attr_relation = []
+        for c in self.subsystem.classes:
+            class_values = dict(zip(header['Class'], [c['name'], domain_name]))
+            class_relation.append(class_values)
+            for a in c['attributes']:
+                attr_values = dict(zip(header['Attribute'], [a['name'], c['name'], domain_name]))
+                attr_relation.append(attr_values)
+            self.db.Connection.execute(class_t.insert(), class_relation )
+            self.db.Connection.execute(attr_t.insert(), attr_relation )
 
         print("Look at model")

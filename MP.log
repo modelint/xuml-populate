@@ -2,3 +2,4 @@ Flatland: __main__ - INFO - Model parser version: 0.1.0
 Flatland: class_model_dsl.database.sm_meta_db - WARNING - Database rebuild requested, rebuilding SM meta database
 Flatland: class_model_dsl.database.sm_meta_db - INFO - Re-creating database file at: /Users/starr/SDEV/Python/PyCharm/class-model-dsl/class_model_dsl/database/sm_meta.db
 Flatland: class_model_dsl.xuml.class_model - INFO - Parsing the model
+Flatland: __main__ - INFO - No problemo
