@@ -9,7 +9,7 @@ from collections import namedtuple
 import os
 from pathlib import Path
 
-Subsystem = namedtuple('Subsystem', 'name classes rels metadata')
+Subsystem = namedtuple('Subsystem', 'name domain classes rels metadata')
 
 class ModelParser:
     """
@@ -88,11 +88,12 @@ class ModelParser:
         # Return the refined model data, checking sequence length
         metadata = result.results.get('metadata', None)  # Optional section
         subsys_name = result.results['subsystem_header'][0]  # Required by model parser
+        domain_name = result.results['domain_header'][0]  # Required by model parser
         class_data = result.results['class_set'][0]  # Required by model parser
         rel_data = result.results.get('rel_section', None)  # Optional section
         # metadata = result.results.get('metadata', None)  # Optional section
         return Subsystem(
-            name=subsys_name, classes=class_data, rels=None if not rel_data else rel_data[0],
+            name=subsys_name, domain=domain_name, classes=class_data, rels=None if not rel_data else rel_data[0],
             metadata=None if not metadata else metadata[0]
         )
 

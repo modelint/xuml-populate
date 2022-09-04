@@ -105,9 +105,6 @@ class SubsystemVisitor(PTNodeVisitor):
         name = ''.join(children)
         return name
 
-    # def visit_ordinal(self, node, children):
-    #     return children[0]
-
     def visit_nl(self, node, children):
         return None
 

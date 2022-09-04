@@ -18,7 +18,7 @@ CREATE TABLE "Class" (
 )
 
 
-[no key 0.00005s] ()
+[no key 0.00010s] ()
 
 CREATE TABLE "Attribute" (
 	"Name" TEXT NOT NULL, 
@@ -28,11 +28,5 @@ CREATE TABLE "Attribute" (
 )
 
 
-[no key 0.00008s] ()
-COMMIT
-INSERT INTO "Class" ("Name") VALUES (?)
-[generated in 0.00011s] ('Alias',)
-COMMIT
-INSERT INTO "Attribute" ("Name", "Class") VALUES (?, ?)
-[generated in 0.00008s] ('Name', 'Alias')
+[no key 0.00012s] ()
 COMMIT
