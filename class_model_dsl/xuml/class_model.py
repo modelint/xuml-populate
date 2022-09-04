@@ -1,5 +1,5 @@
 """
-xUML_class_model.py – Parses an xUML class model file
+class_model.py – Parses an xUML class model file
 """
 
 import sys
@@ -7,15 +7,8 @@ import logging
 from pathlib import Path
 from class_model_dsl.parse.model_parser import ModelParser
 from class_model_dsl.mp_exceptions import ModelParseError, MPIOException
-from class_model_dsl.database.sm_meta_db import SMmetaDB
-
-# Table header attributes for each metamodel class
-# This is used when inserting a tuple into a metammodel relvar
-header = {
-    'Class': ('Name', 'Domain', ),
-    'Domain': ('Name', ),
-    'Attribute': ('Name', 'Class', 'Domain', )
-    }
+from class_model_dsl.database.sm_meta_db import SMmetaDB, population
+from class_model_dsl.populate.metaclass_headers import header
 
 class ClassModel:
 
@@ -41,6 +34,13 @@ class ClassModel:
 
     def Populate(self):
         """Populate the database from the parsed input"""
+
+
+        # Get the domain name
+        domain_name = self.subsystem.domain
+        population['Domain'] = {'Name': domain_name}
+
+
 
         # Insert the domain
         domain_name = self.subsystem.domain

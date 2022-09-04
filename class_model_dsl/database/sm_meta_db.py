@@ -19,6 +19,16 @@ def _set_sqlite_pragma(dbapi_connection, connection_record):
         cursor.close()
 
 
+population = {} # Database population to be generated
+
+def Populate():
+    """
+    Populate the database with all the built relvars
+    :return:
+    """
+    pass
+
+
 def Create_relvars():
     """
     A relvar is a relational variable as defined by C.J. Date and Hugh Darwin.
