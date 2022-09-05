@@ -6,7 +6,7 @@ import logging
 from class_model_dsl.populate.metaclass_headers import header
 from typing import List, Dict
 
-class MetaClass:
+class Metaclass:
     """
     Build an identifier for a class
     """

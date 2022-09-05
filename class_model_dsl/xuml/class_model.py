@@ -9,6 +9,7 @@ from class_model_dsl.parse.model_parser import ModelParser
 from class_model_dsl.mp_exceptions import ModelParseError, MPIOException
 from class_model_dsl.database.sm_meta_db import SMmetaDB, population
 from class_model_dsl.populate.metaclass_headers import header
+from class_model_dsl.populate.metaclass import Metaclass
 
 class ClassModel:
 
@@ -35,10 +36,14 @@ class ClassModel:
     def Populate(self):
         """Populate the database from the parsed input"""
 
-
         # Get the domain name
         domain_name = self.subsystem.domain
-        population['Domain'] = {'Name': domain_name}
+        population['Domain'] = [{'Name': domain_name}, ]
+
+        # Build the class populations for the domain
+        population['Class'] Metaclass(self.subsystem.classes)
+
+
 
 
 
