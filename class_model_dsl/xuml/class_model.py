@@ -7,9 +7,8 @@ import logging
 from pathlib import Path
 from class_model_dsl.parse.model_parser import ModelParser
 from class_model_dsl.mp_exceptions import ModelParseError, MPIOException
-from class_model_dsl.database.sm_meta_db import SMmetaDB, population
+from class_model_dsl.database.sm_meta_db import SMmetaDB
 from class_model_dsl.populate.metaclass_headers import header
-from class_model_dsl.populate.metaclass import Metaclass
 
 class ClassModel:
 
@@ -19,6 +18,8 @@ class ClassModel:
         self.xuml_model_path = path
 
         self.db = SMmetaDB(rebuild=True)
+        self.population = {relvar_name: [] for relvar_name in self.db.MetaData.tables.keys()}
+        self.scope = {}
 
         self.logger.info("Parsing the model")
         # Parse the model
@@ -36,34 +37,25 @@ class ClassModel:
     def Populate(self):
         """Populate the database from the parsed input"""
 
-        # Get the domain name
-        domain_name = self.subsystem.domain
-        population['Domain'] = [{'Name': domain_name}, ]
+        # Initialize a relations dictionary
 
-        # Build the class populations for the domain
-        population['Class'] Metaclass(self.subsystem.classes)
+        # Set the domain scope
+        self.scope = {'domain': self.subsystem.domain}
 
-
-
-
-
-        # Insert the domain
-        domain_name = self.subsystem.domain
-        domain_t = self.db.MetaData.tables['Domain']
-        self.db.Connection.execute(domain_t.insert(), [{'Name': domain_name}])
+        # Insert the domain relation
+        self.population['Domain'] = [{'Name': self.scope['domain']}, ]
 
         # Insert classes
-        class_t = self.db.MetaData.tables['Class']
-        attr_t = self.db.MetaData.tables['Attribute']
-        class_relation = []
-        attr_relation = []
         for c in self.subsystem.classes:
-            class_values = dict(zip(header['Class'], [c['name'], domain_name]))
-            class_relation.append(class_values)
-            for a in c['attributes']:
-                attr_values = dict(zip(header['Attribute'], [a['name'], c['name'], domain_name]))
-                attr_relation.append(attr_values)
-            self.db.Connection.execute(class_t.insert(), class_relation )
-            self.db.Connection.execute(attr_t.insert(), attr_relation )
+            self.scope['class'] = c['name']
+            class_header = [a.name for a in self.db.MetaData.tables['Attribute'].c]
+            class_values = dict(zip(class_header, [self.scope['class'], self.scope['domain']]))
+            self.population['Class'].append(class_values)
+            # for a in c['attributes']:
+            #     attr_values = dict(
+            #         zip(header['Attribute'], [a['name'], [self.scope['class'], self.scope['domain']]
+            #             )
+            #     )
+            #     self.population['Attribute'].append(attr_values)
 
         print("Look at model")

@@ -17,17 +17,17 @@ def define(db) -> dict:
     """
     return {
         # Just a class to get started
-        'domain': Table('Domain', db.MetaData,
+        'Domain': Table('Domain', db.MetaData,
                         Column('Name', Text, nullable=False, primary_key=True),
                         PrimaryKeyConstraint('Name', name='I'),
                         ),
-        'class': Table('Class', db.MetaData,
+        'Class': Table('Class', db.MetaData,
                        Column('Name', Text, nullable=False, primary_key=True),
                        Column('Domain', Text, nullable=False, primary_key=True),
                        PrimaryKeyConstraint('Name', 'Domain', name='I'),
                        ForeignKeyConstraint(('Domain',), ['Domain.Name',], name='R14'),
                        ),
-        'attribute': Table('Attribute', db.MetaData,
+        'Attribute': Table('Attribute', db.MetaData,
                            Column('Name', Text, nullable=False, primary_key=True),
                            Column('Class', Text, nullable=False, primary_key=True),
                            Column('Domain', Text, nullable=False, primary_key=True),
