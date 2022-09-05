@@ -8,7 +8,7 @@ from pathlib import Path
 from class_model_dsl.parse.model_parser import ModelParser
 from class_model_dsl.mp_exceptions import ModelParseError, MPIOException
 from class_model_dsl.database.sm_meta_db import SMmetaDB
-from class_model_dsl.populate.metaclass_headers import header
+from class_model_dsl.populate.mm_class import MMclass
 
 class ClassModel:
 
@@ -19,6 +19,8 @@ class ClassModel:
 
         self.db = SMmetaDB(rebuild=True)
         self.population = {relvar_name: [] for relvar_name in self.db.MetaData.tables.keys()}
+        self.table_names = [t for t in self.db.MetaData.tables.keys()]
+        self.table_headers = { tname: [attr.name for attr in self.db.MetaData.tables[tname].c] for tname in self.table_names }
         self.scope = {}
 
         self.logger.info("Parsing the model")
@@ -47,10 +49,8 @@ class ClassModel:
 
         # Insert classes
         for c in self.subsystem.classes:
-            self.scope['class'] = c['name']
-            class_header = [a.name for a in self.db.MetaData.tables['Attribute'].c]
-            class_values = dict(zip(class_header, [self.scope['class'], self.scope['domain']]))
-            self.population['Class'].append(class_values)
+            MMclass(model=self, class_data=c)
+
             # for a in c['attributes']:
             #     attr_values = dict(
             #         zip(header['Attribute'], [a['name'], [self.scope['class'], self.scope['domain']]
