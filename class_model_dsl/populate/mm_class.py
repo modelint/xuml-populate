@@ -19,6 +19,7 @@ class MMclass:
         self.parse_data = parse_data
         self.name = parse_data['name']
         self.attributes = parse_data['attributes']
+        self.identifiers = set()
 
         class_values = dict(
             zip(self.model.table_headers['Class'], [self.parse_data['name'], self.domain])
@@ -27,3 +28,5 @@ class MMclass:
 
         for a in self.attributes:
             Attribute(mmclass=self, parse_data=a)
+
+        print()

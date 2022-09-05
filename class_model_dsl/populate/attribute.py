@@ -15,9 +15,26 @@ class Attribute:
 
         self.mmclass = mmclass
         self.parse_data = parse_data
-        self.identifiers = []
 
         attr_values = dict(
-            zip(self.mmclass.model.table_headers['Attribute'], [self.parse_data['name'], self.mmclass.name, self.mmclass.domain])
+            zip(self.mmclass.model.table_headers['Attribute'],
+            [self.parse_data['name'], self.mmclass.name, self.mmclass.domain])
         )
         self.mmclass.model.population['Attribute'].append(attr_values)
+
+        for i in self.parse_data['I']:
+            # Add Identifier if it is not already in the population
+            if i not in self.mmclass.identifiers:
+                id_values = dict(
+                    zip(self.mmclass.model.table_headers['Identifier'],
+                        [i, self.mmclass.name, self.mmclass.domain])
+                )
+                self.mmclass.model.population['Identifier'].append(id_values)
+                self.mmclass.identifiers.add(i)
+
+            # Include this attribute in the each of its identifiers
+            id_attr_values = dict(
+                zip(self.mmclass.model.table_headers['Identifier Attribute'],
+                    [i, self.parse_data['name'], self.mmclass.name, self.mmclass.domain])
+            )
+            self.mmclass.model.population['Identifier Attribute'].append(id_attr_values)
