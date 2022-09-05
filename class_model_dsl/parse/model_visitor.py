@@ -42,9 +42,9 @@ class SubsystemVisitor(PTNodeVisitor):
         name = ''.join(children)
         return {'name': name }
 
-    def visit_keyletter(self, node, children):
-        """Abbreviated keyletter name of class"""
-        return { 'keyletter': children[0] }
+    def visit_class_alias(self, node, children):
+        """Abbreviated class_alias name of class"""
+        return { 'alias': children[0] }
 
     def visit_import(self, node, children):
         """Imported class marker"""
@@ -52,7 +52,7 @@ class SubsystemVisitor(PTNodeVisitor):
         return d
 
     def visit_class_header(self, node, children):
-        """Beginning of class section, includes name, optional keyletter and optional import marker"""
+        """Beginning of class section, includes name, optional class_alias and optional import marker"""
         items = {k: v for d in children for k, v in d.items()}
         return items
 
@@ -82,7 +82,7 @@ class SubsystemVisitor(PTNodeVisitor):
         return tdict
 
     def visit_attr_tag(self, node, children):
-        """Beginning of class section, includes name, optional keyletter and optional import marker"""
+        """Beginning of class section, includes name, optional alias and optional import marker"""
         item = children[0]
         return item
 

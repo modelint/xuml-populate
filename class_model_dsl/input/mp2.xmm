@@ -9,13 +9,13 @@ metadata
     Organization logo > mint
 domain SM Metamodel
 subsystem Class And Attribute
-class Alias
+class Alias, A
 attributes
     Name : Alias Name {I}
     Class {I2, R29}
     Domain {I, I2, R29, R33}
 --
-class Attribute
+class Attribute, ATTR
 attributes
     Name : Name {I}
     Class {I, R20}

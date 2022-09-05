@@ -15,6 +15,7 @@ class Attribute:
         self.mmclass = mmclass
         self.parse_data = parse_data
         self.type = parse_data.get('type', "<unresolved>")
+        self.identifiers = self.parse_data.get('I', [])  # This attr might not participate in any identifier
 
         attr_values = dict(
             zip(self.mmclass.model.table_headers['Attribute'],
@@ -22,7 +23,7 @@ class Attribute:
         )
         self.mmclass.model.population['Attribute'].append(attr_values)
 
-        for i in self.parse_data['I']:
+        for i in self.identifiers:
             # Add Identifier if it is not already in the population
             if i not in self.mmclass.identifiers:
                 id_values = dict(
