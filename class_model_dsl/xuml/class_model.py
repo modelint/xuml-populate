@@ -49,7 +49,7 @@ class ClassModel:
 
         # Insert classes
         for c in self.subsystem.classes:
-            MMclass(model=self, class_data=c)
+            MMclass(model=self, domain=self.subsystem.domain, parse_data=c)
 
             # for a in c['attributes']:
             #     attr_values = dict(
