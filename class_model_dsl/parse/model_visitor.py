@@ -70,6 +70,10 @@ class SubsystemVisitor(PTNodeVisitor):
         name = ''.join(children)
         return {'name': name }
 
+    def visit_type_name(self, node, children):
+        name = ''.join(children)
+        return {'type': name }
+
     def visit_attr_tags(self, node, children):
         """Tag values organized in a list by tag"""
         tdict = {}  # Tag dictionary of value lists per tag

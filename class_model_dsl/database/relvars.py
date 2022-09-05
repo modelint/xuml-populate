@@ -31,6 +31,7 @@ def define(db) -> dict:
                            Column('Name', Text, nullable=False, primary_key=True),
                            Column('Class', Text, nullable=False, primary_key=True),
                            Column('Domain', Text, nullable=False, primary_key=True),
+                           Column('Type', Text, nullable=False, primary_key=False),
                            PrimaryKeyConstraint('Name', 'Class', 'Domain', name='I'),
                            ForeignKeyConstraint(('Class', 'Domain',), ['Class.Name', 'Class.Domain', ], name='R20'),
                            ),

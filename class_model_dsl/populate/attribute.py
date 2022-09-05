@@ -3,7 +3,6 @@ attribute.py – Create an attribute relation
 """
 
 import logging
-from typing import List, Dict
 
 class Attribute:
     """
@@ -15,10 +14,11 @@ class Attribute:
 
         self.mmclass = mmclass
         self.parse_data = parse_data
+        self.type = parse_data.get('type', "<unresolved>")
 
         attr_values = dict(
             zip(self.mmclass.model.table_headers['Attribute'],
-            [self.parse_data['name'], self.mmclass.name, self.mmclass.domain])
+            [self.parse_data['name'], self.mmclass.name, self.mmclass.domain, self.type])
         )
         self.mmclass.model.population['Attribute'].append(attr_values)
 

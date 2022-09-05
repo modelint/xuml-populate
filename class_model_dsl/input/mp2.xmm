@@ -7,8 +7,18 @@ metadata
     Organization : Model Integration, LLC / www.modelint.com
     Copyright notice > MIT
     Organization logo > mint
+domain SM Metamodel
 subsystem Class And Attribute
-class Alias <import:Class and Attribute>
+class Alias
 attributes
-    Domain {I29, R22}
+    Name : Alias Name {I}
+    Class {I2, R29}
+    Domain {I, I2, R29, R33}
+--
+class Attribute
+attributes
+    Name : Name {I}
+    Class {I, R20}
+    Domain {I, R20}
+    Type : Type Name
 --
