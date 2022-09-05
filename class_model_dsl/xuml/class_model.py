@@ -39,23 +39,11 @@ class ClassModel:
     def Populate(self):
         """Populate the database from the parsed input"""
 
-        # Initialize a relations dictionary
-
-        # Set the domain scope
-        self.scope = {'domain': self.subsystem.domain}
-
         # Insert the domain relation
-        self.population['Domain'] = [{'Name': self.scope['domain']}, ]
+        self.population['Domain'] = [{'Name': self.subsystem.domain}, ]
 
         # Insert classes
         for c in self.subsystem.classes:
             MMclass(model=self, domain=self.subsystem.domain, parse_data=c)
-
-            # for a in c['attributes']:
-            #     attr_values = dict(
-            #         zip(header['Attribute'], [a['name'], [self.scope['class'], self.scope['domain']]
-            #             )
-            #     )
-            #     self.population['Attribute'].append(attr_values)
 
         print("Look at model")
