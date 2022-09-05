@@ -31,7 +31,7 @@ class MMclass:
         # Populate optional alias
         if self.alias:
             alias_values = dict(
-                zip(self.model.table_headers['Alias'], [self.parse_data['name'], self.name, self.domain])
+                zip(self.model.table_headers['Alias'], [self.alias, self.name, self.domain])
             )
             self.model.population['Alias'].append(alias_values)
 
