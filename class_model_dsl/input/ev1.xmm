@@ -1,0 +1,32 @@
+metadata
+    Title : Elevator Management Class Model
+    Author : Leon Starr
+    Document ID : mint.elevator3.td.1
+    Version : 3.3.4
+    Creation date : June 21, 2018
+    Modification date : February 12, 2022
+    Organization : Model Integration, LLC / www.modelint.com
+    Copyright notice > MIT
+    Organization logo > mint
+domain Elevator Management, EVMAN
+subsystem Elevator, ELEV 1-99
+class Bank
+attributes
+    Name : Name {I}
+    Passenger load time : Duration
+    Block clear time : Duration
+    Max close attempts : Count
+    Average cabin speed : Speed
+    Average stop duration : Duration
+--
+class Shaft
+attributes
+    ID : Shaft ID {I}
+    Bank {R1}
+    In service : Boolean
+--
+relationships
+    R1
+    has service features defined by, 1 Bank
+    defines service features of, M Shaft
+--
