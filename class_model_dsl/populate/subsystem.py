@@ -3,6 +3,7 @@ subsystem.py – Convert parsed subsystem to a relation
 """
 
 import logging
+from class_model_dsl.mp_exceptions import CnumsExceeded
 
 class Subsystem:
     """
@@ -18,7 +19,7 @@ class Subsystem:
         self.name = parse_data['name']
         self.alias = parse_data['alias']
         self.range = parse_data['range']
-
+        self.cnum = self.range[0]
 
         # Insert the subsystem relation
         self.domain.model.population['Subsystem'] = [
@@ -32,3 +33,11 @@ class Subsystem:
         # since the low number is inclusive and the upper bound is the next higher bound-1
         # This policy prevents any subsystem numbering overlap
         # See the relevant github wiki model descriptions on the SM Metamodel repository for more detail
+
+    def next_cnum(self):
+        if self.cnum <= self.range[1]:
+            self.cnum += 1
+            return "C"+str(self.cnum-1)
+        else:
+            self.logger.error(f"Max cnums {self.range[1]} exceeded in subsystem: {self.name}")
+            raise CnumsExceeded(self.range[1])

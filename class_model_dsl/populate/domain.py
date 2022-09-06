@@ -26,8 +26,8 @@ class Domain:
         self.model.population['Modeled Domain'] = [{'Name': self.name}, ]
 
         # Insert the subsystem
-        Subsystem(domain=self, parse_data=parse_data.subsystem)
+        s = Subsystem(domain=self, parse_data=parse_data.subsystem)
 
         # Insert classes
         for c in self.parse_data.classes:
-            MMclass(domain=self, parse_data=c)
+            MMclass(domain=self, subsys=s, parse_data=c)

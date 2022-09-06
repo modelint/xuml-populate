@@ -11,6 +11,16 @@ post = "]"
 class MPException(Exception):
     pass
 
+class MDPopulationException(MPException):
+    pass
+
+class CnumsExceeded(MDPopulationException):
+    def __init__(self, maxcnum):
+        self.maxcnum = maxcnum
+
+    def __str__(self):
+        return f'{pre}Exceeded maximum cnum {self.maxcnum} for subsystem. Adjust number range.{post}'
+
 class MPIOException(MPException):
     pass
 
