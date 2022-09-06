@@ -7,8 +7,8 @@ metadata
     Organization : Model Integration, LLC / www.modelint.com
     Copyright notice > MIT
     Organization logo > mint
-domain SM Metamodel
-subsystem Class And Attribute
+domain SM Metamodel, META
+subsystem Class And Attribute, CATTR 1-24
 class Alias, A
 attributes
     Name : Alias Name {I}
