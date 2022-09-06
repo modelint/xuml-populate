@@ -8,7 +8,7 @@ from pathlib import Path
 from class_model_dsl.parse.model_parser import ModelParser
 from class_model_dsl.mp_exceptions import ModelParseError, MPIOException
 from class_model_dsl.database.sm_meta_db import SMmetaDB
-from class_model_dsl.populate.mm_class import MMclass
+from class_model_dsl.populate.domain import Domain
 
 class ClassModel:
 
@@ -39,11 +39,6 @@ class ClassModel:
     def Populate(self):
         """Populate the database from the parsed input"""
 
-        # Insert the domain relation
-        self.population['Domain'] = [{'Name': self.subsystem.domain}, ]
-
-        # Insert classes
-        for c in self.subsystem.classes:
-            MMclass(model=self, domain=self.subsystem.domain, parse_data=c)
+        Domain(model=self, parse_data=self.subsystem)
 
         print("Look at model")
