@@ -23,14 +23,14 @@ class MMclass:
 
         # Populate class
         class_values = dict(
-            zip(self.domain.model.table_headers['Class'], [self.parse_data['name'], self.domain])
+            zip(self.domain.model.table_headers['Class'], [self.parse_data['name'], self.domain.name])
         )
         self.domain.model.population['Class'].append(class_values)
 
         # Populate optional alias
         if self.alias:
             alias_values = dict(
-                zip(self.domain.model.table_headers['Alias'], [self.alias, self.name, self.domain])
+                zip(self.domain.model.table_headers['Alias'], [self.alias, self.name, self.domain.name])
             )
             self.domain.model.population['Alias'].append(alias_values)
 

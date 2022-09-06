@@ -27,7 +27,37 @@ class SubsystemVisitor(PTNodeVisitor):
     def visit_data_item(self, node, children):
         return { children[0]: children[1] }
 
-    #
+    # Domain
+    def visit_domain_header(self, node, children):
+        """Domain name and optional alias"""
+        items = {k: v for d in children for k, v in d.items()}
+        return items
+
+    def visit_domain_name(self, node, children):
+        name = ''.join(children)
+        return {'name': name }
+
+    def visit_domain_alias(self, node, children):
+        """Alias of domain"""
+        return { 'alias': children[0] }
+
+    # Subsystem
+    def visit_subsystem_header(self, node, children):
+        """Subsystem name, numbering range, and optional alias"""
+        items = {k: v for d in children for k, v in d.items()}
+        return items
+
+    def visit_subsystem_name(self, node, children):
+        name = ''.join(children)
+        return {'name': name }
+
+    def visit_subsystem_alias(self, node, children):
+        """Alias of domain"""
+        return { 'alias': children[0] }
+
+    def visit_num_range(self, node, children):
+        """Subsystem numbering range"""
+        return { 'range': (int(children[0]), int(children[1])) }
 
     # Classes
     def visit_class_set(self, node, children):

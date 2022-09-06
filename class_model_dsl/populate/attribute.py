@@ -19,7 +19,7 @@ class Attribute:
 
         attr_values = dict(
             zip(self.mmclass.domain.model.table_headers['Attribute'],
-            [self.parse_data['name'], self.mmclass.name, self.mmclass.domain, self.type])
+            [self.parse_data['name'], self.mmclass.name, self.mmclass.domain.name, self.type])
         )
         self.mmclass.domain.model.population['Attribute'].append(attr_values)
         # TODO: Check for derived or non-derived, for now assume the latter
@@ -30,7 +30,7 @@ class Attribute:
             if i not in self.mmclass.identifiers:
                 id_values = dict(
                     zip(self.mmclass.domain.model.table_headers['Identifier'],
-                        [i, self.mmclass.name, self.mmclass.domain])
+                        [i, self.mmclass.name, self.mmclass.domain.name])
                 )
                 self.mmclass.domain.model.population['Identifier'].append(id_values)
                 # TODO: Check for super or irreducible, for now assume the latter
@@ -40,6 +40,6 @@ class Attribute:
             # Include this attribute in the each of its identifiers
             id_attr_values = dict(
                 zip(self.mmclass.domain.model.table_headers['Identifier Attribute'],
-                    [i, self.parse_data['name'], self.mmclass.name, self.mmclass.domain])
+                    [i, self.parse_data['name'], self.mmclass.name, self.mmclass.domain.name])
             )
             self.mmclass.domain.model.population['Identifier Attribute'].append(id_attr_values)
