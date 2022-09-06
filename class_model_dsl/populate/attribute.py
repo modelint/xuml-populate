@@ -22,6 +22,8 @@ class Attribute:
             [self.parse_data['name'], self.mmclass.name, self.mmclass.domain, self.type])
         )
         self.mmclass.model.population['Attribute'].append(attr_values)
+        # TODO: Check for derived or non-derived, for now assume the latter
+        self.mmclass.model.population['Non Derived Attribute'].append(attr_values)
 
         for i in self.identifiers:
             # Add Identifier if it is not already in the population
@@ -31,6 +33,8 @@ class Attribute:
                         [i, self.mmclass.name, self.mmclass.domain])
                 )
                 self.mmclass.model.population['Identifier'].append(id_values)
+                # TODO: Check for super or irreducible, for now assume the latter
+                self.mmclass.model.population['Irreducible Identifier'].append(id_values)
                 self.mmclass.identifiers.add(i)
 
             # Include this attribute in the each of its identifiers
