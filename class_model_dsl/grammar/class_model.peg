@@ -11,7 +11,7 @@
 
 // Subsystem
 // The only thing required is a subsystem name and a set of possibly empty classes
-subsystem = metadata? domain_header subsystem_header class_set EOF
+subsystem = metadata? domain_header subsystem_header class_set rel_section? EOF
 domain_header = "domain" sp domain_name domain_alias nl  // Declares the name of the domain
 domain_name = icaps_name
 domain_alias = ',' sp acword
