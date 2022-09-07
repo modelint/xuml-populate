@@ -4,6 +4,7 @@ domain.py – Convert parsed domain to a relation
 
 import logging
 from class_model_dsl.populate.mm_class import MMclass
+from class_model_dsl.populate.relationship import Relationship
 from class_model_dsl.populate.subsystem import Subsystem
 
 class Domain:
@@ -31,3 +32,7 @@ class Domain:
         # Insert classes
         for c in self.parse_data.classes:
             MMclass(domain=self, subsys=s, parse_data=c)
+
+        # Insert relationships
+        for r in self.parse_data.rels:
+            Relationship(domain=self, subsys=s, parse_data=r)
