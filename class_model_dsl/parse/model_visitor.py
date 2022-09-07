@@ -131,7 +131,59 @@ class SubsystemVisitor(PTNodeVisitor):
         print("bp")
         return itag
 
-    # Elements
+    # Relationships
+    def visit_rel_section(self, node, children):
+        """Relationships section with all of the relationships"""
+        return children
+
+    def visit_rel(self, node, children):
+        """Relationship rnum and rel data"""
+        return {**children[0], **children[1]}
+
+    def visit_rname(self, node, children):
+        """The Rnum on any relationship"""
+        return {"rnum": children[0]}
+
+    def visit_binary_rel(self, node, children):
+        """Binary relationship with or without an association class"""
+        items = {k: v for d in children for k, v in d.items()}
+        return items
+
+    def visit_t_side(self, node, children):
+        """T side of a binary association"""
+        return {node.rule_name: {"phrase": children[0], "mult": children[1], "cname": children[2]}}
+
+    def visit_p_side(self, node, children):
+        """P side of a binary association"""
+        return {node.rule_name: {"phrase": children[0], "mult": children[1], "cname": children[2]}}
+
+    def visit_phrase(self, node, children):
+        """Phrase on one side of a binary relationship phrase"""
+        phrase = ''.join(children)
+        return phrase
+
+    def visit_mult(self, node, children):
+        """Binary association (not association class) multiplicity"""
+        mult = node.value  # No children because literal 1 or M is thrown out
+        return mult
+
+    def visit_assoc_class(self, node, children):
+        """Association class name and multiplicity"""
+        return { "assoc_mult": children[0], "assoc_cname": children[1] }
+
+    def visit_gen_rel(self, node, children):
+        """Generalization relationship"""
+        return {"superclass": children[0], "subclasses": children[1:]}
+
+    def visit_superclass(self, node, children):
+        """Superclass in a generalization relationship"""
+        return children[0]
+
+    def visit_subclass(self, node, children):
+        """Subclass in a generalization relationship"""
+        return children[0]
+
+    # Text and delimiters
     def visit_acword(self, node, children):
         """All caps word"""
         return node.value  # No children since this is a literal

@@ -48,6 +48,20 @@ attr_tag = itag / rtag
 itag = 'I' ordinal? // Identifier number, both I and I1 mean the same thing
 rtag = 'R' ordinal 'c'? // Relationship number and optional c constraint signifier
 
+// Relationships
+rel_section = relationship_header rel*  // All relationships in the subsystem
+relationship_header = "relationships" nl
+rel = rname (binary_rel / gen_rel) block_end  // A rel is either a binary association or a generalization
+rname = indent rnum nl  // Name of a rel is its rnum
+binary_rel = t_side p_side assoc_class? // Both sides
+t_side = rel_side
+p_side = rel_side
+rel_side = indent phrase "," sp mult sp+ icaps_name nl  // One side of a binary association
+assoc_class = indent ('1' / 'M') sp+ icaps_name nl   // Association class
+gen_rel = superclass subclass subclass+ // A generalization relationship
+superclass = indent icaps_name sp? "+" nl // A superclass class name
+subclass = indent indent icaps_name nl  // A subclass class name
+
 // Words and delimiters
 //body_line = indent r'.*' nl // An unstructured line of text
 word = iword / lword
@@ -57,6 +71,9 @@ acword = r'[A-Z][A-Z0-9_]*' // All caps words for class abbreviations
 iword = r'[A-Z][A-Za-z0-9]*' // Initial cap word (used in Class and Subsystem names)
 lword = r'[a-z][a-z]*' // Lower case only word (used in relationship phrase)
 ordinal = r'[1-9][0-9]*' // A counting number starting at 1
+phrase = lword (delim lword)*  // Relationship phrase
+mult = r'[1M]c?' // Binary relationship multiplicity, Shlaer-Mellor notation
+rnum = r'O?R[1-9][0-9]*' // Relationship number
 delim = r'[ _]' // Delimiter used inside of names
 indent = "    "  // Need indent for clarity and to signal unstructured lines of text
 block_end = "--" nl?  // Signifies end of a block (within section)
