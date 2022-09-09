@@ -132,6 +132,7 @@ class SubsystemVisitor(PTNodeVisitor):
         return itag
 
     # Relationships
+    # ---
     def visit_rel_section(self, node, children):
         """Relationships section with all of the relationships"""
         return children
@@ -144,6 +145,7 @@ class SubsystemVisitor(PTNodeVisitor):
         """The Rnum on any relationship"""
         return {"rnum": children[0]}
 
+    # Binary association
     def visit_binary_rel(self, node, children):
         """Binary relationship with or without an association class"""
         items = {k: v for d in children for k, v in d.items()}
@@ -171,6 +173,7 @@ class SubsystemVisitor(PTNodeVisitor):
         """Association class name and multiplicity"""
         return { "assoc_mult": children[0], "assoc_cname": children[1] }
 
+    # Generalization
     def visit_gen_rel(self, node, children):
         """Generalization relationship"""
         return {"superclass": children[0], "subclasses": children[1:]}
@@ -182,6 +185,29 @@ class SubsystemVisitor(PTNodeVisitor):
     def visit_subclass(self, node, children):
         """Subclass in a generalization relationship"""
         return children[0]
+
+    # Reference
+    def visit_reference(self, node, children):
+        """Reference"""
+        print()
+        return children[0]
+
+    def visit_source_attrs(self, node, children):
+        """Source attributes referring to some target"""
+        print()
+        return children[0]
+
+    def visit_target_attrs(self, node, children):
+        """Source attributes referring to some target"""
+        print()
+        return children[0]
+
+    def visit_attr_set(self, node, children):
+        """Source attributes referring to some target"""
+        print()
+        return children[0]
+
+    #---
 
     # Text and delimiters
     def visit_acword(self, node, children):

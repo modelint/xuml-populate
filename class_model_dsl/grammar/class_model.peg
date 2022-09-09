@@ -49,18 +49,30 @@ itag = 'I' ordinal? // Identifier number, both I and I1 mean the same thing
 rtag = 'R' ordinal 'c'? // Relationship number and optional c constraint signifier
 
 // Relationships
+// ---
 rel_section = relationship_header rel*  // All relationships in the subsystem
 relationship_header = "relationships" nl
 rel = rname (binary_rel / gen_rel) block_end  // A rel is either a binary association or a generalization
 rname = indent rnum nl  // Name of a rel is its rnum
-binary_rel = t_side p_side assoc_class? // Both sides
+
+// Binary association
+binary_rel = t_side p_side assoc_class? reference // Both sides
 t_side = rel_side
 p_side = rel_side
 rel_side = indent phrase "," sp mult sp+ icaps_name nl  // One side of a binary association
 assoc_class = indent ('1' / 'M') sp+ icaps_name nl   // Association class
+
+// Generalization
 gen_rel = superclass subclass subclass+ // A generalization relationship
 superclass = indent icaps_name sp? "+" nl // A superclass class name
 subclass = indent indent icaps_name nl  // A subclass class name
+
+// Reference
+reference = indent source_attrs sp '->' sp target_attrs nl
+source_attrs = attr_set
+target_attrs = attr_set
+attr_set = class_name '.' ('(' attr_name (',' sp attr_name)+ ')' / attr_name)
+// ---
 
 // Words and delimiters
 //body_line = indent r'.*' nl // An unstructured line of text

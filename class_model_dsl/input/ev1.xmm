@@ -29,4 +29,5 @@ relationships
     R1
     has service features defined by, 1 Bank
     defines service features of, M Shaft
+    Shaft.(Bank, Flot) -> Bank.(Flib, Bork)
 --
