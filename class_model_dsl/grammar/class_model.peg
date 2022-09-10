@@ -56,11 +56,13 @@ rel = rname (binary_rel / gen_rel) block_end  // A rel is either a binary associ
 rname = indent rnum nl  // Name of a rel is its rnum
 
 // Binary association
-binary_rel = t_side p_side assoc_class? reference // Both sides
+binary_rel = t_side p_side assoc_class? ref1 ref2? // Both sides
 t_side = rel_side
 p_side = rel_side
 rel_side = indent phrase "," sp mult sp+ icaps_name nl  // One side of a binary association
 assoc_class = indent ('1' / 'M') sp+ icaps_name nl   // Association class
+ref1 = reference
+ref2 = reference
 
 // Generalization
 gen_rel = superclass subclass subclass+ // A generalization relationship

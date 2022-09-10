@@ -153,11 +153,13 @@ class SubsystemVisitor(PTNodeVisitor):
 
     def visit_t_side(self, node, children):
         """T side of a binary association"""
-        return {node.rule_name: {"phrase": children[0], "mult": children[1], "cname": children[2]}}
+        items = {node.rule_name: {"phrase": children[0], "mult": children[1], "cname": children[2]}}
+        return items
 
     def visit_p_side(self, node, children):
         """P side of a binary association"""
-        return {node.rule_name: {"phrase": children[0], "mult": children[1], "cname": children[2]}}
+        items = {node.rule_name: {"phrase": children[0], "mult": children[1], "cname": children[2]}}
+        return items
 
     def visit_phrase(self, node, children):
         """Phrase on one side of a binary relationship phrase"""
@@ -171,7 +173,18 @@ class SubsystemVisitor(PTNodeVisitor):
 
     def visit_assoc_class(self, node, children):
         """Association class name and multiplicity"""
-        return { "assoc_mult": children[0], "assoc_cname": children[1] }
+        items = { "assoc_mult": children[0], "assoc_cname": children[1] }
+        return items
+
+    def visit_ref1(self, node, children):
+        """Either a simple or t or p reference (t or p if associative)"""
+        ref = { 'ref1': {'source': children[0], 'target': children[1]}}
+        return ref
+
+    def visit_ref2(self, node, children):
+        """Either a t or p reference, requires an association class"""
+        ref = { 'ref2': {'source': children[0], 'target': children[1]}}
+        return ref
 
     # Generalization
     def visit_gen_rel(self, node, children):
@@ -187,10 +200,10 @@ class SubsystemVisitor(PTNodeVisitor):
         return children[0]
 
     # Reference
-    def visit_reference(self, node, children):
-        """Reference"""
-        ref = {'source': children[0], 'target': children[1]}
-        return ref
+    # def visit_reference(self, node, children):
+    #     """Reference"""
+    #     ref = {'source': children[0], 'target': children[1]}
+    #     return ref
 
     def visit_source_attrs(self, node, children):
         """Source attributes referring to target attributes"""

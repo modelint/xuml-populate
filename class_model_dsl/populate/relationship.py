@@ -20,8 +20,8 @@ class Relationship:
         self.rnum = parse_data['rnum']
         self.t_side = parse_data['t_side']
         self.p_side = parse_data['p_side']
-        self.source = parse_data['source']
-        self.target = parse_data['target']
+        self.ref1 = parse_data['ref1']
+        self.ref2 = parse_data.get('ref2')  # Supplied only for an associative binary
 
         # Populate relationship
         self.domain.model.Insert('Relationship', [self.rnum, self.domain.name])
