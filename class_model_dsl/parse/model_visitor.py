@@ -189,18 +189,22 @@ class SubsystemVisitor(PTNodeVisitor):
     # Reference
     def visit_reference(self, node, children):
         """Reference"""
-        print()
-        return children[0]
+        ref = {'source': children[0], 'target': children[1]}
+        return ref
 
     def visit_source_attrs(self, node, children):
-        """Source attributes referring to some target"""
-        print()
-        return children[0]
+        """Source attributes referring to target attributes"""
+        class_name = children[0]['name']
+        attrs = [c['name'] for c in children[1:]]
+        items = {'class': class_name, 'attrs':attrs}
+        return items
 
     def visit_target_attrs(self, node, children):
-        """Source attributes referring to some target"""
-        print()
-        return children[0]
+        """Referenced target attributes"""
+        class_name = children[0]['name']
+        attrs = [c['name'] for c in children[1:]]
+        items = {'class': class_name, 'attrs':attrs}
+        return items
 
     def visit_attr_set(self, node, children):
         """Source attributes referring to some target"""
