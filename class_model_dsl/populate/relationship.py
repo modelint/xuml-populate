@@ -20,12 +20,15 @@ class Relationship:
         self.rnum = parse_data['rnum']
         self.t_side = parse_data['t_side']
         self.p_side = parse_data['p_side']
+        self.source = parse_data['source']
+        self.target = parse_data['target']
 
         # Populate relationship
         self.domain.model.Insert('Relationship', [self.rnum, self.domain.name])
         self.domain.model.Insert('Association', [self.rnum, self.domain.name])
         self.domain.model.Insert('Binary Association', [self.rnum, self.domain.name])
 
+        # Populate the T and P perspectives of an asymmetric binary association
         self.domain.model.Insert('Perspective',
                                  ['T', self.rnum, self.domain.name, self.t_side['cname'], self.t_side['phrase'],
                                   True if 'c' in self.t_side['mult'] else False, self.t_side['mult'][0]]
@@ -39,4 +42,15 @@ class Relationship:
                                  )
         self.domain.model.Insert('Asymmetric Perspective', ['P', self.rnum, self.domain.name])
         self.domain.model.Insert('P Perspective', [self.rnum, self.domain.name])
+
+        # Create reference
+        self.domain.model.Insert('Reference', ['R', self.source['class'], self.target['class'], self.rnum, self.domain.name])
+        referenced_perspective = 'T' if self.target['class'] == self.t_side['cname'] else 'P'
+        self.domain.model.Insert('Association Reference',
+                           ['R', self.source['class'], self.target['class'], self.rnum, self.domain.name,
+                            referenced_perspective])
+        self.domain.model.Insert('Simple Association Reference',
+                           [self.source['class'], self.target['class'], self.rnum, self.domain.name])
+        self.domain.model.Insert('Referring Class', [self.rnum, self.source['class'], self.domain.name])
+        self.domain.model.Insert('Formalizing Class Role', [self.rnum, self.source['class'], self.domain.name])
         print()
