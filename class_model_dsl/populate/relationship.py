@@ -17,6 +17,7 @@ class Relationship:
         self.subsys = subsys
         self.parse_data = parse_data
         self.rnum = parse_data['rnum']
-        self.tside = parse_data['t_side']
-        self.pside = parse_data['p_side']
+
+        # Populate relationship
+        self.domain.model.Insert('Relationship', [self.rnum, self.domain.name])
         print()

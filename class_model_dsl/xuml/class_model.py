@@ -36,6 +36,13 @@ class ClassModel:
 
         self.Populate()
 
+    def Insert(self, table_name, instance):
+        """Insert the instance in the named table dictionary"""
+        instance_dict = dict(
+            zip(self.table_headers[table_name], instance)
+        )
+        self.population[table_name].append(instance_dict)
+
     def Populate(self):
         """Populate the database from the parsed input"""
 
