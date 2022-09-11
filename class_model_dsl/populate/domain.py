@@ -35,4 +35,4 @@ class Domain:
 
         # Insert relationships
         for r in self.parse_data.rels:
-            Relationship(domain=self, subsys=s, parse_data=r)
+            Relationship(domain=self, parse_data=r)

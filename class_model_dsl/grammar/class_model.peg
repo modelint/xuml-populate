@@ -70,14 +70,13 @@ superclass = indent icaps_name sp? "+" nl // A superclass class name
 subclass = indent indent icaps_name nl  // A subclass class name
 
 // Reference
-reference = indent source_attrs sp '->' sp target_attrs nl
+reference = indent source_attrs sp '->' sp target_attrs (',' sp itag)? nl
 source_attrs = attr_set
 target_attrs = attr_set
 attr_set = class_name '.' ('(' attr_name (',' sp attr_name)+ ')' / attr_name)
 // ---
 
 // Words and delimiters
-//body_line = indent r'.*' nl // An unstructured line of text
 word = iword / lword
 icaps_name = iword (delim word)*  // A name using initial caps only
 class_alias = ',' sp+ acword

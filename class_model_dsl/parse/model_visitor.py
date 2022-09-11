@@ -128,7 +128,6 @@ class SubsystemVisitor(PTNodeVisitor):
     def visit_itag(self, node, children):
         """Identifier attribute tag"""
         itag = { 'I': 1 if not children else int(children[0]) }
-        print("bp")
         return itag
 
     # Relationships
@@ -178,12 +177,14 @@ class SubsystemVisitor(PTNodeVisitor):
 
     def visit_ref1(self, node, children):
         """Either a simple or t or p reference (t or p if associative)"""
-        ref = { 'ref1': {'source': children[0], 'target': children[1]}}
+        id = 1 if len(children) < 3 else children[2]['I']  # referenced model identifier, default is I1
+        ref = { 'ref1': {'source': children[0], 'target': children[1], 'id': id}}
         return ref
 
     def visit_ref2(self, node, children):
         """Either a t or p reference, requires an association class"""
-        ref = { 'ref2': {'source': children[0], 'target': children[1]}}
+        id = 1 if len(children) < 3 else children[2]['I']  # referenced model identifier, default is I1
+        ref = { 'ref2': {'source': children[0], 'target': children[1], 'id': id}}
         return ref
 
     # Generalization
@@ -198,12 +199,6 @@ class SubsystemVisitor(PTNodeVisitor):
     def visit_subclass(self, node, children):
         """Subclass in a generalization relationship"""
         return children[0]
-
-    # Reference
-    # def visit_reference(self, node, children):
-    #     """Reference"""
-    #     ref = {'source': children[0], 'target': children[1]}
-    #     return ref
 
     def visit_source_attrs(self, node, children):
         """Source attributes referring to target attributes"""
@@ -221,7 +216,6 @@ class SubsystemVisitor(PTNodeVisitor):
 
     def visit_attr_set(self, node, children):
         """Source attributes referring to some target"""
-        print()
         return children[0]
 
     #---

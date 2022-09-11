@@ -2,8 +2,6 @@
 relationship.py – Convert parsed relationship to a relation
 """
 
-from class_model_dsl.populate.attribute_reference import AttributeReference
-
 import logging
 
 
@@ -12,16 +10,16 @@ class Relationship:
     Create a relationship relation
     """
 
-    def __init__(self, domain, subsys, parse_data):
+    def __init__(self, domain, parse_data):
         """Constructor"""
         self.logger = logging.getLogger(__name__)
 
         self.domain = domain
-        self.subsys = subsys
         self.parse_data = parse_data
         self.rnum = parse_data['rnum']
         self.t_side = parse_data['t_side']
         self.p_side = parse_data['p_side']
+        self.ref1 = parse_data['ref1']
         self.ref1_source = parse_data['ref1']['source']
         self.ref1_target = parse_data['ref1']['target']
         self.ref2 = parse_data.get('ref2')  # Supplied only for an associative binary
@@ -82,6 +80,12 @@ class Relationship:
             self.domain.model.Insert('T Reference',
                                      [self.ref1_source['class'], self.ref1_target['class'], self.rnum,
                                       self.domain.name])
+            # T Attribute References
+            for from_attr, to_attr in zip(self.ref1_source['attrs'], self.ref1_target['attrs']):
+                self.domain.model.Insert('Attribute Reference', [from_attr, self.ref1_source['class'], to_attr,
+                                                                 self.ref1_target['class'], self.domain.name,
+                                                                 self.rnum, 'T', self.ref1['id']])
+
 
             # P Reference
             self.domain.model.Insert('Reference', ['P', self.ref2_source['class'], self.ref2_target['class'], self.rnum,
@@ -97,5 +101,9 @@ class Relationship:
                                      [self.ref2_source['class'], self.ref1_target['class'], self.rnum,
                                       self.domain.name])
 
-        AttributeReference(self, domain.model.subsystem.classes)
-        print()
+            # P Attribute References
+            for from_attr, to_attr in zip(self.ref2_source['attrs'], self.ref2_target['attrs']):
+                self.domain.model.Insert('Attribute Reference', [from_attr, self.ref2_source['class'], to_attr,
+                                                                 self.ref2_target['class'], self.domain.name,
+                                                                 self.rnum, 'P', self.ref1['id']])
+            print()
