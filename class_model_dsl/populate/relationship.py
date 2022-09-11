@@ -17,11 +17,15 @@ class Relationship:
         self.domain = domain
         self.parse_data = parse_data
         self.rnum = parse_data['rnum']
-        self.t_side = parse_data['t_side']
-        self.p_side = parse_data['p_side']
-        self.ref1 = parse_data['ref1']
-        self.ref1_source = parse_data['ref1']['source']
-        self.ref1_target = parse_data['ref1']['target']
+        self.subclasses = parse_data.get('subclasses')
+        self.superclass = parse_data.get('superclass')
+        self.grefs = parse_data.get('grefs')
+
+        self.t_side = parse_data.get('t_side')
+        self.p_side = parse_data.get('p_side')
+        self.ref1 = parse_data.get('ref1')
+        self.ref1_source = None if not self.ref1 else self.ref1['source']
+        self.ref1_target = None if not self.ref1 else self.ref1['target']
         self.ref2 = parse_data.get('ref2')  # Supplied only for an associative binary
         self.ref2_source = None if not self.ref2 else self.ref2['source']
         self.ref2_target = None if not self.ref2 else self.ref2['target']

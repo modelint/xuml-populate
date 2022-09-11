@@ -175,6 +175,12 @@ class SubsystemVisitor(PTNodeVisitor):
         items = { "assoc_mult": children[0], "assoc_cname": children[1] }
         return items
 
+    def visit_binref(self, node, children):
+        """Single class to single class ref"""
+        id = 1 if len(children) < 3 else children[2]['I']  # referenced model identifier, default is I1
+        ref = {'source': children[0], 'target': children[1], 'id': id}
+        return ref
+
     def visit_ref1(self, node, children):
         """Either a simple or t or p reference (t or p if associative)"""
         id = 1 if len(children) < 3 else children[2]['I']  # referenced model identifier, default is I1
@@ -208,19 +214,20 @@ class SubsystemVisitor(PTNodeVisitor):
 
     def visit_genref(self, node, children):
         """Either abbreviated <subclass> source or explicit source for each subclass"""
-        return children[0]
+        genrefs = {'genrefs': children}
+        return genrefs
 
     def visit_single_line_genref(self, node, children):
         """Either a t or p reference, requires an association class"""
         id = 1 if len(children) < 3 else children[2]['I']  # referenced model identifier, default is I1
-        ref = { 'ref': {'source': children[0], 'target': children[1], 'id': id}}
-        return ref
+        grefs = { 'grefs': {'source': children[0], 'target': children[1], 'id': id}}
+        return grefs
 
 
     def visit_source_attrs(self, node, children):
         """Source attributes referring to target attributes"""
         class_name = children[0]['name']
-        attrs = [c['name'] for c in children[1:]]
+        attrs = children[1]
         items = {'class': class_name, 'attrs': attrs}
         return items
 
