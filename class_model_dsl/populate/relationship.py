@@ -64,6 +64,13 @@ class Relationship:
                                       self.domain.name])
             self.domain.model.Insert('Referring Class', [self.rnum, self.ref1_source['class'], self.domain.name])
             self.domain.model.Insert('Formalizing Class Role', [self.rnum, self.ref1_source['class'], self.domain.name])
+
+            # Simple Attribute Reference
+            for from_attr, to_attr in zip(self.ref1_source['attrs'], self.ref1_target['attrs']):
+                self.domain.model.Insert('Attribute Reference', [from_attr, self.ref1_source['class'], to_attr,
+                                                                 self.ref1_target['class'], self.domain.name,
+                                                                 self.rnum, 'R', self.ref1['id']])
+            print()
         else:  # Binary associative (with association class)
             # T Reference
             self.domain.model.Insert('Reference', ['T', self.ref1_source['class'], self.ref1_target['class'], self.rnum,

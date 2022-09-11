@@ -1,0 +1,38 @@
+metadata
+    Title : Elevator Management Class Model
+    Author : Leon Starr
+    Document ID : mint.elevator3.td.1
+    Version : 3.3.4
+    Creation date : June 21, 2018
+    Modification date : February 12, 2022
+    Organization : Model Integration, LLC / www.modelint.com
+    Copyright notice > MIT
+    Organization logo > mint
+domain Elevator Management, EVMAN
+subsystem Elevator, ELEV 1-99
+class Accessible Shaft Level
+attributes
+    Floor {I, R3}
+    Shaft {I, R3}
+    Bank {R3c}
+    Stop requested : Boolean
+--
+class Cabin
+attributes
+    Shaft {I, R2, R43}
+    Travel direction : Direction
+    Current floor {R43}
+--
+class Transfer
+attributes
+    Shaft {I, R53}
+    Destination floor {R53}
+--
+relationships
+    R53
+    is current destination of, 1c Cabin
+    is going to, 1c Accessible Shaft Level
+    1 Transfer
+    Transfer.Shaft -> Cabin.Shaft
+    Transfer.Destination floor -> Accessible Shaft Level.Floor
+--
