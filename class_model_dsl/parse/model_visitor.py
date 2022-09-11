@@ -190,33 +190,61 @@ class SubsystemVisitor(PTNodeVisitor):
     # Generalization
     def visit_gen_rel(self, node, children):
         """Generalization relationship"""
-        return {"superclass": children[0], "subclasses": children[1:]}
+        items = {k: v for d in children[1:] for k, v in d.items()}
+        items["superclass"] = children[0]
+        return items
 
     def visit_superclass(self, node, children):
         """Superclass in a generalization relationship"""
         return children[0]
 
+    def visit_subclasses(self, node, children):
+        """Subclass in a generalization relationship"""
+        return { 'subclasses': children }
+
     def visit_subclass(self, node, children):
         """Subclass in a generalization relationship"""
         return children[0]
+
+    def visit_genref(self, node, children):
+        """Either abbreviated <subclass> source or explicit source for each subclass"""
+        return children[0]
+
+    def visit_single_line_genref(self, node, children):
+        """Either a t or p reference, requires an association class"""
+        id = 1 if len(children) < 3 else children[2]['I']  # referenced model identifier, default is I1
+        ref = { 'ref': {'source': children[0], 'target': children[1], 'id': id}}
+        return ref
+
 
     def visit_source_attrs(self, node, children):
         """Source attributes referring to target attributes"""
         class_name = children[0]['name']
         attrs = [c['name'] for c in children[1:]]
-        items = {'class': class_name, 'attrs':attrs}
+        items = {'class': class_name, 'attrs': attrs}
         return items
 
     def visit_target_attrs(self, node, children):
         """Referenced target attributes"""
         class_name = children[0]['name']
-        attrs = [c['name'] for c in children[1:]]
+        attrs = children[1]
         items = {'class': class_name, 'attrs':attrs}
+        return items
+
+    def visit_allsubs_attrs(self, node, children):
+        """A subset of attrs from a single class"""
+        items = { 'class': '<subclass>', 'attrs': children[0]}
+        return items
+
+    def visit_single_class_attrs(self, node, children):
+        """A subset of attrs from a single class"""
+        items = { 'class': children[0], 'attrs': children[1]}
         return items
 
     def visit_attr_set(self, node, children):
         """Source attributes referring to some target"""
-        return children[0]
+        attrs = [c['name'] for c in children]
+        return attrs
 
     #---
 
