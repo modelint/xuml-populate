@@ -61,19 +61,25 @@ t_side = rel_side
 p_side = rel_side
 rel_side = indent phrase "," sp mult sp+ icaps_name nl  // One side of a binary association
 assoc_class = indent ('1' / 'M') sp+ icaps_name nl   // Association class
-ref1 = reference
-ref2 = reference
+ref1 = bin_ref
+ref2 = bin_ref
 
 // Generalization
-gen_rel = superclass subclass subclass+ // A generalization relationship
+gen_rel = superclass subclass subclass+ genref // A generalization relationship
 superclass = indent icaps_name sp? "+" nl // A superclass class name
 subclass = indent indent icaps_name nl  // A subclass class name
 
+// Genref
+genref = single_line_genref / bin_ref+ // Either abbreviated <subclass> source or explicit source for each subclass
+single_line_genref = indent allsubs_attrs sp '->' sp target_attrs (',' sp itag)? nl // Abbreviated in a single line
+
 // Reference
-reference = indent source_attrs sp '->' sp target_attrs (',' sp itag)? nl
-source_attrs = attr_set
-target_attrs = attr_set
-attr_set = class_name '.' ('(' attr_name (',' sp attr_name)+ ')' / attr_name)
+binref = indent source_attrs sp '->' sp target_attrs (',' sp itag)? nl // Single class to single class ref
+source_attrs = single_class_attrs // So parse visitor can define distinct source target dict keys
+target_attrs = single_class_attrs
+allsubs_attrs = '<subclass>' attr_set  // Abbreviation for same attrs from all subclasses in a generalization
+single_class_attrs = class_name attr_set // A subset of attrs from a single class
+attr_set = '.' ('(' attr_name (',' sp attr_name)+ ')' / attr_name))  // The subset attr names or name
 // ---
 
 // Words and delimiters

@@ -1,0 +1,44 @@
+metadata
+    Title : Elevator Management Class Model
+    Author : Leon Starr
+    Document ID : mint.elevator3.td.1
+    Version : 3.3.4
+    Creation date : June 21, 2018
+    Modification date : February 12, 2022
+    Organization : Model Integration, LLC / www.modelint.com
+    Copyright notice > MIT
+    Organization logo > mint
+domain Elevator Management, EVMAN
+subsystem Elevator, ELEV 1-99
+class Bank Level
+attributes
+    Bank {I, R29}
+    Floor {I, R29}
+--
+class Bottom Bank Level
+attributes
+    Bank {I, R38, R6}
+    Floor {I, R38}
+    Calling up : Boolean
+--
+class Middle Bank Level
+attributes
+    Bank {I, R38}
+    Floor {I, R38}
+    Calling up : Boolean
+    Calling down : Boolean
+--
+class Top Bank Level
+attributes
+    Bank {I, R38, R5}
+    Floor {I, R38}
+    Calling down : Boolean
+--
+relationships
+    R38
+    Bank Level +
+        Top Bank Level
+        Middle Bank Level
+        Bottom Bank Level
+    <subclass>.(Bank, Floor) -> Bank Level.(Bank, Floor)
+--
