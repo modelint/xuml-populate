@@ -39,8 +39,16 @@ class Generalization:
         self.relationship.domain.model.Insert('Minimal Partition', [
             self.relationship.rnum, self.relationship.domain.name, self.subclasses[0], self.subclasses[1]])
 
-        print()
         # Attribute References
+        # If abbreviated, expand <subclass> abbreviation one explcit reference per subclass
+        if len(self.genrefs) == 1 and self.genrefs[0]['source']['class'] == '<subclass>':
+            sources = [{'class': sub, 'attrs': self.genrefs[0]['source']['attrs']} for sub in self.subclasses]
+        else:
+            sources = [s for s in self.genrefs['source']]
+
+        print
+
+        # for s in self.subclasses:
         for from_attr, to_attr in zip(self.ref2_source['attrs'], self.ref2_target['attrs']):
             self.domain.model.Insert('Attribute Reference', [from_attr, self.ref2_source['class'], to_attr,
                                                              self.ref2_target['class'], self.domain.name,
