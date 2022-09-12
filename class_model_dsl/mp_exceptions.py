@@ -21,6 +21,20 @@ class CnumsExceeded(MDPopulationException):
     def __str__(self):
         return f'{pre}Exceeded maximum cnum {self.maxcnum} for subsystem. Adjust number range.{post}'
 
+class LnumsExceeded(MDPopulationException):
+    def __init__(self, maxlnum):
+        self.maxlnum = maxlnum
+
+    def __str__(self):
+        return f'{pre}Exceeded maximum lnum (lineage number) {self.maxlnum} for subsystem. Adjust number range.{post}'
+
+class LessThanTwoSubclassesInGeneralization(MDPopulationException):
+    def __init__(self, rnum):
+        self.rnum = rnum
+
+    def __str__(self):
+        return f'{pre}Generalization [{rnum}] requires at least two subclasses to form a minimal paritition.{post}'
+
 class MPIOException(MPException):
     pass
 

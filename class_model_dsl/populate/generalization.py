@@ -3,6 +3,8 @@ generalization.py – Convert parsed relationship to a relation
 """
 
 import logging
+from class_model_dsl.mp_exceptions import LessThanTwoSubclassesInGeneralization
+
 
 class Generalization:
     """
@@ -19,7 +21,23 @@ class Generalization:
         self.superclass = relationship.parse_data['superclass']
         self.genrefs = relationship.parse_data['genrefs']
 
-        self.relationship.domain.model.Insert('Generalization', [self.relationship.rnum, self.relationship.domain.name])
+        self.relationship.domain.model.Insert('Generalization', [
+            self.relationship.rnum, self.relationship.domain.name, self.superclass])
+        # Superclass
+        self.relationship.domain.model.Insert('Facet', [
+            self.relationship.rnum, self.superclass, self.relationship.domain.name])
+        self.relationship.domain.model.Insert('Superclass', [
+            self.relationship.rnum, self.superclass, self.relationship.domain.name])
+        for subclass in self.subclasses:
+            self.relationship.domain.model.Insert('Facet', [
+                self.relationship.rnum, subclass, self.relationship.domain.name])
+            self.relationship.domain.model.Insert('Subclass', [
+                self.relationship.rnum, subclass, self.relationship.domain.name])
+        if len(self.subclasses) < 2:
+            self.logger.error(f"Less than two subclasses in [{self.relationship.rnum}].")
+            raise LessThanTwoSubclassesInGeneralization(rnum=self.relationship.rnum)
+        self.relationship.domain.model.Insert('Minimal Partition', [
+            self.relationship.rnum, self.relationship.domain.name, self.subclasses[0], self.subclasses[1]])
 
         print()
         # Attribute References

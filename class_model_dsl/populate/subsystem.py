@@ -3,7 +3,7 @@ subsystem.py – Convert parsed subsystem to a relation
 """
 
 import logging
-from class_model_dsl.mp_exceptions import CnumsExceeded
+from class_model_dsl.mp_exceptions import CnumsExceeded, LnumsExceeded
 
 class Subsystem:
     """
@@ -20,6 +20,7 @@ class Subsystem:
         self.alias = parse_data['alias']
         self.range = parse_data['range']
         self.cnum = self.range[0]
+        self.lnum = self.range[0]
 
         # Insert the subsystem relation
         self.domain.model.population['Subsystem'] = [
@@ -41,3 +42,11 @@ class Subsystem:
         else:
             self.logger.error(f"Max cnums {self.range[1]} exceeded in subsystem: {self.name}")
             raise CnumsExceeded(self.range[1])
+
+    def next_lnum(self):
+        if self.lnum <= self.range[1]:
+            self.lnum += 1
+            return "L"+str(self.lnum-1)
+        else:
+            self.logger.error(f"Max lnums {self.range[1]} exceeded in subsystem: {self.name}")
+            raise LnumsExceeded(self.range[1])
