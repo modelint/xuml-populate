@@ -26,7 +26,7 @@ class Subsystem:
         self.domain.model.population['Subsystem'] = [
             {'Name': self.name}, {'First element number': self.range[0]},
             {'Domain': self.domain.name}, {'Alias': self.alias} ]
-        self.domain.model.population['Domain Parition'] = [{'Number': self.range[0]}, {'Domain': self.domain.name}]
+        self.domain.model.population['Domain Partition'] = [{'Number': self.range[0]}, {'Domain': self.domain.name}]
 
         # Note that we are creating a partition for the lowest boundary only
         # Even though the user has expressed both a low and high value. We ignore th high value (range[1])
