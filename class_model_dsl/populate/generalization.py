@@ -57,10 +57,8 @@ class Generalization:
             self.relationship.domain.model.Insert('Formalizing Class Role',
                                                   [self.relationship.rnum, ref['source']['class'],
                                                                            self.relationship.domain.name])
-        print()
-
-        # for from_attr, to_attr in zip(self.ref2_source['attrs'], self.ref2_target['attrs']):
-        #     self.domain.model.Insert('Attribute Reference', [from_attr, self.ref2_source['class'], to_attr,
-        #                                                      self.ref2_target['class'], self.domain.name,
-        #                                                      self.rnum, 'P', self.ref1['id']])
-        print()
+            # Create attribute references for each subclass -> superclass reference
+            for from_attr, to_attr in zip(ref['source']['attrs'], ref['target']['attrs']):
+                self.relationship.domain.model.Insert('Attribute Reference', [from_attr, ref['source']['class'], to_attr,
+                                                                 ref['target']['class'], self.relationship.domain.name,
+                                                                 self.relationship.rnum, 'G', ref['id']])
