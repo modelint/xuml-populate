@@ -46,6 +46,5 @@ class ClassModel:
     def Populate(self):
         """Populate the database from the parsed input"""
 
+        self.logger.info("Populating the model")
         Domain(model=self, parse_data=self.subsystem)
-
-        print("Look at model")

@@ -28,6 +28,7 @@ class BinaryAssociation:
         self.assoc_mult = relationship.parse_data.get('assoc_mult')
 
         # Populate
+        self.logger.info(f"Populating Binary Association [{self.relationship.rnum}]")
         self.relationship.domain.model.Insert('Association', [self.relationship.rnum, self.relationship.domain.name])
         self.relationship.domain.model.Insert('Binary Association',
                                               [self.relationship.rnum, self.relationship.domain.name])
@@ -82,7 +83,6 @@ class BinaryAssociation:
                                                       [from_attr, self.ref1_source['class'], to_attr,
                                                        self.ref1_target['class'], self.relationship.domain.name,
                                                        self.relationship.rnum, 'R', self.ref1['id']])
-            print()
         else:  # Binary associative (with association class)
             # T Reference
             self.relationship.domain.model.Insert('Reference',
@@ -137,4 +137,3 @@ class BinaryAssociation:
                                                       [from_attr, self.ref2_source['class'], to_attr,
                                                        self.ref2_target['class'], self.relationship.domain.name,
                                                        self.relationship.rnum, 'P', self.ref1['id']])
-            print()

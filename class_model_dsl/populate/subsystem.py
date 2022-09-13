@@ -23,6 +23,7 @@ class Subsystem:
         self.lnum = self.range[0]
 
         # Insert the subsystem relation
+        self.logger.info(f"Populating subsystem [{self.name}]")
         self.domain.model.population['Subsystem'] = [
             {'Name': self.name}, {'First element number': self.range[0]},
             {'Domain': self.domain.name}, {'Alias': self.alias} ]

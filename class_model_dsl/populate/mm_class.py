@@ -26,6 +26,7 @@ class MMclass:
         cnum = self.subsys.next_cnum()
 
         # Populate class
+        self.logger.info(f"Populating class [{self.name}]")
         class_values = dict(
             zip(self.domain.model.table_headers['Class'], [self.parse_data['name'], cnum, self.domain.name])
         )
@@ -52,5 +53,3 @@ class MMclass:
 
         for a in self.attributes:
             Attribute(mmclass=self, parse_data=a)
-
-        print()

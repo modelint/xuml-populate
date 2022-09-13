@@ -21,6 +21,8 @@ class Generalization:
         self.superclass = relationship.parse_data['superclass']
         self.genrefs = relationship.parse_data['genrefs']
 
+        # Populate
+        self.logger.info(f"Populating Generalization [{self.relationship.rnum}]")
         self.relationship.domain.model.Insert('Generalization', [
             self.relationship.rnum, self.relationship.domain.name, self.superclass])
         # Superclass

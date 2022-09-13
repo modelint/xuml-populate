@@ -15,3 +15,4 @@ class Lineage:
         self.logger = logging.getLogger(__name__)
 
         self.domain = domain
+        self.logger.info(f"Skipping lineage for now")

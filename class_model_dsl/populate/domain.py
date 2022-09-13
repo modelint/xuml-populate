@@ -23,6 +23,7 @@ class Domain:
         self.alias = parse_data.domain['alias']
 
         # Insert the domain relation
+        self.logger.info(f"Populating modeled domain [{self.name}]")
         self.model.population['Domain'] = [{'Name': self.name}, {'Alias': self.alias}]
         # TODO: For now assume this is always a modeled domain, but need a way to specify a realized domain
         self.model.population['Modeled Domain'] = [{'Name': self.name}, ]
@@ -31,12 +32,15 @@ class Domain:
         s = Subsystem(domain=self, parse_data=parse_data.subsystem)
 
         # Insert classes
+        self.logger.info("Populating classes")
         for c in self.parse_data.classes:
             MMclass(domain=self, subsys=s, parse_data=c)
 
         # Insert relationships
+        self.logger.info("Populating relationships")
         for r in self.parse_data.rels:
             Relationship(domain=self, parse_data=r)
 
+        self.logger.info("Populating lineage")
         Lineage(domain=self)
 
