@@ -42,13 +42,16 @@ class Generalization:
         # Attribute References
         # If abbreviated, expand <subclass> abbreviation one explcit reference per subclass
         if len(self.genrefs) == 1 and self.genrefs[0]['source']['class'] == '<subclass>':
-            sources = [{'class': sub, 'attrs': self.genrefs[0]['source']['attrs']} for sub in self.subclasses]
-        else:
-            sources = [s for s in self.genrefs['source']]
+            self.genrefs = [{'source': {'class': s, 'attrs': self.genrefs[0]['source']['attrs']},
+                             'target': self.genrefs[0]['target']} for s in self.subclasses]
 
         print
 
         # for s in self.subclasses:
+        self.relationship.domain.model.Insert('Reference',
+                                              ['G', sources['class'], self.ref2_target['class'], self.relationship.rnum,
+                                               self.relationship.domain.name])
+
         for from_attr, to_attr in zip(self.ref2_source['attrs'], self.ref2_target['attrs']):
             self.domain.model.Insert('Attribute Reference', [from_attr, self.ref2_source['class'], to_attr,
                                                              self.ref2_target['class'], self.domain.name,
