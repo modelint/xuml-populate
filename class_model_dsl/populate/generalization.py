@@ -45,15 +45,22 @@ class Generalization:
             self.genrefs = [{'source': {'class': s, 'attrs': self.genrefs[0]['source']['attrs']},
                              'target': self.genrefs[0]['target']} for s in self.subclasses]
 
-        print
+        for ref in self.genrefs:
+            self.relationship.domain.model.Insert('Reference',
+                                                  ['G', ref['source']['class'], ref['target']['class'],
+                                                   self.relationship.rnum,
+                                                   self.relationship.domain.name])
+            self.relationship.domain.model.Insert('Generalization Reference',
+                                                  [ref['source']['class'], ref['target']['class'],
+                                                   self.relationship.rnum,
+                                                   self.relationship.domain.name])
+            self.relationship.domain.model.Insert('Formalizing Class Role',
+                                                  [self.relationship.rnum, ref['source']['class'],
+                                                                           self.relationship.domain.name])
+        print()
 
-        # for s in self.subclasses:
-        self.relationship.domain.model.Insert('Reference',
-                                              ['G', sources['class'], self.ref2_target['class'], self.relationship.rnum,
-                                               self.relationship.domain.name])
-
-        for from_attr, to_attr in zip(self.ref2_source['attrs'], self.ref2_target['attrs']):
-            self.domain.model.Insert('Attribute Reference', [from_attr, self.ref2_source['class'], to_attr,
-                                                             self.ref2_target['class'], self.domain.name,
-                                                             self.rnum, 'P', self.ref1['id']])
+        # for from_attr, to_attr in zip(self.ref2_source['attrs'], self.ref2_target['attrs']):
+        #     self.domain.model.Insert('Attribute Reference', [from_attr, self.ref2_source['class'], to_attr,
+        #                                                      self.ref2_target['class'], self.domain.name,
+        #                                                      self.rnum, 'P', self.ref1['id']])
         print()
