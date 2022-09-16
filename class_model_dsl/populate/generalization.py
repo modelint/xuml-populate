@@ -42,16 +42,18 @@ class Generalization:
             self.relationship.rnum, self.relationship.domain.name, self.subclasses[0], self.subclasses[1]])
 
         # Attribute References
-        # If abbreviated, expand <subclass> abbreviation one explcit reference per subclass
+        # If abbreviated, expand <subclass> abbreviation to one explicit reference per subclass
         if len(self.genrefs) == 1 and self.genrefs[0]['source']['class'] == '<subclass>':
             self.genrefs = [{'source': {'class': s, 'attrs': self.genrefs[0]['source']['attrs']},
-                             'target': self.genrefs[0]['target']} for s in self.subclasses]
+                             'target': self.genrefs[0]['target'], 'id': self.genrefs[0]['id']} for s in self.subclasses]
 
         for ref in self.genrefs:
             self.relationship.domain.model.Insert('Reference',
                                                   ['G', ref['source']['class'], ref['target']['class'],
                                                    self.relationship.rnum,
                                                    self.relationship.domain.name])
+            # To satisfy SQL standard, we need to add the Ref attribute so that the foreign key
+            # references the identifier of the Reference table
             self.relationship.domain.model.Insert('Generalization Reference',
                                                   ['G', ref['source']['class'], ref['target']['class'],
                                                    self.relationship.rnum,
