@@ -53,14 +53,15 @@ class Generalization:
                                                    self.relationship.rnum,
                                                    self.relationship.domain.name])
             self.relationship.domain.model.Insert('Generalization Reference',
-                                                  [ref['source']['class'], ref['target']['class'],
+                                                  ['G', ref['source']['class'], ref['target']['class'],
                                                    self.relationship.rnum,
                                                    self.relationship.domain.name])
             self.relationship.domain.model.Insert('Formalizing Class Role',
                                                   [self.relationship.rnum, ref['source']['class'],
-                                                                           self.relationship.domain.name])
+                                                   self.relationship.domain.name])
             # Create attribute references for each subclass -> superclass reference
             for from_attr, to_attr in zip(ref['source']['attrs'], ref['target']['attrs']):
-                self.relationship.domain.model.Insert('Attribute Reference', [from_attr, ref['source']['class'], to_attr,
-                                                                 ref['target']['class'], self.relationship.domain.name,
-                                                                 self.relationship.rnum, 'G', ref['id']])
+                self.relationship.domain.model.Insert('Attribute Reference',
+                                                      [from_attr, ref['source']['class'], to_attr,
+                                                       ref['target']['class'], self.relationship.domain.name,
+                                                       self.relationship.rnum, 'G', ref['id']])
