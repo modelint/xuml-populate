@@ -10,23 +10,14 @@ from sqlalchemy import event
 from sqlalchemy.engine import Engine
 from sqlite3 import Connection as SQLite3Connection
 
-
+# By default, SQLlite does NOT enforce foreign keys. We need enable fkey enforcement
+# when we connect to the DB
 @event.listens_for(Engine, "connect")
 def _set_sqlite_pragma(dbapi_connection, connection_record):
     if isinstance(dbapi_connection, SQLite3Connection):
         cursor = dbapi_connection.cursor()
         cursor.execute("PRAGMA foreign_keys=ON")
         cursor.close()
-
-
-population = { 'Domain': [], 'Class': [], 'Attributes': [] } # Database population to be generated
-
-def Populate():
-    """
-    Populate the database with all the built relvars
-    :return:
-    """
-    pass
 
 
 def Create_relvars():
@@ -37,8 +28,8 @@ def Create_relvars():
     metadata.
     """
     from class_model_dsl.database import relvars
-    SMmetaDB.Relvars = relvars.define(SMmetaDB)
-    SMmetaDB.MetaData.create_all(SMmetaDB.Engine)
+    SMmetaDB.Relvars = relvars.define(SMmetaDB)    # Defines all the tables as a dictionary
+    SMmetaDB.MetaData.create_all(SMmetaDB.Engine)  # Creates all the tables in the DB
 
 
 class SMmetaDB:
@@ -66,7 +57,7 @@ class SMmetaDB:
         """
         Create the sqlite3 database using Sqlalchemy
 
-        :param rebuild: During development this will usually be true.  For deployment it should be false.
+        :param rebuild: During development this will usually be true. For deployment it should be false.
         """
         self.logger = logging.getLogger(__name__)
         self.rebuild = rebuild
@@ -75,7 +66,7 @@ class SMmetaDB:
             self.logger.warning("Database rebuild requested, rebuilding SM meta database")
             # Start with a fresh database
             if SMmetaDB.File.exists():
-                SMmetaDB.File.unlink()
+                SMmetaDB.File.unlink()  # Delete the db file
         else:  # No rebuild requested
             if SMmetaDB.File.exists():
                 self.logger.info("Using existing database")

@@ -10,9 +10,10 @@ from sqlalchemy import ForeignKey, UniqueConstraint, PrimaryKeyConstraint, Forei
 
 def define(db) -> dict:
     """
-    Define all the relvars in the Shlaer-Mellor Metamodel Database.
+    Create table schemas in the supplied database. Each table is a relvar (relational variable) as defined by
+    C.J. Date. Each metamodel class in the Shlaer-Mellor Metamodel (see Github) defines a separate relvar.
 
-    :param db: A SM meta database class which provides an Sqlalchemy MetaData attribute
+    :param db: An SM meta database class which provides an Sqlalchemy MetaData attribute
     :return: Dictionary of table name key, table schema value pairs
     """
     return {

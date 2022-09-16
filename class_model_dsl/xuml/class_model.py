@@ -22,6 +22,7 @@ class ClassModel:
         self.table_names = [t for t in self.db.MetaData.tables.keys()]
         self.table_headers = { tname: [attr.name for attr in self.db.MetaData.tables[tname].c] for tname in self.table_names }
         self.scope = {}
+        self.model = None
 
         self.logger.info("Parsing the model")
         # Parse the model
@@ -48,3 +49,14 @@ class ClassModel:
 
         self.logger.info("Populating the model")
         Domain(model=self, parse_data=self.subsystem)
+
+        self.logger.info("Inserting relations into schema")
+        # Test populating domain relvar
+        # t = self.db.MetaData.tables['Domain']
+        # t = SMmetaDB.Relvars['Domain']
+        # p = self.population['Domain']
+        # self.db.Connection.execute(t.insert(), p)
+        # print()
+        for relvar_name, relation in self.population.items():
+            t = SMmetaDB.Relvars[relvar_name]
+            self.db.Connection.execute(t.insert(), relation)  # Sqlalchemy populates the table schema

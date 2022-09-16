@@ -24,7 +24,7 @@ class Domain:
 
         # Insert the domain relation
         self.logger.info(f"Populating modeled domain [{self.name}]")
-        self.model.population['Domain'] = [{'Name': self.name}, {'Alias': self.alias}]
+        self.model.population['Domain'] = [{'Name': self.name, 'Alias': self.alias}, ]
         # TODO: For now assume this is always a modeled domain, but need a way to specify a realized domain
         self.model.population['Modeled Domain'] = [{'Name': self.name}, ]
 
@@ -43,4 +43,6 @@ class Domain:
 
         self.logger.info("Populating lineage")
         Lineage(domain=self)
+
+
 
