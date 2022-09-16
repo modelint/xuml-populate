@@ -59,4 +59,5 @@ class ClassModel:
         # print()
         for relvar_name, relation in self.population.items():
             t = SMmetaDB.Relvars[relvar_name]
-            self.db.Connection.execute(t.insert(), relation)  # Sqlalchemy populates the table schema
+            if relation:
+                self.db.Connection.execute(t.insert(), relation)  # Sqlalchemy populates the table schema

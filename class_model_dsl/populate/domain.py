@@ -39,7 +39,7 @@ class Domain:
         # Insert relationships
         self.logger.info("Populating relationships")
         for r in self.parse_data.rels:
-            Relationship(domain=self, parse_data=r)
+            Relationship(domain=self, subsys=s, parse_data=r)
 
         self.logger.info("Populating lineage")
         Lineage(domain=self)
