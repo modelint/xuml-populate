@@ -44,7 +44,8 @@ class BinaryAssociation:
                                               )
         self.relationship.domain.model.Insert('Asymmetric Perspective',
                                               ['T', self.relationship.rnum, self.relationship.domain.name])
-        self.relationship.domain.model.Insert('T Perspective', [self.relationship.rnum, self.relationship.domain.name])
+        # Need to add 'Side' so that R105 works in SQL
+        self.relationship.domain.model.Insert('T Perspective', ['T', self.relationship.rnum, self.relationship.domain.name])
 
         self.relationship.domain.model.Insert('Perspective',
                                               ['P', self.relationship.rnum, self.relationship.domain.name,
@@ -53,7 +54,8 @@ class BinaryAssociation:
                                               )
         self.relationship.domain.model.Insert('Asymmetric Perspective',
                                               ['P', self.relationship.rnum, self.relationship.domain.name])
-        self.relationship.domain.model.Insert('P Perspective', [self.relationship.rnum, self.relationship.domain.name])
+        # Need to add 'Side' so that R105 works in SQL
+        self.relationship.domain.model.Insert('P Perspective', ['P', self.relationship.rnum, self.relationship.domain.name])
 
         # Create reference
         if not self.ref2:  # Simple binary association
@@ -101,8 +103,9 @@ class BinaryAssociation:
                                                   ['T', self.ref1_source['class'], self.ref1_target['class'],
                                                    self.relationship.rnum,
                                                    self.relationship.domain.name])
+            # Add Ref type for SQL on R153
             self.relationship.domain.model.Insert('T Reference',
-                                                  [self.ref1_source['class'], self.ref1_target['class'],
+                                                  ['T', self.ref1_source['class'], self.ref1_target['class'],
                                                    self.relationship.rnum,
                                                    self.relationship.domain.name])
             # T Attribute References
@@ -126,8 +129,9 @@ class BinaryAssociation:
                                                   ['P', self.ref2_source['class'], self.ref2_target['class'],
                                                    self.relationship.rnum,
                                                    self.relationship.domain.name])
+            # Add Ref type for SQL on R153
             self.relationship.domain.model.Insert('P Reference',
-                                                  [self.ref2_source['class'], self.ref1_target['class'],
+                                                  ['P', self.ref2_source['class'], self.ref2_target['class'],
                                                    self.relationship.rnum,
                                                    self.relationship.domain.name])
 
@@ -136,4 +140,4 @@ class BinaryAssociation:
                 self.relationship.domain.model.Insert('Attribute Reference',
                                                       [from_attr, self.ref2_source['class'], to_attr,
                                                        self.ref2_target['class'], self.relationship.domain.name,
-                                                       self.relationship.rnum, 'P', self.ref1['id']])
+                                                       self.relationship.rnum, 'P', self.ref2['id']])
