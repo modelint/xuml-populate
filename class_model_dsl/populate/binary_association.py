@@ -60,7 +60,7 @@ class BinaryAssociation:
         # Create reference
         if not self.ref2:  # Simple binary association
             self.relationship.domain.model.Insert('Reference',
-                                                  ['R', self.ref1_source['class'], self.ref1_source['class'],
+                                                  ['R', self.ref1_source['class'], self.ref1_target['class'],
                                                    self.relationship.rnum,
                                                    self.relationship.domain.name])
             referenced_perspective = 'T' if self.ref1_target['class'] == self.t_side['cname'] else 'P'
@@ -69,8 +69,9 @@ class BinaryAssociation:
                                                    self.relationship.rnum,
                                                    self.relationship.domain.name,
                                                    referenced_perspective])
+            # Add Ref type for SQL on R176
             self.relationship.domain.model.Insert('Simple Association Reference',
-                                                  [self.ref1_source['class'], self.ref1_target['class'],
+                                                  ['R', self.ref1_source['class'], self.ref1_target['class'],
                                                    self.relationship.rnum,
                                                    self.relationship.domain.name])
             self.relationship.domain.model.Insert('Referring Class', [self.relationship.rnum, self.ref1_source['class'],

@@ -385,6 +385,7 @@ def define(db) -> dict:
                                                              'Perspective.Side'], name='R154'),
                                        ),
         'Simple Association Reference': Table('Simple Association Reference', db.MetaData,
+                                              Column('Ref type', Text, nullable=False, primary_key=False),
                                               Column('From class', Text, nullable=False, primary_key=True),
                                               Column('To class', Text, nullable=False, primary_key=True),
                                               Column('Rnum', Text, nullable=False, primary_key=True),
@@ -392,8 +393,8 @@ def define(db) -> dict:
                                               PrimaryKeyConstraint('From class', 'To class', 'Rnum', 'Domain',
                                                                    name='I'),
                                               ForeignKeyConstraint(
-                                                  ('From class', 'To class', 'Rnum', 'Domain',),
-                                                  ['Association Reference.From class',
+                                                  ('Ref type', 'From class', 'To class', 'Rnum', 'Domain',),
+                                                  ['Association Reference.Ref type', 'Association Reference.From class',
                                                    'Association Reference.To class', 'Association Reference.Rnum',
                                                    'Association Reference.Domain'], name='R176'),
                                               ForeignKeyConstraint(
