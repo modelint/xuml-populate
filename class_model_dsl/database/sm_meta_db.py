@@ -1,7 +1,6 @@
 """
 sm_meta_db.py - Loads the existing Shlaer-Mellor Metamodel database
 """
-import sys
 import logging
 import logging.config
 from pathlib import Path
@@ -11,7 +10,8 @@ from sqlalchemy.engine import Engine
 from sqlite3 import Connection as SQLite3Connection
 
 # By default, SQLlite does NOT enforce foreign keys. We need enable fkey enforcement
-# when we connect to the DB
+# when we connect to the DB. SQLAlchemy 1.4 Events / Event Registration doc specifies this pattern
+# The decorator does something with the eonnection_record param, so yeah, it's apparently necessary
 @event.listens_for(Engine, "connect")
 def _set_sqlite_pragma(dbapi_connection, connection_record):
     if isinstance(dbapi_connection, SQLite3Connection):
