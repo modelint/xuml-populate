@@ -63,7 +63,7 @@ class SMmetaDB:
         self.rebuild = rebuild
 
         if self.rebuild:  # DB rebuild requested
-            self.logger.warning("Database rebuild requested, rebuilding SM meta database")
+            self.logger.info("Database rebuild requested, rebuilding SM meta database")
             # Start with a fresh database
             if SMmetaDB.File.exists():
                 SMmetaDB.File.unlink()  # Delete the db file

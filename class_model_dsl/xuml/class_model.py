@@ -27,7 +27,7 @@ class ClassModel:
         self.logger.info("Parsing the model")
         # Parse the model
         try:
-            self.model = ModelParser(model_file_path=self.xuml_model_path, debug=True)
+            self.model = ModelParser(model_file_path=self.xuml_model_path, debug=False)
         except MPIOException as e:
             sys.exit(e)
         try:

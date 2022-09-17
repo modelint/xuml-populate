@@ -354,7 +354,7 @@ def define(db) -> dict:
                                           Column('Superclass', Text, nullable=False, primary_key=True),
                                           Column('Rnum', Text, nullable=False, primary_key=True),
                                           Column('Domain', Text, nullable=False, primary_key=True),
-                                          PrimaryKeyConstraint('Ref', 'Subclass', 'Superclass', 'Rnum', 'Domain',
+                                          PrimaryKeyConstraint('Subclass', 'Superclass', 'Rnum', 'Domain',
                                                                name='I'),
                                           ForeignKeyConstraint(('Ref', 'Subclass', 'Superclass', 'Rnum', 'Domain',),
                                                                ['Reference.Ref', 'Reference.From class',
