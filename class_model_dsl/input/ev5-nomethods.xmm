@@ -62,6 +62,13 @@ attributes
     Name : Level Name {I}
     Height : Distance {I2}
 --
+class Floor Service
+attributes
+    Floor {I, I2, R49}
+    Shaft {I, R49}
+    Direction : Direction {I, I2}
+    Bank {I2, R49}
+--
 class Middle Bank Level
 attributes
     Bank {I, R38}
@@ -114,6 +121,16 @@ relationships
     passengers enter via, 1 Door
     Door.Shaft -> Cabin.Shaft
 --
+    R5
+    is the highest floor serviceable by, 1 Bank
+    provides service up to, 1 Top Bank Level
+    Top Bank Level.Bank -> Bank.Name
+--
+    R6
+    is the lowest floor serviceable by, 1 Bank
+    provides service down to, 1 Bottom Bank Level
+    Bottom Bank Level.Bank -> Bank.Name
+--
     R28
     intersects and opens onto, M Floor
     is intersected and accessed by, M Shaft
@@ -139,6 +156,13 @@ relationships
     is location of, 1c Cabin
     is at, 1 Shaft Level
     Cabin.(Shaft, Current floor) -> Shaft Level.(Shaft, Floor)
+--
+    R49
+    call has chosen for service, 1c Accessible Shaft Level
+    will service call from, 1c Bank Level
+    M Floor Service
+    Floor Service.(Floor, Bank) -> Bank Level.(Floor, Bank)
+    Floor Service.(Floor, Shaft) -> Accessible Shaft Level.(Floor, Shaft)
 --
     R53
     is current destination of, 1c Cabin
