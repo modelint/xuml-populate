@@ -51,12 +51,6 @@ class ClassModel:
         Domain(model=self, parse_data=self.subsystem)
 
         self.logger.info("Inserting relations into schema")
-        # Test populating domain relvar
-        # t = self.db.MetaData.tables['Domain']
-        # t = SMmetaDB.Relvars['Domain']
-        # p = self.population['Domain']
-        # self.db.Connection.execute(t.insert(), p)
-        # print()
         for relvar_name, relation in self.population.items():
             t = SMmetaDB.Relvars[relvar_name]
             if relation:
