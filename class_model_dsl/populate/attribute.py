@@ -6,7 +6,7 @@ import logging
 
 class Attribute:
     """
-    Build all attributes for a class
+    Populate an attribute of a class
     """
     def __init__(self, mmclass, parse_data):
         """Constructor"""
@@ -27,19 +27,21 @@ class Attribute:
 
         for i in self.identifiers:
             # Add Identifier if it is not already in the population
-            if i not in self.mmclass.identifiers:
+            if i.number not in self.mmclass.identifiers:
                 id_values = dict(
                     zip(self.mmclass.domain.model.table_headers['Identifier'],
-                        [i, self.mmclass.name, self.mmclass.domain.name])
+                        [i.number, self.mmclass.name, self.mmclass.domain.name])
                 )
                 self.mmclass.domain.model.population['Identifier'].append(id_values)
-                # TODO: Check for super or irreducible, for now assume the latter
-                self.mmclass.domain.model.population['Irreducible Identifier'].append(id_values)
-                self.mmclass.identifiers.add(i)
+                if not i.super:
+                    self.mmclass.domain.model.population['Irreducible Identifier'].append(id_values)
+                else:
+                    self.mmclass.domain.model.population['Super Identifier'].append(id_values)
+                self.mmclass.identifiers.add(i.number)
 
             # Include this attribute in the each of its identifiers
             id_attr_values = dict(
                 zip(self.mmclass.domain.model.table_headers['Identifier Attribute'],
-                    [i, self.parse_data['name'], self.mmclass.name, self.mmclass.domain.name])
+                    [i.number, self.parse_data['name'], self.mmclass.name, self.mmclass.domain.name])
             )
             self.mmclass.domain.model.population['Identifier Attribute'].append(id_attr_values)

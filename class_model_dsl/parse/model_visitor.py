@@ -1,6 +1,9 @@
 """ model_visitor.py """
 
 from arpeggio import PTNodeVisitor
+from collections import namedtuple
+
+ID = namedtuple('_ID', 'number super')
 
 class SubsystemVisitor(PTNodeVisitor):
 
@@ -127,8 +130,15 @@ class SubsystemVisitor(PTNodeVisitor):
 
     def visit_itag(self, node, children):
         """Identifier attribute tag"""
-        itag = { 'I': 1 if not children else int(children[0]) }
-        return itag
+        itag = None
+        if not children:
+            itag = ID(1, False)
+        else:
+            super = True if children[0] == '*' else False
+            tag_num = children[0] if not super else children[1]
+            itag = ID(int(tag_num), super)
+        id = {'I': itag }
+        return id
 
     # Relationships
     # ---
