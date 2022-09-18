@@ -52,8 +52,16 @@ rtag = 'R' ordinal 'c'? // Relationship number and optional c constraint signifi
 // ---
 rel_section = relationship_header rel*  // All relationships in the subsystem
 relationship_header = "relationships" nl
-rel = rname (binary_rel / gen_rel) block_end  // A rel is either a binary association or a generalization
+rel = rname (ordinal_rel / binary_rel / gen_rel) block_end  // A rel is an ordinal, association or a generalization
 rname = indent rnum nl  // Name of a rel is its rnum
+
+// Ordinal
+ordinal_rel = ascend oform
+ascend = indent highval sp '/' sp lowval ',' sp class_name nl
+highval = phrase
+lowval = phrase
+oform = indent rank_attr sp ':' sp itag nl
+rank_attr = attr_name
 
 // Binary association
 binary_rel = t_side p_side assoc_class? ref1 ref2? // Both sides

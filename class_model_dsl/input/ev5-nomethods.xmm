@@ -131,6 +131,10 @@ relationships
     provides service down to, 1 Bottom Bank Level
     Bottom Bank Level.Bank -> Bank.Name
 --
+    OR7
+    higher / lower, Floor
+    Height : I
+--
     R28
     intersects and opens onto, M Floor
     is intersected and accessed by, M Shaft

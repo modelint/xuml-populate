@@ -144,6 +144,22 @@ class SubsystemVisitor(PTNodeVisitor):
         """The Rnum on any relationship"""
         return {"rnum": children[0]}
 
+    # Ordinal relationship
+    def visit_ordinal_rel (self, node, children):
+        """Ordinal relationship """
+        items = {k: v for d in children for k, v in d.items()}
+        return items
+
+    def visit_ascend(self, node, children):
+        """Ascend-descend phrases"""
+        items = {node.rule_name: {"highval": children[0], "lowval": children[1], "cname": children[2]['name']}}
+        return items
+
+    def visit_oform(self, node, children):
+        """Ordinal formalization"""
+        items = {node.rule_name: {"ranking attr": children[0], "id": children[1]['I']}}
+        return items
+
     # Binary association
     def visit_binary_rel(self, node, children):
         """Binary relationship with or without an association class"""
