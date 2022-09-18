@@ -167,7 +167,7 @@ class SubsystemVisitor(PTNodeVisitor):
 
     def visit_oform(self, node, children):
         """Ordinal formalization"""
-        items = {node.rule_name: {"ranking attr": children[0], "id": children[1]['I']}}
+        items = {node.rule_name: {"ranking attr": children[0], "id": children[1]['I'].number}}
         return items
 
     # Binary association
