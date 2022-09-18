@@ -32,7 +32,7 @@ relationships
     R53
     is current destination of, 1c Cabin
     is going to, 1c Accessible Shaft Level
-    1 Transfer
+ ev2-assoc-class.xmm   1 Transfer
     Transfer.Shaft -> Cabin.Shaft
     Transfer.Destination floor -> Accessible Shaft Level.Floor
 --
