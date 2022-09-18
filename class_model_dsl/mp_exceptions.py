@@ -14,6 +14,10 @@ class MPException(Exception):
 class MDPopulationException(MPException):
     pass
 
+class UnknownRelationshipType(MDPopulationException):
+    def __str__(self):
+        return f'{pre}Relationship is not a Generalization, Ordinal or Assocation.{post}'
+
 class CnumsExceeded(MDPopulationException):
     def __init__(self, maxcnum):
         self.maxcnum = maxcnum
