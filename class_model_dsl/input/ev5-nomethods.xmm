@@ -114,7 +114,7 @@ relationships
     is accessible in, 1c Bank Level
     1 Accessible Shaft Level
     Accessible Shaft Level.(Floor, Shaft) -> Shaft Level.(Floor, Shaft)
-    Accessible Shaft Level.(Floor, Bank) -> Bank Level.(Bank, Floor)
+    Accessible Shaft Level.(Floor, Bank) -> Bank Level.(Floor, Bank)
 --
     R4
     is passenger entry for, 1 Cabin

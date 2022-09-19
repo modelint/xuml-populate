@@ -9,6 +9,7 @@ from class_model_dsl.parse.model_parser import ModelParser
 from class_model_dsl.mp_exceptions import ModelParseError, MPIOException
 from class_model_dsl.database.sm_meta_db import SMmetaDB
 from class_model_dsl.populate.domain import Domain
+from class_model_dsl.populate.attribute import ResolveAttrTypes
 
 class ClassModel:
 
@@ -36,6 +37,9 @@ class ClassModel:
             sys.exit(e)
 
         self.Populate()
+        ResolveAttrTypes()
+
+
 
     def Insert(self, table_name, instance):
         """Insert the instance in the named table dictionary"""
