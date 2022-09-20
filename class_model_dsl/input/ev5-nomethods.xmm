@@ -19,7 +19,7 @@ attributes
 --
 class Bank
 attributes
-    Name : Name {I}
+    Name : Bank Name {I}
     Passenger load time : Duration
     Block clear time : Duration
     Max close attempts : Count
@@ -39,7 +39,7 @@ attributes
 --
 class Building
 attributes
-    Name : Name {I}
+    Name : Building Name {I}
     Average floor gap : Distance
 --
 class Cabin

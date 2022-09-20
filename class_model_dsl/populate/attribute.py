@@ -4,21 +4,32 @@ attribute.py – Create an attribute relation
 
 import logging
 from class_model_dsl.database.sm_meta_db import SMmetaDB as smdb
-from sqlalchemy import select, join, func, and_
+from sqlalchemy import select, join, and_
 from collections import namedtuple
 
 I_Attribute = namedtuple('_I_Attribute', 'name, mmclass, domain')
+"""
+I_Attribute
+
+Instance reference to Attribute class (See identifier of Attribute class in the metamodel)
+
+- name -- Attribute name
+- mmclass -- Class it belongs to (class is a keyword, so we preface with mm (metamodel)
+- domain -- Domain of the class
+"""
 
 
 def ResolveAttrTypes():
     """
-    Update all unresolved attribute types
+    Determine an update type of each unresolved (referential) attribute
     """
     attr_t = smdb.MetaData.tables['Attribute']
     p = [attr_t.c.Name, attr_t.c.Class, attr_t.c.Domain]
     q = select(p).where(attr_t.c.Type == "<unresolved>")
     rows = smdb.Connection.execute(q).fetchall()
     uattrs = [I_Attribute(*r) for r in rows]
+    # Rather than batch all the updates, we do them one by one
+    # This reduces the search space for each subsequent type resolution
     for uattr in uattrs:
         assign_type = ResolveAttr(attr=uattr)
         r = and_(
@@ -28,31 +39,47 @@ def ResolveAttrTypes():
         )
         u = attr_t.update().where(r).values(Type=assign_type)
         smdb.Connection.execute(u)
-    print()
 
 
 def ResolveAttr(attr: I_Attribute) -> str:
     """
+    The modeler specifies explicit types only for non-referential attributes. This means that all attributes with
+    unresolved types are referential.
 
-    :return:  Type name
+    We need to obtain one (there could be multiple) Attribute Reference where the unresolved attribute is a source
+    *From attribute* referring to some *To attribute*. Then we check the type of that *To attribute*. If the type is
+    not <unresolved>, we return it. Otherwise, we recursively apply the same process to the *To attribute*. The chain
+    of references must eventually land on a specified type if the model has been properly formalized.
+
+    :param attr: Unresolved attribute: A referential attribute with an unresolved type
+    :return:  Type name to assign
     """
+    logging.info(f"Resolving attribute type [{attr}]")
     # Select one attribute reference where the attribute is the source
     aref_t = smdb.MetaData.tables['Attribute Reference']
     attr_t = smdb.MetaData.tables['Attribute']
-    j = join(aref_t, attr_t, aref_t.c['To attribute'] == attr_t.c.Name, aref_t.c['To class'] == attr_t.c.Class)
+    # We join the two relvars on the To_attribute so that we can obtain that attribute's Type
+    # j = join, r = restrict, p = project, q = query, and row is the query result
+    j = join(aref_t, attr_t,
+             and_(
+                 (aref_t.c['To attribute'] == attr_t.c.Name),
+                 (aref_t.c['To class'] == attr_t.c.Class),
+                 (aref_t.c.Domain == attr_t.c.Domain),
+             ),
+             )
     r = and_(
         (aref_t.c['From attribute'] == attr.name),
         (aref_t.c['From class'] == attr.mmclass),
         (aref_t.c.Domain == attr.domain),
     )
-    p = [aref_t.c['To attribute'], aref_t.c['To class'], attr_t.c.Type]  # Get the target attribute
+    p = [aref_t.c['To attribute'], aref_t.c['To class'], attr_t.c.Type]  # Project the target attribute and its type
     q = select(p).select_from(j).where(r)
-    row = smdb.Connection.execute(q).fetchone()
+    row = smdb.Connection.execute(q).fetchone()  # There could be many, but we only need one
     refattr = I_Attribute(name=row['To attribute'], mmclass=row['To class'], domain=attr.domain)
     if row['Type'] != '<unresolved>':
-        return row['Type']
+        return row['Type']  # The To_attribute has a type
     else:
-        ResolveAttr(attr=refattr)
+        return ResolveAttr(attr=refattr)  # The To_attribute is also unresolved. Resolve it!
 
 
 class Attribute:
