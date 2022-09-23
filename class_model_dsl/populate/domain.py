@@ -41,8 +41,8 @@ class Domain:
         for r in self.parse_data.rels:
             Relationship(domain=self, subsys=s, parse_data=r)
 
-        self.logger.info("Populating lineage")
-        Lineage(domain=self)
+        # self.logger.info("Populating lineage")
+        # Lineage(domain=self)
 
 
 
