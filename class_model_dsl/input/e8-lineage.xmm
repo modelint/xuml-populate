@@ -1,0 +1,74 @@
+metadata
+    Title : Elevator Management Class Model
+    Author : Leon Starr
+    Document ID : mint.elevator3.td.1
+    Version : 3.3.4
+    Creation date : June 21, 2018
+    Modification date : February 12, 2022
+    Organization : Model Integration, LLC / www.modelint.com
+    Copyright notice > MIT
+    Organization logo > mint
+domain Lineage Example, LINEX
+subsystem Lineage, LIN 1-99
+class A
+attributes
+    ID {I}
+--
+class B
+attributes
+    A {I, R1}
+--
+class C
+attributes
+    A {I, R1}
+    E {I2, R2}
+--
+class D
+attributes
+    A {I, R1}
+    E {I2, R2}
+    H {I3, R4}
+--
+class E
+attributes
+    ID {I}
+--
+class F
+attributes
+    E {I, R3}
+    H {I2, R4}
+--
+class G
+attributes
+    E {I, R3}
+--
+class H
+attributes
+    ID {I}
+--
+relationships
+    R1
+    A +
+        B
+        C
+        D
+    <subclass>.A -> A.ID
+--
+    R2
+    E +
+        C
+        D
+    <subclass>.E -> E.ID
+--
+    R3
+    E +
+        G
+        F
+    <subclass>.E -> E.ID
+--
+    R4
+    H +
+        D
+        F
+    <subclass>.H -> H.ID
+--
