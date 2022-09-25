@@ -9,6 +9,7 @@ from class_model_dsl.parse.model_parser import ModelParser
 from class_model_dsl.mp_exceptions import ModelParseError, MPIOException
 from class_model_dsl.database.sm_meta_db import SMmetaDB
 from class_model_dsl.populate.domain import Domain
+from class_model_dsl.populate.lineage import Lineage
 from class_model_dsl.populate.attribute import ResolveAttrTypes
 
 class ClassModel:
@@ -24,6 +25,7 @@ class ClassModel:
         self.table_headers = { tname: [attr.name for attr in self.db.MetaData.tables[tname].c] for tname in self.table_names }
         self.scope = {}
         self.model = None
+        self.domain = None
 
         self.logger.info("Parsing the model")
         # Parse the model
@@ -52,10 +54,14 @@ class ClassModel:
         """Populate the database from the parsed input"""
 
         self.logger.info("Populating the model")
-        Domain(model=self, parse_data=self.subsystem)
+        self.domain = Domain(model=self, parse_data=self.subsystem)
 
         self.logger.info("Inserting relations into schema")
         for relvar_name, relation in self.population.items():
             t = SMmetaDB.Relvars[relvar_name]
             if relation:
                 self.db.Connection.execute(t.insert(), relation)  # Sqlalchemy populates the table schema
+
+        self.logger.info("Populating lineage")
+        Lineage(domain=self.domain)
+

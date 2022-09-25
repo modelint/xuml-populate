@@ -6,7 +6,6 @@ import logging
 from class_model_dsl.populate.mm_class import MMclass
 from class_model_dsl.populate.relationship import Relationship
 from class_model_dsl.populate.subsystem import Subsystem
-from class_model_dsl.populate.lineage import Lineage
 
 class Domain:
     """
@@ -40,9 +39,6 @@ class Domain:
         self.logger.info("Populating relationships")
         for r in self.parse_data.rels:
             Relationship(domain=self, subsys=s, parse_data=r)
-
-        # self.logger.info("Populating lineage")
-        # Lineage(domain=self)
 
 
 
