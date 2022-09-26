@@ -153,6 +153,7 @@ class Lineage:
                     # Start a new branch if there is more than one subclass to visit
                     fork = True if len(visit_subs) > 1 else False
                     if fork:
+                        self.xrels = set()  # New branch, no excluded rels
                         branch = self.step(walk=[], cvisit=s, rvisit=arel)
                         if branch:
                             walk.append(branch)
