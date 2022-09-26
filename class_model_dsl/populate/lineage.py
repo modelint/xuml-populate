@@ -7,6 +7,8 @@ from class_model_dsl.database.sm_meta_db import SMmetaDB as smdb
 from sqlalchemy import select, and_
 from typing import List, Set, Optional
 
+
+
 def findSubclasses(grel: str, domain: str) -> Set[str]:
     """
     Return the set of all subclasses in the specified generalization
@@ -82,8 +84,9 @@ class Lineage:
         q = select(psub).except_(select(psuper))
         rows = smdb.Connection.execute(q).fetchall()
         self.leaf_classes = [r['Class'] for r in rows]
-        self.leaf_classes = ['D']  # TODO: Remove this line (here for testing only)
         for leaf in self.leaf_classes:
+            self.xrels = set()
+            self.xclasses = set()
             leafwalk = self.step(walk=[], cvisit=leaf, rvisit=None)
             self.walks.append(leafwalk)
         print()
@@ -99,7 +102,7 @@ class Lineage:
         """
 
         walk.append(cvisit)  # Advance the walk by adding the visited class
-        self.xclasses.add(cvisit)  # Class has been visited
+        # self.xclasses.add(cvisit)  # Class has been visited
         # Now we figure out where and if we can take another step
 
         # Get all adjacent relationships, if any, on the civisit class that have not already been traversed
@@ -113,46 +116,51 @@ class Lineage:
         rows = smdb.Connection.execute(q).fetchall()
         # Grab the result being careful to exclude prior traversals so we don't walk around in circles!
         adj_rels = [r['Rnum'] for r in rows if r['Rnum'] not in self.xrels and r['Rnum'] != rvisit]
-        if cvisit == 'D':  # TODO: Remove this line here for testing only
-            adj_rels = ['R2', 'R4', 'R1']
 
         # We have nowhere else to walk if cvisit does not participate in any new rels
         if not adj_rels:
             return walk
 
+        # Create a set of all hops going up to a superclass
+        uphops = {h for h in adj_rels if isSubclass(grel=h, cname=cvisit, domain=self.domain.name) }
+
         # We can try to take a step
         for arel in adj_rels:
             # Is cvisit a superclass or subclass in this arel?
             # There are only two possibilities, so we arbitrarily check to see if it paticipates as a subclass
-
-            cvisit_is_subclass_in_arel = isSubclass(grel=arel, cname=cvisit, domain=self.domain.name)
-
-            if cvisit_is_subclass_in_arel:
+            if arel in uphops:  # Hopping up to a superclass
                 superclass = findSuperclass(grel=arel, domain=self.domain.name)
-                subclasses = findSubclasses(grel=arel, domain=self.domain.name)
-                xclass_in_grel = (subclasses - set(cvisit)).intersection(self.xclasses)
-                if xclass_in_grel:
-                    print()
-                    return walk[:-1]  # Chop off this cvisit and terminate
+
+                # Exclude all subclasses of unvisited uphop rels other than cvisit
+                other_uphops = uphops - self.xrels - {arel}
+                for o in other_uphops:
+                    subclasses = findSubclasses(grel=o, domain=self.domain.name)
+                    exclude_subclasses = {c for c in subclasses if c != cvisit}
+                    self.xclasses = self.xclasses.union(exclude_subclasses)
 
                 # Since we don't need to branch out, we can now mark this arel as excluded
                 self.xrels.add(arel)
                 walk = self.step(walk=walk, cvisit=superclass, rvisit=arel)
-            else:  # cvisit is a superclass in arel
+            else:  # hopping down to a subclass
                 print()
                 # We are going to branch out to one or more subclasses
                 # (Any of our subclasses adjacent to some excluded relationship cannot be added)
                 # Get all the subclass class names
                 subclasses = findSubclasses(grel=arel, domain=self.domain.name)
-                for s in subclasses:
+                visit_subs = subclasses.difference(self.xclasses)
+                for s in visit_subs:
                     print()
-                    branch = self.step(walk=[], cvisit=s, rvisit=arel)
-                    if branch:
-                        walk.append(branch)
+                    # Start a new branch if there is more than one subclass to visit
+                    fork = True if len(visit_subs) > 1 else False
+                    if fork:
+                        branch = self.step(walk=[], cvisit=s, rvisit=arel)
+                        if branch:
+                            walk.append(branch)
+                        else:
+                            self.xclasses.remove(s)
+                            print()
                     else:
-                        self.xclasses.remove(s)
-                        print()
-                    print()
+                        walk = self.step(walk=walk, cvisit=s, rvisit=arel)
                 self.xrels.add(arel)
         print()
         return walk
