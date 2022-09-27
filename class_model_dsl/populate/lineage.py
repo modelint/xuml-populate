@@ -7,6 +7,8 @@ from class_model_dsl.database.sm_meta_db import SMmetaDB as smdb
 from sqlalchemy import select, and_
 from typing import List, Set, Optional
 
+# TODO: Flatten walks into lineage populations
+# TODO: Then populate lineages in the db
 
 
 def findSubclasses(grel: str, domain: str) -> Set[str]:
@@ -61,6 +63,25 @@ def findSuperclass(grel: str, domain: str) -> str:
     row = smdb.Connection.execute(q).fetchone()
     return row['Class']
 
+
+# def flatten(suffix: List, prefix: Optional[List]=None) -> List[str]:
+#     output = []
+#     for n in suffix:
+#         if type(n) is str:
+#             output.append(n)
+#         else:
+#             flist = flatten(suffix=n, prefix=output.copy())
+#     return output
+#
+# def makeLineagePop(walk: List) -> List[ List[str]]:
+#     allpops = []
+#     for n in walk:
+#         if type(n) is str:
+#             output.append(n)
+
+
+
+
 class Lineage:
     """
     Create all lineages for a domain
@@ -74,6 +95,7 @@ class Lineage:
         self.walks = []
         self.xrels = set()
         self.xclasses = set()
+        self.popclasses = set()
 
         # Get all classes with at least one subclass facet and no superclass facets as: leaves
 
@@ -89,6 +111,9 @@ class Lineage:
             self.xclasses = set()
             leafwalk = self.step(walk=[], cvisit=leaf, rvisit=None)
             self.walks.append(leafwalk)
+        for w in self.walks:
+            for n in w:
+                print()
         print()
 
     def step(self, walk: List, cvisit: str, rvisit: Optional[str] = None) -> List:

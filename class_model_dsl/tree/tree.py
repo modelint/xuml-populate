@@ -1,0 +1,39 @@
+"""
+tree.py – Functions that process tree elements
+"""
+
+from typing import List
+
+def extract(tree: List) -> (List[str], bool):
+    pop = []
+    # If there are no sublists in the node, it is a terminal node and we can just return its contents
+    if not any(isinstance(n, list) for n in tree):
+        print("Terminal node")
+        return tree, True
+    # Step through each node
+    for i, n in enumerate(tree):
+        # If the node is a string, just append it to the population
+        if type(n) is str:
+            pop.append(n)
+        else:  # Otherwise it is nested and we extract a branch from it
+            branch = extract(n)
+            pop = pop + branch[0]  # Add the extracted branch to the population
+            if branch[1]:  # the extracted branch was a terminal node (no deeper nesting)
+                del tree[i]  # We delete it from the tree so we don't process it again
+                if len(tree) == 2 and len(tree[1]) == 1:
+                    tree[1] = tree[1][0]
+                print()
+            break  # Once we process a nested node, we don't go any further
+    print()
+    return pop, False  # This is not a terminal node
+
+
+pattern = ['A', 'B', ['C', ['D', 'E'], ['F']], ['G', 'H']]
+
+lineages = []
+if not any(isinstance(n, list) for n in pattern):
+    lineages = pattern
+else:
+    while len(pattern) > 0 and any(isinstance(n, list) for n in pattern):
+        lineages.append(extract(pattern)[0])
+print()
