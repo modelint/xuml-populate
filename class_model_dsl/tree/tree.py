@@ -5,7 +5,7 @@ tree.py – Functions that process tree elements
 from typing import List
 
 def extract(tree: List) -> (List[str], bool):
-    pop = []
+    pop = []  # population
     # If there are no sublists in the node, it is a terminal node and we can just return its contents
     if not any(isinstance(n, list) for n in tree):
         print("Terminal node")
@@ -20,6 +20,9 @@ def extract(tree: List) -> (List[str], bool):
             pop = pop + branch[0]  # Add the extracted branch to the population
             if branch[1]:  # the extracted branch was a terminal node (no deeper nesting)
                 del tree[i]  # We delete it from the tree so we don't process it again
+                # If the remaining tree is a parent with only one child, we can transform it into
+                # a flat branch. This means we have ['n0', ['n1']] and we can flatten that into
+                # [ 'n0', 'n1' ]. This keeps us from ending up with a childless parent.
                 if len(tree) == 2 and len(tree[1]) == 1:
                     tree[1] = tree[1][0]
                 print()
