@@ -93,15 +93,17 @@ class Lineage:
             self.walks.append(leafwalk)
 
         # Flatten the walks
-        self.lineages = []
+        self.lineages = set()
         for walk in self.walks:
             pattern = walk.copy()
             if not any(isinstance(n, list) for n in pattern):
-                self.lineages.append(pattern)
+                pattern.sort()
+                self.lineages.add(':'.join(pattern))
             else:
                 while len(pattern) > 0 and any(isinstance(n, list) for n in pattern):
                     extraction = extract(pattern)[0].copy()
-                    self.lineages.append(extraction)
+                    extraction.sort()
+                    self.lineages.add(':'.join(extraction))
 
         # Load the lineages into the db
         self.populate()
@@ -113,16 +115,15 @@ class Lineage:
         :return:
         """
         population = OrderedDict({'Element': [], 'Spanning Element': [], 'Lineage': [], 'Class in Lineage': []})
-        for w in self.walks:
-            lineage = extract(w)[0]
+        for lin in self.lineages:
             self.domain.lnums += 1
             lnum = 'L' + (str(self.domain.lnums))
             idvals = {'Number': lnum, 'Domain': self.domain.name}
             population['Element'].append(idvals)
             population['Spanning Element'].append(idvals) # Element and Spanning Element have the same header
             population['Lineage'].append({'Lnum': lnum, 'Domain': self.domain.name})
-            for c in lineage:
-                population['Class in Lineage'].append({'Class': c, 'Lnum': lnum, 'Domain': self.domain.name})
+            for cname in lin.split(':'):
+                population['Class in Lineage'].append({'Class': cname, 'Lnum': lnum, 'Domain': self.domain.name})
         pass
         for relvar_name, relation in population.items():
             t = smdb.Relvars[relvar_name]
