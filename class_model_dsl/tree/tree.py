@@ -5,6 +5,21 @@ tree.py – Functions that process tree elements
 from typing import List
 
 def extract(tree: List) -> (List[str], bool):
+    """
+    A tree is represented as a list of strings and sublists.
+    A single invocation grabs all strings up to the first sublist, and then invokes itself on that sublist.
+    Eventually, a sublist is encountered that is simply a list of strings terminating the recursion.
+    As each invocation returns, any visited sublist is deleted.
+
+    Recursive execution of this function effects a left handed search through the tree
+    to extract a flat branch as a list of strings only and to prune that branch from the source tree.
+
+    Therefore, this function has a side effect of pruning the provided tree
+
+    :param tree: A list of strings and sublists. It may be modified by this function.
+    :return: The pruned branch and whether or not this invocation of extract encountered a terminal (string only list).
+    The result is useful internally to terminate recursion, but of no value to the outside caller
+    """
     pop = []  # population
     # If there are no sublists in the node, it is a terminal node and we can just return its contents
     if not any(isinstance(n, list) for n in tree):

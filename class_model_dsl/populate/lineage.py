@@ -9,6 +9,7 @@ from typing import List, Set, Optional
 from class_model_dsl.tree.tree import extract
 from collections import OrderedDict
 
+
 def findSubclasses(grel: str, domain: str) -> Set[str]:
     """
     Return the set of all subclasses in the specified generalization
@@ -77,8 +78,9 @@ class Lineage:
         self.xclasses = set()
         self.popclasses = set()
 
-        # Get all classes with at least one subclass facet and no superclass facets as: leaves
-
+        # Get all classes with at least one subclass facet and no superclass facets
+        # These constitute 'leaves'. We use them as starting points as we step through a set of generalizations
+        # to identify lineages.
         subclass_t = smdb.MetaData.tables['Subclass']
         superclass_t = smdb.MetaData.tables['Superclass']
         psuper = [superclass_t.c.Class, superclass_t.c.Domain]
@@ -86,13 +88,15 @@ class Lineage:
         q = select(psub).except_(select(psuper))
         rows = smdb.Connection.execute(q).fetchall()
         self.leaf_classes = [r['Class'] for r in rows]
+
+        # Now we walk (step) through each generalization to build trees of one or more lineages
         for leaf in self.leaf_classes:
             self.xrels = set()
             self.xclasses = set()
             leafwalk = self.step(walk=[], cvisit=leaf, rvisit=None)
             self.walks.append(leafwalk)
 
-        # Flatten the walks
+        # We then prune these trees to extract unique branches, each of which constitutes a distinct lineage
         self.lineages = set()
         for walk in self.walks:
             pattern = walk.copy()
@@ -105,7 +109,7 @@ class Lineage:
                     extraction.sort()
                     self.lineages.add(':'.join(extraction))
 
-        # Load the lineages into the db
+        # Finally, we load each lineage into the db
         self.populate()
 
     def populate(self):
@@ -120,7 +124,7 @@ class Lineage:
             lnum = 'L' + (str(self.domain.lnums))
             idvals = {'Number': lnum, 'Domain': self.domain.name}
             population['Element'].append(idvals)
-            population['Spanning Element'].append(idvals) # Element and Spanning Element have the same header
+            population['Spanning Element'].append(idvals)  # Element and Spanning Element have the same header
             population['Lineage'].append({'Lnum': lnum, 'Domain': self.domain.name})
             for cname in lin.split(':'):
                 population['Class in Lineage'].append({'Class': cname, 'Lnum': lnum, 'Domain': self.domain.name})
@@ -128,8 +132,6 @@ class Lineage:
         for relvar_name, relation in population.items():
             t = smdb.Relvars[relvar_name]
             smdb.Connection.execute(t.insert(), relation)
-
-
 
     def step(self, walk: List, cvisit: str, rvisit: Optional[str] = None) -> List:
         """
@@ -147,7 +149,7 @@ class Lineage:
 
         # Get all adjacent relationships, if any, on the civisit class that have not already been traversed
         facet_t = smdb.MetaData.tables['Facet']  # Could be either super or subclasses, so we search Facets
-        p = facet_t.c.Rnum # We project on the rnums
+        p = facet_t.c.Rnum  # We project on the rnums
         r = and_(
             (facet_t.c.Class == cvisit),
             (facet_t.c.Domain == self.domain.name),
@@ -162,7 +164,7 @@ class Lineage:
             return walk
 
         # Create a set of all hops going up to a superclass
-        uphops = {h for h in adj_rels if isSubclass(grel=h, cname=cvisit, domain=self.domain.name) }
+        uphops = {h for h in adj_rels if isSubclass(grel=h, cname=cvisit, domain=self.domain.name)}
 
         # We can try to take a step
         for arel in adj_rels:
