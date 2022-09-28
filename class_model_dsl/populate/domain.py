@@ -20,6 +20,7 @@ class Domain:
         self.parse_data = parse_data
         self.name = parse_data.domain['name']
         self.alias = parse_data.domain['alias']
+        self.lnums = 0
 
         # Insert the domain relation
         self.logger.info(f"Populating modeled domain [{self.name}]")
@@ -39,6 +40,4 @@ class Domain:
         self.logger.info("Populating relationships")
         for r in self.parse_data.rels:
             Relationship(domain=self, subsys=s, parse_data=r)
-
-
 

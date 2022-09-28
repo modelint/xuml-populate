@@ -6,10 +6,8 @@ import logging
 from class_model_dsl.database.sm_meta_db import SMmetaDB as smdb
 from sqlalchemy import select, and_
 from typing import List, Set, Optional
-
-# TODO: Flatten walks into lineage populations
-# TODO: Then populate lineages in the db
-
+from class_model_dsl.tree.tree import extract
+from collections import OrderedDict
 
 def findSubclasses(grel: str, domain: str) -> Set[str]:
     """
@@ -64,24 +62,6 @@ def findSuperclass(grel: str, domain: str) -> str:
     return row['Class']
 
 
-# def flatten(suffix: List, prefix: Optional[List]=None) -> List[str]:
-#     output = []
-#     for n in suffix:
-#         if type(n) is str:
-#             output.append(n)
-#         else:
-#             flist = flatten(suffix=n, prefix=output.copy())
-#     return output
-#
-# def makeLineagePop(walk: List) -> List[ List[str]]:
-#     allpops = []
-#     for n in walk:
-#         if type(n) is str:
-#             output.append(n)
-
-
-
-
 class Lineage:
     """
     Create all lineages for a domain
@@ -111,10 +91,44 @@ class Lineage:
             self.xclasses = set()
             leafwalk = self.step(walk=[], cvisit=leaf, rvisit=None)
             self.walks.append(leafwalk)
+
+        # Flatten the walks
+        self.lineages = []
+        for walk in self.walks:
+            pattern = walk.copy()
+            if not any(isinstance(n, list) for n in pattern):
+                self.lineages.append(pattern)
+            else:
+                while len(pattern) > 0 and any(isinstance(n, list) for n in pattern):
+                    extraction = extract(pattern)[0].copy()
+                    self.lineages.append(extraction)
+
+        # Load the lineages into the db
+        self.populate()
+
+    def populate(self):
+        """
+        Trace through walks to populate all Lineages
+
+        :return:
+        """
+        population = OrderedDict({'Element': [], 'Spanning Element': [], 'Lineage': [], 'Class in Lineage': []})
         for w in self.walks:
-            for n in w:
-                print()
-        print()
+            lineage = extract(w)[0]
+            self.domain.lnums += 1
+            lnum = 'L' + (str(self.domain.lnums))
+            idvals = {'Number': lnum, 'Domain': self.domain.name}
+            population['Element'].append(idvals)
+            population['Spanning Element'].append(idvals) # Element and Spanning Element have the same header
+            population['Lineage'].append({'Lnum': lnum, 'Domain': self.domain.name})
+            for c in lineage:
+                population['Class in Lineage'].append({'Class': c, 'Lnum': lnum, 'Domain': self.domain.name})
+        pass
+        for relvar_name, relation in population.items():
+            t = smdb.Relvars[relvar_name]
+            smdb.Connection.execute(t.insert(), relation)
+
+
 
     def step(self, walk: List, cvisit: str, rvisit: Optional[str] = None) -> List:
         """
