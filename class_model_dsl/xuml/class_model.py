@@ -7,7 +7,7 @@ import logging
 from pathlib import Path
 from class_model_dsl.parse.model_parser import ModelParser
 from class_model_dsl.mp_exceptions import ModelParseError, MPIOException
-from class_model_dsl.database.sm_meta_db import SMmetaDB
+# from class_model_dsl.database.sm_meta_db import SMmetaDB
 from class_model_dsl.populate.domain import Domain
 from class_model_dsl.populate.lineage import Lineage
 from class_model_dsl.populate.attribute import ResolveAttrTypes
@@ -19,10 +19,10 @@ class ClassModel:
         self.logger = logging.getLogger(__name__)
         self.xuml_model_path = path
 
-        self.db = SMmetaDB(rebuild=True)
-        self.population = {relvar_name: [] for relvar_name in self.db.MetaData.tables.keys()}
-        self.table_names = [t for t in self.db.MetaData.tables.keys()]
-        self.table_headers = { tname: [attr.name for attr in self.db.MetaData.tables[tname].c] for tname in self.table_names }
+        # self.db = SMmetaDB(rebuild=True)
+        # self.population = {relvar_name: [] for relvar_name in self.db.MetaData.tables.keys()}
+        # self.table_names = [t for t in self.db.MetaData.tables.keys()]
+        # self.table_headers = { tname: [attr.name for attr in self.db.MetaData.tables[tname].c] for tname in self.table_names }
         self.scope = {}
         self.model = None
         self.domain = None
@@ -57,10 +57,10 @@ class ClassModel:
         self.domain = Domain(model=self, parse_data=self.subsystem)
 
         self.logger.info("Inserting relations into schema")
-        for relvar_name, relation in self.population.items():
-            t = SMmetaDB.Relvars[relvar_name]
-            if relation:
-                self.db.Connection.execute(t.insert(), relation)  # Sqlalchemy populates the table schema
+        # for relvar_name, relation in self.population.items():
+        #     t = SMmetaDB.Relvars[relvar_name]
+        #     if relation:
+        #         self.db.Connection.execute(t.insert(), relation)  # Sqlalchemy populates the table schema
 
         self.logger.info("Populating lineage")
         Lineage(domain=self.domain)
