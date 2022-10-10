@@ -7,7 +7,7 @@ import logging.config
 import sys
 import argparse
 from pathlib import Path
-from class_model_dsl.xuml.class_model import ClassModel
+from class_model_dsl.xuml.user_model import UserModel
 from class_model_dsl import version
 
 _logpath = Path("mp.log")
@@ -43,14 +43,12 @@ def main():
         print(f'xUML class model parser version: {version}')
         sys.exit(0)
 
-    # Model specified?
+    # User model specified?
     if args.model:
-        model_path = Path(args.model)
+        user_model_path = Path(args.model)
 
-        # Parse the model
-        ClassModel(
-            path=model_path
-        )
+        # Process the user's model
+        UserModel.load( user_model_path )
 
     logger.info("No problemo")  # We didn't die on an exception, basically
 
