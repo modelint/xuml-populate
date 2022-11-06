@@ -8,9 +8,11 @@ import sys
 import argparse
 from pathlib import Path
 from class_model_dsl.xuml.user_model import UserModel
+from class_model_dsl.xuml.metamodel import Metamodel
 from class_model_dsl import version
 
 _logpath = Path("mp.log")
+
 
 def get_logger():
     """Initiate the logger"""
@@ -24,13 +26,14 @@ def parse(cl_input):
     parser = argparse.ArgumentParser(description='xUML class model parser')
     parser.add_argument('-m', '--model', action='store',
                         help='class model file name')
+    parser.add_argument('-R', '--rebuild', action='store_true',
+                        help='Rebuild the metamodel database.'),
     parser.add_argument('-V', '--version', action='store_true',
                         help='Print the current version of parser')
     return parser.parse_args(cl_input)
 
 
 def main():
-
     # Start logging
     logger = get_logger()
     logger.info(f'Model parser version: {version}')
@@ -43,12 +46,16 @@ def main():
         print(f'xUML class model parser version: {version}')
         sys.exit(0)
 
+    # If requested, rebuild the metamodel db
+    if args.rebuild:
+        Metamodel.CreateDB()
+
     # User model specified?
     if args.model:
         user_model_path = Path(args.model)
 
         # Process the user's model
-        UserModel.load( user_model_path )
+        UserModel.load(user_model_path)
 
     logger.info("No problemo")  # We didn't die on an exception, basically
 

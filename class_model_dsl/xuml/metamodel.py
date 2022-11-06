@@ -3,7 +3,6 @@ metamodel.py – Parses the SM Metamodel and uses it to create a corresponding d
 
 For now, we focus only on the Class and Attribute Subsystem
 """
-
 import sys
 import logging
 from pathlib import Path
@@ -12,6 +11,8 @@ from class_model_dsl.mp_exceptions import ModelParseError, MPIOException
 from class_model_dsl.populate.domain import Domain
 from class_model_dsl.populate.lineage import Lineage
 from class_model_dsl.populate.attribute import ResolveAttrTypes
+
+print("Made it to here")
 
 class Metamodel:
 
@@ -72,12 +73,15 @@ class Metamodel:
         ResolveAttrTypes()
 
 
-    def CreateDB(self):
+    @classmethod
+    def CreateDB(cls):
         """
         Create a metamodel database in PyRAL complete with relvars and constraints
         from a parse of the metamodel xcm file
         :return:
         """
+        cls.parse()
+        pass
         # TODO: Put class-attr.xcm file in a new metamodel input directory
         # TODO: parse it and store results independently of the users model .xcm
 

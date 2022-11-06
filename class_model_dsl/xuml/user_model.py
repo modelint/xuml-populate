@@ -11,7 +11,7 @@ For our purposes we will use the Elevator Management domain as one of our user /
 import sys
 import logging
 from pathlib import Path
-from metamodel import Metamodel
+from class_model_dsl.xuml.metamodel import Metamodel
 from class_model_dsl.parse.model_parser import ModelParser
 from class_model_dsl.mp_exceptions import ModelParseError, MPIOException
 # from class_model_dsl.database.sm_meta_db import SMmetaDB
@@ -19,8 +19,8 @@ from class_model_dsl.populate.domain import Domain
 from class_model_dsl.populate.lineage import Lineage
 from class_model_dsl.populate.attribute import ResolveAttrTypes
 
-class UserModel:
 
+class UserModel:
     logger = logging.getLogger(__name__)
     user_model_path = None
 
@@ -29,22 +29,18 @@ class UserModel:
         cls.user_model_path = user_model_path
 
         # TODO work out the thread from main into UserModel to the build
-        # TODO of the metamodel. See notes in Simplenote
+        # TODO of the metamodel. See notes in Ulysess SDEV/class-model-dsl
 
-
-
-
-        logger.info("Parsing the user model")
-        # Parse the model
-        try:
-            self.model = ModelParser(model_file_path=self.xuml_model_path, debug=False)
-        except MPIOException as e:
-            sys.exit(e)
-        try:
-            self.subsystem = self.model.parse()
-        except ModelParseError as e:
-            sys.exit(e)
-
+        # cls.logger.info("Parsing the user model")
+        # # Parse the model
+        # try:
+        #     self.model = ModelParser(model_file_path=self.xuml_model_path, debug=False)
+        # except MPIOException as e:
+        #     sys.exit(e)
+        # try:
+        #     self.subsystem = self.model.parse()
+        # except ModelParseError as e:
+        #     sys.exit(e)
 
     def __init__(self, path: Path):
         """Constructor"""
@@ -68,10 +64,8 @@ class UserModel:
         except ModelParseError as e:
             sys.exit(e)
 
-
         self.Populate()
         ResolveAttrTypes()
-
 
     def CreateDB(self):
         """
@@ -104,4 +98,3 @@ class UserModel:
 
         self.logger.info("Populating lineage")
         Lineage(domain=self.domain)
-
