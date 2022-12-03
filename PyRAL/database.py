@@ -56,7 +56,7 @@ class Database:
 
         cmd = f"relvar create {name} {header} {id_const}"
         result = cls.tclRAL.eval(cmd)
-        pass
+        print(result)
 
     @classmethod
     def populateSchema(cls):

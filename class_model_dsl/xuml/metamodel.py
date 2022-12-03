@@ -89,8 +89,11 @@ class Metamodel:
         :param mm_class:
         :return:
         """
-        cname = mm_class['name']
-        # TODO Fix line below to reference they types dict
+        # Skip imported classes
+        if mm_class.get('import'):
+            return
+
+        cname = mm_class['name'].replace(' ', '_')
         attrs = [Attribute(name=a['name'], type=cls.types[a['type']]) for a in mm_class['attributes']]
         ids = {}
         for a in mm_class['attributes']:
