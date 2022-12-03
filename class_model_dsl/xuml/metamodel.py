@@ -11,6 +11,9 @@ from class_model_dsl.mp_exceptions import ModelParseError, MPIOException
 from class_model_dsl.populate.domain import Domain
 from class_model_dsl.populate.lineage import Lineage
 from class_model_dsl.populate.attribute import ResolveAttrTypes
+from PyRAL.database import Database
+from PyRAL.rtypes import Attribute
+import yaml
 
 print("Made it to here")
 
@@ -19,6 +22,7 @@ class Metamodel:
     metamodel_path = Path("class_model_dsl/metamodel/class-attribute.xcm")
     metamodel = None
     metamodel_subsystem = None
+    types = None
 
     @classmethod
     def parse(cls):
@@ -36,8 +40,12 @@ class Metamodel:
         except ModelParseError as e:
             sys.exit(e)
 
+        # Get the datatypes
+        with open("class_model_dsl/metamodel/mm_types.yaml", 'r') as file:
+            cls.types = yaml.safe_load(file)
+
     @classmethod
-    def buildschema(cls):
+    def build_schema(cls):
         """
         Define a schema in PyRAL (for now let's just create the relvars)
 
@@ -74,13 +82,40 @@ class Metamodel:
 
 
     @classmethod
-    def CreateDB(cls):
+    def add_class(cls, mm_class):
+        """
+        Add class to database as a relvar definition
+
+        :param mm_class:
+        :return:
+        """
+        cname = mm_class['name']
+        # TODO Fix line below to reference they types dict
+        attrs = [Attribute(name=a['name'], type=cls.types[a['type']]) for a in mm_class['attributes']]
+        ids = {}
+        for a in mm_class['attributes']:
+            identifiers = a.get('I', [])  # This attr might not participate in any identifier
+            for i in identifiers:
+                if i[0] not in ids:
+                    ids[i[0]] = [a['name']]
+                else:
+                    ids[i[0]].append(a['name'])
+        Database.create_relvar(name=cname, attrs=attrs, ids=ids)
+
+    @classmethod
+    def create_db(cls):
         """
         Create a metamodel database in PyRAL complete with relvars and constraints
         from a parse of the metamodel xcm file
         :return:
         """
+        # Create a TclRAL session
+        Database.init()
+
+
         cls.parse()
+        for c in cls.metamodel_subsystem.classes:
+            cls.add_class(c)
         pass
         # TODO: Put class-attr.xcm file in a new metamodel input directory
         # TODO: parse it and store results independently of the users model .xcm

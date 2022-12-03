@@ -48,7 +48,7 @@ def main():
 
     # If requested, rebuild the metamodel db
     if args.rebuild:
-        Metamodel.CreateDB()
+        Metamodel.create_db()
 
     # User model specified?
     if args.model:
