@@ -59,6 +59,43 @@ class Database:
         print(result)
 
     @classmethod
+    def create_association(cls, name: str,
+                           from_relvar: str, from_attrs: List[str], from_mult: str,
+                           to_relvar: str, to_attrs: List[str], to_mult: str,
+                           ):
+        """
+        Create a TclRAL association
+
+        :return:
+        """
+        from_attr_str = "{"
+        for a in from_attrs:
+            from_attr_str += a + ' '
+        from_attr_str = from_attr_str[:-1] + "}"
+
+        to_attr_str = "{"
+        for a in to_attrs:
+            to_attr_str += a + ' '
+        to_attr_str = to_attr_str[:-1] + "}"
+        cmd = f"relvar association {name} {from_relvar} {from_attr_str} {from_mult}" \
+              f" {to_relvar} {to_attr_str} {to_mult}"
+        cls.tclRAL.eval(cmd)
+        result = cls.tclRAL.eval("relvar constraint info R20")
+        print(result)
+        # relvar association R1 \
+        # Subsystem {First_element_number Domain} 1 \
+        # Domain_Partition {Number Domain} 1
+        pass
+
+    @classmethod
+    def create_correlation(cls):
+        pass
+
+    @classmethod
+    def create_partition(cls):
+        pass
+
+    @classmethod
     def populateSchema(cls):
         """
         Invoke whatever method does this. Not sure yet how to specify

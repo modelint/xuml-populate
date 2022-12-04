@@ -8,9 +8,6 @@ import logging
 from pathlib import Path
 from class_model_dsl.parse.model_parser import ModelParser
 from class_model_dsl.mp_exceptions import ModelParseError, MPIOException
-from class_model_dsl.populate.domain import Domain
-from class_model_dsl.populate.lineage import Lineage
-from class_model_dsl.populate.attribute import ResolveAttrTypes
 from PyRAL.database import Database
 from PyRAL.rtypes import Attribute
 import yaml
@@ -19,10 +16,38 @@ print("Made it to here")
 
 class Metamodel:
 
+    _logger = logging.getLogger(__name__)
     metamodel_path = Path("class_model_dsl/metamodel/class-attribute.xcm")
     metamodel = None
     metamodel_subsystem = None
     types = None
+    mult_tclral = {
+        'M': '+',
+        '1': '1',
+        'Mc': '*',
+        '1c': '?'
+    }
+
+    @classmethod
+    def create_db(cls):
+        """
+        Create a metamodel database in PyRAL complete with relvars and constraints
+        from a parse of the metamodel xcm file
+        :return:
+        """
+        # Create a TclRAL session
+        Database.init()
+
+        # Parse the metamodel
+        cls.parse()
+
+        # Create schema element in db for each class and relationship
+        for c in cls.metamodel_subsystem.classes:
+            cls.add_class(c)
+
+        for r in cls.metamodel_subsystem.rels:
+            cls.add_rel(r)
+        pass
 
     @classmethod
     def parse(cls):
@@ -43,43 +68,6 @@ class Metamodel:
         # Get the datatypes
         with open("class_model_dsl/metamodel/mm_types.yaml", 'r') as file:
             cls.types = yaml.safe_load(file)
-
-    @classmethod
-    def build_schema(cls):
-        """
-        Define a schema in PyRAL (for now let's just create the relvars)
-
-        :return:
-        """
-
-    def __init__(self, path: Path):
-        """Constructor"""
-        self.logger = logging.getLogger(__name__)
-        self.xuml_model_path = path
-
-        # self.db = SMmetaDB(rebuild=True)
-        # self.population = {relvar_name: [] for relvar_name in self.db.MetaData.tables.keys()}
-        # self.table_names = [t for t in self.db.MetaData.tables.keys()]
-        # self.table_headers = { tname: [attr.name for attr in self.db.MetaData.tables[tname].c] for tname in self.table_names }
-        self.scope = {}
-        self.model = None
-        self.domain = None
-
-        self.logger.info("Parsing the model")
-        # Parse the model
-        try:
-            self.model = ModelParser(model_file_path=self.xuml_model_path, debug=False)
-        except MPIOException as e:
-            sys.exit(e)
-        try:
-            self.subsystem = self.model.parse()
-        except ModelParseError as e:
-            sys.exit(e)
-
-
-        self.Populate()
-        ResolveAttrTypes()
-
 
     @classmethod
     def add_class(cls, mm_class):
@@ -106,22 +94,95 @@ class Metamodel:
         Database.create_relvar(name=cname, attrs=attrs, ids=ids)
 
     @classmethod
-    def create_db(cls):
+    def add_rel(cls, rel):
         """
-        Create a metamodel database in PyRAL complete with relvars and constraints
-        from a parse of the metamodel xcm file
+        Based on the rel type, call the appropriate method
+
+        :param mm_class:
         :return:
         """
-        # Create a TclRAL session
-        Database.init()
+        # The following cases are mutually exclusive since an SM relationship
+        # is either a generalization, associative (has association class),
+        # or association relationship (no association class)
 
+        # Generalization case if it has a superclass defined
+        if rel.get('superclass'):
+            cls.add_generalization(rel)
+            return
 
-        cls.parse()
-        for c in cls.metamodel_subsystem.classes:
-            cls.add_class(c)
+        # Associative case if it refs 1 and 2 from an association class
+        if rel.get('ref2'):
+            cls.add_associative(rel)
+            return
+
+        # Association case not the other two cases (only one ref)
+        cls.add_association(association=rel)
+
+    @classmethod
+    def add_association(cls, association):
+        """
+        Add association constraint to metamodel db
+        This will result in an association in TclRAL and possibly a correlation
+
+        From TclRAL man page
+        relvar association name
+            refrngRelvar refrngAttrList refToSpec
+            refToRelvar refToAttrList refrngSpec
+
+        Metamodel terminology
+        relvar association <rnum> <referring_class> <ref> <mult> <referenced_class> <mult>
+
+        example:
+        relvar association R3 Domain_Partition Domain + Modeled_Domain Name 1
+
+        :param rel:  The association
+        """
+        rnum = association['rnum']
+
+        source = association['ref1']['source']
+        referring_class = source['class'].replace(' ', '_')
+        referring_attrs = [a.replace(' ', '_') for a in source['attrs']]
+
+        target = association['ref1']['target']
+        referenced_class = target['class'].replace(' ', '_')
+        referenced_attrs = [a.replace(' ', '_') for a in target['attrs']]
+
+        # Find matching t or p side to obtain multiplicity
+        if association['t_side']['cname'] == referring_class:
+            referring_mult = cls.mult_tclral[association['t_side']['mult']]
+            referenced_mult = cls.mult_tclral[association['p_side']['mult']]
+        else:
+            referring_mult = cls.mult_tclral[association['p_side']['mult']]
+            referenced_mult = cls.mult_tclral[association['t_side']['mult']]
+
+        Database.create_association(name=rnum,
+                                    from_relvar=referring_class, from_attrs=referring_attrs, from_mult=referring_mult,
+                                    to_relvar=referenced_class, to_attrs=referenced_attrs, to_mult=referenced_mult,
+                                    )
+
+    @classmethod
+    def add_associative(cls, rel):
+        """
+        Add association constraint to metamodel db
+        This will result in an association in TclRAL and possibly a correlation
+
+        :param mm_class:
+        :return:
+        """
         pass
-        # TODO: Put class-attr.xcm file in a new metamodel input directory
-        # TODO: parse it and store results independently of the users model .xcm
+        #Database.create_correlation(name=rnum, )
+
+    @classmethod
+    def add_generalization(cls, rel):
+        """
+        Add association constraint to metamodel db
+        This will result in an association in TclRAL and possibly a correlation
+
+        :param mm_class:
+        :return:
+        """
+        pass
+        #Database.create_partition(name=rnum, )
 
     def Insert(self, table_name, instance):
         """Insert the instance in the named table dictionary"""
@@ -130,19 +191,4 @@ class Metamodel:
         #     zip(self.table_headers[table_name], instance)
         # )
         # self.population[table_name].append(instance_dict)
-
-    def Populate(self):
-        """Populate the database from the parsed input"""
-
-        self.logger.info("Populating the model")
-        self.domain = Domain(model=self, parse_data=self.subsystem)
-
-        self.logger.info("Inserting relations into schema")
-        # for relvar_name, relation in self.population.items():
-        #     t = SMmetaDB.Relvars[relvar_name]
-        #     if relation:
-        #         self.db.Connection.execute(t.insert(), relation)  # Sqlalchemy populates the table schema
-
-        self.logger.info("Populating lineage")
-        Lineage(domain=self.domain)
 
