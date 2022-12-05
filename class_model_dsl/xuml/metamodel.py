@@ -10,22 +10,31 @@ from class_model_dsl.parse.model_parser import ModelParser
 from class_model_dsl.mp_exceptions import ModelParseError, MPIOException
 from PyRAL.database import Database
 from PyRAL.rtypes import Attribute
+from PyRAL.database import Mult as DBMult
 import yaml
 
 print("Made it to here")
 
-class Metamodel:
 
+def unspace(sdelim: str) -> str:
+    """
+    :param sdelim: space delimited string
+    :return: underscore delimited string
+    """
+    return sdelim.replace(' ', '_')
+
+
+class Metamodel:
     _logger = logging.getLogger(__name__)
     metamodel_path = Path("class_model_dsl/metamodel/class-attribute.xcm")
     metamodel = None
     metamodel_subsystem = None
     types = None
     mult_tclral = {
-        'M': '+',
-        '1': '1',
-        'Mc': '*',
-        '1c': '?'
+        'M': DBMult.AT_LEAST_ONE,
+        '1': DBMult.EXACTLY_ONE,
+        'Mc': DBMult.ZERO_ONE_OR_MANY,
+        '1c': DBMult.ZERO_OR_ONE
     }
 
     @classmethod
@@ -81,7 +90,7 @@ class Metamodel:
         if mm_class.get('import'):
             return
 
-        cname = mm_class['name'].replace(' ', '_')
+        cname = unspace(mm_class['name'])
         attrs = [Attribute(name=a['name'], type=cls.types[a['type']]) for a in mm_class['attributes']]
         ids = {}
         for a in mm_class['attributes']:
@@ -140,12 +149,12 @@ class Metamodel:
         rnum = association['rnum']
 
         source = association['ref1']['source']
-        referring_class = source['class'].replace(' ', '_')
-        referring_attrs = [a.replace(' ', '_') for a in source['attrs']]
+        referring_class = unspace(source['class'])
+        referring_attrs = [unspace(a) for a in source['attrs']]
 
         target = association['ref1']['target']
-        referenced_class = target['class'].replace(' ', '_')
-        referenced_attrs = [a.replace(' ', '_') for a in target['attrs']]
+        referenced_class = unspace(target['class'])
+        referenced_attrs = [unspace(a) for a in target['attrs']]
 
         # Find matching t or p side to obtain multiplicity
         if association['t_side']['cname'] == referring_class:
@@ -161,16 +170,49 @@ class Metamodel:
                                     )
 
     @classmethod
-    def add_associative(cls, rel):
+    def add_associative(cls, associative_rel):
         """
         Add association constraint to metamodel db
         This will result in an association in TclRAL and possibly a correlation
 
-        :param mm_class:
+        Example:
+        relvar correlation C1 OWNERSHIP OwnerName + OWNER OwnerName DogName * DOG DogName
+
+        :param associative_rel:
         :return:
         """
-        pass
-        #Database.create_correlation(name=rnum, )
+        rnum = associative_rel['rnum']
+        assoc_class = unspace(associative_rel['assoc_cname'])
+
+        ref1_source = associative_rel['ref1']['source']
+        ref1_from_attrs = [unspace(a) for a in ref1_source['attrs']]
+
+        target1 = associative_rel['ref1']['target']
+        ref1_class = unspace(target1['class'])
+        ref1_to_attrs = [unspace(a) for a in target1['attrs']]
+
+        ref2_source = associative_rel['ref2']['source']
+        ref2_from_attrs = [unspace(a) for a in ref2_source['attrs']]
+
+        target2 = associative_rel['ref2']['target']
+        ref2_class = unspace(target2['class'])
+        ref2_to_attrs = [unspace(a) for a in target2['attrs']]
+
+        if associative_rel['t_side']['cname'] == associative_rel['ref1']['target']['class']:
+            ref1_mult = cls.mult_tclral[associative_rel['t_side']['mult']]
+            ref2_mult = cls.mult_tclral[associative_rel['p_side']['mult']]
+        else:
+            ref1_mult = cls.mult_tclral[associative_rel['p_side']['mult']]
+            ref2_mult = cls.mult_tclral[associative_rel['t_side']['mult']]
+
+        # Find matching t or p side to obtain multiplicity
+
+        Database.create_correlation(name=rnum, correlation_relvar=assoc_class,
+                                    correl_a_attrs=ref1_from_attrs, a_mult=ref1_mult, a_relvar=ref1_class,
+                                    a_ref_attrs=ref1_to_attrs,
+                                    correl_b_attrs=ref2_from_attrs, b_mult=ref2_mult, b_relvar=ref2_class,
+                                    b_ref_attrs=ref2_to_attrs,
+                                    )
 
     @classmethod
     def add_generalization(cls, rel):
@@ -182,7 +224,7 @@ class Metamodel:
         :return:
         """
         pass
-        #Database.create_partition(name=rnum, )
+        # Database.create_partition(name=rnum, )
 
     def Insert(self, table_name, instance):
         """Insert the instance in the named table dictionary"""
@@ -191,4 +233,3 @@ class Metamodel:
         #     zip(self.table_headers[table_name], instance)
         # )
         # self.population[table_name].append(instance_dict)
-

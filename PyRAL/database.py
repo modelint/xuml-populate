@@ -6,6 +6,14 @@ import tkinter
 
 from typing import List, Dict
 from PyRAL.rtypes import Attribute
+from enum import Enum
+
+
+class Mult(Enum):
+    AT_LEAST_ONE = '+',
+    EXACTLY_ONE = '1',
+    ZERO_ONE_OR_MANY = '*',
+    ZERO_OR_ONE = '?'
 
 
 class Database:
@@ -47,7 +55,7 @@ class Database:
         header = f"{{{header[:-1]}}}"
 
         id_const = ""
-        for inum,attrs in ids.items():
+        for inum, attrs in ids.items():
             id_const += '{'
             for a in attrs:
                 id_const += a.replace(' ', '_') + ' '
@@ -56,12 +64,12 @@ class Database:
 
         cmd = f"relvar create {name} {header} {id_const}"
         result = cls.tclRAL.eval(cmd)
-        print(result)
+        cls._logger.info(result)
 
     @classmethod
     def create_association(cls, name: str,
-                           from_relvar: str, from_attrs: List[str], from_mult: str,
-                           to_relvar: str, to_attrs: List[str], to_mult: str,
+                           from_relvar: str, from_attrs: List[str], from_mult: Mult,
+                           to_relvar: str, to_attrs: List[str], to_mult: Mult,
                            ):
         """
         Create a TclRAL association
@@ -82,13 +90,38 @@ class Database:
         cls.tclRAL.eval(cmd)
         result = cls.tclRAL.eval("relvar constraint info R20")
         print(result)
+        cls._logger.info(result)
         # relvar association R1 \
         # Subsystem {First_element_number Domain} 1 \
         # Domain_Partition {Number Domain} 1
         pass
 
     @classmethod
-    def create_correlation(cls):
+    def create_correlation(cls, name: str, correlation_relvar: str,
+                           correl_a_attrs: List[str], a_mult: Mult, a_relvar: str, a_ref_attrs: List[str],
+                           correl_b_attrs: List[str], b_mult: Mult, b_relvar: str, b_ref_attrs: List[str],
+                           complete: bool = False):
+        """
+        TclRAL syntax from man page
+        relvar correlation ?-complete? name correlRelvar
+             correlAttrListA refToSpecA refToRelvarA refToAttrListA
+             correlAttrListB refToSpecB refToRelvarB refToAttrListB
+
+        :param name: Name of the correlation
+        :param correlation_relvar: Name of the relvar holding the correlation
+        :param correl_a_attrs: Attrs in correlation relvar referencing a-side relvar
+        :param a_mult: Multiplicity on the a-side relvar
+        :param a_relvar: Name of the a-side relvar
+        :param a_ref_attrs: Attrs in the a-side relvar referencd by the correlation
+        :param correl_b_attrs: Attrs in correlation relvar referencing b-side relvar
+        :param b_mult: Multiplicity on the b-side relvar
+        :param b_relvar: Name of the b-side relvar
+        :param b_ref_attrs: Attrs in the b-side relvar referencd by the correlation
+        :param complete: True implies the cardinality of correlRelvar must equal the product of the cardinality of
+            refToRelvarA and refToRelvarB. If False, correlRelvar is allowed to have a subset of the Cartesian product
+            of the references.
+        :return:
+        """
         pass
 
     @classmethod
