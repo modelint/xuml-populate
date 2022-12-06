@@ -10,9 +10,9 @@ from enum import Enum
 
 
 class Mult(Enum):
-    AT_LEAST_ONE = '+',
-    EXACTLY_ONE = '1',
-    ZERO_ONE_OR_MANY = '*',
+    AT_LEAST_ONE = '+'
+    EXACTLY_ONE = '1'
+    ZERO_ONE_OR_MANY = '*'
     ZERO_OR_ONE = '?'
 
 
@@ -76,25 +76,18 @@ class Database:
 
         :return:
         """
-        from_attr_str = "{"
-        for a in from_attrs:
-            from_attr_str += a + ' '
-        from_attr_str = from_attr_str[:-1] + "}"
+        # Join each attribute list into a string
+        from_attr_str = "{" + ' '.join(from_attrs) + '}'
+        to_attr_str = "{" + ' '.join(to_attrs) + '}'
 
-        to_attr_str = "{"
-        for a in to_attrs:
-            to_attr_str += a + ' '
-        to_attr_str = to_attr_str[:-1] + "}"
-        cmd = f"relvar association {name} {from_relvar} {from_attr_str} {from_mult}" \
-              f" {to_relvar} {to_attr_str} {to_mult}"
+        # Build a TclRAL command string
+        cmd = f"relvar association {name} {from_relvar} {from_attr_str} {from_mult.value}" \
+              f" {to_relvar} {to_attr_str} {to_mult.value}"
+
+        # Execute the command and log the result
         cls.tclRAL.eval(cmd)
-        result = cls.tclRAL.eval("relvar constraint info R20")
-        print(result)
+        result = cls.tclRAL.eval(f"relvar constraint info {name}")
         cls._logger.info(result)
-        # relvar association R1 \
-        # Subsystem {First_element_number Domain} 1 \
-        # Domain_Partition {Number Domain} 1
-        pass
 
     @classmethod
     def create_correlation(cls, name: str, correlation_relvar: str,
@@ -106,6 +99,10 @@ class Database:
         relvar correlation ?-complete? name correlRelvar
              correlAttrListA refToSpecA refToRelvarA refToAttrListA
              correlAttrListB refToSpecB refToRelvarB refToAttrListB
+        Example:
+            relvar correlation C1 OWNERSHIP
+                OwnerName + OWNER OwnerName
+                DogName * DOG DogName
 
         :param name: Name of the correlation
         :param correlation_relvar: Name of the relvar holding the correlation
@@ -122,7 +119,21 @@ class Database:
             of the references.
         :return:
         """
-        pass
+        # Join each attribute list into a string
+        correl_a_attrs_str = "{" + ' '.join(correl_a_attrs) + '}'
+        correl_b_attrs_str = "{" + ' '.join(correl_b_attrs) + '}'
+        a_ref_attrs_str = "{" + ' '.join(a_ref_attrs) + '}'
+        b_ref_attrs_str = "{" + ' '.join(b_ref_attrs) + '}'
+
+        # Build a TclRAL command string
+        cmd = f"relvar correlation {'-complete ' if complete else ''} {name} {correlation_relvar} " \
+              f"{correl_a_attrs_str} {a_mult.value} {a_relvar} {a_ref_attrs_str} " \
+              f"{correl_b_attrs_str} {b_mult.value} {b_relvar} {b_ref_attrs_str} "
+
+        # Execute the command and log the result
+        cls.tclRAL.eval(cmd)
+        result = cls.tclRAL.eval(f"relvar constraint info {name}")
+        cls._logger.info(result)
 
     @classmethod
     def create_partition(cls):
