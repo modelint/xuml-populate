@@ -166,7 +166,7 @@ class Metamodel:
         referenced_attrs = [unspace(a) for a in target['attrs']]
 
         # Find matching t or p side to obtain multiplicity
-        if association['t_side']['cname'] == referring_class:
+        if association['t_side']['cname'] == source['class']:
             referring_mult = cls.mult_tclral[association['t_side']['mult']]
             referenced_mult = cls.mult_tclral[association['p_side']['mult']]
         else:

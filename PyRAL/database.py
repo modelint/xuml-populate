@@ -154,7 +154,6 @@ class Database:
         cls.tclRAL.eval(cmd)
         result = cls.tclRAL.eval(f"relvar constraint info {name}")
         cls._logger.info(result)
-        pass
 
     @classmethod
     def populateSchema(cls):

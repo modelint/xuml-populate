@@ -161,7 +161,7 @@ relationships
     R27
     has instances uniquely distinguished by, M Identifier
     uniquely distinguishes instances of, 1 Class
-    Identifer.(Class, Domain) -> Class.(Name, Domain)
+    Identifier.(Class, Domain) -> Class.(Name, Domain)
 --
     R29
     abbreviates name of, 1 Class
