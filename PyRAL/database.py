@@ -64,6 +64,7 @@ class Database:
 
         cmd = f"relvar create {name} {header} {id_const}"
         result = cls.tclRAL.eval(cmd)
+        cls._logger.info(f"Adding class: {name}")
         cls._logger.info(result)
 
     @classmethod
@@ -136,7 +137,23 @@ class Database:
         cls._logger.info(result)
 
     @classmethod
-    def create_partition(cls):
+    def create_partition(cls, name: str, super: str, super_attrs: List[str], subs: Dict[str, List[str]]):
+        """
+        relvar partition name super superAttrList
+            sub1 sub1AttrList
+            ...
+
+        """
+        super_attrs_str = '{' + ' '.join(super_attrs) + '}'
+        all_subs = ""
+        for subname, attrs in subs.items():
+            all_subs += subname + ' ' + '{' + ' '.join(attrs) + '} '
+        all_subs = all_subs[:-1]
+
+        cmd = f"relvar partition {name} {super} {super_attrs_str} {all_subs}"
+        cls.tclRAL.eval(cmd)
+        result = cls.tclRAL.eval(f"relvar constraint info {name}")
+        cls._logger.info(result)
         pass
 
     @classmethod
