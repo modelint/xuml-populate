@@ -57,6 +57,8 @@ class Metamodel:
 
         for r in cls.metamodel_subsystem.rels:
             cls.add_rel(r)
+        Database.names()  # Log all created relvar names
+        Database.constraint_names()  # Log all created constraints
         pass
 
     @classmethod

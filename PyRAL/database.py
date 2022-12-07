@@ -91,6 +91,26 @@ class Database:
         cls._logger.info(result)
 
     @classmethod
+    def names(cls, pattern: str = ""):
+        """
+        Use this to names of all created relvars or those specified by the optional pattern.
+
+        :param pattern:
+        """
+        result = cls.tclRAL.eval(f"relvar names {pattern}")
+        cls._logger.info(result)
+
+    @classmethod
+    def constraint_names(cls, pattern: str = ""):
+        """
+        Use this to names of all created constraints or those specified by the optional pattern.
+
+        :param pattern:
+        """
+        result = cls.tclRAL.eval(f"relvar constraint names {pattern}")
+        cls._logger.info(result)
+
+    @classmethod
     def create_correlation(cls, name: str, correlation_relvar: str,
                            correl_a_attrs: List[str], a_mult: Mult, a_relvar: str, a_ref_attrs: List[str],
                            correl_b_attrs: List[str], b_mult: Mult, b_relvar: str, b_ref_attrs: List[str],
