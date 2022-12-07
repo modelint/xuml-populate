@@ -31,6 +31,7 @@ class Metamodel:
     metamodel_subsystem = None
     types = None
     imported = set()
+    unresolved_rels = []
     mult_tclral = {
         'M': DBMult.AT_LEAST_ONE,
         '1': DBMult.EXACTLY_ONE,

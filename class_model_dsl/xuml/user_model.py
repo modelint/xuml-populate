@@ -11,13 +11,13 @@ For our purposes we will use the Elevator Management domain as one of our user /
 import sys
 import logging
 from pathlib import Path
-from class_model_dsl.xuml.metamodel import Metamodel
+# from class_model_dsl.xuml.metamodel import Metamodel
 from class_model_dsl.parse.model_parser import ModelParser
 from class_model_dsl.mp_exceptions import ModelParseError, MPIOException
-from class_model_dsl.populate.domain import Domain
-from class_model_dsl.populate.lineage import Lineage
-from class_model_dsl.populate.attribute import ResolveAttrTypes
-from class_model_dsl.populate.mm_class import MMclass
+# from class_model_dsl.populate.domain import Domain
+# from class_model_dsl.populate.lineage import Lineage
+# from class_model_dsl.populate.attribute import ResolveAttrTypes
+# from class_model_dsl.populate.mm_class import MMclass
 
 
 class UserModel:
