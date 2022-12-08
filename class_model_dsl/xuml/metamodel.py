@@ -29,7 +29,8 @@ class Metamodel:
     metamodel_pkg = Path("class_model_dsl/metamodel")
     subsys_cm_files = list(metamodel_pkg.glob('*.xcm'))
     metamodel = None
-    metamodel_subsystem = None
+    metamodel_subsystem = {}
+    schema_classes = set()  # All classes added to the db schema for reference when constraints are added
     types = None
     mult_tclral = {
         'M': DBMult.AT_LEAST_ONE,
@@ -45,24 +46,27 @@ class Metamodel:
         from a parse of the metamodel xcm file
         :return:
         """
-        # Create a TclRAL session
+        # Create a TclRAL session with an empty db
         Database.init()
 
+        # Parse each metamodel file and add each class to the db
         for subsys_cm_file in cls.metamodel_pkg.glob("*.xcm"):
             cls._logger.info(f"Processing subsystem cm file: [{subsys_cm_file}]")
 
             # Parse the metamodel
-            cls.parse(cm_path=subsys_cm_file)
+            current_subsystem = cls.parse(cm_path=subsys_cm_file)
 
-            # Create schema element in db for each class and relationship
-            for c in cls.metamodel_subsystem.classes:
+            # Add each class to the db
+            for c in current_subsystem.classes:
                 cls.add_class(c)
-            Database.names()  # Log all created relvar names
-        pass
 
-        #     for r in cls.metamodel_subsystem.rels:
-        #         cls.add_rel(r)
-        # Database.constraint_names()  # Log all created constraints
+        # Now that all classes are present in the db, add all the constraints
+        for sname,subsys in cls.metamodel_subsystem.items():
+            for r in subsys.rels:
+                cls.add_rel(r)
+        Database.names()  # Log all created relvar names
+        Database.constraint_names()  # Log all created constraints
+        pass
 
     @classmethod
     def parse(cls, cm_path):
@@ -71,18 +75,21 @@ class Metamodel:
 
         :return:
         """
+        sname = cm_path.stem
         try:
             cls.metamodel = ModelParser(model_file_path=cm_path, debug=False)
         except MPIOException as e:
             sys.exit(e)
         try:
-            cls.metamodel_subsystem = cls.metamodel.parse()
+            cls.metamodel_subsystem[sname] = cls.metamodel.parse()
         except ModelParseError as e:
             sys.exit(e)
 
         # Get the datatypes
         with open("class_model_dsl/metamodel/mm_types.yaml", 'r') as file:
             cls.types = yaml.safe_load(file)
+
+        return cls.metamodel_subsystem[sname]
 
     @classmethod
     def add_class(cls, mm_class):
@@ -107,6 +114,7 @@ class Metamodel:
                 else:
                     ids[i[0]].append(a['name'])
         Database.create_relvar(name=cname, attrs=attrs, ids=ids)
+        cls.schema_classes.add(mm_class['name'])
 
     @classmethod
     def add_rel(cls, rel):
@@ -129,6 +137,9 @@ class Metamodel:
         if rel.get('ref2'):
             cls.add_associative(associative_rel=rel)
             return
+
+        if rel.get('ascend'):
+            return  # Ordinal relationship, no constraint added
 
         # Association case not the other two cases (only one ref)
         cls.add_association(association=rel)
@@ -155,14 +166,14 @@ class Metamodel:
         rnum = association['rnum']
 
         source = association['ref1']['source']
-        if source['class'] in cls.imported:
+        if source['class'] not in cls.schema_classes:
             cls._logger.warning(f"Rel {rnum} to imported class skipped")
             return  # We'll add the association after all imported classes are resolved
         referring_class = unspace(source['class'])
         referring_attrs = [unspace(a) for a in source['attrs']]
 
         target = association['ref1']['target']
-        if target['class'] in cls.imported:
+        if target['class'] not in cls.schema_classes:
             cls._logger.warning(f"Rel {rnum} to imported class skipped")
             return  # We'll add the association after all imported classes are resolved
         referenced_class = unspace(target['class'])
@@ -193,7 +204,7 @@ class Metamodel:
         :param associative_rel:
         """
         rnum = associative_rel['rnum']
-        if associative_rel['assoc_cname'] in cls.imported:
+        if associative_rel['assoc_cname'] not in cls.schema_classes:
             cls._logger.warning(f"Rel {rnum} to imported class skipped")
             return  # We'll add the association after all imported classes are resolved
         assoc_class = unspace(associative_rel['assoc_cname'])
@@ -202,7 +213,7 @@ class Metamodel:
         ref1_from_attrs = [unspace(a) for a in ref1_source['attrs']]
 
         target1 = associative_rel['ref1']['target']
-        if target1['class'] in cls.imported:
+        if target1['class'] not in cls.schema_classes:
             cls._logger.warning(f"Rel {rnum} to imported class skipped")
             return  # We'll add the association after all imported classes are resolved
         ref1_class = unspace(target1['class'])
@@ -212,7 +223,7 @@ class Metamodel:
         ref2_from_attrs = [unspace(a) for a in ref2_source['attrs']]
 
         target2 = associative_rel['ref2']['target']
-        if target2['class'] in cls.imported:
+        if target2['class'] not in cls.schema_classes:
             cls._logger.warning(f"Rel {rnum} to imported class skipped")
             return  # We'll add the association after all imported classes are resolved
         ref2_class = unspace(target2['class'])
@@ -242,12 +253,12 @@ class Metamodel:
         :param mm_class:
         """
         rnum = generalization['rnum']
-        if generalization['superclass'] in cls.imported:
+        if generalization['superclass'] not in cls.schema_classes:
             cls._logger.warning(f"Rel {rnum} to imported class skipped")
             return  # We'll add the association after all imported classes are resolved
         superclass_name = generalization['superclass']
         for n in generalization['subclasses']:
-            if n in cls.imported:
+            if n not in cls.schema_classes:
                 cls._logger.warning(f"Rel {rnum} to imported class skipped")
                 return  # We'll add the association after all imported classes are resolved
         subclass_names = generalization['subclasses']
