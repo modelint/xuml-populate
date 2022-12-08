@@ -26,7 +26,8 @@ def unspace(sdelim: str) -> str:
 
 class Metamodel:
     _logger = logging.getLogger(__name__)
-    metamodel_path = Path("class_model_dsl/metamodel/class-attribute.xcm")
+    metamodel_pkg = Path("class_model_dsl/metamodel")
+    subsys_cm_files = list(metamodel_pkg.glob('*.xcm'))
     metamodel = None
     metamodel_subsystem = None
     types = None
@@ -49,28 +50,31 @@ class Metamodel:
         # Create a TclRAL session
         Database.init()
 
-        # Parse the metamodel
-        cls.parse()
+        for subsys_cm_file in cls.metamodel_pkg.glob("*.xcm"):
+            cls._logger.info(f"Processing subsystem cm file: [{subsys_cm_file}]")
 
-        # Create schema element in db for each class and relationship
-        for c in cls.metamodel_subsystem.classes:
-            cls.add_class(c)
+            # Parse the metamodel
+            cls.parse(cm_path=subsys_cm_file)
 
-        for r in cls.metamodel_subsystem.rels:
-            cls.add_rel(r)
-        Database.names()  # Log all created relvar names
-        Database.constraint_names()  # Log all created constraints
-        pass
+            # Create schema element in db for each class and relationship
+            for c in cls.metamodel_subsystem.classes:
+                cls.add_class(c)
+            Database.names()  # Log all created relvar names
+            pass
+
+        #     for r in cls.metamodel_subsystem.rels:
+        #         cls.add_rel(r)
+        # Database.constraint_names()  # Log all created constraints
 
     @classmethod
-    def parse(cls):
+    def parse(cls, cm_path):
         """
         Parse the metamodel
 
         :return:
         """
         try:
-            cls.metamodel = ModelParser(model_file_path=cls.metamodel_path, debug=False)
+            cls.metamodel = ModelParser(model_file_path=cm_path, debug=False)
         except MPIOException as e:
             sys.exit(e)
         try:
