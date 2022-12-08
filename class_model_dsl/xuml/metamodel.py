@@ -13,9 +13,6 @@ from PyRAL.rtypes import Attribute
 from PyRAL.database import Mult as DBMult
 import yaml
 
-print("Made it to here")
-
-
 def unspace(sdelim: str) -> str:
     """
     :param sdelim: space delimited string
@@ -23,17 +20,41 @@ def unspace(sdelim: str) -> str:
     """
     return sdelim.replace(' ', '_')
 
-
 class Metamodel:
+    """
+    The SM Metamodel is loaded from a package representing a Modeled Domain.
+
+    The package is a folder consisting of one or more subsystem .xcm files and a single
+    types yaml file.
+
+    Once loaded, the Metamodel creates a corresponding database schema in TclRAL via
+    the PyRAL interface.
+
+    A user model can then be populated into this schema.
+    """
     _logger = logging.getLogger(__name__)
+
+    # The user does not suppy the metamodel, so we can assume it is located within
+    # our module as indicated.
     metamodel_pkg = Path("class_model_dsl/metamodel")
+
+    # Subsystem class model files
     subsys_cm_files = list(metamodel_pkg.glob('*.xcm'))
-    metamodel = None
-    metamodel_subsystem = {}
+
+    metamodel = None  # The current parsed metamodel subsystem
+    types = None  # These are defined for all subsystems in the domain (not loaded yet)
+
+    # An entry is added for each subsystem as it is parsed. Once all classes in the Modeled Domain
+    # are added to the DB, this dictionary is consulted to create all relationship constraints.
+    # This way we don't need to reload and reparse the subsystem files.
+    metamodel_subsystem = {}  # Parsed subsystems, keyed by subsystem file name
+
     schema_classes = set()  # All classes added to the db schema for reference when constraints are added
-    types = None
+
+    # Here is a mapping from metamodel multiplcity notation to that used by the target TclRAL db
+    # When interacting with PyRAL we must supply the db specific value
     mult_tclral = {
-        'M': DBMult.AT_LEAST_ONE,
+        'M': DBMult.AT_LEAST_ONE
         '1': DBMult.EXACTLY_ONE,
         'Mc': DBMult.ZERO_ONE_OR_MANY,
         '1c': DBMult.ZERO_OR_ONE
