@@ -175,12 +175,6 @@ class Database:
         result = cls.tclRAL.eval(f"relvar constraint info {name}")
         cls._logger.info(result)
 
-    @classmethod
-    def populateSchema(cls):
-        """
-        Invoke whatever method does this. Not sure yet how to specify
-        """
-        pass
 
     @classmethod
     def save(cls, dbname):

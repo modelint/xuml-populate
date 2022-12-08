@@ -21,7 +21,16 @@ from class_model_dsl.mp_exceptions import ModelParseError, MPIOException
 
 
 class UserModel:
+    """
+    The command line specifies a package representing a Modeled Domain in some user directory.
+
+    The package is a folder consisting of oen or more subsystem .xcm files and a single
+    types yaml file.
+
+    Once loaded, the model information is populated into an existing Metamodel database.
+    """
     _logger = logging.getLogger(__name__)
+
     user_model_path = None
     subsystem = None
     model = None
@@ -47,8 +56,7 @@ class UserModel:
             sys.exit(e)
 
         cls.populate()
-        ResolveAttrTypes()
-
+        # ResolveAttrTypes()
 
     @classmethod
     def populate(cls):
@@ -59,20 +67,22 @@ class UserModel:
         # Insert classes
         cls._logger.info("Populating classes")
         domain = cls.subsystem.domain['name']
-        for c in cls.subsystem.classes:
-            MMclass.populate(domain=domain, parse_data=c)
+        pass
+
+        # for c in cls.subsystem.classes:
+        #     MMclass.populate(domain=domain, parse_data=c)
 
         # Insert relationships
         # self.logger.info("Populating relationships")
         # for r in self.parse_data.rels:
         #     Relationship(domain=self, subsys=s, parse_data=r)
 
-        #self.domain = Domain(model=self, parse_data=self.subsystem)
+        # self.domain = Domain(model=self, parse_data=self.subsystem)
 
         # for relvar_name, relation in self.population.items():
         #     t = SMmetaDB.Relvars[relvar_name]
         #     if relation:
         #         self.db.Connection.execute(t.insert(), relation)  # Sqlalchemy populates the table schema
 
-        #cls._logger.info("Populating lineage")
-        #Lineage(domain=self.domain)
+        # cls._logger.info("Populating lineage")
+        # Lineage(domain=self.domain)

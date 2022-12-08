@@ -54,7 +54,7 @@ class Metamodel:
     # Here is a mapping from metamodel multiplcity notation to that used by the target TclRAL db
     # When interacting with PyRAL we must supply the db specific value
     mult_tclral = {
-        'M': DBMult.AT_LEAST_ONE
+        'M': DBMult.AT_LEAST_ONE,
         '1': DBMult.EXACTLY_ONE,
         'Mc': DBMult.ZERO_ONE_OR_MANY,
         '1c': DBMult.ZERO_OR_ONE
@@ -295,11 +295,3 @@ class Metamodel:
 
         Database.create_partition(name=rnum, super=unspace(superclass_name),
                                   super_attrs=superclass_attrs, subs=subclasses)
-
-    def Insert(self, table_name, instance):
-        """Insert the instance in the named table dictionary"""
-        pass
-        # instance_dict = dict(
-        #     zip(self.table_headers[table_name], instance)
-        # )
-        # self.population[table_name].append(instance_dict)
