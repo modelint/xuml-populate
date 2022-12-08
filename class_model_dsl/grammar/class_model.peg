@@ -46,7 +46,7 @@ type_name = icaps_name
 attr_tags = '{' attr_tag (',' sp attr_tag )* '}' // {I, I2, R29c} for example
 attr_tag = itag / rtag
 itag = '*'? 'I' ordinal? // Identifier number, both I and I1 mean the same thing, optional super identifier * symbol
-rtag = 'R' ordinal 'c'? // Relationship number and optional c constraint signifier
+rtag = 'O'? 'R' ordinal 'c'? // Relationship number and optional c constraint signifier
 
 // Relationships
 // ---

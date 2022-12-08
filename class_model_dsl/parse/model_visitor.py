@@ -122,10 +122,25 @@ class SubsystemVisitor(PTNodeVisitor):
         return item
 
     def visit_rtag(self, node, children):
-        """Referential attribute tag"""
-        rnum = int(children[0])
-        constraint = len(children) > 1
-        rtag = {'R': (rnum, constraint) }
+        """
+        Referential attribute tag
+
+        Here we expect examples like these:
+            R21c
+            R22
+            OR23
+
+        The trick is to extract the number, conditionality status, and either R or OR
+        """
+        # 'R' gets swallowed by the parser since it is a literal, but 'O' shows up as a child
+        # element for some reason. Not sure why 'O' is treated differently, but this complicates
+        # the code below. Best solution is to clean up the grammar eventually.
+
+        tag = 'OR' if node[0].value == 'O' else 'R'
+        rnum_index = 1 if tag == 'OR' else 0
+        rnum = int(rnum_index)
+        constraint = children[-1] == 'c'
+        rtag = {tag: (rnum, constraint) }
         return rtag
 
     def visit_itag(self, node, children):
@@ -164,6 +179,14 @@ class SubsystemVisitor(PTNodeVisitor):
         """Ascend-descend phrases"""
         items = {node.rule_name: {"highval": children[0], "lowval": children[1], "cname": children[2]['name']}}
         return items
+
+    def visit_highval(self, node, children):
+        """High value phrase"""
+        return ''.join(children)
+
+    def visit_lowval(self, node, children):
+        """Low value phrase"""
+        return ''.join(children)
 
     def visit_oform(self, node, children):
         """Ordinal formalization"""

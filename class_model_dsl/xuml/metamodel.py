@@ -31,8 +31,6 @@ class Metamodel:
     metamodel = None
     metamodel_subsystem = None
     types = None
-    imported = set()
-    unresolved_rels = []
     mult_tclral = {
         'M': DBMult.AT_LEAST_ONE,
         '1': DBMult.EXACTLY_ONE,
@@ -60,7 +58,7 @@ class Metamodel:
             for c in cls.metamodel_subsystem.classes:
                 cls.add_class(c)
             Database.names()  # Log all created relvar names
-            pass
+        pass
 
         #     for r in cls.metamodel_subsystem.rels:
         #         cls.add_rel(r)
@@ -94,10 +92,8 @@ class Metamodel:
         :param mm_class:
         :return:
         """
-        # Skip imported classes (we'll add them when their home subsystem is processed)
+        # Skip imported classes
         if mm_class.get('import'):
-            # Add name to the set of imported classes so that we can resolve them later
-            cls.imported.add(mm_class['name'])
             return
 
         cname = unspace(mm_class['name'])
