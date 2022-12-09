@@ -2,7 +2,7 @@
 mp_exceptions.py – Model parser specific exceptions
 """
 
-# Every flatland error should have the same format
+# Every error should have the same format
 # with a standard prefix and postfix defined here
 pre = "\nxUML model parser: ["
 post = "]"
@@ -13,6 +13,10 @@ class MPException(Exception):
 
 class MDPopulationException(MPException):
     pass
+
+class MultipleDomainsException(MPException):
+    def __str__(self):
+        return f'{pre}Only one domain may be loaded at a time.{post}'
 
 class UnknownRelationshipType(MDPopulationException):
     def __str__(self):

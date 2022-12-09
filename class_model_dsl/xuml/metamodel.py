@@ -106,6 +106,11 @@ class Metamodel:
         except ModelParseError as e:
             sys.exit(e)
 
+        # TODO: use this Pathlib style to redo the indented with open code below
+        # types_path = cm_path.join('types.yaml')
+        # type_text = types_path.read_text()
+        # cls.types = yaml.safe_load(type_text)
+
         # Get the datatypes
         with open("class_model_dsl/metamodel/mm_types.yaml", 'r') as file:
             cls.types = yaml.safe_load(file)

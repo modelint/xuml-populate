@@ -13,11 +13,12 @@ import logging
 from pathlib import Path
 # from class_model_dsl.xuml.metamodel import Metamodel
 from class_model_dsl.parse.model_parser import ModelParser
-from class_model_dsl.mp_exceptions import ModelParseError, MPIOException
+from class_model_dsl.mp_exceptions import ModelParseError, MPIOException, MultipleDomainsException
 # from class_model_dsl.populate.domain import Domain
 # from class_model_dsl.populate.lineage import Lineage
 # from class_model_dsl.populate.attribute import ResolveAttrTypes
 # from class_model_dsl.populate.mm_class import MMclass
+import yaml
 
 
 class UserModel:
@@ -31,30 +32,42 @@ class UserModel:
     """
     _logger = logging.getLogger(__name__)
 
+    user_model_pkg = None
     user_model_path = None
+    model_subsystem = {}  # Parsed subsystems, keyed by subsystem file name
     subsystem = None
     model = None
+    domain = None
 
     @classmethod
-    def load(cls, user_model_path: Path):
+    def parse(cls, cm_path):
         """
+        Parse the model
 
-        :param user_model_path:
+        :return:
         """
-        cls.user_model_path = user_model_path
-
-        # Parse the model
-        cls._logger.info("Parsing the user model")
+        sname = cm_path.stem
         try:
-            cls.model = ModelParser(model_file_path=cls.user_model_path, debug=False)
+            cls.model = ModelParser(model_file_path=cm_path, debug=False)
         except MPIOException as e:
             sys.exit(e)
         try:
-            cls.subsystem = cls.model.parse()
-            pass
+            cls.model_subsystem[sname] = cls.model.parse()
         except ModelParseError as e:
             sys.exit(e)
+        return cls.model_subsystem[sname]
 
+    @classmethod
+    def load(cls, user_model_pkg: Path):
+        """
+
+        :param user_model_pkg:
+        """
+        cls._logger.info(f"Processing user class models in : [{user_model_pkg}]")
+        cls.user_model_pkg = user_model_pkg
+        for subsys_cm_file in cls.user_model_pkg.glob("*.xcm"):
+            cls._logger.info(f"Processing user subsystem cm file: [{subsys_cm_file}]")
+            cls.parse(cm_path=subsys_cm_file)
         cls.populate()
         # ResolveAttrTypes()
 
@@ -66,8 +79,16 @@ class UserModel:
 
         # Insert classes
         cls._logger.info("Populating classes")
-        domain = cls.subsystem.domain['name']
-        pass
+        for sname, subsys in cls.model_subsystem.items():
+            if not cls.domain:
+                cls.domain = subsys.domain
+            elif cls.domain != subsys.domain:
+                cls._logger.error(f"Multiple domains: {cls.domain}, {subsys.domain}]")
+                raise MultipleDomainsException
+
+            # TODO: HERE Domain name is set, now start populating contents into metamodel schema
+
+            pass
 
         # for c in cls.subsystem.classes:
         #     MMclass.populate(domain=domain, parse_data=c)

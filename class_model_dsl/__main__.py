@@ -50,12 +50,12 @@ def main():
     if args.rebuild:
         Metamodel.create_db()
 
-    # User model specified?
+    # User model package specified?
     if args.model:
         user_model_path = Path(args.model)
 
         # Process the user's model
-        UserModel.load(user_model_path)
+        UserModel.load(user_model_pkg=user_model_path)
 
     logger.info("No problemo")  # We didn't die on an exception, basically
 
