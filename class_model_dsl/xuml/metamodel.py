@@ -9,8 +9,8 @@ from pathlib import Path
 from class_model_dsl.parse.model_parser import ModelParser
 from class_model_dsl.mp_exceptions import ModelParseError, MPIOException
 from PyRAL.database import Database
-from PyRAL.rtypes import Attribute
-from PyRAL.database import Mult as DBMult
+from PyRAL.relvar import Relvar
+from PyRAL.rtypes import Attribute, Mult as DBMult
 import yaml
 
 def unspace(sdelim: str) -> str:
@@ -33,6 +33,8 @@ class Metamodel:
     A user model can then be populated into this schema.
     """
     _logger = logging.getLogger(__name__)
+
+    db = None
 
     # The user does not suppy the metamodel, so we can assume it is located within
     # our module as indicated.
@@ -68,7 +70,7 @@ class Metamodel:
         :return:
         """
         # Create a TclRAL session with an empty db
-        Database.init()
+        cls.db = Database.init()
 
         # Parse each metamodel file and add each class to the db
         for subsys_cm_file in cls.metamodel_pkg.glob("*.xcm"):
@@ -139,7 +141,7 @@ class Metamodel:
                     ids[i[0]] = [a['name']]
                 else:
                     ids[i[0]].append(a['name'])
-        Database.create_relvar(name=cname, attrs=attrs, ids=ids)
+        Relvar.create_relvar(db=cls.db, name=cname, attrs=attrs, ids=ids)
         cls.schema_classes.add(mm_class['name'])
 
     @classmethod
@@ -213,7 +215,7 @@ class Metamodel:
             referring_mult = cls.mult_tclral[association['p_side']['mult']]
             referenced_mult = cls.mult_tclral[association['t_side']['mult']]
 
-        Database.create_association(name=rnum,
+        Relvar.create_association(db=cls.db, name=rnum,
                                     from_relvar=referring_class, from_attrs=referring_attrs, from_mult=referring_mult,
                                     to_relvar=referenced_class, to_attrs=referenced_attrs, to_mult=referenced_mult,
                                     )
@@ -264,7 +266,7 @@ class Metamodel:
 
         # Find matching t or p side to obtain multiplicity
 
-        Database.create_correlation(name=rnum, correlation_relvar=assoc_class,
+        Relvar.create_correlation(db=cls.db, name=rnum, correlation_relvar=assoc_class,
                                     correl_a_attrs=ref1_from_attrs, a_mult=ref1_mult, a_relvar=ref1_class,
                                     a_ref_attrs=ref1_to_attrs,
                                     correl_b_attrs=ref2_from_attrs, b_mult=ref2_mult, b_relvar=ref2_class,
@@ -298,5 +300,5 @@ class Metamodel:
             # TODO: Put in logic for Non uniform superclass refs (no examples available in class-attr subsys)
             pass
 
-        Database.create_partition(name=rnum, super=unspace(superclass_name),
+        Relvar.create_partition(db=cls.db, name=rnum, superclass_name=unspace(superclass_name),
                                   super_attrs=superclass_attrs, subs=subclasses)

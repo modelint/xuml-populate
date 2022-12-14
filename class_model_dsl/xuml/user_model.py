@@ -8,17 +8,16 @@ user model or M1 population
 For our purposes we will use the Elevator Management domain as one of our user / M1 test cases
 """
 
-import sys
+# import sys
 import logging
 from pathlib import Path
 # from class_model_dsl.xuml.metamodel import Metamodel
 from class_model_dsl.parse.model_parser import ModelParser
 from class_model_dsl.mp_exceptions import ModelParseError, MPIOException, MultipleDomainsException
-# from class_model_dsl.populate.domain import Domain
+from class_model_dsl.populate.domain import Domain
 # from class_model_dsl.populate.lineage import Lineage
 # from class_model_dsl.populate.attribute import ResolveAttrTypes
 # from class_model_dsl.populate.mm_class import MMclass
-import yaml
 
 
 class UserModel:
@@ -40,6 +39,20 @@ class UserModel:
     domain = None
 
     @classmethod
+    def load(cls, user_model_pkg: Path):
+        """
+
+        :param user_model_pkg:
+        """
+        cls._logger.info(f"Processing user class models in : [{user_model_pkg}]")
+        cls.user_model_pkg = user_model_pkg
+        for subsys_cm_file in cls.user_model_pkg.glob("*.xcm"):
+            cls._logger.info(f"Processing user subsystem cm file: [{subsys_cm_file}]")
+            cls.parse(cm_path=subsys_cm_file)
+        cls.populate()
+        # ResolveAttrTypes()
+
+    @classmethod
     def parse(cls, cm_path):
         """
         Parse the model
@@ -58,37 +71,25 @@ class UserModel:
         return cls.model_subsystem[sname]
 
     @classmethod
-    def load(cls, user_model_pkg: Path):
-        """
-
-        :param user_model_pkg:
-        """
-        cls._logger.info(f"Processing user class models in : [{user_model_pkg}]")
-        cls.user_model_pkg = user_model_pkg
-        for subsys_cm_file in cls.user_model_pkg.glob("*.xcm"):
-            cls._logger.info(f"Processing user subsystem cm file: [{subsys_cm_file}]")
-            cls.parse(cm_path=subsys_cm_file)
-        cls.populate()
-        # ResolveAttrTypes()
-
-    @classmethod
     def populate(cls):
         """Populate the database from the parsed input"""
 
         cls._logger.info("Populating the model")
+        from PyRAL.database import Database
 
         # Insert classes
         cls._logger.info("Populating classes")
         for sname, subsys in cls.model_subsystem.items():
+            # For now we are processing only a single domain.
+            # Therefore each subsystem should specify the same domain. If not, we exit with an error.
             if not cls.domain:
                 cls.domain = subsys.domain
             elif cls.domain != subsys.domain:
                 cls._logger.error(f"Multiple domains: {cls.domain}, {subsys.domain}]")
                 raise MultipleDomainsException
 
-            # TODO: HERE Domain name is set, now start populating contents into metamodel schema
-
-            pass
+        Domain.populate(db=Database.tclRAL, domain=cls.domain, subsystems=cls.model_subsystem)
+        pass
 
         # for c in cls.subsystem.classes:
         #     MMclass.populate(domain=domain, parse_data=c)

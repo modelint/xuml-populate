@@ -148,7 +148,7 @@ class Lineage:
         # Now we figure out where and if we can take another step
 
         # Get all adjacent relationships, if any, on the civisit class that have not already been traversed
-        facet_t = smdb.MetaData.tables['Facet']  # Could be either super or subclasses, so we search Facets
+        facet_t = smdb.MetaData.tables['Facet']  # Could be either superclass_name or subclasses, so we search Facets
         p = facet_t.c.Rnum  # We project on the rnums
         r = and_(
             (facet_t.c.Class == cvisit),
