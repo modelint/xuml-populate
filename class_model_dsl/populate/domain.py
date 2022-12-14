@@ -49,6 +49,15 @@ class Domain:
                 Domain_Partition_i(Number=s.subsystem['range'][0], Domain=domain['name'])
             ])
         Transaction.execute()
+        domain_pop = Relvar.population(db=db, relvar='Domain')
+        modeled_domain_pop = Relvar.population(db=db, relvar='Modeled_Domain')
+        subsystem_pop = Relvar.population(db=db, relvar='Subsystem')
+        domain_partition_pop = Relvar.population(db=db, relvar='Domain_Partition')
+        cls._logger.info("Domain subsytem population:")
+        cls._logger.info(f"Domain Population\n{domain_pop}")
+        cls._logger.info(f"Modeled Domain\n{modeled_domain_pop}")
+        cls._logger.info(f"Subsystem\n{subsystem_pop}")
+        cls._logger.info(f"Domain Paritition\n{domain_partition_pop}")
         pass
 
 

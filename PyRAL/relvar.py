@@ -149,3 +149,16 @@ class Relvar:
         Transaction.append_statement(statement=cmd)
 
         pass
+
+    @classmethod
+    def population(cls, db, relvar: str):
+        """
+
+        :param db:
+        :param relvar:
+        :return:
+        """
+        result = db.eval(f"set {relvar}")
+        result = db.eval(f"set {relvar}")
+        # db.eval(f"puts ${relvar}")
+        return result
