@@ -8,7 +8,7 @@ user model or M1 population
 For our purposes we will use the Elevator Management domain as one of our user / M1 test cases
 """
 
-# import sys
+import sys
 import logging
 from pathlib import Path
 # from class_model_dsl.xuml.metamodel import Metamodel
@@ -88,7 +88,7 @@ class UserModel:
                 cls._logger.error(f"Multiple domains: {cls.domain}, {subsys.domain}]")
                 raise MultipleDomainsException
 
-        Domain.populate(db=Database.tclRAL, domain=cls.domain, subsystems=cls.model_subsystem)
+        Domain.populate(mmdb=Database.tclRAL, domain=cls.domain, subsystems=cls.model_subsystem)
         pass
 
         # for c in cls.subsystem.classes:

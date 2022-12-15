@@ -1,5 +1,5 @@
 """
-subsystem.py – Convert parsed subsystem to a relation
+subsystem.py – Manage assignment of subsystem class and relationship numbers
 """
 
 import logging
@@ -8,39 +8,29 @@ from class_model_dsl.mp_exceptions import CnumsExceeded
 
 class Subsystem:
     """
-    Create a subsystem relation
+    Manages the automatic assignment of unique numbers to the Subsystem's classes. In traditional Shlaer-Mellor,
+    Cnums were assigned by the modeler for naming purposes just like Rnums. Here we assign and use the numbers
+    internally only as a means of unique identification among all Subsystem Elements. This means that the number
+    assigned to any given class may vary each time the model is populated.
     """
 
-    def __init__(self, domain, parse_data):
-        """Constructor"""
-        self.logger = logging.getLogger(__name__)
+    def __init__(self, record):
+        """Constructor to initialize the cnum counter"""
 
-        self.domain = domain
-        self.parse_data = parse_data
-        self.name = parse_data['name']
-        self.alias = parse_data['alias']
-        self.range = parse_data['range']
-        self.cnum = self.range[0]
+        self._logger = logging.getLogger(__name__)
 
-        # Insert the subsystem relation
-        self.logger.info(f"Populating subsystem [{self.name}]")
-        self.domain.model.population['Subsystem'] = [
-            {'Name': self.name, 'First element number': self.range[0], 'Domain': self.domain.name, 'Alias': self.alias}
-        ]
-        self.domain.model.population['Domain Partition'] = [{'Number': self.range[0], 'Domain': self.domain.name}]
-
-        # Note that we are creating a partition for the lowest boundary only
-        # Even though the user has expressed both a low and high value. We ignore th high value (range[1])
-        # So if you have two subsystems with ranges 1-99 and 100-199, this results in partions 1, 100
-        # since the low number is inclusive and the upper bound is the next higher bound-1
-        # This policy prevents any subsystem numbering overlap
-        # See the relevant github wiki model descriptions on the SM Metamodel repository for more detail
+        self.name = record.subsystem['name']  # Name of the subsystem
+        self.range = record.subsystem['range']  # Numbering range as a two element tuple
+        self.cnum = self.range[0]  # Lowest assignable value in the range, we start counting here
 
     def next_cnum(self):
+        """
+        Assign the next available class number and throw an unrecoverable error if the numbering range is exceeded.
+        """
         if self.cnum <= self.range[1]:
             self.cnum += 1
             return "C" + str(self.cnum - 1)
         else:
-            self.logger.error(f"Max cnums {self.range[1]} exceeded in subsystem: {self.name}")
+            self._logger.error(f"Max cnums {self.range[1]} exceeded in subsystem: {self.name}")
             raise CnumsExceeded(self.range[1])
 

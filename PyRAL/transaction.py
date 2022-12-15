@@ -54,5 +54,6 @@ class Transaction:
         cls._logger.info(f"Executing transaction:")
         cls._logger.info(cls._cmd)
         cls._result = cls._db.eval(cls._cmd)
+        cls._statements = None  # The statements have been executed
         cls._logger.info(f"With result: [{cls._result}]")
 
