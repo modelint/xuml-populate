@@ -100,9 +100,12 @@ class Relvar:
         b_ref_attrs_str = "{" + ' '.join(b_ref_attrs) + '}'
 
         # Build a TclRAL command string
+        # We need to reverse the a/b multiplicities since TclRAL considers multiplicty from the perspective
+        # of the correlation relvar tuples rather than from the perspectives of the participating (non correlation)
+        # relvar tuples. The latter approach matches the way SM modelers think.
         cmd = f"relvar correlation {'-complete ' if complete else ''} {name} {correlation_relvar} " \
-              f"{correl_a_attrs_str} {a_mult.value} {a_relvar} {a_ref_attrs_str} " \
-              f"{correl_b_attrs_str} {b_mult.value} {b_relvar} {b_ref_attrs_str} "
+              f"{correl_a_attrs_str} {b_mult.value} {a_relvar} {a_ref_attrs_str} " \
+              f"{correl_b_attrs_str} {a_mult.value} {b_relvar} {b_ref_attrs_str} "
 
         # Execute the command and log the result
         db.eval(cmd)

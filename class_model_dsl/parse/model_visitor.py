@@ -3,7 +3,7 @@
 from arpeggio import PTNodeVisitor
 from collections import namedtuple
 
-ID = namedtuple('_ID', 'number superclass_name')
+ID = namedtuple('_ID', 'number superid')
 
 class SubsystemVisitor(PTNodeVisitor):
 

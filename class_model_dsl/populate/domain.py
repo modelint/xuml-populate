@@ -67,6 +67,7 @@ class Domain:
             subsys = Subsystem(record=s)
             for c in s.classes:
                 MMclass.populate(mmdb=mmdb, domain=domain, subsystem=subsys, record=c)
+                pass
             pass
 
         #

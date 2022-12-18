@@ -3,7 +3,7 @@ Activity ID : string
 Alias Name : string
 Attribute Name : string
 Class Name : string
-Class Number : int
+Class Number : string
 Domain Alias : string
 Domain Name : string
 Element Label : string
