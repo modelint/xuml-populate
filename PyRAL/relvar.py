@@ -3,7 +3,8 @@ relvar.py – Operations on relvars
 """
 
 import logging
-import tabulate
+from tabulate import tabulate
+import re
 from typing import List, Dict, TYPE_CHECKING
 from PyRAL.rtypes import Attribute, Mult
 from PyRAL.transaction import Transaction
@@ -168,6 +169,7 @@ class Relvar:
     @classmethod
     def relformat(cls, db, relvar: str):
         """
+        Prints a table of the relvar population
 
         :param db:
         :param relvar:
@@ -176,13 +178,21 @@ class Relvar:
         result = db.eval(f"set {relvar}")
         h, b = result.split('}', 1)
         h = h[1:]
-        attrs = h.split(' ')
-        attr_names = attrs[::2]
-        attr_types = attrs[1::2]
-        deg = len(attr_names)
+        h_items = h.split(' ')
+        h_attrs = h_items[::2]
+        h_types = h_items[1::2]
+        deg = len(h_attrs)
         body = b.split('} {')
         body[0] = body[0].split(' {{')[1]
+        value_pattern = r"([{}\w ]*)"
+        pattern = ""
+        for a in h_attrs:
+            pattern += a + ' ' + value_pattern + ' '
+        pattern = pattern[:-1]
+        body_lists = []
         for row in body:
-            pass
-        # db.eval(f"puts ${relvar}")
-        pass
+            fields = re.findall(pattern, row)
+            vals = [f.strip('{}') for f in fields[0]]
+            body_lists.append(vals)
+        print(f"\n-- {relvar} --")
+        print(tabulate(body_lists, h_attrs, tablefmt="outline"))
