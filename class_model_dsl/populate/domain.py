@@ -68,6 +68,7 @@ class Domain:
             for c in s.classes:
                 MMclass.populate(mmdb=mmdb, domain=domain, subsystem=subsys, record=c)
                 pass
+            r = Relvar.relformat(db=mmdb, relvar='Class')
             pass
 
         #

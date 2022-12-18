@@ -3,6 +3,7 @@ relvar.py – Operations on relvars
 """
 
 import logging
+import tabulate
 from typing import List, Dict, TYPE_CHECKING
 from PyRAL.rtypes import Attribute, Mult
 from PyRAL.transaction import Transaction
@@ -162,6 +163,26 @@ class Relvar:
         :return:
         """
         result = db.eval(f"set {relvar}")
-        result = db.eval(f"set {relvar}")
         # db.eval(f"puts ${relvar}")
-        return result
+
+    @classmethod
+    def relformat(cls, db, relvar: str):
+        """
+
+        :param db:
+        :param relvar:
+        :return:
+        """
+        result = db.eval(f"set {relvar}")
+        h, b = result.split('}', 1)
+        h = h[1:]
+        attrs = h.split(' ')
+        attr_names = attrs[::2]
+        attr_types = attrs[1::2]
+        deg = len(attr_names)
+        body = b.split('} {')
+        body[0] = body[0].split(' {{')[1]
+        for row in body:
+            pass
+        # db.eval(f"puts ${relvar}")
+        pass
