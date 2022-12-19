@@ -10,6 +10,9 @@ from PyRAL.rtypes import Attribute, Mult
 from PyRAL.transaction import Transaction
 from collections import namedtuple
 
+if TYPE_CHECKING:
+    from tkinter import Tk
+
 class Relvar:
     """
     A relational variable (table)
@@ -17,7 +20,7 @@ class Relvar:
     _logger = logging.getLogger(__name__)
 
     @classmethod
-    def create_relvar(cls, db, name: str, attrs: List[Attribute], ids: Dict[int, List[str]]):
+    def create_relvar(cls, db: 'Tk', name: str, attrs: List[Attribute], ids: Dict[int, List[str]]):
         """
         Compose a TclRAL relvar create commmand from the supplied class
         definition.
@@ -42,7 +45,7 @@ class Relvar:
         cls._logger.info(result)
 
     @classmethod
-    def create_association(cls, db, name: str,
+    def create_association(cls, db: 'Tk', name: str,
                            from_relvar: str, from_attrs: List[str], from_mult: Mult,
                            to_relvar: str, to_attrs: List[str], to_mult: Mult,
                            ):
@@ -65,7 +68,7 @@ class Relvar:
         cls._logger.info(result)
 
     @classmethod
-    def create_correlation(cls, db, name: str, correlation_relvar: str,
+    def create_correlation(cls, db: 'Tk', name: str, correlation_relvar: str,
                            correl_a_attrs: List[str], a_mult: Mult, a_relvar: str, a_ref_attrs: List[str],
                            correl_b_attrs: List[str], b_mult: Mult, b_relvar: str, b_ref_attrs: List[str],
                            complete: bool = False):
@@ -115,7 +118,7 @@ class Relvar:
         cls._logger.info(result)
 
     @classmethod
-    def create_partition(cls, db, name: str,
+    def create_partition(cls, db: 'Tk', name: str,
                          superclass_name: str, super_attrs: List[str], subs: Dict[str, List[str]]):
         """
         relvar partition name superclass_name superAttrList
@@ -135,7 +138,7 @@ class Relvar:
         cls._logger.info(result)
 
     @classmethod
-    def insert(cls, db, relvar: str, tuples: List[namedtuple]):
+    def insert(cls, db: 'Tk', relvar: str, tuples: List[namedtuple]):
         """
         Creates an insert command and adds it to the open transaction.
 
@@ -156,7 +159,7 @@ class Relvar:
         pass
 
     @classmethod
-    def population(cls, db, relvar: str):
+    def population(cls, db: 'Tk', relvar: str):
         """
 
         :param db:
@@ -167,7 +170,7 @@ class Relvar:
         # db.eval(f"puts ${relvar}")
 
     @classmethod
-    def relformat(cls, db, relvar: str):
+    def relformat(cls, db: 'Tk', relvar: str):
         """
         Prints a table of the specified relvar population.
 

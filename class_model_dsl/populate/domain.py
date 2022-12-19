@@ -75,6 +75,7 @@ class Domain:
         pass
 
         # TODO: Insert the relationships
+        # TODO: Add type checking for all params
         #
         # # Insert relationships
         # self.logger.info("Populating relationships")
