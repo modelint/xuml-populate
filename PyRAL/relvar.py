@@ -218,7 +218,14 @@ class Relvar:
         # from each row to match our attribute list order
         # Here we apply the tuple_pattern regex to each body row stripping the brackets from each value
         # and end up with a list of unbracketed body row values
-        b_rows = [[f.strip('{}') for f in re.findall(tuple_pattern, row)[0]] for row in body]
+        if deg > 1:
+            b_rows = [[f.strip('{}') for f in re.findall(tuple_pattern, row)[0]] for row in body]
+            pass
+        else:
+            b_rows = []
+            for row in body:
+                vmatch = re.findall(tuple_pattern, row)[0]
+                b_rows.append([vmatch.strip('{}')])
 
         # Now we have what we need to generate a table
         print(f"\n-- {relvar} --")
