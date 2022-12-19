@@ -169,30 +169,57 @@ class Relvar:
     @classmethod
     def relformat(cls, db, relvar: str):
         """
-        Prints a table of the relvar population
+        Prints a table of the specified relvar population.
 
-        :param db:
-        :param relvar:
-        :return:
+        We obtain the value of the supplied relvar from TclRAL as a single string.
+        We need to parse this string into attributes, types, and attribute values for
+        each tuple so that we can display the data as a table using the imported tabulate
+        module.
+
+        :param db: The TclRAL session
+        :param relvar: The value (a relation) of this variable is displayed
         """
+        # The tcl set command returns a variable value, in this case a relvar
         result = db.eval(f"set {relvar}")
-        h, b = result.split('}', 1)
-        h = h[1:]
-        h_items = h.split(' ')
-        h_attrs = h_items[::2]
-        h_types = h_items[1::2]
-        deg = len(h_attrs)
+
+        # The result is a single, very long string, representing the value of the
+        # relvar.
+
+        # First we split the header from the body. The header consists of attribute and
+        # type names surrounded by a pair of brackets like this: {attr1 type1 attr2 type2 ... }
+        # followed by a space and then the body (all the tuples) also between a pair of braces.
+
+        h, b = result.split('}', 1)  # Split at the first closing bracket to obtain header and body strings
+        h = h.strip('{')  # Remove the open brace from the header string
+        h_items = h.split(' ')  # There will be no spaces in any of the names, so we break on the space delimiter
+        h_attrs = h_items[::2]  # Every even numbered item (0,2, ...) is an attribute name
+        h_types = h_items[1::2]  # Every odd one is a type name
+        deg = len(h_attrs)  # The degree of the relvar is the number of attributes (columns)
+
+        # Now we process the body
+        # Each tuple is surrounded by brackets so our first stop is to split them all out into distinct tuple strings
         body = b.split('} {')
-        body[0] = body[0].split(' {{')[1]
-        value_pattern = r"([{}\w ]*)"
-        pattern = ""
+        body[0] = body[0].lstrip(' {')  # Remove any preceding space or brackets from the first tuple
+        # Each tuple alternates with the attribute name and the attribute value
+        # We want to extract just the values to create the table rows
+        # To complicate matters, values may contain spaces. TclRAL attribute names do not.
+        # A multi-word value is surrounded by brackets
+        # So you might see a tuple like this: Floor_height 32.6 Name {Lower lobby}
+        # We need a regex component that will extract the bracketed space delimited values
+        # As well as the non-bracketed single word values
+        value_pattern = r"([{}\w ]*)"  # Grab a string of any combination of brackets, word characters and spaces
+        # Now we build this component into an alternating pattern of attribute and value items
+        # for the attributes in our relation header
+        tuple_pattern = ""
         for a in h_attrs:
-            pattern += a + ' ' + value_pattern + ' '
-        pattern = pattern[:-1]
-        body_lists = []
-        for row in body:
-            fields = re.findall(pattern, row)
-            vals = [f.strip('{}') for f in fields[0]]
-            body_lists.append(vals)
+            tuple_pattern += f"{a} {value_pattern} "
+        tuple_pattern = tuple_pattern.rstrip(' ')  # Removes the final trailing space
+        # Now we can use the constructed tuple pattern regex to extract a list of values
+        # from each row to match our attribute list order
+        # Here we apply the tuple_pattern regex to each body row stripping the brackets from each value
+        # and end up with a list of unbracketed body row values
+        b_rows = [[f.strip('{}') for f in re.findall(tuple_pattern, row)[0]] for row in body]
+
+        # Now we have what we need to generate a table
         print(f"\n-- {relvar} --")
-        print(tabulate(body_lists, h_attrs, tablefmt="outline"))
+        print(tabulate(b_rows, h_attrs, tablefmt="outline"))  # That last parameter chooses our table style

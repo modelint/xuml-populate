@@ -69,6 +69,7 @@ class Domain:
                 MMclass.populate(mmdb=mmdb, domain=domain, subsystem=subsys, record=c)
             Relvar.relformat(db=mmdb, relvar='Class')
         pass
+        # TODO: Print out a table for all of the other metamodel classes
 
         #
         # # Insert relationships
