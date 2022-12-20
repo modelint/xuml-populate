@@ -12,106 +12,106 @@ domain Metamodel, META
 subsystem Relationship, REL 100-149
 class Association
 attributes
-    Rnum {I, R100}
-    Domain {I, R100}
+    Rnum : Relationship Number {I, R100}
+    Domain : Domain Name {I, R100}
 --
 class Association Class
 attributes
-    Rnum {I, R120c, R151}
-    Class {I2, R120, R151}
-    Domain {I, I2, R120, R151}
+    Rnum : Relationship Number {I, R120c, R151}
+    Class : Class Name {I2, R120, R151}
+    Domain : Domain Name {I, I2, R120, R151}
 --
 class Asymmetric Perspective
 attributes
-    Side {I, R121c}
-    Rnum {I, R121}
-    Domain {I, R121}
+    Side : Side {I, R121c}
+    Rnum : Relationship Number {I, R121}
+    Domain : Domain Name {I, R121}
 --
 class Binary Association
 attributes
-    Rnum {I, R119}
-    Domain {I, R119}
+    Rnum : Relationship Number {I, R119}
+    Domain : Domain Name {I, R119}
 --
 class Class <import:Class And Attribute>
 attributes
     Name {I}
-    Domain {I}
+    Domain : Domain Name {I}
 --
 class Class In Lineage
 attributes
-    Class {I, R131}
-    Lnum {I, R131}
-    Domain {I, R131}
+    Class : Class Name {I, R131}
+    Lnum : Lineage Number {I, R131}
+    Domain : Domain Name {I, R131}
 --
 class Constrained Loop
 attributes
     CLnum : Constrained Loop Number {I, R17}
-    Domain {I, R17}
+    Domain : Domain Name {I, R17}
 --
 class Facet
 attributes
-    Rnum {I, R101}
-    Class {I, R101}
-    Domain {I, R101}
+    Rnum : Relationship Number {I, R101}
+    Class : Class Name {I, R101}
+    Domain : Domain Name {I, R101}
 --
 class Generalization
 attributes
-    Rnum {I, R100, R103}
-    Domain {I, R100, R103}
-    Superclass {R103}
+    Rnum : Relationship Number {I, R100, R103}
+    Domain : Domain Name {I, R100, R103}
+    Superclass : Class Name {R103}
 --
 class Identifier <import:Class And Attribute>
 attributes
     Number {I}
-    Class {I}
-    Domain {I}
+    Class : Class Name {I}
+    Domain : Domain Name {I}
 --
 class Identifier Attribute <import:Class And Attribute>
 attributes
     Identifier {I}
     Attribute {I}
-    Class {I}
-    Domain {I}
+    Class : Class Name {I}
+    Domain : Domain Name {I}
 --
 class Lineage
 attributes
     Lnum : Lineage Number {I, R17}
-    Domain {I, R17}
+    Domain : Domain Name {I, R17}
 --
 class Loop Segment
 attributes
-    Loop {I, R130}
-    Rnum {I, R130}
-    Domain {I, R130}
+    Loop : Constrained Loop Number {I, R130}
+    Rnum : Relationship Number {I, R130}
+    Domain : Domain Name {I, R130}
 --
 class Minimal Partition
 attributes
-    Rnum {I, R116, R117, R118}
-    Domain {I, R116, R117, R118}
-    A subclass {R117}
-    B subclass {R118c}
+    Rnum : Relationship Number {I, R116, R117, R118}
+    Domain : Domain Name {I, R116, R117, R118}
+    A subclass : Class Name {R117}
+    B subclass : Class Name {R118c}
 --
 class Ordinal Relationship
 attributes
-    Rnum {I, R100}
-    Domain {I, R100, R104, R106, R107}
-    Ranked class {R104, R106, R107}
-    Ranking attribute {R106}
-    Ranking identifier {R107, R106}
+    Rnum : Relationship Number {I, R100}
+    Domain : Domain Name {I, R100, R104, R106, R107}
+    Ranked class : Class Name {R104, R106, R107}
+    Ranking attribute : Attribute Name {R106}
+    Ranking identifier : ID Number {R107, R106}
     Ascending perspective : Phrase Name
     Descending perspective : Phrase Name
 --
 class P Perspective
 attributes
-    Rnum {I, R125, R105}
-    Domain {I, R105, R125}
+    Rnum : Relationship Number {I, R125, R105}
+    Domain : Domain Name {I, R105, R125}
 --
 class Perspective
 attributes
     Side : Side {I}
-    Rnum {I, I2}
-    Domain {I, I2, R110}
-    Viewed class {R110}
+    Rnum : Relationship Number {I, I2}
+    Domain : Domain Name {I, I2, R110}
+    Viewed class : Class Name {R110}
     Phrase : Phrase Name {I2}
     Conditional : Boolean
     Multiplicity : One Many
@@ -119,34 +119,34 @@ attributes
 class Relationship
 attributes
     Rnum : Relationship Number {I, R14}
-    Domain {I, R14}
+    Domain : Domain Name {I, R14}
 --
 class Subclass
 attributes
-    Rnum {I, R102, R151}
-    Class {I, R102, R151}
-    Domain {I, R102, R151}
+    Rnum : Relationship Number {I, R102, R151}
+    Class : Class Name {I, R102, R151}
+    Domain : Domain Name {I, R102, R151}
 --
 class Superclass
 attributes
-    Rnum {I, R102}
-    Domain {I, R102}
-    Class {R102}
+    Rnum : Relationship Number {I, R102}
+    Domain : Domain Name {I, R102}
+    Class : Class Name {R102}
 --
 class Symmetric Perspective
 attributes
-    Rnum {I, R123, R121}
-    Domain {I, R121, R123}
+    Rnum : Relationship Number {I, R123, R121}
+    Domain : Domain Name {I, R121, R123}
 --
 class T Perspective
 attributes
-    Rnum {I, R124, R105}
-    Domain {I, R105, R124}
+    Rnum : Relationship Number {I, R124, R105}
+    Domain : Domain Name {I, R105, R124}
 --
 class Unary Association
 attributes
-    Rnum {I, R119}
-    Domain {I, R119}
+    Rnum : Relationship Number {I, R119}
+    Domain : Domain Name {I, R119}
 --
 relationships
     R100

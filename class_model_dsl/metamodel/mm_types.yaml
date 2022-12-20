@@ -18,6 +18,7 @@ Phrase Name : string
 Reference Type : string
 Relationship Number : string
 Spanning Element Label : string
+Side : string
 Subsystem Alias : string
 Subsystem Name : string
 Subsystem Element Label : string
