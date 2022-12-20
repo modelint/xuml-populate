@@ -4,12 +4,17 @@ Alias Name : string
 Attribute Name : string
 Class Name : string
 Class Number : string
+Conditionality : boolean
+Constrained Loop Number : string
 Domain Alias : string
 Domain Name : string
 Element Label : string
 Element Number : int
 Enumeration Value : string
 ID Number : int
+Lineage Number : string
+Multiplicity : string
+Phrase Name : string
 Reference Type : string
 Relationship Number : string
 Spanning Element Label : string
