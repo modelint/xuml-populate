@@ -103,6 +103,7 @@ attributes
 --
 class P Perspective
 attributes
+    Side : Side {R105}
     Rnum : Relationship Number {I, R125, R105}
     Domain : Domain Name {I, R105, R125}
 --
@@ -135,11 +136,13 @@ attributes
 --
 class Symmetric Perspective
 attributes
+    Side : Side {R121}
     Rnum : Relationship Number {I, R123, R121}
     Domain : Domain Name {I, R121, R123}
 --
 class T Perspective
 attributes
+    Side : Side {R105}
     Rnum : Relationship Number {I, R124, R105}
     Domain : Domain Name {I, R105, R124}
 --
@@ -172,7 +175,7 @@ relationships
     R103
     is required by, 1 Generalization
     requires, 1 Superclass
-    Generalization.(Rnum, Domain, Superclass) -> Superclass.(Rnum, Domain, Class)
+    Generalization.(Rnum, Domain) -> Superclass.(Rnum, Domain)
 --
     R104
     ranks instances by value in, 1 Class
@@ -188,12 +191,12 @@ relationships
     R106
     is ranked by, 1 Identifier Attribute
     is used to rank, 1c Ordinal Relationship
-    Ordinal Relationship.(Rnum, Domain, Ranked class, Ordered attribute, Ranking identifier) -> Identifier Attribute.(Rnum, Domain, Class, Attribute, Identifier)
+    Ordinal Relationship.(Domain, Ranked class, Ranking attribute, Ranking identifier) -> Identifier Attribute.(Domain, Class, Attribute, Identifier)
 --
     R107
     formalizes, Mc Ordinal Relationship
     is formalized by, 1 Identifier
-    Ordinal Relationship.(Ranking identifier, Class, Domain) -> Identifier.(Number, Class, Domain)
+    Ordinal Relationship.(Ranking identifier, Ranked class, Domain) -> Identifier.(Number, Class, Domain)
 --
     R110
     is standpoint of, Mc Perspective
@@ -232,7 +235,7 @@ relationships
     Perspective +
         Symmetric Perspective
         Asymmetric Perspective
-    <subclass>.(Rnum, Domain) -> Perspective.(Rnum, Domain)
+    <subclass>.(Side, Rnum, Domain) -> Perspective.(Side, Rnum, Domain)
 --
     R123
     is view on, 1 Unary Association
@@ -260,6 +263,6 @@ relationships
     is instantiated to manifest real world entity as part of, Mc Lineage
     real world entity requires instantiation of each, M Class
     1 Class In Lineage
-    Class in Lineage.(Class, Domain) -> Facet.(Class, Rnum)
+    Class in Lineage.(Class, Domain) -> Class.(Name, Domain)
     Class in Lineage.(Lnum, Domain) -> Lineage.(Lnum, Domain)
 --

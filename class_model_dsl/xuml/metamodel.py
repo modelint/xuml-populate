@@ -13,12 +13,14 @@ from PyRAL.relvar import Relvar
 from PyRAL.rtypes import Attribute, Mult as DBMult
 import yaml
 
+
 def unspace(sdelim: str) -> str:
     """
     :param sdelim: space delimited string
     :return: underscore delimited string
     """
     return sdelim.replace(' ', '_')
+
 
 class Metamodel:
     """
@@ -84,7 +86,7 @@ class Metamodel:
                 cls.add_class(c)
 
         # Now that all classes are present in the db, add all the constraints
-        for sname,subsys in cls.metamodel_subsystem.items():
+        for sname, subsys in cls.metamodel_subsystem.items():
             for r in subsys.rels:
                 cls.add_rel(r)
         Database.names()  # Log all created relvar names
@@ -216,9 +218,9 @@ class Metamodel:
             referenced_mult = cls.mult_tclral[association['t_side']['mult']]
 
         Relvar.create_association(db=cls.db, name=rnum,
-                                    from_relvar=referring_class, from_attrs=referring_attrs, from_mult=referring_mult,
-                                    to_relvar=referenced_class, to_attrs=referenced_attrs, to_mult=referenced_mult,
-                                    )
+                                  from_relvar=referring_class, from_attrs=referring_attrs, from_mult=referring_mult,
+                                  to_relvar=referenced_class, to_attrs=referenced_attrs, to_mult=referenced_mult,
+                                  )
 
     @classmethod
     def add_associative(cls, associative_rel):
@@ -267,11 +269,11 @@ class Metamodel:
         # Find matching t or p side to obtain multiplicity
 
         Relvar.create_correlation(db=cls.db, name=rnum, correlation_relvar=assoc_class,
-                                    correl_a_attrs=ref1_from_attrs, a_mult=ref1_mult, a_relvar=ref1_class,
-                                    a_ref_attrs=ref1_to_attrs,
-                                    correl_b_attrs=ref2_from_attrs, b_mult=ref2_mult, b_relvar=ref2_class,
-                                    b_ref_attrs=ref2_to_attrs,
-                                    )
+                                  correl_a_attrs=ref1_from_attrs, a_mult=ref1_mult, a_relvar=ref1_class,
+                                  a_ref_attrs=ref1_to_attrs,
+                                  correl_b_attrs=ref2_from_attrs, b_mult=ref2_mult, b_relvar=ref2_class,
+                                  b_ref_attrs=ref2_to_attrs,
+                                  )
 
     @classmethod
     def add_generalization(cls, generalization):
@@ -290,15 +292,16 @@ class Metamodel:
                 cls._logger.warning(f"Rel {rnum} to imported class skipped")
                 return  # We'll add the association after all imported classes are resolved
         subclass_names = generalization['subclasses']
+        genref = generalization['genrefs'][0]
+        superclass_attrs = [unspace(a) for a in genref['target']['attrs']]
         if len(generalization['genrefs']) == 1:  # All superclass refs identical
-            genref = generalization['genrefs'][0]
-            superclass_attrs = [unspace(a) for a in genref['target']['attrs']]
             subclass_attrs = [unspace(a) for a in genref['source']['attrs']]
             subclasses = {unspace(s): subclass_attrs for s in subclass_names}
-            pass
         else:
-            # TODO: Put in logic for Non uniform superclass refs (no examples available in class-attr subsys)
-            pass
+            subclasses = {}
+            for g in generalization['genrefs']:
+                referring_subclass_name = unspace(g['source']['class'])
+                subclasses[referring_subclass_name] = [unspace(a) for a in g['source']['attrs']]
 
         Relvar.create_partition(db=cls.db, name=rnum, superclass_name=unspace(superclass_name),
-                                  super_attrs=superclass_attrs, subs=subclasses)
+                                super_attrs=superclass_attrs, subs=subclasses)
