@@ -3,7 +3,15 @@ binary_association.py – Convert parsed relationship to a relation
 """
 
 import logging
+from PyRAL.relvar import Relvar
+from typing import TYPE_CHECKING
 
+from class_model_dsl.populate.pop_types import mult_tclral,\
+    Association_i, Binary_Association_i, Association_Class_i, \
+    Perspective_i, Asymmetric_Perspective_i, T_Perspective_i, P_Perspective_i
+
+if TYPE_CHECKING:
+    from tkinter import Tk
 
 class BinaryAssociation:
     """
@@ -11,40 +19,55 @@ class BinaryAssociation:
     """
     _logger = logging.getLogger(__name__)
     record = None
+    rnum = None
+    t_side, p_side = None, None
+    ref1_source, ref2_source = None, None
+    ref1_target, ref2_target = None, None
+    ref1, ref2 = None, None
+    assoc_cname = None
+    assoc_mult = None
 
     @classmethod
-    def populate(cls, mmdb: 'Tk', domain, rnum, record):
+    def populate(cls, mmdb: 'Tk', domain, rnum: str, record):
         """Constructor"""
 
-        pass
+        cls.rnum = rnum
 
+        cls.t_side = record.get('t_side')
+        cls.p_side = record.get('p_side')
+        cls.ref1 = record.get('ref1')
+        cls.ref1_source = None if not cls.ref1 else cls.ref1['source']
+        cls.ref1_target = None if not cls.ref1 else cls.ref1['target']
+        cls.ref2 = record.get('ref2')  # Supplied only for an associative binary
+        cls.ref2_source = None if not cls.ref2 else cls.ref2['source']
+        cls.ref2_target = None if not cls.ref2 else cls.ref2['target']
+        cls.assoc_cname = record.get('assoc_cname')
+        cls.assoc_mult = record.get('assoc_mult')
 
-        # self.t_side = relationship.parse_data.get('t_side')
-        # self.p_side = relationship.parse_data.get('p_side')
-        # self.ref1 = relationship.parse_data.get('ref1')
-        # self.ref1_source = None if not self.ref1 else self.ref1['source']
-        # self.ref1_target = None if not self.ref1 else self.ref1['target']
-        # self.ref2 = relationship.parse_data.get('ref2')  # Supplied only for an associative binary
-        # self.ref2_source = None if not self.ref2 else self.ref2['source']
-        # self.ref2_target = None if not self.ref2 else self.ref2['target']
-        # self.assoc_cname = relationship.parse_data.get('assoc_cname')
-        # self.assoc_mult = relationship.parse_data.get('assoc_mult')
-        #
-        # # Populate
-        # self.logger.info(f"Populating Binary Association [{self.relationship.rnum}]")
-        # self.relationship.domain.model.Insert('Association', [self.relationship.rnum, self.relationship.domain.name])
-        # self.relationship.domain.model.Insert('Binary Association',
-        #                                       [self.relationship.rnum, self.relationship.domain.name])
-        # if self.assoc_cname:
-        #     self.relationship.domain.model.Insert('Association Class', [self.relationship.rnum, self.assoc_cname,
-        #                                                                 self.relationship.domain.name])
-        #
-        # # Populate the T and P perspectives of an asymmetric binary association
-        # self.relationship.domain.model.Insert('Perspective',
-        #                                       ['T', self.relationship.rnum, self.relationship.domain.name,
-        #                                        self.t_side['cname'], self.t_side['phrase'],
-        #                                        True if 'c' in self.t_side['mult'] else False, self.t_side['mult'][0]]
-        #                                       )
+        # Populate
+        cls._logger.info(f"Populating Binary Association [{cls.rnum}]")
+        Relvar.insert(db=mmdb, relvar='Association', tuples=[
+            Association_i(Rnum=cls.rnum, Domain=domain['name'])
+        ])
+        Relvar.insert(db=mmdb, relvar='Binary_Association', tuples=[
+            Binary_Association_i(Rnum=cls.rnum, Domain=domain['name'])
+        ])
+
+        if cls.assoc_cname:
+            Relvar.insert(db=mmdb, relvar='Association_Class', tuples=[
+                Association_Class_i(Rnum=cls.rnum, Class=cls.assoc_cname, Domain=domain['name'])
+            ])
+
+        # Populate the T and P perspectives of an asymmetric binary association
+        t_mult = cls.t_side['mult'][0]
+        Relvar.insert(db=mmdb, relvar='Perspective', tuples=[
+            Perspective_i(Side='T', Rnum=cls.rnum, Domain=domain['name'],
+                          Viewed_class=cls.t_side['cname'], Phrase=cls.t_side['phrase'],
+                          Conditional=True if 'c' in cls.t_side['mult'] else False,
+                          Multiplicity= mult_tclral[t_mult]
+                          )
+        ])
+
         # self.relationship.domain.model.Insert('Asymmetric Perspective',
         #                                       ['T', self.relationship.rnum, self.relationship.domain.name])
         # # Need to add 'Side' so that R105 works in SQL

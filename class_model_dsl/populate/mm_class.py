@@ -7,9 +7,7 @@ from PyRAL.transaction import Transaction
 from PyRAL.relvar import Relvar
 from class_model_dsl.populate.attribute import Attribute
 from class_model_dsl.populate.pop_types import\
-    Element_i, Subsystem_Element_i,\
-    Class_i, Alias_i,\
-    Attribute_i, Identiifer_i, Identifer_Attribute_i
+    Element_i, Subsystem_Element_i,Class_i, Alias_i
 
 from typing import TYPE_CHECKING
 

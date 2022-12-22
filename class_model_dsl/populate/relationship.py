@@ -11,12 +11,11 @@ from PyRAL.transaction import Transaction
 from PyRAL.relvar import Relvar
 from class_model_dsl.mp_exceptions import UnknownRelationshipType
 from typing import TYPE_CHECKING
-from class_model_dsl.populate.pop_types import Element_i, Subsystem_Element_i
+from class_model_dsl.populate.pop_types import Element_i, Subsystem_Element_i, Rel_i
 
 if TYPE_CHECKING:
     from tkinter import Tk
 
-Rel_i = namedtuple('Rel_i', 'Rnum Domain')
 
 class Relationship:
     """
