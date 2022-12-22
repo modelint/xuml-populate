@@ -50,6 +50,7 @@ class UserModel:
             cls._logger.info(f"Processing user subsystem cm file: [{subsys_cm_file}]")
             cls.parse(cm_path=subsys_cm_file)
         cls.populate()
+        # TODO: Resolve unresolved attribute types
         # ResolveAttrTypes()
 
     @classmethod
@@ -92,14 +93,14 @@ class UserModel:
         pass
 
         # for c in cls.subsystem.classes:
-        #     MMclass.populate(domain=domain, parse_data=c)
+        #     MMclass.populate(domain=domain, record=c)
 
         # Insert relationships
         # self.logger.info("Populating relationships")
-        # for r in self.parse_data.rels:
-        #     Relationship(domain=self, subsys=s, parse_data=r)
+        # for r in self.record.rels:
+        #     Relationship(domain=self, subsys=s, record=r)
 
-        # self.domain = Domain(model=self, parse_data=self.subsystem)
+        # self.domain = Domain(model=self, record=self.subsystem)
 
         # for relvar_name, relation in self.population.items():
         #     t = SMmetaDB.Relvars[relvar_name]

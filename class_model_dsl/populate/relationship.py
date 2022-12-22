@@ -3,49 +3,57 @@ relationship.py – Convert parsed relationship to a relation
 """
 
 import logging
-from class_model_dsl.populate.generalization import Generalization
+# from class_model_dsl.populate.generalization import Generalization
 from class_model_dsl.populate.binary_association import BinaryAssociation
-from class_model_dsl.populate.ordinal import Ordinal
+# from class_model_dsl.populate.ordinal import Ordinal
+from collections import namedtuple
+from PyRAL.transaction import Transaction
+from PyRAL.relvar import Relvar
 from class_model_dsl.mp_exceptions import UnknownRelationshipType
+from typing import TYPE_CHECKING
+from class_model_dsl.populate.pop_types import Element_i, Subsystem_Element_i
 
+if TYPE_CHECKING:
+    from tkinter import Tk
+
+Rel_i = namedtuple('Rel_i', 'Rnum Domain')
 
 class Relationship:
     """
     Create a relationship relation
     """
+    _logger = logging.getLogger(__name__)
+    record = None
+    name = None
+    rnum = None
 
-    def __init__(self, domain, subsys, parse_data):
+    @classmethod
+    def populate(cls, mmdb: 'Tk', domain, subsystem, record):
         """Constructor"""
-        self.logger = logging.getLogger(__name__)
 
-        self.domain = domain
-        self.subsys = subsys
-        self.parse_data = parse_data
-        self.rnum = parse_data['rnum']
+        cls.record = record
+        cls.rnum = record['rnum']
 
         # Populate relationship
-        self.domain.model.Insert('Relationship', [self.rnum, self.domain.name])
+        Transaction.open(db=mmdb)
+        Relvar.insert(db=mmdb, relvar='Element', tuples=[
+            Element_i(Label=cls.rnum, Domain=domain['name'])
+        ])
+        Relvar.insert(db=mmdb, relvar='Subsystem_Element', tuples=[
+            Subsystem_Element_i(Label=cls.rnum, Domain=domain['name'], Subsystem=subsystem.name)
+        ])
+        Relvar.insert(db=mmdb, relvar='Relationship', tuples=[
+            Rel_i(Rnum=cls.rnum, Domain=domain['name'])
+        ])
 
-        # Populate subsystem element
-        se_values = dict(
-            zip(self.domain.model.table_headers['Subsystem Element'], [self.rnum, self.domain.name, self.subsys.name])
-        )
-        self.domain.model.population['Subsystem Element'].append(se_values)
-
-        # Populate element
-        e_values = dict(
-            zip(self.domain.model.table_headers['Element'], [self.rnum, self.domain.name])
-        )
-        self.domain.model.population['Element'].append(e_values)
-
-        # Populate generalization
-        if 't_side' in self.parse_data:
-            BinaryAssociation(self)
-        elif 'superclass' in self.parse_data:
-            Generalization(self)
-        elif 'ascend' in self.parse_data:
-            Ordinal(self)
-        else:
-            logging.error(
-                "Population encountered relationship type that is not an Association, Generalization, or Ordinal.")
-            raise UnknownRelationshipType
+        # Populate based on relationship type
+        if 't_side' in cls.record:
+            BinaryAssociation.populate(mmdb, domain, cls.rnum, cls.record)
+        # elif 'superclass' in self.parse_data:
+        #     Generalization(self)
+        # elif 'ascend' in self.parse_data:
+        #     Ordinal(self)
+        # else:
+        #     logging.error(
+        #         "Population encountered relationship type that is not an Association, Generalization, or Ordinal.")
+        #     raise UnknownRelationshipType

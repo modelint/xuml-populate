@@ -4,16 +4,12 @@ domain.py – Convert parsed domain to a relation
 
 import logging
 from class_model_dsl.populate.mm_class import MMclass
-# from class_model_dsl.populate.relationship import Relationship
+from class_model_dsl.populate.relationship import Relationship
 from class_model_dsl.populate.subsystem import Subsystem
-from collections import namedtuple
 from PyRAL.transaction import Transaction
 from PyRAL.relvar import Relvar
-
-Domain_i = namedtuple('Domain_i', 'Name Alias')
-Modeled_Domain_i = namedtuple('Modeled_Domain_i', 'Name')
-Domain_Partition_i = namedtuple('Domain_Partition_i', 'Number Domain')
-Subsystem_i = namedtuple('Domain_Partition_i', 'Name First_element_number Domain Alias')
+from class_model_dsl.populate.pop_types import\
+    Domain_i, Modeled_Domain_i, Domain_Partition_i, Subsystem_i
 
 class Domain:
     """
@@ -72,13 +68,12 @@ class Domain:
             for c in s.classes:
                 MMclass.populate(mmdb=mmdb, domain=domain, subsystem=subsys, record=c)
             Relvar.relformat(db=mmdb, relvar='Class')
+
+        # Insert relationships
+        cls._logger.info("Populating user model relationships")
+        for s in subsystems.values():
+            subsys = Subsystem(record=s)
+            for r in s.rels:
+                Relationship.populate(mmdb=mmdb, domain=domain, subsystem=subsys, record=r)
+
         pass
-
-        # TODO: Insert the relationships
-        # TODO: Add type checking for all params
-        #
-        # # Insert relationships
-        # self.logger.info("Populating relationships")
-        # for r in self.parse_data.rels:
-        #     Relationship(domain=self, subsys=s, parse_data=r)
-

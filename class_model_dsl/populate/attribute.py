@@ -3,21 +3,11 @@ attribute.py – Create an attribute relation
 """
 
 import logging
-from collections import namedtuple
 from PyRAL.relvar import Relvar
 from typing import Set
-
-Attribute_i = namedtuple('Attribute_i', 'Name Class Domain Type')
-Non_Derived_Attribute_i = namedtuple('Non_Derived_Attribute_i', 'Name Class Domain')
-Identifier_i = namedtuple('Identifier_i', 'Number Class Domain')
-Irreducible_Identifier_i = namedtuple('Irreducible_Identifier_i', 'Number Class Domain')
-Super_Identifier_i = namedtuple('Super_Identifier_i', 'Number Class Domain')
-Identifier_Attribute_i = namedtuple('Identifier_Attribute_i', 'Identifier Attribute Class Domain')
-"""
-I_Attribute
-
-Instance reference to Attribute class (See identifier of Attribute class in the metamodel)
-"""
+from class_model_dsl.populate.pop_types import \
+    Attribute_i, Non_Derived_Attribute_i,\
+    Identifier_i, Irreducible_Identifier_i, Super_Identifier_i, Identifier_Attribute_i
 
 class Attribute:
     """
@@ -28,7 +18,6 @@ class Attribute:
     record = None
     dtype = None
     participating_ids = None
-
 
     @classmethod
     def populate(cls, mmdb, domain: str, cname: str, class_identifiers: Set[int], record):

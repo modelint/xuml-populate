@@ -3,18 +3,19 @@ mm_class.py – Convert parsed class to a relation
 """
 
 import logging
-from collections import namedtuple
 from PyRAL.transaction import Transaction
 from PyRAL.relvar import Relvar
 from class_model_dsl.populate.attribute import Attribute
+from class_model_dsl.populate.pop_types import\
+    Element_i, Subsystem_Element_i,\
+    Class_i, Alias_i,\
+    Attribute_i, Identiifer_i, Identifer_Attribute_i
 
-Element_i = namedtuple('Element_i', 'Label Domain')
-Subsystem_Element_i = namedtuple('Element_i', 'Label Domain Subsystem')
-Class_i = namedtuple('Class_i', 'Name Cnum Domain')
-Alias_i = namedtuple('Alias_i', 'Name Class Domain')
-Attribute_i = namedtuple('Attribute_i', 'Name Class Domain Type')
-Identiifer_i = namedtuple('Identifier_i', 'Number Class Domain')
-Identifer_Attribute_i = namedtuple('Identifier_Attribute_i', 'Identifier Attribute Class Domain')
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from tkinter import Tk
+
 
 
 class MMclass:
@@ -29,7 +30,7 @@ class MMclass:
     identifiers = None
 
     @classmethod
-    def populate(cls, mmdb, domain, subsystem, record):
+    def populate(cls, mmdb: 'Tk', domain, subsystem, record):
         """Constructor"""
 
         cls.record = record
