@@ -68,20 +68,29 @@ class BinaryAssociation:
                           )
         ])
 
-        # self.relationship.domain.model.Insert('Asymmetric Perspective',
-        #                                       ['T', self.relationship.rnum, self.relationship.domain.name])
-        # # Need to add 'Side' so that R105 works in SQL
-        # self.relationship.domain.model.Insert('T Perspective', ['T', self.relationship.rnum, self.relationship.domain.name])
+        Relvar.insert(db=mmdb, relvar='Asymmetric Perspective', tuples=[
+            Asymmetric_Perspective_i(Side='T', Rnum=cls.rnum, Domain=domain['name'])
+        ])
+        Relvar.insert(db=mmdb, relvar='T Perspective', tuples=[
+            T_Perspective_i(Side='T', Rnum=cls.rnum, Domain=domain['name'])
+        ])
+
+        p_mult = cls.p_side['mult'][0]
+        Relvar.insert(db=mmdb, relvar='Perspective', tuples=[
+            Perspective_i(Side='P', Rnum=cls.rnum, Domain=domain['name'],
+                          Viewed_class=cls.p_side['cname'], Phrase=cls.p_side['phrase'],
+                          Conditional=True if 'c' in cls.p_side['mult'] else False,
+                          Multiplicity= mult_tclral[p_mult]
+                          )
+        ])
+
+        Relvar.insert(db=mmdb, relvar='Asymmetric Perspective', tuples=[
+            Asymmetric_Perspective_i(Side='P', Rnum=cls.rnum, Domain=domain['name'])
+        ])
+        Relvar.insert(db=mmdb, relvar='P Perspective', tuples=[
+            P_Perspective_i(Side='P', Rnum=cls.rnum, Domain=domain['name'])
+        ])
         #
-        # self.relationship.domain.model.Insert('Perspective',
-        #                                       ['P', self.relationship.rnum, self.relationship.domain.name,
-        #                                        self.p_side['cname'], self.p_side['phrase'],
-        #                                        True if 'c' in self.p_side['mult'] else False, self.p_side['mult'][0]]
-        #                                       )
-        # self.relationship.domain.model.Insert('Asymmetric Perspective',
-        #                                       ['P', self.relationship.rnum, self.relationship.domain.name])
-        # # Need to add 'Side' so that R105 works in SQL
-        # self.relationship.domain.model.Insert('P Perspective', ['P', self.relationship.rnum, self.relationship.domain.name])
         #
         # # Create reference
         # if not self.ref2:  # Simple binary association
