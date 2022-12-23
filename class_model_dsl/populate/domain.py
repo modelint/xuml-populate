@@ -74,8 +74,7 @@ class Domain:
         for s in subsystems.values():
             subsys = Subsystem(record=s)
             for r in s.rels:
-                if not 'ascend' in r:
-                    Relationship.populate(mmdb=mmdb, domain=domain, subsystem=subsys, record=r)
+                Relationship.populate(mmdb=mmdb, domain=domain, subsystem=subsys, record=r)
 
         Relvar.relformat(db=mmdb, relvar='Relationship')
         Relvar.relformat(db=mmdb, relvar='Association')
@@ -90,5 +89,6 @@ class Domain:
         Relvar.relformat(db=mmdb, relvar='Subclass')
         Relvar.relformat(db=mmdb, relvar='Facet')
         Relvar.relformat(db=mmdb, relvar='Minimal_Partition')
+        Relvar.relformat(db=mmdb, relvar='Ordinal_Relationship')
         print("Done")
         pass

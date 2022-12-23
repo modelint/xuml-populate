@@ -5,7 +5,7 @@ relationship.py – Convert parsed relationship to a relation
 import logging
 from class_model_dsl.populate.generalization import Generalization
 from class_model_dsl.populate.binary_association import BinaryAssociation
-# from class_model_dsl.populate.ordinal import Ordinal
+from class_model_dsl.populate.ordinal import Ordinal
 from PyRAL.transaction import Transaction
 from PyRAL.relvar import Relvar
 from class_model_dsl.mp_exceptions import UnknownRelationshipType
@@ -49,10 +49,10 @@ class Relationship:
             BinaryAssociation.populate(mmdb, domain, cls.rnum, cls.record)
         elif 'superclass' in cls.record:
             Generalization.populate(mmdb, domain, cls.rnum, cls.record)
+        elif 'ascend' in cls.record:
+            Ordinal.populate(mmdb, domain, cls.rnum, cls.record)
+        else:
+            logging.error(
+                "Population encountered relationship type that is not an Association, Generalization, or Ordinal.")
+            raise UnknownRelationshipType
         Transaction.execute()
-        # elif 'ascend' in self.parse_data:
-        #     Ordinal(self)
-        # else:
-        #     logging.error(
-        #         "Population encountered relationship type that is not an Association, Generalization, or Ordinal.")
-        #     raise UnknownRelationshipType

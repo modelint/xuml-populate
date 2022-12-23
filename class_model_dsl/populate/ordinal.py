@@ -3,28 +3,37 @@ ordinal.py – Convert parsed relationshiop to a relation
 """
 
 import logging
+from PyRAL.relvar import Relvar
+from typing import TYPE_CHECKING
+
+from class_model_dsl.populate.pop_types import Ordinal_Relationship
+
+if TYPE_CHECKING:
+    from tkinter import Tk
 
 class Ordinal:
     """
     Create an ordinal relationship relation
     """
+    _logger = logging.getLogger(__name__)
+    record = None
+    rnum = None
+    ascend = None
+    oform = None
 
-    def __init__(self, relationship):
+    @classmethod
+    def populate(cls, mmdb: 'Tk', domain, rnum: str, record):
         """Constructor"""
-        self.logger = logging.getLogger(__name__)
 
-        self.relationship = relationship
-        self.ascend = relationship.parse_data['ascend']
-        self.oform = relationship.parse_data['oform']
+        cls.rnum = rnum
+        cls.ascend = record['ascend']
+        cls.oform = record['oform']
 
         # Populate
-        self.logger.info(f"Populating Ordinal [{self.relationship.rnum}]")
-        self.relationship.domain.model.Insert('Ordinal Relationship', [
-            self.relationship.rnum,
-            self.relationship.domain.name,
-            self.ascend['cname'],
-            self.oform['ranking attr'],
-            self.oform['id'],
-            self.ascend['highval'],
-            self.ascend['lowval'],
+        cls._logger.info(f"Populating Ordinal [{cls.rnum}]")
+        Relvar.insert(db=mmdb, relvar='Ordinal_Relationship', tuples=[
+            Ordinal_Relationship(Rnum=cls.rnum, Domain=domain['name'], Ranked_class=cls.ascend['cname'],
+                                 Ranking_attribute=cls.oform['ranking attr'], Ranking_identifier=cls.oform['id'],
+                                 Ascending_perspective=cls.ascend['highval'], Descending_perspective=cls.ascend['lowval']
+                                 )
         ])
