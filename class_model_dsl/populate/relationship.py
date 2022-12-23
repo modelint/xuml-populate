@@ -48,6 +48,7 @@ class Relationship:
         # Populate based on relationship type
         if 't_side' in cls.record:
             BinaryAssociation.populate(mmdb, domain, cls.rnum, cls.record)
+        Transaction.execute()
         # elif 'superclass' in self.parse_data:
         #     Generalization(self)
         # elif 'ascend' in self.parse_data:

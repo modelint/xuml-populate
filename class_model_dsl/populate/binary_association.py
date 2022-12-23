@@ -68,10 +68,10 @@ class BinaryAssociation:
                           )
         ])
 
-        Relvar.insert(db=mmdb, relvar='Asymmetric Perspective', tuples=[
+        Relvar.insert(db=mmdb, relvar='Asymmetric_Perspective', tuples=[
             Asymmetric_Perspective_i(Side='T', Rnum=cls.rnum, Domain=domain['name'])
         ])
-        Relvar.insert(db=mmdb, relvar='T Perspective', tuples=[
+        Relvar.insert(db=mmdb, relvar='T_Perspective', tuples=[
             T_Perspective_i(Side='T', Rnum=cls.rnum, Domain=domain['name'])
         ])
 
@@ -84,10 +84,10 @@ class BinaryAssociation:
                           )
         ])
 
-        Relvar.insert(db=mmdb, relvar='Asymmetric Perspective', tuples=[
+        Relvar.insert(db=mmdb, relvar='Asymmetric_Perspective', tuples=[
             Asymmetric_Perspective_i(Side='P', Rnum=cls.rnum, Domain=domain['name'])
         ])
-        Relvar.insert(db=mmdb, relvar='P Perspective', tuples=[
+        Relvar.insert(db=mmdb, relvar='P_Perspective', tuples=[
             P_Perspective_i(Side='P', Rnum=cls.rnum, Domain=domain['name'])
         ])
         #

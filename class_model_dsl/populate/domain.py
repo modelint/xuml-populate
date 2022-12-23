@@ -74,6 +74,15 @@ class Domain:
         for s in subsystems.values():
             subsys = Subsystem(record=s)
             for r in s.rels:
-                Relationship.populate(mmdb=mmdb, domain=domain, subsystem=subsys, record=r)
+                if 't_side' in r:
+                    Relationship.populate(mmdb=mmdb, domain=domain, subsystem=subsys, record=r)
 
+        Relvar.relformat(db=mmdb, relvar='Relationship')
+        Relvar.relformat(db=mmdb, relvar='Association')
+        Relvar.relformat(db=mmdb, relvar='Binary_Association')
+        Relvar.relformat(db=mmdb, relvar='Perspective')
+        Relvar.relformat(db=mmdb, relvar='Asymmetric_Perspective')
+        Relvar.relformat(db=mmdb, relvar='T_Perspective')
+        Relvar.relformat(db=mmdb, relvar='P_Perspective')
+        print("Done")
         pass
