@@ -210,7 +210,7 @@ class Relvar:
         # So you might see a tuple like this: Floor_height 32.6 Name {Lower lobby}
         # We need a regex component that will extract the bracketed space delimited values
         # As well as the non-bracketed single word values
-        value_pattern = r"([{}\w ]*)"  # Grab a string of any combination of brackets, word characters and spaces
+        value_pattern = r"([{}<>\w ]*)"  # Grab a string of any combination of brackets, word characters and spaces
         # Now we build this component into an alternating pattern of attribute and value items
         # for the attributes in our relation header
         tuple_pattern = ""

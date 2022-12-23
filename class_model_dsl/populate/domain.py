@@ -52,6 +52,7 @@ class Domain:
         Relvar.relformat(db=mmdb, relvar='Domain')
         modeled_domain_pop = Relvar.population(db=mmdb, relvar='Modeled_Domain')
         Relvar.relformat(db=mmdb, relvar='Modeled_Domain')
+        Relvar.relformat(db=mmdb, relvar='Realized_Domain')
         subsystem_pop = Relvar.population(db=mmdb, relvar='Subsystem')
         Relvar.relformat(db=mmdb, relvar='Subsystem')
         domain_partition_pop = Relvar.population(db=mmdb, relvar='Domain_Partition')
@@ -67,7 +68,14 @@ class Domain:
             subsys = Subsystem(record=s)
             for c in s.classes:
                 MMclass.populate(mmdb=mmdb, domain=domain, subsystem=subsys, record=c)
-            Relvar.relformat(db=mmdb, relvar='Class')
+        Relvar.relformat(db=mmdb, relvar='Class')
+        Relvar.relformat(db=mmdb, relvar='Alias')
+        Relvar.relformat(db=mmdb, relvar='Attribute')
+        Relvar.relformat(db=mmdb, relvar='Identifier')
+        Relvar.relformat(db=mmdb, relvar='Super_Identifier')
+        Relvar.relformat(db=mmdb, relvar='Irreducible_Identifier')
+        Relvar.relformat(db=mmdb, relvar='Identifier_Attribute')
+        Relvar.relformat(db=mmdb, relvar='Non_Derived_Attribute')
 
         # Insert relationships
         cls._logger.info("Populating user model relationships")
