@@ -222,15 +222,32 @@ class Relvar:
         # Here we apply the tuple_pattern regex to each body row stripping the brackets from each value
         # and end up with a list of unbracketed body row values
 
-        # For tablulate we need a list for the columns and a list of lists for the rows
-        if deg > 1:
-            # More than one column and the regex match returns a convenient tuple in the zero element
-            b_rows = [[f.strip('{}') for f in re.findall(tuple_pattern, row)[0]] for row in body]
-        else:
-            # If there is only one match (value), regex returns a string rather than a tuple
-            # in the zero element. We need to embed this string in a list
-            b_rows = [[re.findall(tuple_pattern, row)[0].strip('{}') for row in body]]
-        # Either way, b_rows is a list of lists
+        # For tabulate we need a list for the columns and a list of lists for the rows
+
+        # Handle case where there are zero attributes
+        b_rows = None  # Default assumption
+        if deg == 0:
+            h_attrs = ['<deg 0>']
+
+        # Handle case where there are zero body tuples
+        at_least_one_tuple = b.strip('{} ')  # Empty string if no tuples in body
+
+        # Table with zero columns and one tuple
+        # There cannot be many tuples since they would be duplicates, which are not allowed
+        if deg == 0 and at_least_one_tuple:
+            b_rows = [['<dee>']]  # Tabledee
+
+        # There is at least one body tuple
+        if at_least_one_tuple:
+            if deg > 1:
+                # More than one column and the regex match returns a convenient tuple in the zero element
+                b_rows = [[f.strip('{}') for f in re.findall(tuple_pattern, row)[0]] for row in body]
+            elif deg == 1:
+                # If there is only one match (value), regex returns a string rather than a tuple
+                # in the zero element. We need to embed this string in a list
+                b_rows = [[re.findall(tuple_pattern, row)[0].strip('{}') for row in body]]
+            # Either way, b_rows is a list of lists
+
 
         # Now we have what we need to generate a table
         print(f"\n-- {relvar} --")

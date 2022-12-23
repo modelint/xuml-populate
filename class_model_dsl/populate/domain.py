@@ -30,6 +30,7 @@ class Domain:
         :return:
         """
         cls._logger.info(f"Populating modeled domain [{domain['name']}]")
+        Relvar.relformat(db=mmdb, relvar='Domain')
 
         Transaction.open(db=mmdb)
         Relvar.insert(db=mmdb, relvar='Domain', tuples=[
