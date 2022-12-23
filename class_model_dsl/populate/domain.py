@@ -74,7 +74,7 @@ class Domain:
         for s in subsystems.values():
             subsys = Subsystem(record=s)
             for r in s.rels:
-                if 't_side' in r:
+                if not 'ascend' in r:
                     Relationship.populate(mmdb=mmdb, domain=domain, subsystem=subsys, record=r)
 
         Relvar.relformat(db=mmdb, relvar='Relationship')
@@ -84,5 +84,11 @@ class Domain:
         Relvar.relformat(db=mmdb, relvar='Asymmetric_Perspective')
         Relvar.relformat(db=mmdb, relvar='T_Perspective')
         Relvar.relformat(db=mmdb, relvar='P_Perspective')
+        Relvar.relformat(db=mmdb, relvar='Association_Class')
+        Relvar.relformat(db=mmdb, relvar='Generalization')
+        Relvar.relformat(db=mmdb, relvar='Superclass')
+        Relvar.relformat(db=mmdb, relvar='Subclass')
+        Relvar.relformat(db=mmdb, relvar='Facet')
+        Relvar.relformat(db=mmdb, relvar='Minimal_Partition')
         print("Done")
         pass

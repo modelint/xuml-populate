@@ -36,6 +36,8 @@ Non_Derived_Attribute_i = namedtuple('Non_Derived_Attribute_i', 'Name Class Doma
 
 # Relationship subsystem
 Rel_i = namedtuple('Rel_i', 'Rnum Domain')
+
+# Association
 Association_i = namedtuple('Association_i', 'Rnum Domain')
 Binary_Association_i = namedtuple('Binary_Association_i', 'Rnum Domain')
 Association_Class_i = namedtuple('Association_Class_i', 'Rnum Class Domain')
@@ -44,3 +46,9 @@ Asymmetric_Perspective_i = namedtuple('Asymmetric_Perspective_i', 'Side Rnum Dom
 T_Perspective_i = namedtuple('T_Perspective_i', 'Side Rnum Domain')
 P_Perspective_i = namedtuple('P_Perspective_i', 'Side Rnum Domain')
 
+# Generalization
+Generalization_i = namedtuple('Generalization_i', 'Rnum Domain Superclass')
+Facet_i = namedtuple('Facet_i', 'Rnum Domain Class')
+Superclass_i = namedtuple('Superclass_i', 'Rnum Domain Class')
+Subclass_i = namedtuple('Subclass_i', 'Rnum Domain Class')
+Minimal_Partition_i = namedtuple('Minimal_Partition_i', 'Rnum Domain A_subclass B_subclass')

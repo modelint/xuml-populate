@@ -3,10 +3,9 @@ relationship.py – Convert parsed relationship to a relation
 """
 
 import logging
-# from class_model_dsl.populate.generalization import Generalization
+from class_model_dsl.populate.generalization import Generalization
 from class_model_dsl.populate.binary_association import BinaryAssociation
 # from class_model_dsl.populate.ordinal import Ordinal
-from collections import namedtuple
 from PyRAL.transaction import Transaction
 from PyRAL.relvar import Relvar
 from class_model_dsl.mp_exceptions import UnknownRelationshipType
@@ -48,9 +47,9 @@ class Relationship:
         # Populate based on relationship type
         if 't_side' in cls.record:
             BinaryAssociation.populate(mmdb, domain, cls.rnum, cls.record)
+        elif 'superclass' in cls.record:
+            Generalization.populate(mmdb, domain, cls.rnum, cls.record)
         Transaction.execute()
-        # elif 'superclass' in self.parse_data:
-        #     Generalization(self)
         # elif 'ascend' in self.parse_data:
         #     Ordinal(self)
         # else:
