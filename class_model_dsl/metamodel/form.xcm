@@ -91,7 +91,7 @@ attributes
 --
 class Subclass <import:Relationship>
 attributes
-    Name {I}
+    Class {I}
     Rnum : Relationship Number {I}
     Domain : Domain Name {I}
 --
@@ -122,7 +122,7 @@ relationships
         Subclass
         Association Class
         Referring Class
-    Subclass.(Name, Rnum, Domain) -> Formalizing Class Role.(Class, Rnum, Domain)
+    Subclass.(Class, Rnum, Domain) -> Formalizing Class Role.(Class, Rnum, Domain)
     Referring Class.(Class, Rnum, Domain) -> Formalizing Class Role.(Class, Rnum, Domain)
     Association Class.(Class, Rnum, Domain) -> Formalizing Class Role.(Class, Rnum, Domain)
 --
@@ -130,6 +130,8 @@ relationships
     Reference +
         Generalization Reference
         Association Reference
+    Generalization Reference.(Subclass, Superclass, Rnum, Domain) -> Reference.(From class, To class, Rnum, Domain)
+    Association Reference.(Ref type, From class, To class, Rnum, Domain) -> Reference.(Ref type, From class, To class, Rnum, Domain)
 --
     R153
     Association Class Reference +
@@ -152,7 +154,7 @@ relationships
     R156
     is housed in, 1 Subclass
     houses, 1 Generalization Reference
-    Generalization Reference.(Subclass, Rnum, Domain) -> Subclass.(Name, Rnum, Domain)
+    Generalization Reference.(Subclass, Rnum, Domain) -> Subclass.(Class, Rnum, Domain)
 --
     R157
     houses, 1 Simple Association Reference
@@ -172,7 +174,7 @@ relationships
     R170
     refers to, 1 Superclass
     is referred to by, M Generalization Reference
-    Generalization Reference.(Superclass, Rnum, Domain) -> Superclass.(Name, Rnum, Domain)
+    Generalization Reference.(Superclass, Rnum, Domain) -> Superclass.(Class, Rnum, Domain)
 --
     R176
     Association Reference +
