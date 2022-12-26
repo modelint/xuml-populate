@@ -8,7 +8,10 @@ from typing import TYPE_CHECKING
 
 from class_model_dsl.populate.pop_types import mult_tclral,\
     Association_i, Binary_Association_i, Association_Class_i, \
-    Perspective_i, Asymmetric_Perspective_i, T_Perspective_i, P_Perspective_i
+    Perspective_i, Asymmetric_Perspective_i, T_Perspective_i, P_Perspective_i,\
+    Reference_i, Formalizing_Class_Role_i,\
+    Association_Reference_i, Simple_Association_Reference_i, Referring_Class_i,\
+    Attribute_Reference_i
 
 if TYPE_CHECKING:
     from tkinter import Tk
@@ -90,38 +93,41 @@ class BinaryAssociation:
         Relvar.insert(db=mmdb, relvar='P_Perspective', tuples=[
             P_Perspective_i(Side='P', Rnum=cls.rnum, Domain=domain['name'])
         ])
-        #
-        #
-        # # Create reference
-        # if not self.ref2:  # Simple binary association
-        #     self.relationship.domain.model.Insert('Reference',
-        #                                           ['R', self.ref1_source['class'], self.ref1_target['class'],
-        #                                            self.relationship.rnum,
-        #                                            self.relationship.domain.name])
-        #     referenced_perspective = 'T' if self.ref1_target['class'] == self.t_side['cname'] else 'P'
-        #     self.relationship.domain.model.Insert('Association Reference',
-        #                                           ['R', self.ref1_source['class'], self.ref1_target['class'],
-        #                                            self.relationship.rnum,
-        #                                            self.relationship.domain.name,
-        #                                            referenced_perspective])
-        #     # Add Ref type for SQL on R176
-        #     self.relationship.domain.model.Insert('Simple Association Reference',
-        #                                           ['R', self.ref1_source['class'], self.ref1_target['class'],
-        #                                            self.relationship.rnum,
-        #                                            self.relationship.domain.name])
-        #     self.relationship.domain.model.Insert('Referring Class', [self.relationship.rnum, self.ref1_source['class'],
-        #                                                               self.relationship.domain.name])
-        #     self.relationship.domain.model.Insert('Formalizing Class Role',
-        #                                           [self.relationship.rnum, self.ref1_source['class'],
-        #                                            self.relationship.domain.name])
-        #
-        #     # Simple Attribute Reference
-        #     for from_attr, to_attr in zip(self.ref1_source['attrs'], self.ref1_target['attrs']):
-        #         self.relationship.domain.model.Insert('Attribute Reference',
-        #                                               [from_attr, self.ref1_source['class'], to_attr,
-        #                                                self.ref1_target['class'], self.relationship.domain.name,
-        #                                                self.relationship.rnum, 'R', self.ref1['id']])
-        # else:  # Binary associative (with association class)
+        pass
+
+        if not cls.ref2:  # Simple binary association
+            Relvar.insert(db=mmdb, relvar='Reference', tuples=[
+                Reference_i(Ref_type='R',
+                            From_class=cls.ref1_source['class'], To_class=cls.ref1_target['class'],
+                            Rnum=cls.rnum, Domain=domain['name'])
+            ])
+            referenced_perspective = 'T' if cls.ref1_target['class'] == cls.t_side['cname'] else 'P'
+            Relvar.insert(db=mmdb, relvar='Association_Reference', tuples=[
+                Association_Reference_i(Ref_type='R',
+                                        From_class=cls.ref1_source['class'], To_class=cls.ref1_target['class'],
+                                        Rnum=cls.rnum, Domain=domain['name'],
+                                        Perspective=referenced_perspective)
+            ])
+            Relvar.insert(db=mmdb, relvar='Simple_Association_Reference', tuples=[
+                Simple_Association_Reference_i(Ref_type='R',
+                                               From_class=cls.ref1_source['class'], To_class=cls.ref1_target['class'],
+                                               Rnum=cls.rnum, Domain=domain['name'])
+            ])
+            Relvar.insert(db=mmdb, relvar='Referring_Class', tuples=[
+                Referring_Class_i(Class=cls.ref1_source['class'], Rnum=cls.rnum, Domain=domain['name'])
+            ])
+            Relvar.insert(db=mmdb, relvar='Formalizing_Class_Role', tuples=[
+                Formalizing_Class_Role_i(Class=cls.ref1_source['class'], Rnum=cls.rnum, Domain=domain['name'])
+            ])
+
+            # Simple Attribute Reference
+            for from_attr, to_attr in zip(cls.ref1_source['attrs'], cls.ref1_target['attrs']):
+                Relvar.insert(db=mmdb, relvar='Attribute_Reference', tuples=[
+                    Attribute_Reference_i(From_attribute=from_attr, From_class=cls.ref1_source['class'],
+                                          To_attribute=to_attr, To_class=cls.ref1_target['class'],
+                                          Domain=domain['name'], To_identifier=cls.ref1['id'], Rnum=cls.rnum)
+        ])
+        else:  # Binary associative (with association class)
         #     # T Reference
         #     self.relationship.domain.model.Insert('Reference',
         #                                           ['T', self.ref1_source['class'], self.ref1_target['class'],

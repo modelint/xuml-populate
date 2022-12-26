@@ -32,9 +32,13 @@ Irreducible_Identifier_i = namedtuple('Irreducible_Identifier_i', 'Number Class 
 Super_Identifier_i = namedtuple('Super_Identifier_i', 'Number Class Domain')
 Identifier_Attribute_i = namedtuple('Identifier_Attribute_i', 'Identifier Attribute Class Domain')
 Non_Derived_Attribute_i = namedtuple('Non_Derived_Attribute_i', 'Name Class Domain')
+Attribute_Reference_i = namedtuple('Attribute_Reference_i', 'From_attribute From_class To_attribute To_class '
+                                                            'Domain To_identifier Ref Rnum')
 
 # Relationship subsystem
 Rel_i = namedtuple('Rel_i', 'Rnum Domain')
+Reference_i = namedtuple('Reference_i', 'Ref_type From_class To_class Rnum Domain')
+Formalizing_Class_Role_i = namedtuple('Formalizing_Class_Role_i', 'Rnum Class Domain')
 
 # Association
 Association_i = namedtuple('Association_i', 'Rnum Domain')
@@ -44,6 +48,11 @@ Perspective_i = namedtuple('Perspective_i', 'Side Rnum Domain Viewed_class Phras
 Asymmetric_Perspective_i = namedtuple('Asymmetric_Perspective_i', 'Side Rnum Domain')
 T_Perspective_i = namedtuple('T_Perspective_i', 'Side Rnum Domain')
 P_Perspective_i = namedtuple('P_Perspective_i', 'Side Rnum Domain')
+Association_Reference_i = namedtuple('Association_Reference_i', 'Ref_type From_class To_class Rnum Domain Perspective')
+Simple_Association_Reference_i = namedtuple('Simple_Association_Reference_i', 'Ref_type From_class To_class Rnum Domain')
+Referring_Class_i = namedtuple('Referring_Class_i', 'Rnum Class Domain')
+
+
 
 # Generalization
 Generalization_i = namedtuple('Generalization_i', 'Rnum Domain Superclass')
