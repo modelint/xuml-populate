@@ -116,7 +116,7 @@ attributes
 relationships
     R150
     is used to formalize, Mc Relationship
-    is formalized in, M Class
+    is formalized in, Mc Class
     1 Formalizing Class Role
     Formalizing Class Role.(Rnum, Domain) -> Relationship.(Rnum, Domain)
     Formalizing Class Role.(Class, Domain) -> Class.(Name, Domain)
