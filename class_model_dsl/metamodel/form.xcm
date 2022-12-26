@@ -2,9 +2,9 @@ metadata
     Title : Formalization Subsystem / Shlaer-Mellor Metamodel
     Author : Leon Starr
     Document ID : mint.sm-meta.class.td.6
-    Version : 2.7.0
+    Version : 2.7.1
     /// Creation date : July 3, 2011
-    Modification date : December 24, 2022
+    Modification date : December 26, 2022
     Organization : Model Integration, LLC / www.modelint.com
     Copyright notice > MIT
     Organization logo > mint
@@ -47,9 +47,10 @@ attributes
 class Generalization Reference
 attributes
     Subclass : Class Name {I, R152, R156}
-    Superclass : Class Name {I, R152, R170}
+    Superclass : Class Name {I, R152}
     Rnum : Relationship Number {I, R152, R156, R170}
     Domain : Domain Name {I, R152, R156, R170}
+    Ref type : Reference Type {R152}
 --
 class Referring Class
 attributes
@@ -82,6 +83,7 @@ attributes
     To class : Class Name {I, R176}
     Rnum : Relationship Number {I, R157, R176}
     Domain : Domain Name {I, R157, R176}
+    Ref type : Reference Type {R176}
 --
 class Superclass <import:Relationship>
 attributes
@@ -101,6 +103,7 @@ attributes
     Participating class : Class Name {I, R153}
     Rnum : Relationship Number {I, R153, R159}
     Domain : Domain Name {I, R153, R159}
+    Ref type : Reference Type {R153}
 --
 class T Reference
 attributes
@@ -108,6 +111,7 @@ attributes
     Participating class : Class Name {I, R153}
     Rnum : Relationship Number {I, R153, R158}
     Domain : Domain Name {I, R153, R158}
+    Ref type : Reference Type {R153}
 --
 relationships
     R150
@@ -130,14 +134,14 @@ relationships
     Reference +
         Generalization Reference
         Association Reference
-    Generalization Reference.(Subclass, Superclass, Rnum, Domain) -> Reference.(From class, To class, Rnum, Domain)
-    Association Reference.(Ref type, From class, To class, Rnum, Domain) -> Reference.(Ref type, From class, To class, Rnum, Domain)
+    Generalization Reference.(Ref type, Subclass, Superclass, Rnum, Domain) -> Reference.(Ref, From class, To class, Rnum, Domain)
+    Association Reference.(Ref type, From class, To class, Rnum, Domain) -> Reference.(Ref, From class, To class, Rnum, Domain)
 --
     R153
     Association Class Reference +
         T Reference
         P Reference
-    <subclass>.(Association class, Participating class, Rnum, Domain) -> Association Class Reference.(Association class, Participating class, Rnum, Domain)
+    <subclass>.(Ref type, Association class, Participating class, Rnum, Domain) -> Association Class Reference.(Ref type, Association class, Participating class, Rnum, Domain)
 --
     R154
     refers to, 1 Perspective
@@ -164,22 +168,22 @@ relationships
     R158
     houses, 1 T Reference
     is housed in, 1 Association Class
-    T Reference.(Association class, Rnum, Domain) -> Association Class.(Class, Rnum, Domain)
+    T Reference.(Rnum, Domain) -> Association Class.(Rnum, Domain)
 --
     R159
     houses, 1 P Reference
     is housed in, 1 Association Class
-    P Reference.(Association class, Rnum, Domain) -> Association Class.(Class, Rnum, Domain)
+    P Reference.(Rnum, Domain) -> Association Class.(Rnum, Domain)
 --
     R170
     refers to, 1 Superclass
     is referred to by, M Generalization Reference
-    Generalization Reference.(Superclass, Rnum, Domain) -> Superclass.(Class, Rnum, Domain)
+    Generalization Reference.(Rnum, Domain) -> Superclass.(Rnum, Domain)
 --
     R176
     Association Reference +
         Simple Association Reference
         Association Class Reference
-    Simple Association Reference.(From class, To class, Rnum, Domain) -> Association Reference.(From class, To class, Rnum, Domain)
-    Association Class Reference.(Association class, Participating class, Rnum, Domain) -> Association Reference.(From class, To class, Rnum, Domain)
+    Simple Association Reference.(Ref type, From class, To class, Rnum, Domain) -> Association Reference.(Ref type, From class, To class, Rnum, Domain)
+    Association Class Reference.(Ref type, Association class, Participating class, Rnum, Domain) -> Association Reference.(Ref type, From class, To class, Rnum, Domain)
 --
