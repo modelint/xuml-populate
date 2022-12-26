@@ -145,7 +145,7 @@ relationships
 --
     R154
     refers to, 1 Perspective
-    is referred to by, M Association Reference
+    is referred to by, Mc Association Reference
     Association Reference.(Rnum, Domain, Perspective) -> Perspective.(Rnum, Domain, Side)
 --
     R155

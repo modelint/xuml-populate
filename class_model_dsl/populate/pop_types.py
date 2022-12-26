@@ -37,7 +37,7 @@ Attribute_Reference_i = namedtuple('Attribute_Reference_i', 'From_attribute From
 
 # Relationship subsystem
 Rel_i = namedtuple('Rel_i', 'Rnum Domain')
-Reference_i = namedtuple('Reference_i', 'Ref_type From_class To_class Rnum Domain')
+Reference_i = namedtuple('Reference_i', 'Ref From_class To_class Rnum Domain')
 Formalizing_Class_Role_i = namedtuple('Formalizing_Class_Role_i', 'Rnum Class Domain')
 
 # Association
