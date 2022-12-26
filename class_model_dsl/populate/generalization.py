@@ -8,7 +8,8 @@ from typing import TYPE_CHECKING
 from class_model_dsl.mp_exceptions import LessThanTwoSubclassesInGeneralization
 
 from class_model_dsl.populate.pop_types import \
-    Generalization_i, Facet_i, Superclass_i, Subclass_i, Minimal_Partition_i
+    Generalization_i, Facet_i, Superclass_i, Subclass_i, Minimal_Partition_i,\
+    Reference_i, Generalization_Reference_i, Formalizing_Class_Role_i, Attribute_Reference_i
 
 
 if TYPE_CHECKING:
@@ -66,28 +67,30 @@ class Generalization:
         ])
 
         # Attribute References
-        # # If abbreviated, expand <subclass> abbreviation to one explicit reference per subclass
-        # if len(self.genrefs) == 1 and self.genrefs[0]['source']['class'] == '<subclass>':
-        #     self.genrefs = [{'source': {'class': s, 'attrs': self.genrefs[0]['source']['attrs']},
-        #                      'target': self.genrefs[0]['target'], 'id': self.genrefs[0]['id']} for s in self.subclasses]
-        #
-        # for ref in self.genrefs:
-        #     self.relationship.domain.model.Insert('Reference',
-        #                                           ['G', ref['source']['class'], ref['target']['class'],
-        #                                            self.relationship.rnum,
-        #                                            self.relationship.domain.name])
-        #     # To satisfy SQL standard, we need to add the Ref attribute so that the foreign key
-        #     # references the identifier of the Reference table
-        #     self.relationship.domain.model.Insert('Generalization Reference',
-        #                                           ['G', ref['source']['class'], ref['target']['class'],
-        #                                            self.relationship.rnum,
-        #                                            self.relationship.domain.name])
-        #     self.relationship.domain.model.Insert('Formalizing Class Role',
-        #                                           [self.relationship.rnum, ref['source']['class'],
-        #                                            self.relationship.domain.name])
-        #     # Create attribute references for each subclass -> superclass reference
-        #     for from_attr, to_attr in zip(ref['source']['attrs'], ref['target']['attrs']):
-        #         self.relationship.domain.model.Insert('Attribute Reference',
-        #                                               [from_attr, ref['source']['class'], to_attr,
-        #                                                ref['target']['class'], self.relationship.domain.name,
-        #                                                self.relationship.rnum, 'G', ref['id']])
+        # If abbreviated, expand <subclass> abbreviation to one explicit reference per subclass
+        if len(cls.genrefs) == 1 and cls.genrefs[0]['source']['class'] == '<subclass>':
+            cls.genrefs = [{'source': {'class': s, 'attrs': cls.genrefs[0]['source']['attrs']},
+                             'target': cls.genrefs[0]['target'], 'id': cls.genrefs[0]['id']} for s in cls.subclasses]
+
+        for ref in cls.genrefs:
+            Relvar.insert(db=mmdb, relvar='Reference', tuples=[
+                Reference_i(Ref='G',
+                            From_class=ref['source']['class'], To_class=ref['target']['class'],
+                            Rnum=cls.rnum, Domain=domain['name'])
+            ])
+            Relvar.insert(db=mmdb, relvar='Generalization_Reference', tuples=[
+                Generalization_Reference_i(Ref_type='G',
+                            Subclass=ref['source']['class'], Superclass=ref['target']['class'],
+                            Rnum=cls.rnum, Domain=domain['name'])
+            ])
+            Relvar.insert(db=mmdb, relvar='Formalizing_Class_Role', tuples=[
+                Formalizing_Class_Role_i(Class=ref['source']['class'], Rnum=cls.rnum, Domain=domain['name'])
+            ])
+            # Create attribute references for each subclass -> superclass reference
+            for from_attr, to_attr in zip(ref['source']['attrs'], ref['target']['attrs']):
+                Relvar.insert(db=mmdb, relvar='Attribute_Reference', tuples=[
+                    Attribute_Reference_i(From_attribute=from_attr, From_class=ref['source']['class'],
+                                          To_attribute=to_attr, To_class=ref['target']['class'],
+                                          Ref='G',
+                                          Domain=domain['name'], To_identifier=ref['id'], Rnum=cls.rnum)
+                ])

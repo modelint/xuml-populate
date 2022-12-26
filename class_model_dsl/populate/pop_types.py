@@ -65,6 +65,7 @@ Facet_i = namedtuple('Facet_i', 'Rnum Domain Class')
 Superclass_i = namedtuple('Superclass_i', 'Rnum Domain Class')
 Subclass_i = namedtuple('Subclass_i', 'Rnum Domain Class')
 Minimal_Partition_i = namedtuple('Minimal_Partition_i', 'Rnum Domain A_subclass B_subclass')
+Generalization_Reference_i = namedtuple('Generalization_i', 'Ref_type Subclass Superclass Rnum Domain')
 
 # Ordinal
 Ordinal_Relationship = namedtuple('Ordinal_Relationship_i',
