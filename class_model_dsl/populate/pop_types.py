@@ -51,6 +51,11 @@ P_Perspective_i = namedtuple('P_Perspective_i', 'Side Rnum Domain')
 Association_Reference_i = namedtuple('Association_Reference_i', 'Ref_type From_class To_class Rnum Domain Perspective')
 Simple_Association_Reference_i = namedtuple('Simple_Association_Reference_i', 'Ref_type From_class To_class Rnum Domain')
 Referring_Class_i = namedtuple('Referring_Class_i', 'Rnum Class Domain')
+Association_Class_Reference_i = namedtuple('Association_Class_Reference_i',
+                                           'Ref_type Association_class Participating_class '
+                                           'Rnum Domain')
+T_Reference_i = namedtuple('T_Reference_i', 'Ref_type Association_class Participating_class Rnum Domain')
+P_Reference_i = namedtuple('P_Reference_i', 'Ref_type Association_class Participating_class Rnum Domain')
 
 
 
