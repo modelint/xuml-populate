@@ -139,7 +139,7 @@ class BinaryAssociation:
                 Formalizing_Class_Role_i(Class=cls.ref1_source['class'], Rnum=cls.rnum, Domain=domain['name'])
             ])
             Relvar.insert(db=mmdb, relvar='Association_Reference', tuples=[
-                Association_Reference_i(Ref_type='R',
+                Association_Reference_i(Ref_type='T',
                                     From_class=cls.ref1_source['class'], To_class=cls.ref1_target['class'],
                                     Rnum=cls.rnum, Domain=domain['name'],
                                     Perspective='T')
@@ -170,11 +170,8 @@ class BinaryAssociation:
                             From_class=cls.ref2_source['class'], To_class=cls.ref2_target['class'],
                             Rnum=cls.rnum, Domain=domain['name'])
             ])
-            Relvar.insert(db=mmdb, relvar='Formalizing_Class_Role', tuples=[
-                Formalizing_Class_Role_i(Class=cls.ref2_source['class'], Rnum=cls.rnum, Domain=domain['name'])
-            ])
             Relvar.insert(db=mmdb, relvar='Association_Reference', tuples=[
-                Association_Reference_i(Ref_type='R',
+                Association_Reference_i(Ref_type='P',
                                         From_class=cls.ref2_source['class'], To_class=cls.ref2_target['class'],
                                         Rnum=cls.rnum, Domain=domain['name'],
                                         Perspective='P')
