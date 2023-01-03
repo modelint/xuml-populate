@@ -3,6 +3,7 @@ domain.py – Convert parsed domain to a relation
 """
 
 import logging
+from class_model_dsl.populate.attribute import Attribute
 from class_model_dsl.populate.mm_class import MMclass
 from class_model_dsl.populate.relationship import Relationship
 from class_model_dsl.populate.subsystem import Subsystem
@@ -109,4 +110,5 @@ class Domain:
         Relvar.relformat(db=mmdb, relvar='Formalizing_Class_Role')
         Relvar.relformat(db=mmdb, relvar='Attribute_Reference')
         print("Done")
+        Attribute.ResolveAttrTypes(mmdb=mmdb)
         pass

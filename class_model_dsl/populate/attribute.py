@@ -4,6 +4,7 @@ attribute.py – Create an attribute relation
 
 import logging
 from PyRAL.relvar import Relvar
+from PyRAL.relation import Relation
 from typing import Set
 from class_model_dsl.populate.pop_types import \
     Attribute_i, Non_Derived_Attribute_i,\
@@ -58,16 +59,24 @@ class Attribute:
             # TODO convert below from SQL to TclRAL (after ref subsystem added)
 
 
-    # @classmethod
-    # def ResolveAttrTypes():
-    #     """
-    #     Determine an update type of each unresolved (referential) attribute
-    #     """
+    @classmethod
+    def ResolveAttrTypes(cls, mmdb):
+        """
+        Determine an update type of each unresolved (referential) attribute
+        """
+
+        # Get the set of all attributes with unresolved types
+        Relation.restrict(db=mmdb, expression='')
+
+
     #     attr_t = smdb.MetaData.tables['Attribute']
     #     p = [attr_t.c.Name, attr_t.c.Class, attr_t.c.Domain]
     #     q = select(p).where(attr_t.c.Type == "<unresolved>")
     #     rows = smdb.Connection.execute(q).fetchall()
     #     uattrs = [I_Attribute(*r) for r in rows]
+
+
+
     #     # Rather than batch all the updates, we do them one by one
     #     # This reduces the search space for each subsequent type resolution
     #     for uattr in uattrs:
@@ -81,21 +90,22 @@ class Attribute:
     #         smdb.Connection.execute(u)
     #
     #
-    # @classmethod
-    # def ResolveAttr(cls, attr: Attribute_i) -> str:
-    #     """
-    #     The modeler specifies explicit types only for non-referential attributes. This means that all attributes with
-    #     unresolved types are referential.
-    #
-    #     We need to obtain one (there could be multiple) Attribute Reference where the unresolved attribute is a source
-    #     *From attribute* referring to some *To attribute*. Then we check the type of that *To attribute*. If the type is
-    #     not <unresolved>, we return it. Otherwise, we recursively apply the same process to the *To attribute*. The chain
-    #     of references must eventually land on a specified type if the model has been properly formalized.
-    #
-    #     :param attr: Unresolved attribute: A referential attribute with an unresolved type
-    #     :return:  Type name to assign
-    #     """
-    #     cls._logging.info(f"Resolving attribute type [{attr}]")
+    @classmethod
+    def ResolveAttr(cls, attr: Attribute_i) -> str:
+        """
+        The modeler specifies explicit types only for non-referential attributes. This means that all attributes with
+        unresolved types are referential.
+
+        We need to obtain one (there could be multiple) Attribute Reference where the unresolved attribute is a source
+        *From attribute* referring to some *To attribute*. Then we check the type of that *To attribute*. If the type is
+        not <unresolved>, we return it. Otherwise, we recursively apply the same process to the *To attribute*. The chain
+        of references must eventually land on a specified type if the model has been properly formalized.
+
+        :param attr: Unresolved attribute: A referential attribute with an unresolved type
+        :return:  Type name to assign
+        """
+        cls._logger.info(f"Resolving attribute type [{attr}]")
+        return ''  # Remove this after testing calling method
     #     # Select one attribute reference where the attribute is the source
     #     aref_t = smdb.MetaData.tables['Attribute Reference']
     #     attr_t = smdb.MetaData.tables['Attribute']
