@@ -69,7 +69,7 @@ class Relation:
         rexpr = "{"  # Selection expression is surrounded by brackets
         for attribute,value in attr_vals.items():
             # We AND them all together with the && tcl operator
-            rexpr += f"[string match {{{value}}} [tuple extract $t Type]] &&" # For use with restrict command
+            rexpr += f"[string match {{{value}}} [tuple extract $t {attribute}]] &&" # For use with restrict command
             # rexpr += f"[string match {{{value}}} ${attribute}] && " # For use with restrictwith command
         # Remove the trailing && and return the complete selection expression
         rexpr = rexpr.rstrip(' &&') + "}"
