@@ -66,7 +66,8 @@ class Attribute:
         """
 
         # Get the set of all attributes with unresolved types
-        Relation.restrict(db=mmdb, expression='')
+        result = Relation.restrict(db=mmdb, relation='Attribute', restriction='Type:<unresolved>')
+        pass
 
 
     #     attr_t = smdb.MetaData.tables['Attribute']

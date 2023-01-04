@@ -18,18 +18,70 @@ class Relation:
     _logger = logging.getLogger(__name__)
 
     @classmethod
-    def restrict(cls, db: 'Tk', expression: str):
+    def build_select_expr(cls, selection: str) -> str:
+        """
+        Convert a Scrall style select expression to an equivalent Tcl string match expression
+
+        For now we only support an and'ed list of direct string matches in the format:
+
+           attr1:str1, attr2:str2, ...
+
+        With the assumption that we would like to select each tuple where
+
+        attr1 == str1 AND attr2 == str2 ...
+
+        We'll convert this to a Tcl expression like this:
+
+        {[string match str1 $attr1] && [string match str2 $attr2] ...}
+
+        Note that this only works for the TclRAL relation restrictwith command and not the
+        relation restrict command. But that should suffice for our purposes
+
+        Once our Scrall parser is ready, we can expand the functionality further
+
+        :param selection:  The Scrall style select expression
+        :return: The Tcl expression
+        """
+        # Parse out matches on comma delimiter as a list of strings
+        match_strings = selection.split(',')
+        # Break each match on the ':' into attr and value as a dictionary
+        attr_vals = {a[0].strip(): a[1].strip() for a in [m.split(':') for m in match_strings]}
+        # Now build the selection expression from each dictionary item
+        sexpr = "{"  # Selection expression is surrounded by brackets
+        for attribute,value in attr_vals.items():
+            # We AND them all together with the && tcl operator
+            sexpr += f"[string match {{{value}}} ${attribute}] && "
+        # Remove the trailing && and return the complete selection expression
+        return sexpr.rstrip(' &&') + "}"
+
+
+    @classmethod
+    def restrict(cls, db: 'Tk', relation: str, restriction: str) -> str:
         """
         Perform a restriction and return the result
         """
-        # Let's just do a test to see if we can perform a restriction using a literal
-        cmd1 = "[relation restrictwith $Attribute {[string match <* $Type]}]"
-        cmd2 = "[relation restrict $Attribute t {[string match <* [tuple extract $t Type]]}]"
-        cmd3 = "relation restrict $Attribute a {[string match <* [tuple extract $a Type]]}"
-        result = db.eval(cmd3)
-        cls.relformat(db=db, relation=result)
-        print()
+        # Parse the restriction expression
+        # Split out matches on comma delimiter as a list of strings
+        match_strings = restriction.split(',')
+        # Break each match on the ':' into attr and value as a dictionary
+        attr_vals = {a[0].strip(): a[1].strip() for a in [m.split(':') for m in match_strings]}
+        # Now build the selection expression from each dictionary item
+        rexpr = "{"  # Selection expression is surrounded by brackets
+        for attribute,value in attr_vals.items():
+            # We AND them all together with the && tcl operator
+            rexpr += f"[string match {{{value}}} [tuple extract $t Type]] &&" # For use with restrict command
+            # rexpr += f"[string match {{{value}}} ${attribute}] && " # For use with restrictwith command
+        # Remove the trailing && and return the complete selection expression
+        rexpr = rexpr.rstrip(' &&') + "}"
 
+        # Add it to the restrictwith command and evaluate
+        # result = db.eval("relation restrict $Attribute a {[string match <unresolved> [tuple extract $a Type]]}")
+        # result = db.eval("relation restrictwith $Attribute {[string match <unresolved> $Type]}")
+        # cmd = f"relation restrictwith ${relation} {rexpr}"
+        cmd = f"relation restrict ${relation} t {rexpr}"
+        result = db.eval(cmd)
+        cls.relformat(db=db, relation=result)
+        return result
 
 
     @classmethod
