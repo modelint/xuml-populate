@@ -110,5 +110,5 @@ class Domain:
         Relvar.relformat(db=mmdb, relvar='Formalizing_Class_Role')
         Relvar.relformat(db=mmdb, relvar='Attribute_Reference')
         print("Done")
-        Attribute.ResolveAttrTypes(mmdb=mmdb)
+        Attribute.ResolveAttrTypes(mmdb=mmdb, domain=domain['name'])
         pass

@@ -9,6 +9,11 @@ from typing import Set
 from class_model_dsl.populate.pop_types import \
     Attribute_i, Non_Derived_Attribute_i,\
     Identifier_i, Irreducible_Identifier_i, Super_Identifier_i, Identifier_Attribute_i
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from tkinter import Tk
+
 
 class Attribute:
     """
@@ -60,21 +65,23 @@ class Attribute:
 
 
     @classmethod
-    def ResolveAttrTypes(cls, mmdb):
+    def ResolveAttrTypes(cls, mmdb: 'Tk', domain: str):
         """
         Determine an update type of each unresolved (referential) attribute
         """
 
         # Get the set of all attributes with unresolved types
-        result = Relation.restrict(db=mmdb, relation='Attribute', restriction='Type:<unresolved>')
+        Relation.restrict(db=mmdb, relation='Attribute',
+                                   restriction=f'Type:<unresolved>, Domain:{domain}')
+        result = Relation.project(db=mmdb, attributes=['Name', 'Class'])
+        uattrs = Relation.makedict(relation=result)
+
+
+        # TODO Now we have a result, but we need to project out the identifier values so that
+        # TODO We can use it to process and update each tuple
         pass
 
 
-    #     attr_t = smdb.MetaData.tables['Attribute']
-    #     p = [attr_t.c.Name, attr_t.c.Class, attr_t.c.Domain]
-    #     q = select(p).where(attr_t.c.Type == "<unresolved>")
-    #     rows = smdb.Connection.execute(q).fetchall()
-    #     uattrs = [I_Attribute(*r) for r in rows]
 
 
 
