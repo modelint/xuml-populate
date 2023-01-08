@@ -74,32 +74,21 @@ class Attribute:
         Relation.restrict(db=mmdb, relation='Attribute',
                                    restriction=f'Type:<unresolved>, Domain:{domain}')
         result = Relation.project(db=mmdb, attributes=['Name', 'Class'])
-        uattrs = Relation.makedict(relation=result)
+        uattrs = Relation.make_pyrel(relation=result).body
 
-
-        # TODO Now we have a result, but we need to project out the identifier values so that
-        # TODO We can use it to process and update each tuple
+        # Rather than batch all the updates, we do them one by one
+        # This reduces the search space for each subsequent type resolution
+        for a in uattrs:
+            assign_type = cls.ResolveAttr(
+                attr_name=a['Name'], class_name=a['Class'], domain_name=domain
+            )
+            # Update the attribute instance with the assigned type
         pass
 
 
 
-
-
-    #     # Rather than batch all the updates, we do them one by one
-    #     # This reduces the search space for each subsequent type resolution
-    #     for uattr in uattrs:
-    #         assign_type = ResolveAttr(attr=uattr)
-    #         r = and_(
-    #             (attr_t.c.Name == uattr.name),
-    #             (attr_t.c.Class == uattr.mmclass),
-    #             (attr_t.c.Domain == uattr.domain),
-    #         )
-    #         u = attr_t.update().where(r).values(Type=assign_type)
-    #         smdb.Connection.execute(u)
-    #
-    #
     @classmethod
-    def ResolveAttr(cls, attr: Attribute_i) -> str:
+    def ResolveAttr(cls, attr_name: str, class_name: str, domain_name: str) -> str:
         """
         The modeler specifies explicit types only for non-referential attributes. This means that all attributes with
         unresolved types are referential.
@@ -113,7 +102,6 @@ class Attribute:
         :return:  Type name to assign
         """
         cls._logger.info(f"Resolving attribute type [{attr}]")
-        return ''  # Remove this after testing calling method
     #     # Select one attribute reference where the attribute is the source
     #     aref_t = smdb.MetaData.tables['Attribute Reference']
     #     attr_t = smdb.MetaData.tables['Attribute']

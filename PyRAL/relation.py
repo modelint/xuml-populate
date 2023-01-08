@@ -5,7 +5,7 @@ relation.py – Operations on relations
 import logging
 import re
 from tabulate import tabulate
-from typing import List, Dict, TYPE_CHECKING
+from typing import List, Dict, Optional, TYPE_CHECKING
 from PyRAL.rtypes import RelationValue
 from collections import namedtuple
 
@@ -19,6 +19,7 @@ if TYPE_CHECKING:
 # For any given command, if no relvar is specified, the previous relation result is assumed
 # to be the input.
 _relation = r'^relation'  # Name of the latest relation result
+session_variable_names = set() # Maintain a list of temporary variable names in use
 
 
 class Relation:
@@ -66,6 +67,10 @@ class Relation:
 
 
     @classmethod
+    def join(cls, ):
+        pass
+
+    @classmethod
     def restrict(cls, db: 'Tk', relation: str, restriction: str) -> str:
         """
         Perform a restriction and return the result
@@ -92,38 +97,55 @@ class Relation:
         return result
 
     @classmethod
-    def project(cls, db: 'Tk', attributes: List[str], relation: str=_relation) -> str:
+    def project(cls, db: 'Tk', attributes: List[str], relation: str=_relation, svar_name: Optional[str]=None) -> str:
         """
         Project attributes over relation
 
-        :param attributes:
-        :param db:
-        :param relation:
-        :return:
+        :param db: The TclRAL session
+        :param attributes: Attributes to be projected
+        :param relation: The relation to be projected
+        :param svar_name: Relation result is stored in this optional TclRAL variable for subsequent operations to use
+        :return Resulting relation as a TclRAL string
         """
-        projection = ""
-        for a in attributes:
-            projection += f"{a} "
+        projection = ' '.join(attributes)
         cmd = f'set {_relation} [relation project ${{{relation}}} {projection.strip()}]'
         result = db.eval(cmd)
+        if svar_name:  # Save the result using the supplied session variable name
+            session_variable_names.add(svar_name)
+            db.eval(f"set {svar_name} {_relation}")
         cls.relformat(db=db, relation=result)
         return result
 
     @classmethod
-    def makedict(cls, relation: str) -> RelationValue:
+    def make_pyrel(cls, relation: str) -> RelationValue:
         """
+        Take a relation obtained from TclRAL and convert it into a pythonic relation value.
+        A RelationValue is a named tuple with a header and a body component.
+        The header component will be a dictionary of attribute name keys and type values
+        The body component will be a list of relational tuples each defined as a dictionary
+        with a key matching some attribute of the header and a value for that attribute.
 
-        :param relation:
-        :return:
+        :param relation: A TclRAL string representing a relation
+        :return: A RelationValue constructed from the provided relation string
         """
+        # First check for the dee/dum edge cases
+        if relation.strip() == '{} {}':
+            # Tabledum (DUM), no attributes and no tuples (relational false value)
+            # Header is an empty dictionary and body is an empty list
+            return RelationValue(header={}, body=[])
+        if relation.strip() == '{} {{}}':
+            # Tabledum (DEE), no attributes and one empty tuple (relational true value)
+            # Header is an empty dictionary and body is a list with one empty dictionary element
+            return RelationValue(header={}, body=[{}])
+
+        # Going forward we can assume that there is at least one attribute and zero or more tuples
         h, b = relation.split('}', 1)  # Split at the first closing bracket to obtain header and body strings
-        h = h.strip('{')  # Remove the open brace from the header string
-        h_items = h.split(' ')  # There will be no spaces in any of the names, so we break on the space delimiter
-        h_attrs = h_items[::2]  # Every even numbered item (0,2, ...) is an attribute name
-        h_types = h_items[1::2]  # Every odd one is a type name
-        deg = len(h_attrs)  # The degree of the relation is the number of attributes (columns)
 
-        # Now we process the body
+        # Construct the header dictionary
+        h_items = h.strip('{').split()  # Remove the open brace and split on spaces (no spaces in TclRAL attr names)
+        header = dict(zip(h_items[::2], h_items[1::2]))  # Attribute names for keys and TclRAL types for values
+
+        # Construct the body list
         # Each tuple is surrounded by brackets so our first stop is to split them all out into distinct tuple strings
         body = b.split('} {')
         body[0] = body[0].lstrip(' {')  # Remove any preceding space or brackets from the first tuple
@@ -138,7 +160,7 @@ class Relation:
         # Now we build this component into an alternating pattern of attribute and value items
         # for the attributes in our relation header
         tuple_pattern = ""
-        for a in h_attrs:
+        for a in header.keys():
             tuple_pattern += f"{a} {value_pattern} "
         tuple_pattern = tuple_pattern.rstrip(' ')  # Removes the final trailing space
         # Now we can use the constructed tuple pattern regex to extract a list of values
@@ -150,21 +172,22 @@ class Relation:
 
         # Handle case where there are zero body tuples
         at_least_one_tuple = b.strip('{} ')  # Empty string if no tuples in body
+        if not at_least_one_tuple:
+            return RelationValue(header=header, body={})
 
         # There is at least one body tuple
-        if at_least_one_tuple:
-            if deg > 1:
-                # More than one column and the regex match returns a convenient tuple in the zero element
-                # b_rows = [for row in body]
-                b_rows = [[f.strip('{}') for f in re.findall(tuple_pattern, row)[0]] for row in body]
-            elif deg == 1:
-                # If there is only one match (value), regex returns a string rather than a tuple
-                # in the zero element. We need to embed this string in a list
-                b_rows = [[re.findall(tuple_pattern, row)[0].strip('{}') for row in body]]
-            # Either way, b_rows is a list of lists
+        if len(header) > 1:
+            # More than one column and the regex match returns a convenient tuple in the zero element
+            # b_rows = [for row in body]
+            b_rows = [[f.strip('{}') for f in re.findall(tuple_pattern, row)[0]] for row in body]
+        else:
+            # If there is only one match (value), regex returns a string rather than a tuple
+            # in the zero element. We need to embed this string in a list
+            b_rows = [[re.findall(tuple_pattern, row)[0].strip('{}') for row in body]]
+        # Either way, b_rows is a list of lists
 
-        rbody = [dict(zip(h_attrs, r)) for r in b_rows]
-        rval = RelationValue(header=h_attrs, body=rbody)
+        body = [dict(zip(header.keys(), r)) for r in b_rows]
+        rval = RelationValue(header=header, body=body)
         return rval
 
 
