@@ -6,7 +6,7 @@ from collections import namedtuple
 from enum import Enum
 
 Attribute = namedtuple('_Attribute', 'name type')
-RelationValue = namedtuple('RelationValue', 'header body')
+RelationValue = namedtuple('RelationValue', 'name header body')
 
 class Mult(Enum):
     AT_LEAST_ONE = '+'

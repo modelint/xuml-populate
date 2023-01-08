@@ -117,7 +117,7 @@ class Relation:
         return result
 
     @classmethod
-    def make_pyrel(cls, relation: str) -> RelationValue:
+    def make_pyrel(cls, relation: str, name: str='^result' ) -> RelationValue:
         """
         Take a relation obtained from TclRAL and convert it into a pythonic relation value.
         A RelationValue is a named tuple with a header and a body component.
@@ -125,6 +125,7 @@ class Relation:
         The body component will be a list of relational tuples each defined as a dictionary
         with a key matching some attribute of the header and a value for that attribute.
 
+        :param name: An optional relvar name
         :param relation: A TclRAL string representing a relation
         :return: A RelationValue constructed from the provided relation string
         """
@@ -187,10 +188,22 @@ class Relation:
         # Either way, b_rows is a list of lists
 
         body = [dict(zip(header.keys(), r)) for r in b_rows]
-        rval = RelationValue(header=header, body=body)
+        rval = RelationValue(name=name, header=header, body=body)
         return rval
 
 
+    @classmethod
+    def relformat2(cls, rval: RelationValue):
+        """
+        Formats the relation into a table and prints it using the imported tabulation module
+
+        :param rval: A pyRAL relation value
+        """
+        # Now we have what we need to generate a table
+        # Print the relvar name if supplied, otherwise use the default name for the latest result
+        tablename = rval.name if rval.name else '<unnamed>'
+        print(f"\n-- Relation: {tablename} --")
+        print(tabulate(tabular_data=rval.body, headers=rval.header, tablefmt="outline"))  # That last parameter chooses our table style
 
     @classmethod
     def relformat(cls, db: 'Tk', relation: str):

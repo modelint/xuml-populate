@@ -74,11 +74,12 @@ class Attribute:
         Relation.restrict(db=mmdb, relation='Attribute',
                                    restriction=f'Type:<unresolved>, Domain:{domain}')
         result = Relation.project(db=mmdb, attributes=['Name', 'Class'])
-        uattrs = Relation.make_pyrel(relation=result).body
+        uattrs = Relation.make_pyrel(relation=result)
+        Relation.relformat2(uattrs)
 
         # Rather than batch all the updates, we do them one by one
         # This reduces the search space for each subsequent type resolution
-        for a in uattrs:
+        for a in uattrs.body:
             assign_type = cls.ResolveAttr(
                 attr_name=a['Name'], class_name=a['Class'], domain_name=domain
             )
