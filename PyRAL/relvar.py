@@ -5,7 +5,7 @@ relvar.py – Operations on relvars
 import logging
 from tabulate import tabulate
 import re
-from typing import List, Dict, TYPE_CHECKING
+from typing import List, Dict, Any, TYPE_CHECKING
 from PyRAL.rtypes import Attribute, Mult
 from PyRAL.transaction import Transaction
 from collections import namedtuple
@@ -157,6 +157,20 @@ class Relvar:
         Transaction.append_statement(statement=cmd)
 
         pass
+
+    @classmethod
+    def updateone(cls, db: 'Tk', relvar_name: str, id:Dict, update:Dict[str,Any]):
+        """
+        """
+        id_str = ""
+        for id_attr,id_val in id.items():
+            id_str += f"{id_attr} {{{id_val}}} "
+        update_str = ""
+        for u_attr,u_val in update.items():
+            update_str += u_attr + " {" + u_val + "}"
+        cmd = f'relvar updateone {relvar_name} t {{{id_str}}} {{tuple update $t {update_str}}}'
+        result = db.eval(cmd)
+
 
     @classmethod
     def population(cls, db: 'Tk', relvar: str):

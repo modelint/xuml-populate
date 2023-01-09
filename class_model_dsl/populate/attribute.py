@@ -61,9 +61,6 @@ class Attribute:
                 Identifier_Attribute_i(Identifier=i.number, Attribute=record['name'], Class=cname, Domain=domain)
             ])
 
-            # TODO convert below from SQL to TclRAL (after ref subsystem added)
-
-
     @classmethod
     def ResolveAttrTypes(cls, mmdb: 'Tk', domain: str):
         """
@@ -83,10 +80,11 @@ class Attribute:
             assign_type = cls.ResolveAttr(mmdb=mmdb,
                 attr_name=a['Name'], class_name=a['Class'], domain_name=domain
             )
-            pass
-            # Update the attribute instance with the assigned type
-        pass
-
+            Relvar.updateone(db=mmdb,
+                             relvar_name='Attribute',
+                             id={'Name':a['Name'], 'Class':a['Class'], 'Domain':domain},
+                             update={'Type': assign_type})
+        Relvar.relformat(db=mmdb, relvar='Attribute')
 
 
     @classmethod
