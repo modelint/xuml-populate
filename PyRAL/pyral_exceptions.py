@@ -17,3 +17,7 @@ class Transaction(PyRALException):
 class IncompleteTransactionPending(PyRALException):
     def __str__(self):
         return f'{pre}Only one transaction may be open at a time.{post}'
+
+class RestrictOneOnZeroCardinality(PyRALException):
+    def __str__(self):
+        return f'{pre}Attempted restrict one operation on relation with no tuples.{post}'

@@ -7,6 +7,7 @@ import re
 from tabulate import tabulate
 from typing import List, Dict, Optional, TYPE_CHECKING
 from PyRAL.rtypes import RelationValue
+from PyRAL.pyral_exceptions import RestrictOneOnZeroCardinality
 from collections import namedtuple
 
 if TYPE_CHECKING:
@@ -65,13 +66,8 @@ class Relation:
         # Remove the trailing && and return the complete selection expression
         return sexpr.rstrip(' &&') + "}"
 
-
     @classmethod
-    def join(cls, ):
-        pass
-
-    @classmethod
-    def restrict(cls, db: 'Tk', relation: str, restriction: str) -> str:
+    def restrict(cls, db: 'Tk', restriction: str, relation: str=_relation, svar_name: Optional[str]=None) -> str:
         """
         Perform a restriction and return the result
         """
@@ -91,9 +87,45 @@ class Relation:
 
         # Add it to the restrictwith command and evaluate
         # result = db.eval("relation restrict $Attribute a {[string match <unresolved> [tuple extract $a Type]]}")
-        cmd = f"set {_relation} [relation restrict ${relation} t {rexpr}]"
+        cmd = f"set {_relation} [relation restrict ${{{relation}}} t {rexpr}]"
         result = db.eval(cmd)
-        cls.relformat(db=db, relation=result)
+        check = db.eval(f"set {{{_relation}}}")
+        if svar_name:  # Save the result using the supplied session variable name
+            session_variable_names.add(svar_name)
+            db.eval(f"set {svar_name} {_relation}")
+        return result
+
+    @classmethod
+    def rename(cls, db: 'Tk', old_name: str, new_name:str, relation: str=_relation, svar_name: Optional[str]=None) -> str:
+        """
+        Rename attribute from old to new name
+        :old_name: Current name of the attribute
+        :new_name: Attribute will be renamed to this name
+        :return Resulting relation as a TclRAL string
+        """
+        cmd = f'set {_relation} [relation rename ${{{relation}}} {old_name} {new_name}]'
+        result = db.eval(cmd)
+        if svar_name:  # Save the result using the supplied session variable name
+            session_variable_names.add(svar_name)
+            db.eval(f"set {svar_name} {_relation}")
+        return result
+
+    @classmethod
+    def join(cls, db: 'Tk', rname2: str, rname1: str=_relation, svar_name: Optional[str]=None) -> str:
+        """
+        Project attributes over relation
+
+        :param rname1:
+        :param rname2:
+        :param db: The TclRAL session
+        :param svar_name: Relation result is stored in this optional TclRAL variable for subsequent operations to use
+        :return Resulting relation as a TclRAL string
+        """
+        cmd = f'set {{{_relation}}} [relation join ${{{rname1}}} ${rname2}]'
+        result = db.eval(cmd)
+        if svar_name:  # Save the result using the supplied session variable name
+            session_variable_names.add(svar_name)
+            db.eval(f"set {svar_name} {_relation}")
         return result
 
     @classmethod
@@ -113,7 +145,6 @@ class Relation:
         if svar_name:  # Save the result using the supplied session variable name
             session_variable_names.add(svar_name)
             db.eval(f"set {svar_name} {_relation}")
-        cls.relformat(db=db, relation=result)
         return result
 
     @classmethod
@@ -203,7 +234,9 @@ class Relation:
         # Print the relvar name if supplied, otherwise use the default name for the latest result
         tablename = rval.name if rval.name else '<unnamed>'
         print(f"\n-- Relation: {tablename} --")
-        print(tabulate(tabular_data=rval.body, headers=rval.header, tablefmt="outline"))  # That last parameter chooses our table style
+        attr_names = list(rval.header.keys())
+        brows = [list(row.values()) for row in rval.body]
+        print(tabulate(tabular_data=brows, headers=attr_names, tablefmt="outline"))  # That last parameter chooses our table style
 
     @classmethod
     def relformat(cls, db: 'Tk', relation: str):
