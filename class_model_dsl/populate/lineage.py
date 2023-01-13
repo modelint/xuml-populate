@@ -52,8 +52,8 @@ class Lineage:
 
         # Now we walk (step) through each generalization to build trees of one or more lineages
         for leaf in leaf_classes:
-            xrels = set()
-            xclasses = set()
+            cls.xrels = set()
+            cls.xclasses = set()
             leafwalk = cls.step(walk=[], cvisit=leaf, rvisit=None)
             cls.walks.append(leafwalk)
 
@@ -84,30 +84,28 @@ class Lineage:
         :param rvisit: The relationship currently being traversed
         :return: The updated walk
         """
-        pass
 
         walk.append(cvisit)  # Advance the walk by adding the visited class
         cls.xclasses.add(cvisit)  # Class has been visited
+
         # Now we figure out where and if we can take another step
 
         # Get all adjacent relationships, if any, on the civisit class that have not already been traversed
-        facet_t = smdb.MetaData.tables['Facet']  # Could be either superclass_name or subclasses, so we search Facets
-        p = facet_t.c.Rnum  # We project on the rnums
-        r = and_(
-            (facet_t.c.Class == cvisit),
-            (facet_t.c.Domain == self.domain.name),
-        )  # Restrict on the cvisit class
-        q = select(p).where(r)  # Get all Facets that cvisit participates in
-        rows = smdb.Connection.execute(q).fetchall()
+        # Could be either superclass_name or subclasses, so we search Facets
+        # Get all Facets that cvisit participates in
+        Relation.restrict(db=cls.mmdb, restriction=f"Class:{cvisit}, Domain:{cls.domain}", relation="Facet")
+        r = Relation.project(db=cls.mmdb, attributes=["Rnum",])
+        s = Relation.make_pyrel(relation=r, name="possible steps")
         # Grab the result being careful to exclude prior traversals so we don't walk around in circles!
-        adj_rels = [r['Rnum'] for r in rows if r['Rnum'] not in self.xrels and r['Rnum'] != rvisit]
+        adj_rels = [r['Rnum'] for r in s.body if r['Rnum'] not in cls.xrels and r['Rnum'] != rvisit]
 
-        # # We have nowhere else to walk if cvisit does not participate in any new rels
-        # if not adj_rels:
-        #     return walk
-        #
-        # # Create a set of all hops going up to a superclass
-        # uphops = {h for h in adj_rels if isSubclass(grel=h, cname=cvisit, domain=self.domain.name)}
+        # We have nowhere else to walk if cvisit does not participate in any new rels
+        if not adj_rels:
+            return walk
+        pass
+
+        # Create a set of all hops going up to a superclass
+        uphops = {h for h in adj_rels if isSubclass(grel=h, cname=cvisit, domain=cls.domain)}
         #
         # # We can try to take a step
         # for arel in adj_rels:
