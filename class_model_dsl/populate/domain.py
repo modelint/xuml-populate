@@ -6,6 +6,7 @@ import logging
 from class_model_dsl.populate.attribute import Attribute
 from class_model_dsl.populate.mm_class import MMclass
 from class_model_dsl.populate.relationship import Relationship
+from class_model_dsl.populate.lineage import Lineage
 from class_model_dsl.populate.subsystem import Subsystem
 from PyRAL.transaction import Transaction
 from PyRAL.relvar import Relvar
@@ -111,4 +112,10 @@ class Domain:
         Relvar.relformat(db=mmdb, relvar='Attribute_Reference')
         print("Done")
         Attribute.ResolveAttrTypes(mmdb=mmdb, domain=domain['name'])
-        pass
+        cls._logger.info("Populating lineage")
+        # Reprinting these for lineage debugging purposes
+        Relvar.relformat(db=mmdb, relvar='Generalization')
+        Relvar.relformat(db=mmdb, relvar='Superclass')
+        Relvar.relformat(db=mmdb, relvar='Subclass')
+        Relvar.relformat(db=mmdb, relvar='Facet')
+        Lineage.Derive(mmdb=mmdb, domain=domain['name'])

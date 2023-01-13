@@ -21,6 +21,7 @@ Domain_Partition_i = namedtuple('Domain_Partition_i', 'Number Domain')
 Subsystem_i = namedtuple('Domain_Partition_i', 'Name First_element_number Domain Alias')
 Element_i = namedtuple('Element_i', 'Label Domain')
 Subsystem_Element_i = namedtuple('Element_i', 'Label Domain Subsystem')
+Spanning_Element_i = namedtuple('Spanning_Element_i', 'Label Domain')
 
 # Class and Attribute subsystem
 Class_i = namedtuple('Class_i', 'Name Cnum Domain')
@@ -71,3 +72,7 @@ Generalization_Reference_i = namedtuple('Generalization_i', 'Ref_type Subclass S
 Ordinal_Relationship = namedtuple('Ordinal_Relationship_i',
                                   'Rnum Domain Ranked_class Ranking_attribute Ranking_identifier '
                                   'Ascending_perspective Descending_perspective')
+
+# Lineage
+Lineage_i = namedtuple('Lineage_i', 'Lnum Domain')
+Class_in_Lineage_i = namedtuple('Class_in_Lineage_i', 'Class Lnum Domain')

@@ -92,7 +92,7 @@ class Relation:
         check = db.eval(f"set {{{_relation}}}")
         if svar_name:  # Save the result using the supplied session variable name
             session_variable_names.add(svar_name)
-            db.eval(f"set {svar_name} {_relation}")
+            db.eval(f"set {svar_name} ${{{_relation}}}")
         return result
 
     @classmethod
@@ -107,7 +107,7 @@ class Relation:
         result = db.eval(cmd)
         if svar_name:  # Save the result using the supplied session variable name
             session_variable_names.add(svar_name)
-            db.eval(f"set {svar_name} {_relation}")
+            db.eval(f"set {svar_name} ${{{_relation}}}")
         return result
 
     @classmethod
@@ -125,7 +125,25 @@ class Relation:
         result = db.eval(cmd)
         if svar_name:  # Save the result using the supplied session variable name
             session_variable_names.add(svar_name)
-            db.eval(f"set {svar_name} {_relation}")
+            db.eval(f"set {svar_name} ${{{_relation}}}")
+        return result
+
+    @classmethod
+    def subtract(cls, db: 'Tk', rname2: str, rname1: str=_relation, svar_name: Optional[str]=None) -> str:
+        """
+        Subtract relation2 from relation1
+
+        :param rname1:
+        :param rname2:
+        :param db: The TclRAL session
+        :param svar_name: Relation result is stored in this optional TclRAL variable for subsequent operations to use
+        :return Resulting relation as a TclRAL string
+        """
+        cmd = f'set {_relation} [relation minus ${{{rname1}}} ${rname2}]'
+        result = db.eval(cmd)
+        if svar_name:  # Save the result using the supplied session variable name
+            session_variable_names.add(svar_name)
+            db.eval(f"set {svar_name} ${{{_relation}}}")
         return result
 
     @classmethod
@@ -144,11 +162,11 @@ class Relation:
         result = db.eval(cmd)
         if svar_name:  # Save the result using the supplied session variable name
             session_variable_names.add(svar_name)
-            db.eval(f"set {svar_name} {_relation}")
+            db.eval(f"set {svar_name} ${{{_relation}}}")
         return result
 
     @classmethod
-    def make_pyrel(cls, relation: str, name: str='^result' ) -> RelationValue:
+    def make_pyrel(cls, relation: str, name: str=_relation ) -> RelationValue:
         """
         Take a relation obtained from TclRAL and convert it into a pythonic relation value.
         A RelationValue is a named tuple with a header and a body component.
