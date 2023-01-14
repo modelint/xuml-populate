@@ -182,11 +182,11 @@ class Relation:
         if relation.strip() == '{} {}':
             # Tabledum (DUM), no attributes and no tuples (relational false value)
             # Header is an empty dictionary and body is an empty list
-            return RelationValue(header={}, body=[])
+            return RelationValue(name=name, header={}, body=[])
         if relation.strip() == '{} {{}}':
             # Tabledum (DEE), no attributes and one empty tuple (relational true value)
             # Header is an empty dictionary and body is a list with one empty dictionary element
-            return RelationValue(header={}, body=[{}])
+            return RelationValue(name=name, header={}, body=[{}])
 
         # Going forward we can assume that there is at least one attribute and zero or more tuples
         h, b = relation.split('}', 1)  # Split at the first closing bracket to obtain header and body strings
