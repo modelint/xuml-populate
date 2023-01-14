@@ -75,4 +75,4 @@ Ordinal_Relationship = namedtuple('Ordinal_Relationship_i',
 
 # Lineage
 Lineage_i = namedtuple('Lineage_i', 'Lnum Domain')
-Class_in_Lineage_i = namedtuple('Class_in_Lineage_i', 'Class Lnum Domain')
+Class_In_Lineage_i = namedtuple('Class_In_Lineage_i', 'Class Lnum Domain')

@@ -19,7 +19,6 @@ class Domain:
     """
     _logger = logging.getLogger(__name__)
     subsystem_counter = {}
-    lnums = 0
 
     @classmethod
     def populate(cls, mmdb, domain, subsystems):
@@ -114,8 +113,7 @@ class Domain:
         Attribute.ResolveAttrTypes(mmdb=mmdb, domain=domain['name'])
         cls._logger.info("Populating lineage")
         # Reprinting these for lineage debugging purposes
-        Relvar.relformat(db=mmdb, relvar='Generalization')
-        Relvar.relformat(db=mmdb, relvar='Superclass')
-        Relvar.relformat(db=mmdb, relvar='Subclass')
-        Relvar.relformat(db=mmdb, relvar='Facet')
         Lineage.Derive(mmdb=mmdb, domain=domain['name'])
+        Relvar.relformat(db=mmdb, relvar='Lineage')
+        Relvar.relformat(db=mmdb, relvar='Class_In_Lineage')
+        print()
