@@ -34,13 +34,13 @@ class Relationship:
 
         # Populate relationship
         Transaction.open(db=mmdb)
-        Relvar.insert(db=mmdb, relvar='Element', tuples=[
+        Relvar.insert(relvar='Element', tuples=[
             Element_i(Label=cls.rnum, Domain=domain['name'])
         ])
-        Relvar.insert(db=mmdb, relvar='Subsystem_Element', tuples=[
+        Relvar.insert(relvar='Subsystem_Element', tuples=[
             Subsystem_Element_i(Label=cls.rnum, Domain=domain['name'], Subsystem=subsystem.name)
         ])
-        Relvar.insert(db=mmdb, relvar='Relationship', tuples=[
+        Relvar.insert(relvar='Relationship', tuples=[
             Rel_i(Rnum=cls.rnum, Domain=domain['name'])
         ])
 

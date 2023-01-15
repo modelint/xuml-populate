@@ -199,17 +199,17 @@ class Lineage:
             lnum = 'L' + (str(cls.lnums))
             cls._logger.info(f"Populating lineage [{lnum}]")
             Transaction.open(db=cls.mmdb)
-            Relvar.insert(db=cls.mmdb, relvar='Element', tuples=[
+            Relvar.insert(relvar='Element', tuples=[
                 Element_i(Label=lnum, Domain=cls.domain)
             ])
-            Relvar.insert(db=cls.mmdb, relvar='Spanning_Element', tuples=[
+            Relvar.insert(relvar='Spanning_Element', tuples=[
                 Spanning_Element_i(Label=lnum, Domain=cls.domain)
             ])
-            Relvar.insert(db=cls.mmdb, relvar='Lineage', tuples=[
+            Relvar.insert(relvar='Lineage', tuples=[
                 Lineage_i(Lnum=lnum, Domain=cls.domain)
             ])
             for cname in lin.split(':'):
-                Relvar.insert(db=cls.mmdb, relvar='Class_In_Lineage', tuples=[
+                Relvar.insert(relvar='Class_In_Lineage', tuples=[
                     Class_In_Lineage_i(Class=cname,Lnum=lnum, Domain=cls.domain)
                 ])
             Transaction.execute()

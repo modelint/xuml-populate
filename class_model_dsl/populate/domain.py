@@ -33,19 +33,19 @@ class Domain:
         cls._logger.info(f"Populating modeled domain [{domain['name']}]")
 
         Transaction.open(db=mmdb)
-        Relvar.insert(db=mmdb, relvar='Domain', tuples=[
+        Relvar.insert(relvar='Domain', tuples=[
             Domain_i(Name=domain['name'], Alias=domain['alias']),
             ])
         # # TODO: For now assume this is always a modeled domain, but need a way to specify a realized domain
-        Relvar.insert(db=mmdb, relvar='Modeled_Domain', tuples=[
+        Relvar.insert(relvar='Modeled_Domain', tuples=[
             Modeled_Domain_i(Name=domain['name']),
             ])
         for s in subsystems.values():
-            Relvar.insert(db=mmdb, relvar='Subsystem', tuples=[
+            Relvar.insert(relvar='Subsystem', tuples=[
                 Subsystem_i(Name=s.subsystem['name'], First_element_number=s.subsystem['range'][0],
                             Domain=domain['name'], Alias=s.subsystem['alias']),
             ])
-            Relvar.insert(db=mmdb, relvar='Domain_Partition', tuples=[
+            Relvar.insert(relvar='Domain_Partition', tuples=[
                 Domain_Partition_i(Number=s.subsystem['range'][0], Domain=domain['name'])
             ])
         Transaction.execute()

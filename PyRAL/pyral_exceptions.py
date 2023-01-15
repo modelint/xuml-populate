@@ -11,11 +11,12 @@ post = "]"
 class PyRALException(Exception):
     pass
 
-class TclRALException(PyRALException):
-    pass
-
 class Transaction(PyRALException):
     pass
+
+class NoOpenTransaction(PyRALException):
+    def __str__(self):
+        return f'{pre}Attempt to add statement when no transaction has been opened.{post}'
 
 class IncompleteTransactionPending(PyRALException):
     def __str__(self):

@@ -42,17 +42,17 @@ class MMclass:
         # Populate class
         cls._logger.info(f"Populating class [{cls.name}]")
         Transaction.open(db=mmdb)
-        Relvar.insert(db=mmdb, relvar='Element', tuples=[
+        Relvar.insert(relvar='Element', tuples=[
             Element_i(Label=cls.cnum, Domain=domain['name'])
         ])
-        Relvar.insert(db=mmdb, relvar='Subsystem_Element', tuples=[
+        Relvar.insert(relvar='Subsystem_Element', tuples=[
             Subsystem_Element_i(Label=cls.cnum, Domain=domain['name'], Subsystem=subsystem.name)
         ])
-        Relvar.insert(db=mmdb, relvar='Class', tuples=[
+        Relvar.insert(relvar='Class', tuples=[
             Class_i(Name=cls.name, Cnum=cls.cnum, Domain=domain['name'])
         ])
         if cls.alias:
-            Relvar.insert(db=mmdb, relvar='Alias', tuples=[
+            Relvar.insert(relvar='Alias', tuples=[
                 Alias_i(Name=cls.name, Class=cls.name, Domain=domain['name'])
             ])
 

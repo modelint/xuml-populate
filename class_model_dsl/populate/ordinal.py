@@ -31,7 +31,7 @@ class Ordinal:
 
         # Populate
         cls._logger.info(f"Populating Ordinal [{cls.rnum}]")
-        Relvar.insert(db=mmdb, relvar='Ordinal_Relationship', tuples=[
+        Relvar.insert(relvar='Ordinal_Relationship', tuples=[
             Ordinal_Relationship(Rnum=cls.rnum, Domain=domain['name'], Ranked_class=cls.ascend['cname'],
                                  Ranking_attribute=cls.oform['ranking attr'], Ranking_identifier=cls.oform['id'],
                                  Ascending_perspective=cls.ascend['highval'], Descending_perspective=cls.ascend['lowval']

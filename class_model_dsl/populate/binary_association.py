@@ -49,21 +49,21 @@ class BinaryAssociation:
 
         # Populate
         cls._logger.info(f"Populating Binary Association [{cls.rnum}]")
-        Relvar.insert(db=mmdb, relvar='Association', tuples=[
+        Relvar.insert(relvar='Association', tuples=[
             Association_i(Rnum=cls.rnum, Domain=domain['name'])
         ])
-        Relvar.insert(db=mmdb, relvar='Binary_Association', tuples=[
+        Relvar.insert(relvar='Binary_Association', tuples=[
             Binary_Association_i(Rnum=cls.rnum, Domain=domain['name'])
         ])
 
         if cls.assoc_cname:
-            Relvar.insert(db=mmdb, relvar='Association_Class', tuples=[
+            Relvar.insert(relvar='Association_Class', tuples=[
                 Association_Class_i(Rnum=cls.rnum, Class=cls.assoc_cname, Domain=domain['name'])
             ])
 
         # Populate the T and P perspectives of an asymmetric binary association
         t_mult = cls.t_side['mult'][0]
-        Relvar.insert(db=mmdb, relvar='Perspective', tuples=[
+        Relvar.insert(relvar='Perspective', tuples=[
             Perspective_i(Side='T', Rnum=cls.rnum, Domain=domain['name'],
                           Viewed_class=cls.t_side['cname'], Phrase=cls.t_side['phrase'],
                           Conditional=True if 'c' in cls.t_side['mult'] else False,
@@ -71,15 +71,15 @@ class BinaryAssociation:
                           )
         ])
 
-        Relvar.insert(db=mmdb, relvar='Asymmetric_Perspective', tuples=[
+        Relvar.insert(relvar='Asymmetric_Perspective', tuples=[
             Asymmetric_Perspective_i(Side='T', Rnum=cls.rnum, Domain=domain['name'])
         ])
-        Relvar.insert(db=mmdb, relvar='T_Perspective', tuples=[
+        Relvar.insert(relvar='T_Perspective', tuples=[
             T_Perspective_i(Side='T', Rnum=cls.rnum, Domain=domain['name'])
         ])
 
         p_mult = cls.p_side['mult'][0]
-        Relvar.insert(db=mmdb, relvar='Perspective', tuples=[
+        Relvar.insert(relvar='Perspective', tuples=[
             Perspective_i(Side='P', Rnum=cls.rnum, Domain=domain['name'],
                           Viewed_class=cls.p_side['cname'], Phrase=cls.p_side['phrase'],
                           Conditional=True if 'c' in cls.p_side['mult'] else False,
@@ -87,42 +87,42 @@ class BinaryAssociation:
                           )
         ])
 
-        Relvar.insert(db=mmdb, relvar='Asymmetric_Perspective', tuples=[
+        Relvar.insert(relvar='Asymmetric_Perspective', tuples=[
             Asymmetric_Perspective_i(Side='P', Rnum=cls.rnum, Domain=domain['name'])
         ])
-        Relvar.insert(db=mmdb, relvar='P_Perspective', tuples=[
+        Relvar.insert(relvar='P_Perspective', tuples=[
             P_Perspective_i(Side='P', Rnum=cls.rnum, Domain=domain['name'])
         ])
         pass
 
         if not cls.ref2:  # Simple binary association
-            Relvar.insert(db=mmdb, relvar='Reference', tuples=[
+            Relvar.insert(relvar='Reference', tuples=[
                 Reference_i(Ref='R',
                             From_class=cls.ref1_source['class'], To_class=cls.ref1_target['class'],
                             Rnum=cls.rnum, Domain=domain['name'])
             ])
             referenced_perspective = 'T' if cls.ref1_target['class'] == cls.t_side['cname'] else 'P'
-            Relvar.insert(db=mmdb, relvar='Association_Reference', tuples=[
+            Relvar.insert(relvar='Association_Reference', tuples=[
                 Association_Reference_i(Ref_type='R',
                                         From_class=cls.ref1_source['class'], To_class=cls.ref1_target['class'],
                                         Rnum=cls.rnum, Domain=domain['name'],
                                         Perspective=referenced_perspective)
             ])
-            Relvar.insert(db=mmdb, relvar='Simple_Association_Reference', tuples=[
+            Relvar.insert(relvar='Simple_Association_Reference', tuples=[
                 Simple_Association_Reference_i(Ref_type='R',
                                                From_class=cls.ref1_source['class'], To_class=cls.ref1_target['class'],
                                                Rnum=cls.rnum, Domain=domain['name'])
             ])
-            Relvar.insert(db=mmdb, relvar='Referring_Class', tuples=[
+            Relvar.insert(relvar='Referring_Class', tuples=[
                 Referring_Class_i(Class=cls.ref1_source['class'], Rnum=cls.rnum, Domain=domain['name'])
             ])
-            Relvar.insert(db=mmdb, relvar='Formalizing_Class_Role', tuples=[
+            Relvar.insert(relvar='Formalizing_Class_Role', tuples=[
                 Formalizing_Class_Role_i(Class=cls.ref1_source['class'], Rnum=cls.rnum, Domain=domain['name'])
             ])
 
             # Simple Attribute Reference
             for from_attr, to_attr in zip(cls.ref1_source['attrs'], cls.ref1_target['attrs']):
-                Relvar.insert(db=mmdb, relvar='Attribute_Reference', tuples=[
+                Relvar.insert(relvar='Attribute_Reference', tuples=[
                     Attribute_Reference_i(From_attribute=from_attr, From_class=cls.ref1_source['class'],
                                           To_attribute=to_attr, To_class=cls.ref1_target['class'],
                                           Ref='R',
@@ -130,26 +130,26 @@ class BinaryAssociation:
                 ])
         else:  # Binary associative (with association class)
             # T Reference
-            Relvar.insert(db=mmdb, relvar='Reference', tuples=[
+            Relvar.insert(relvar='Reference', tuples=[
                 Reference_i(Ref='T',
                             From_class=cls.ref1_source['class'], To_class=cls.ref1_target['class'],
                             Rnum=cls.rnum, Domain=domain['name'])
             ])
-            Relvar.insert(db=mmdb, relvar='Formalizing_Class_Role', tuples=[
+            Relvar.insert(relvar='Formalizing_Class_Role', tuples=[
                 Formalizing_Class_Role_i(Class=cls.ref1_source['class'], Rnum=cls.rnum, Domain=domain['name'])
             ])
-            Relvar.insert(db=mmdb, relvar='Association_Reference', tuples=[
+            Relvar.insert(relvar='Association_Reference', tuples=[
                 Association_Reference_i(Ref_type='T',
                                     From_class=cls.ref1_source['class'], To_class=cls.ref1_target['class'],
                                     Rnum=cls.rnum, Domain=domain['name'],
                                     Perspective='T')
             ])
-            Relvar.insert(db=mmdb, relvar='Association_Class_Reference', tuples=[
+            Relvar.insert(relvar='Association_Class_Reference', tuples=[
                 Association_Class_Reference_i(Ref_type='T', Association_class=cls.ref1_source['class'],
                                               Participating_class=cls.ref1_target['class'],
                                               Rnum=cls.rnum, Domain=domain['name'])
             ])
-            Relvar.insert(db=mmdb, relvar='T_Reference', tuples=[
+            Relvar.insert(relvar='T_Reference', tuples=[
                 T_Reference_i(Ref_type='T', Association_class=cls.ref1_source['class'],
                                               Participating_class=cls.ref1_target['class'],
                                               Rnum=cls.rnum, Domain=domain['name'])
@@ -157,7 +157,7 @@ class BinaryAssociation:
 
             # T Attribute References
             for from_attr, to_attr in zip(cls.ref1_source['attrs'], cls.ref1_target['attrs']):
-                Relvar.insert(db=mmdb, relvar='Attribute_Reference', tuples=[
+                Relvar.insert(relvar='Attribute_Reference', tuples=[
                     Attribute_Reference_i(From_attribute=from_attr, From_class=cls.ref1_source['class'],
                                           To_attribute=to_attr, To_class=cls.ref1_target['class'],
                                           Ref='T',
@@ -165,23 +165,23 @@ class BinaryAssociation:
                 ])
 
             # P Reference
-            Relvar.insert(db=mmdb, relvar='Reference', tuples=[
+            Relvar.insert(relvar='Reference', tuples=[
                 Reference_i(Ref='P',
                             From_class=cls.ref2_source['class'], To_class=cls.ref2_target['class'],
                             Rnum=cls.rnum, Domain=domain['name'])
             ])
-            Relvar.insert(db=mmdb, relvar='Association_Reference', tuples=[
+            Relvar.insert(relvar='Association_Reference', tuples=[
                 Association_Reference_i(Ref_type='P',
                                         From_class=cls.ref2_source['class'], To_class=cls.ref2_target['class'],
                                         Rnum=cls.rnum, Domain=domain['name'],
                                         Perspective='P')
             ])
-            Relvar.insert(db=mmdb, relvar='Association_Class_Reference', tuples=[
+            Relvar.insert(relvar='Association_Class_Reference', tuples=[
                 Association_Class_Reference_i(Ref_type='P', Association_class=cls.ref2_source['class'],
                                               Participating_class=cls.ref2_target['class'],
                                               Rnum=cls.rnum, Domain=domain['name'])
             ])
-            Relvar.insert(db=mmdb, relvar='P_Reference', tuples=[
+            Relvar.insert(relvar='P_Reference', tuples=[
                 P_Reference_i(Ref_type='P', Association_class=cls.ref2_source['class'],
                               Participating_class=cls.ref2_target['class'],
                               Rnum=cls.rnum, Domain=domain['name'])
@@ -189,7 +189,7 @@ class BinaryAssociation:
 
             # P Attribute References
             for from_attr, to_attr in zip(cls.ref2_source['attrs'], cls.ref2_target['attrs']):
-                Relvar.insert(db=mmdb, relvar='Attribute_Reference', tuples=[
+                Relvar.insert(relvar='Attribute_Reference', tuples=[
                     Attribute_Reference_i(From_attribute=from_attr, From_class=cls.ref2_source['class'],
                                           To_attribute=to_attr, To_class=cls.ref2_target['class'],
                                           Ref='P',

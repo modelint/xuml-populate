@@ -2,7 +2,7 @@
 transaction.py -- Database transaction
 """
 import logging
-from PyRAL.pyral_exceptions import IncompleteTransactionPending
+from PyRAL.pyral_exceptions import IncompleteTransactionPending, NoOpenTransaction
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -41,8 +41,10 @@ class Transaction:
 
         :param statement:  Statement to be appended
         """
+        if not isinstance(cls._statements, list):
+            cls._logger.exception("Statement append when no transaction is open.")
+            raise NoOpenTransaction
         cls._statements.append(statement)
-        return
 
     @classmethod
     def execute(cls):

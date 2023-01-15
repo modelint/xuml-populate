@@ -32,32 +32,32 @@ class Attribute:
         cls.record = record
         cls.dtype = record.get('type', "<unresolved>")
         participating_ids = cls.record.get('I', [])  # This attr might not participate in any identifier
-        Relvar.insert(db=mmdb, relvar='Attribute', tuples=[
+        Relvar.insert(relvar='Attribute', tuples=[
             Attribute_i(Name=record['name'], Class=cname, Domain=domain, Type=cls.dtype)
         ])
         # TODO: Check for derived or non-derived, for now assume the latter
-        Relvar.insert(db=mmdb, relvar='Non_Derived_Attribute', tuples=[
+        Relvar.insert(relvar='Non_Derived_Attribute', tuples=[
             Non_Derived_Attribute_i(Name=record['name'], Class=cname, Domain=domain)
         ])
 
         for i in participating_ids:
             # Add Identifier if it is not already in the population
             if i.number not in class_identifiers:
-                Relvar.insert(db=mmdb, relvar='Identifier', tuples=[
+                Relvar.insert(relvar='Identifier', tuples=[
                     Identifier_i(Number=i.number, Class=cname, Domain=domain)
                 ])
                 if not i.superid:
-                    Relvar.insert(db=mmdb, relvar='Irreducible_Identifier', tuples=[
+                    Relvar.insert(relvar='Irreducible_Identifier', tuples=[
                         Irreducible_Identifier_i(Number=i.number, Class=cname, Domain=domain)
                     ])
                 else:
-                    Relvar.insert(db=mmdb, relvar='Super_Identifier', tuples=[
+                    Relvar.insert(relvar='Super_Identifier', tuples=[
                         Super_Identifier_i(Number=i.number, Class=cname, Domain=domain)
                     ])
                 class_identifiers.add(i.number)
 
             # Include this attribute in this identifier
-            Relvar.insert(db=mmdb, relvar='Identifier_Attribute', tuples=[
+            Relvar.insert(relvar='Identifier_Attribute', tuples=[
                 Identifier_Attribute_i(Identifier=i.number, Attribute=record['name'], Class=cname, Domain=domain)
             ])
 

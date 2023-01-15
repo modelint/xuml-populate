@@ -177,6 +177,50 @@ class Relvar:
         verify_cmd = f"relvar constraint info {name}"
         cls.command(tclral, cmd=verify_cmd)
 
+    @classmethod
+    def insert(cls, relvar: str, tuples: List[namedtuple]):
+        """
+        Specifies the insert of a set of tuples into the value of the relvar, modifying it in place.
+
+        Rather than execute the insert operation immediately, it is added as a statement to the currently
+        open transaction. The Transaction append operation will raise an exception if no
+        transaction is currently open.
+
+        It is often the case that a set of inserts must be executed together as a transaction
+        so that relvar constraints may be checked. For example, an SM xUML super and subclass insert must
+        be applied as a single transaction. In cases where a single, standalone insert will suffice,
+        it is simply wrapped as a single statement transaction for simplicity.
+
+        TclRAL does not require that a single insert be embedded in an explicit transaction so,
+        in the future, a standalone insert may be supported by PyRAL.
+
+        The TclRAL syntax is:
+            relvar insert <relvarName> ?<name-value-list> ...?
+
+        TclRAL example where an instance of Class is inserted into the SM xUML metamodel:
+            relvar insert Class {Name {Accessible Shaft Level} Cnum {C1} Domain {Elevator Management}}
+
+        Where PyRAL input is:
+            relvar: 'Class'
+            tuples: [ Class_i(Name='Accessible Shaft Level', Cnum='C1', Domain='Elevator Management') ]
+
+
+        Note that the emtpy set may be provided which results in a no-op.
+        PyRAL supports this feature by allowing an empty list of tuples to be specified
+
+        :relvar: The name of an existing relvar
+        :tuples: A list of tuples named such that the attributes exactly match the relvar header
+        """
+        cmd = f"relvar insert {relvar} "
+        for t in tuples:
+            cmd += '{'
+            instance_tuple = t._asdict()
+            for k, v in instance_tuple.items():
+                cmd += f"{k} {{{v}}} "  # Spaces are allowed in values
+            cmd = cmd[:-1] + '} '
+        cmd = cmd[:-1]
+        Transaction.append_statement(statement=cmd)
+
 
     @classmethod
     def create_relvar(cls, tclral: Tk, name: str, attrs: List[Attribute], ids: Dict[int, List[str]]) -> str:
@@ -241,27 +285,6 @@ class Relvar:
         db.eval(cmd)
         result = db.eval(f"relvar constraint info {name}")
         cls._logger.info(result)
-
-    @classmethod
-    def insert(cls, db: Tk, relvar: str, tuples: List[namedtuple]):
-        """
-        Creates an insert command and adds it to the open transaction.
-
-        Does not actually execute the command.
-
-        :return:
-        """
-        cmd = f"relvar insert {relvar} "
-        for t in tuples:
-            cmd += '{'
-            instance_tuple = t._asdict()
-            for k, v in instance_tuple.items():
-                cmd += f"{k} {{{v}}} "  # Spaces are allowed in values
-            cmd = cmd[:-1] + '} '
-        cmd = cmd[:-1]
-        Transaction.append_statement(statement=cmd)
-
-        pass
 
     @classmethod
     def updateone(cls, db: Tk, relvar_name: str, id:Dict, update:Dict[str,Any]):
