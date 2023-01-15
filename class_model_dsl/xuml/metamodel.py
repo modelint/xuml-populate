@@ -216,7 +216,7 @@ class Metamodel:
             referring_mult = cls.mult_tclral[association['p_side']['mult']]
             referenced_mult = cls.mult_tclral[association['t_side']['mult']]
 
-        Relvar.create_association(db=cls.db, name=rnum,
+        Relvar.create_association(tclral=cls.db, name=rnum,
                                   from_relvar=referring_class, from_attrs=referring_attrs, from_mult=referring_mult,
                                   to_relvar=referenced_class, to_attrs=referenced_attrs, to_mult=referenced_mult,
                                   )

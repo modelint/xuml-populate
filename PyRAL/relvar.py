@@ -5,10 +5,9 @@ relvar.py – TclRAL operations on relvars
 import logging
 from tabulate import tabulate
 import re
-from typing import List, Dict, Any, TYPE_CHECKING
+from typing import List, Dict, Any
 from PyRAL.rtypes import Attribute, Mult, delim
 from PyRAL.transaction import Transaction
-from PyRAL.pyral_exceptions import TclRALException
 from collections import namedtuple
 from tkinter import Tk, TclError
 
@@ -22,12 +21,13 @@ class Relvar:
     _logger = logging.getLogger(__name__)
 
     @classmethod
-    def command(cls, tclral: Tk, cmd: str) -> str:
+    def command(cls, tclral: Tk, cmd: str, log: bool=True) -> str:
         """
         Executes a TclRAL command via the supplied session and returns TclRAL's string result.
 
         :param tclral: The TclRAL session
         :param cmd: A TclRAL command string
+        :param log:  If false, the result will not be logged. Useful when no meaningful result is expected
         :return: The string received as a result of executing the command
         """
         cls._logger.info(f"cmd: {cmd}")
@@ -37,9 +37,58 @@ class Relvar:
             cls._logger.exception(e)
             raise
 
-        cls._logger.info(f"result: {result}")
-        cls._logger.info(result)
+        if log:
+            cls._logger.info(f"result: {result}")
         return result
+
+    # TclRAL commands organized in alphabetic order to match the TclRAL man pages
+
+    @classmethod
+    def create_association(cls, tclral: Tk, name: str,
+                           from_relvar: str, from_attrs: List[str], from_mult: Mult,
+                           to_relvar: str, to_attrs: List[str], to_mult: Mult,
+                           ):
+        """
+        Create a named referential association between two relvars. TclRAL returns an empty string and PyRAL
+        does not return any value.
+
+        An association declares that a source relvar has attributes that refer to an identifier of a target relvar.
+        In this method we'll use the terms "from" and "to" to describe the corresponding association elements.
+
+        The referring and referred to attribute lists are ordered and "from" attributes refer to the corresponding
+        "to" attributes.
+
+        The set of "to" attributes must constitute an identifier for the "to" relvar.
+
+        Multiplicity and conditionality are specified as M, 1, Mc or 1c with the meanings:
+
+            M - at least one
+            1 - exactly one
+            Mc - zero or more
+            1c - zero or one
+
+        :param tclral:
+        :param name:
+        :param from_relvar: The referring relvar (source)
+        :param from_attrs: The referential attributes in the source relvar
+        :param from_mult: Multiplicity conditionality associated with the source side of the association
+        :param to_relvar: The referenced relvar (target)
+        :param to_attrs: The referential attributes in the target relvar
+        :param to_mult: Multiplicity conditionality associated with the target side of the association
+        """
+        # Join each attribute list into a string
+        from_attr_str = "{" + ' '.join(from_attrs) + '}'
+        to_attr_str = "{" + ' '.join(to_attrs) + '}'
+
+        # Build a TclRAL command string
+        cmd = f"relvar association {name} {from_relvar} {from_attr_str} {from_mult.value}" \
+              f" {to_relvar} {to_attr_str} {to_mult.value}"
+
+        # Execute the command and ignore the result
+        cls.command(tclral, cmd=cmd, log=False)
+        # Verify and log the constraint by executing the TclRAL constraint command
+        verify_cmd = f"relvar constraint info {name}"
+        cls.command(tclral, cmd=verify_cmd)
 
 
     @classmethod
@@ -87,29 +136,6 @@ class Relvar:
         return cls.command(tclral, cmd)
 
     @classmethod
-    def create_association(cls, db: Tk, name: str,
-                           from_relvar: str, from_attrs: List[str], from_mult: Mult,
-                           to_relvar: str, to_attrs: List[str], to_mult: Mult,
-                           ):
-        """
-        Create a TclRAL association
-
-        :return:
-        """
-        # Join each attribute list into a string
-        from_attr_str = "{" + ' '.join(from_attrs) + '}'
-        to_attr_str = "{" + ' '.join(to_attrs) + '}'
-
-        # Build a TclRAL command string
-        cmd = f"relvar association {name} {from_relvar} {from_attr_str} {from_mult.value}" \
-              f" {to_relvar} {to_attr_str} {to_mult.value}"
-
-        # Execute the command and log the result
-        db.eval(cmd)
-        result = db.eval(f"relvar constraint info {name}")
-        cls._logger.info(result)
-
-    @classmethod
     def create_correlation(cls, db: Tk, name: str, correlation_relvar: str,
                            correl_a_attrs: List[str], a_mult: Mult, a_relvar: str, a_ref_attrs: List[str],
                            correl_b_attrs: List[str], b_mult: Mult, b_relvar: str, b_ref_attrs: List[str],
@@ -149,7 +175,7 @@ class Relvar:
         # Build a TclRAL command string
         # We need to reverse the a/b multiplicities since TclRAL considers multiplicty from the perspective
         # of the correlation relvar tuples rather than from the perspectives of the participating (non correlation)
-        # relvar tuples. The latter approach matches the way SM modelers think.
+        # relvar tuples. The latter approach matches the way Shlaer-Mellor xUML modelers think.
         cmd = f"relvar correlation {'-complete ' if complete else ''} {name} {correlation_relvar} " \
               f"{correl_a_attrs_str} {b_mult.value} {a_relvar} {a_ref_attrs_str} " \
               f"{correl_b_attrs_str} {a_mult.value} {b_relvar} {b_ref_attrs_str} "
