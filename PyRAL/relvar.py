@@ -90,6 +90,93 @@ class Relvar:
         verify_cmd = f"relvar constraint info {name}"
         cls.command(tclral, cmd=verify_cmd)
 
+    @classmethod
+    def create_correlation(cls, tclral: Tk, name: str, correlation_relvar: str,
+                           correl_a_attrs: List[str], a_mult: Mult, a_relvar: str, a_ref_attrs: List[str],
+                           correl_b_attrs: List[str], b_mult: Mult, b_relvar: str, b_ref_attrs: List[str],
+                           complete: bool = False):
+        """
+        A relvar can manage a correlation between tuples in one or two other relvars.
+
+        An association class in Shlaer-Mellor xUML is represented by such a relvar correlation.
+
+        The referential correlation is between a correlation relvar and two other relvars A and B.
+
+        Correlations declare that every tuple in the correlation relvar refers to exactly one tuple of
+        relvar A and exactly one tuple of relvar B. (we use lower case a and b here in the code)
+
+        The correlation A attributes refer to an identifier of relvar A and similarly for the B components.
+
+        Multiplicity and conditionality is specified the same as in the create_association command.
+
+        Syntax from the TclRAL man page:
+        relvar correlation ?-complete? name correlRelvar
+             correlAttrListA refToSpecA refToRelvarA refToAttrListA
+             correlAttrListB refToSpecB refToRelvarB refToAttrListB
+
+        Example TclRAL command from the TclRAL man page
+        PyRAL:
+
+            relvar correlation C1 OWNERSHIP
+                OwnerName + OWNER OwnerName
+                DogName * DOG DogName
+
+        Additional example from the SM metamodel
+            (See SM class-attribute subsystem with participating classesIdentifier and Attribute where
+            the R22 association is:
+                Identifier requires M Attribute / Attribute is required in Mc Identifier
+                using association class Identifier Attribute):
+
+            PyRAL input:
+                name: R22, correlation_relvar: Identifier_Attribute
+                corel_a_attrs: ['Identifier', 'Class', 'Domain']
+                a_mult: Mc
+                a_ref_attrs: ['Number', 'Class', 'Domain']
+                corel_b_attrs: ['Attribute', 'Class', 'Domain']
+                b_mult: M
+                b_ref_attrs: ['Name', 'Class', 'Domain']
+
+            TclRAL generated command
+                relvar correlation R22 Identifier_Attribute
+                    {Identifier Class Domain} + Identifier
+                    {Number Class Domain} {Attribute Class Domain} * Attribute {Name Class Domain}
+
+        :param tclral:  The TclRAL session
+        :param name: Name of the correlation
+        :param correlation_relvar: Name of the relvar holding the correlation
+        :param correl_a_attrs: Attrs in correlation relvar referencing a-side relvar
+        :param a_mult: Multiplicity on the a-side relvar
+        :param a_relvar: Name of the a-side relvar
+        :param a_ref_attrs: Attrs in the a-side relvar referencd by the correlation
+        :param correl_b_attrs: Attrs in correlation relvar referencing b-side relvar
+        :param b_mult: Multiplicity on the b-side relvar
+        :param b_relvar: Name of the b-side relvar
+        :param b_ref_attrs: Attrs in the b-side relvar referencd by the correlation
+        :param complete: True implies the cardinality of correlRelvar must equal the product of the cardinality of
+            refToRelvarA and refToRelvarB. If False, correlRelvar is allowed to have a subset of the Cartesian product
+            of the references.
+        :return:
+        """
+        # Join each attribute list into a string
+        correl_a_attrs_str = "{" + ' '.join(correl_a_attrs) + '}'
+        correl_b_attrs_str = "{" + ' '.join(correl_b_attrs) + '}'
+        a_ref_attrs_str = "{" + ' '.join(a_ref_attrs) + '}'
+        b_ref_attrs_str = "{" + ' '.join(b_ref_attrs) + '}'
+
+        # Build a TclRAL command string
+        # We need to reverse the a/b multiplicities since TclRAL considers multiplicty from the perspective
+        # of the correlation relvar tuples rather than from the perspectives of the participating (non correlation)
+        # relvar tuples. The latter approach matches the way Shlaer-Mellor xUML modelers think.
+        cmd = f"relvar correlation {'-complete ' if complete else ''}{name} {correlation_relvar} " \
+              f"{correl_a_attrs_str} {b_mult.value} {a_relvar} {a_ref_attrs_str} " \
+              f"{correl_b_attrs_str} {a_mult.value} {b_relvar} {b_ref_attrs_str}"
+
+        # Execute the command and log the result
+        cls.command(tclral, cmd=cmd, log=False)
+        # Verify and log the constraint by executing the TclRAL constraint command
+        verify_cmd = f"relvar constraint info {name}"
+        cls.command(tclral, cmd=verify_cmd)
+
 
     @classmethod
     def create_relvar(cls, tclral: Tk, name: str, attrs: List[Attribute], ids: Dict[int, List[str]]) -> str:
@@ -134,56 +221,6 @@ class Relvar:
         # Build and execute the TclRAL command
         cmd = f"relvar create {name} {header} {id_list}"
         return cls.command(tclral, cmd)
-
-    @classmethod
-    def create_correlation(cls, db: Tk, name: str, correlation_relvar: str,
-                           correl_a_attrs: List[str], a_mult: Mult, a_relvar: str, a_ref_attrs: List[str],
-                           correl_b_attrs: List[str], b_mult: Mult, b_relvar: str, b_ref_attrs: List[str],
-                           complete: bool = False):
-        """
-        TclRAL syntax from man page
-        relvar correlation ?-complete? name correlRelvar
-             correlAttrListA refToSpecA refToRelvarA refToAttrListA
-             correlAttrListB refToSpecB refToRelvarB refToAttrListB
-        Example:
-            relvar correlation C1 OWNERSHIP
-                OwnerName + OWNER OwnerName
-                DogName * DOG DogName
-
-        :param db:  The TclRAL session
-        :param name: Name of the correlation
-        :param correlation_relvar: Name of the relvar holding the correlation
-        :param correl_a_attrs: Attrs in correlation relvar referencing a-side relvar
-        :param a_mult: Multiplicity on the a-side relvar
-        :param a_relvar: Name of the a-side relvar
-        :param a_ref_attrs: Attrs in the a-side relvar referencd by the correlation
-        :param correl_b_attrs: Attrs in correlation relvar referencing b-side relvar
-        :param b_mult: Multiplicity on the b-side relvar
-        :param b_relvar: Name of the b-side relvar
-        :param b_ref_attrs: Attrs in the b-side relvar referencd by the correlation
-        :param complete: True implies the cardinality of correlRelvar must equal the product of the cardinality of
-            refToRelvarA and refToRelvarB. If False, correlRelvar is allowed to have a subset of the Cartesian product
-            of the references.
-        :return:
-        """
-        # Join each attribute list into a string
-        correl_a_attrs_str = "{" + ' '.join(correl_a_attrs) + '}'
-        correl_b_attrs_str = "{" + ' '.join(correl_b_attrs) + '}'
-        a_ref_attrs_str = "{" + ' '.join(a_ref_attrs) + '}'
-        b_ref_attrs_str = "{" + ' '.join(b_ref_attrs) + '}'
-
-        # Build a TclRAL command string
-        # We need to reverse the a/b multiplicities since TclRAL considers multiplicty from the perspective
-        # of the correlation relvar tuples rather than from the perspectives of the participating (non correlation)
-        # relvar tuples. The latter approach matches the way Shlaer-Mellor xUML modelers think.
-        cmd = f"relvar correlation {'-complete ' if complete else ''} {name} {correlation_relvar} " \
-              f"{correl_a_attrs_str} {b_mult.value} {a_relvar} {a_ref_attrs_str} " \
-              f"{correl_b_attrs_str} {a_mult.value} {b_relvar} {b_ref_attrs_str} "
-
-        # Execute the command and log the result
-        db.eval(cmd)
-        result = db.eval(f"relvar constraint info {name}")
-        cls._logger.info(result)
 
     @classmethod
     def create_partition(cls, db: Tk, name: str,

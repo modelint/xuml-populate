@@ -267,7 +267,7 @@ class Metamodel:
 
         # Find matching t or p side to obtain multiplicity
 
-        Relvar.create_correlation(db=cls.db, name=rnum, correlation_relvar=assoc_class,
+        Relvar.create_correlation(tclral=cls.db, name=rnum, correlation_relvar=assoc_class,
                                   correl_a_attrs=ref1_from_attrs, a_mult=ref1_mult, a_relvar=ref1_class,
                                   a_ref_attrs=ref1_to_attrs,
                                   correl_b_attrs=ref2_from_attrs, b_mult=ref2_mult, b_relvar=ref2_class,
