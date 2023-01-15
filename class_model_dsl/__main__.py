@@ -46,7 +46,7 @@ def main():
         print(f'xUML class model parser version: {version}')
         sys.exit(0)
 
-    # If requested, rebuild the metamodel db
+    # If requested, rebuild the metamodel tclral
     if args.rebuild:
         Metamodel.create_db()
 

@@ -11,6 +11,9 @@ post = "]"
 class PyRALException(Exception):
     pass
 
+class TclRALException(PyRALException):
+    pass
+
 class Transaction(PyRALException):
     pass
 

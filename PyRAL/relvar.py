@@ -1,51 +1,93 @@
 """
-relvar.py – Operations on relvars
+relvar.py – TclRAL operations on relvars
 """
 
 import logging
 from tabulate import tabulate
 import re
 from typing import List, Dict, Any, TYPE_CHECKING
-from PyRAL.rtypes import Attribute, Mult
+from PyRAL.rtypes import Attribute, Mult, delim
 from PyRAL.transaction import Transaction
+from PyRAL.pyral_exceptions import TclRALException
 from collections import namedtuple
-
-if TYPE_CHECKING:
-    from tkinter import Tk
+from tkinter import Tk, TclError
 
 class Relvar:
     """
     A relational variable (table)
+
+    TclRAL does not support spaces in names, but PyRAL accepts space delimited names.
+    But each space delimiter will be replaced with an underscore delimiter before submitting to TclRAL
     """
     _logger = logging.getLogger(__name__)
 
     @classmethod
-    def create_relvar(cls, db: 'Tk', name: str, attrs: List[Attribute], ids: Dict[int, List[str]]):
+    def command(cls, tclral: Tk, cmd: str) -> str:
         """
-        Compose a TclRAL relvar create commmand from the supplied class
-        definition.
+        Executes a TclRAL command via the supplied session and returns TclRAL's string result.
+
+        :param tclral: The TclRAL session
+        :param cmd: A TclRAL command string
+        :return: The string received as a result of executing the command
         """
-        # relvar create PUPPY {PuppyName string Dame string Sire string} {attr names} ...
-        header = ""
-        for a in attrs:
-            header += a.name.replace(' ', '_') + ' ' + a.type.replace(' ', '_') + ' '
-        header = f"{{{header[:-1]}}}"
+        cls._logger.info(f"cmd: {cmd}")
+        try:
+            result = tclral.eval(cmd)
+        except TclError as e:
+            cls._logger.exception(e)
+            raise
 
-        id_const = ""
-        for inum, attrs in ids.items():
-            id_const += '{'
-            for a in attrs:
-                id_const += a.replace(' ', '_') + ' '
-            id_const = id_const[:-1] + '} '
-        id_const = id_const[:-1]
-
-        cmd = f"relvar create {name} {header} {id_const}"
-        result = db.eval(cmd)
-        cls._logger.info(f"Adding class: {name}")
+        cls._logger.info(f"result: {result}")
         cls._logger.info(result)
+        return result
+
 
     @classmethod
-    def create_association(cls, db: 'Tk', name: str,
+    def create_relvar(cls, tclral: Tk, name: str, attrs: List[Attribute], ids: Dict[int, List[str]]) -> str:
+        """
+        Create a relvar
+
+        Syntax from the TclRAL man page:
+            relvar create <relvarName> <heading> <id1> ?id2 ...?
+
+        Example TclRAL command:
+            relvar create Waypoint {WPT_number int, Lat string, Long string, Frequency double} {WPT_number} {Lat Long}
+
+        This class has both a single attribute identifier "WPT_number" and a multiple attribute identifier {Lat Long}
+        We wrap each identifier in {} brackets for simplicity even though we only really need them to group
+        multiple attribute identifiers
+
+        :param tclral: A TclRAL session
+        :param name: Name of the new relvar
+        :param attrs: A list of Attributes (name, type - named tuples)
+        :param ids: A dictionary of {idnum: [attr_name, ...] } values
+        :return: The relation defined by the empty relvar in the form: <heading> {}
+        """
+        # A header is a bracketed list of attribute name pairs such as:
+        #   {WPT_number int, Lat string, Long string, Frequency double}
+        header = "{"
+        for a in attrs:
+            # We need to replace any spaces in an attribute name with underscores
+            header += f"{a.name.replace(' ', delim)} {a.type.replace(' ', delim)} "
+        header = header[:-1] + "}" # Replace the trailing space with a closing bracket
+
+        # Now we make the list of identifiers such as:
+        #   {WPT_number} {Lat Long}
+        id_list = ""
+        for inum, attrs in ids.items():
+            # Create a bracketed list for each identifier
+            id_list += '{'
+            for a in attrs:
+                id_list += f"{a.replace(' ', delim)} "
+            id_list = id_list[:-1] + '} '
+        id_list = id_list[:-1]
+
+        # Build and execute the TclRAL command
+        cmd = f"relvar create {name} {header} {id_list}"
+        return cls.command(tclral, cmd)
+
+    @classmethod
+    def create_association(cls, db: Tk, name: str,
                            from_relvar: str, from_attrs: List[str], from_mult: Mult,
                            to_relvar: str, to_attrs: List[str], to_mult: Mult,
                            ):
@@ -68,7 +110,7 @@ class Relvar:
         cls._logger.info(result)
 
     @classmethod
-    def create_correlation(cls, db: 'Tk', name: str, correlation_relvar: str,
+    def create_correlation(cls, db: Tk, name: str, correlation_relvar: str,
                            correl_a_attrs: List[str], a_mult: Mult, a_relvar: str, a_ref_attrs: List[str],
                            correl_b_attrs: List[str], b_mult: Mult, b_relvar: str, b_ref_attrs: List[str],
                            complete: bool = False):
@@ -118,7 +160,7 @@ class Relvar:
         cls._logger.info(result)
 
     @classmethod
-    def create_partition(cls, db: 'Tk', name: str,
+    def create_partition(cls, db: Tk, name: str,
                          superclass_name: str, super_attrs: List[str], subs: Dict[str, List[str]]):
         """
         relvar partition name superclass_name superAttrList
@@ -138,7 +180,7 @@ class Relvar:
         cls._logger.info(result)
 
     @classmethod
-    def insert(cls, db: 'Tk', relvar: str, tuples: List[namedtuple]):
+    def insert(cls, db: Tk, relvar: str, tuples: List[namedtuple]):
         """
         Creates an insert command and adds it to the open transaction.
 
@@ -159,7 +201,7 @@ class Relvar:
         pass
 
     @classmethod
-    def updateone(cls, db: 'Tk', relvar_name: str, id:Dict, update:Dict[str,Any]):
+    def updateone(cls, db: Tk, relvar_name: str, id:Dict, update:Dict[str,Any]):
         """
         """
         id_str = ""
@@ -173,7 +215,7 @@ class Relvar:
 
 
     @classmethod
-    def population(cls, db: 'Tk', relvar: str):
+    def population(cls, db: Tk, relvar: str):
         """
 
         :param db:
@@ -181,10 +223,10 @@ class Relvar:
         :return:
         """
         result = db.eval(f"set {relvar}")
-        # db.eval(f"puts ${relvar}")
+        # tclral.eval(f"puts ${relvar}")
 
     @classmethod
-    def relformat(cls, db: 'Tk', relvar: str):
+    def relformat(cls, db: Tk, relvar: str):
         """
         Prints a table of the specified relvar population.
 

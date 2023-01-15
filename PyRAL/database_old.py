@@ -41,7 +41,7 @@ class Database:
         cls._logger.info("TclRAL initiated")
 
         if db_path:
-            # TODO: Have TclRAL load the db from the specified path
+            # TODO: Have TclRAL load the tclral from the specified path
             pass
 
     @classmethod

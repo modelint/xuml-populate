@@ -7,6 +7,7 @@ from enum import Enum
 
 Attribute = namedtuple('_Attribute', 'name type')
 RelationValue = namedtuple('RelationValue', 'name header body')
+delim = '_' # TclRAL delimiter that replaces a space delimiter
 
 class Mult(Enum):
     AT_LEAST_ONE = '+'

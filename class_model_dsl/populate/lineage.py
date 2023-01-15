@@ -70,7 +70,7 @@ class Lineage:
                     extraction.sort()
                     cls.lineages.add(':'.join(extraction))
 
-        # Finally, we load each lineage into the db
+        # Finally, we load each lineage into the tclral
         cls.populate()
 
 

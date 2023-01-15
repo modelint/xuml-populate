@@ -86,7 +86,7 @@ class Relation:
         rexpr = rexpr.rstrip(' &&') + "}"
 
         # Add it to the restrictwith command and evaluate
-        # result = db.eval("relation restrict $Attribute a {[string match <unresolved> [tuple extract $a Type]]}")
+        # result = tclral.eval("relation restrict $Attribute a {[string match <unresolved> [tuple extract $a Type]]}")
         cmd = f"set {_relation} [relation restrict ${{{relation}}} t {rexpr}]"
         result = db.eval(cmd)
         check = db.eval(f"set {{{_relation}}}")
@@ -270,7 +270,7 @@ class Relation:
         :param relation: The value (a relation) of this variable is displayed
         """
         # The tcl set command returns a variable value, in this case a relation
-        # result = db.eval(f"set {relation}")
+        # result = tclral.eval(f"set {relation}")
 
         # The result is a single, very long string, representing the value of the
         # relation.

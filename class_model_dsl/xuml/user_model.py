@@ -105,7 +105,7 @@ class UserModel:
         # for relvar_name, relation in self.population.items():
         #     t = SMmetaDB.Relvars[relvar_name]
         #     if relation:
-        #         self.db.Connection.execute(t.insert(), relation)  # Sqlalchemy populates the table schema
+        #         self.tclral.Connection.execute(t.insert(), relation)  # Sqlalchemy populates the table schema
 
         # cls._logger.info("Populating lineage")
         # Lineage(domain=self.domain)

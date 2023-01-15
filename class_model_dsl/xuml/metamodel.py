@@ -53,10 +53,10 @@ class Metamodel:
     # This way we don't need to reload and reparse the subsystem files.
     metamodel_subsystem = {}  # Parsed subsystems, keyed by subsystem file name
 
-    schema_classes = set()  # All classes added to the db schema for reference when constraints are added
+    schema_classes = set()  # All classes added to the tclral schema for reference when constraints are added
 
-    # Here is a mapping from metamodel multiplcity notation to that used by the target TclRAL db
-    # When interacting with PyRAL we must supply the db specific value
+    # Here is a mapping from metamodel multiplcity notation to that used by the target TclRAL tclral
+    # When interacting with PyRAL we must supply the tclral specific value
     mult_tclral = {
         'M': DBMult.AT_LEAST_ONE,
         '1': DBMult.EXACTLY_ONE,
@@ -71,21 +71,21 @@ class Metamodel:
         from a parse of the metamodel xcm file
         :return:
         """
-        # Create a TclRAL session with an empty db
+        # Create a TclRAL session with an empty tclral
         cls.db = Database.init()
 
-        # Parse each metamodel file and add each class to the db
+        # Parse each metamodel file and add each class to the tclral
         for subsys_cm_file in cls.metamodel_pkg.glob("*.xcm"):
             cls._logger.info(f"Processing subsystem cm file: [{subsys_cm_file}]")
 
             # Parse the metamodel
             current_subsystem = cls.parse(cm_path=subsys_cm_file)
 
-            # Add each class to the db
+            # Add each class to the tclral
             for c in current_subsystem.classes:
                 cls.add_class(c)
 
-        # Now that all classes are present in the db, add all the constraints
+        # Now that all classes are present in the tclral, add all the constraints
         for sname, subsys in cls.metamodel_subsystem.items():
             for r in subsys.rels:
                 cls.add_rel(r)
@@ -142,7 +142,7 @@ class Metamodel:
                     ids[i[0]] = [a['name']]
                 else:
                     ids[i[0]].append(a['name'])
-        Relvar.create_relvar(db=cls.db, name=cname, attrs=attrs, ids=ids)
+        Relvar.create_relvar(tclral=cls.db, name=cname, attrs=attrs, ids=ids)
         cls.schema_classes.add(mm_class['name'])
 
     @classmethod
@@ -176,7 +176,7 @@ class Metamodel:
     @classmethod
     def add_association(cls, association):
         """
-        Add association constraint to metamodel db
+        Add association constraint to metamodel tclral
         This will result in an association in TclRAL and possibly a correlation
 
         From TclRAL man page
@@ -224,7 +224,7 @@ class Metamodel:
     @classmethod
     def add_associative(cls, associative_rel):
         """
-        Add association constraint to metamodel db
+        Add association constraint to metamodel tclral
         This will result in an association in TclRAL and possibly a correlation
 
         Example:
@@ -277,7 +277,7 @@ class Metamodel:
     @classmethod
     def add_generalization(cls, generalization):
         """
-        Add partition constraint to metamodel db
+        Add partition constraint to metamodel tclral
 
         :param mm_class:
         """

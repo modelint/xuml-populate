@@ -45,9 +45,9 @@ class Relvar:
         statement = f"relvar create {self.name} {header_string} {id_string}"
         Transaction.update_schema(statement)
         Transaction.build_schema()
-        # db.eval(statement)
+        # tclral.eval(statement)
         self.logger.info(f"Added create relvar {self.name} to transaction.")
-        # result = db.eval("relvar names")
-        # self.logger.info(f'Relvars in db: [{result}]')
+        # result = tclral.eval("relvar names")
+        # self.logger.info(f'Relvars in tclral: [{result}]')
 
         pass
