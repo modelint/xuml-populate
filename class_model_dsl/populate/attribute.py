@@ -106,15 +106,14 @@ class Attribute:
         # We join the two relvars on the To_attribute so that we can obtain that attribute's Type
 
         # First we must rename two attributes in the Attribute Reference class
-        Relation.rename(tclral=mmdb, old_name='To_attribute', new_name='Name', relation='Attribute_Reference')
-        result = Relation.rename(tclral=mmdb, old_name='To_class', new_name='Class')
-        ar_rename = Relation.make_pyrel(relation=result, name='AR Rename')
-        Relation.relformat(ar_rename)
+        Relation.rename(mmdb, names={'To_attribute': 'Name', 'To_class': 'Class'},
+                                 relation='Attribute_Reference', svar_name='ar_rename')
+        Relation.print(mmdb, 'ar_rename')
+
 
         # Then we join the renamed Attribute Reference with Attribute to get the 'to attributes'
-        result = Relation.join(tclral=mmdb, rname2='Attribute')
-        nj = Relation.make_pyrel(relation=result, name='Join')
-        Relation.relformat(nj)
+        Relation.join(tclral=mmdb, rname2='Attribute', svar_name='Attr_JOIN_Attribute_Reference')
+        Relation.print(mmdb, 'Attr_JOIN_Attribute_Reference')
 
         # Finally, we restrict and project on our from attribute to get its reference type
         result = Relation.restrict(tclral=mmdb,

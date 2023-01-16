@@ -5,7 +5,7 @@ relation.py – Operations on relations
 import logging
 import re
 from tabulate import tabulate
-from typing import List, Optional
+from typing import List, Optional, Dict
 from PyRAL.rtypes import RelationValue
 from PyRAL.command import Command
 
@@ -17,7 +17,7 @@ from tkinter import Tk
 # any user relvars. Do not ever use the name below as one of your user relvars!
 # For any given command, if no relvar is specified, the previous relation result is assumed
 # to be the input.
-_relation = r'^relation'  # Name of the latest relation result
+_relation = r'^relation'  # Name of the latest relation result. Carat prevents name collision
 session_variable_names = set() # Maintain a list of temporary variable names in use
 
 
@@ -125,18 +125,48 @@ class Relation:
         return result
 
     @classmethod
-    def rename(cls, tclral: Tk, old_name: str, new_name:str, relation: str=_relation, svar_name: Optional[str]=None) -> str:
+    def rename(cls, tclral: Tk, names: Dict[str, str], relation: str=_relation, svar_name: Optional[str]=None) -> str:
         """
-        Rename attribute from old to new name
-        :old_name: Current name of the attribute
-        :new_name: Attribute will be renamed to this name
+        Given an input relation, rename one or more attributes from old to new names. This is useful when you want
+        to join two relvars on attributes with differing names.
+
+        In SM xUML, it is common for an attribute with one name to reference another attribute of the same
+        type but a different name, Employee_ID -> Manager, for exmaple.
+
+        We often need to rename multiple attributes before performing a join, so the single attribute rename
+        operation provided by TclRAL is executed once for each element of the names dictionary.
+
+        TclRAL rename syntax:
+            relation rename <relationValue> ?oldname newname ...?
+
+        Multiple rename example in TclRAL:
+            relation rename ${Attribute_Reference} To_attribute Name
+            relation rename ${^relation} To_class Class
+
+        (^relation) is the name of PyRAL's intermediate result session variable, so we are feeding
+        the result of the first rename into the next.
+
+        Generated from the PyRAL input:
+            relation: 'Attribute_Reference'
+            names: {'To_attribute': 'Name', 'To_class': 'Class'}
+
+        :param tclral: The TclRAL session
+        :param relation: The relation to rename
+        :param names: Dictionary in format { old_name: new_name }
+        :param svar_name:  Name of a TclRAL session variable named for future reference
         :return Resulting relation as a TclRAL string
         """
-        cmd = f'set {_relation} [relation rename ${{{relation}}} {old_name} {new_name}]'
-        result = Command.execute(tclral, cmd)
-        if svar_name:  # Save the result using the supplied session variable name
+        r = relation
+        result = None
+        # Each attribute rename is executed with a separate command
+        for old_name,new_name in names.items():
+            # The first rename operation is on the supplied relation
+            cmd = f'set {_relation} [relation rename ${{{r}}} {old_name} {new_name}]'
+            result = Command.execute(tclral, cmd)
+            r = _relation # Subsequent renames are based on the previous result
+        if svar_name:  # Save the final result using the supplied session variable name
             cls.set_var(tclral, svar_name)
-        return result
+        return result # Result of the final rename (all renames in place)
 
     @classmethod
     def join(cls, tclral: Tk, rname2: str, rname1: str=_relation, svar_name: Optional[str]=None) -> str:
@@ -277,7 +307,7 @@ class Relation:
         return rval
 
     @classmethod
-    def print(cls, tclral: 'Tk', variable_name: str):
+    def print(cls, tclral: 'Tk', variable_name: str=_relation):
         """
         Given the name of a TclRAL relation variable, obtain its value and print it as a table.
 
