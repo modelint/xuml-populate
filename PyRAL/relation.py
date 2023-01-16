@@ -211,13 +211,32 @@ class Relation:
     @classmethod
     def subtract(cls, tclral: Tk, rname2: str, rname1: str=_relation, svar_name: Optional[str]=None) -> str:
         """
-        Subtract relation2 from relation1
+        Returns the set difference between two relations using the TclRAL minus command.
 
-        :param rname1:
-        :param rname2:
+        Each relation must be of the same type (same header) as will the result.
+
+        The body of the result consists of those tuples present in r1 but not present in r2.
+
+        Relational subtraction is not commutative so the order of the r1 and r2 arguments is significant.
+
+        The TclRAL syntax is:
+            relation minus <relationValue1> <relationValue2>
+
+        TclRAL example taken from the lineage.py Derive method where a set of all classes playing one or more
+        subclass roles subtracts all classes playing superclass roles to obtain a set of leaf classes that
+        participate as subclasses only.
+
+            relation minus $subs $supers
+
+        Generated from the following PyRAL input:
+            rname1: subs
+            rname2: supers
+
         :param tclral: The TclRAL session
+        :param rname1: Subtracts value in rname2
+        :param rname2: Is subtracted from value in rname1
         :param svar_name: Relation result is stored in this optional TclRAL variable for subsequent operations to use
-        :return Resulting relation as a TclRAL string
+        :return Subtraction relation as a TclRAL string
         """
         cmd = f'set {_relation} [relation minus ${{{rname1}}} ${rname2}]'
         result = Command.execute(tclral, cmd)
