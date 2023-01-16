@@ -78,47 +78,17 @@ class Relation:
         tclral.eval(f"set {name} ${{{_relation}}}")
 
     @classmethod
-    def restrict(cls, tclral: Tk, restriction: str, relation: str=_relation, svar_name: Optional[str]=None) -> str:
+    def join(cls, tclral: Tk, rname2: str, rname1: str=_relation, svar_name: Optional[str]=None) -> str:
         """
-        Here we select zero or more tuples that match the supplied criteria.
+        Perform a natural join on two relations
 
-        In relational theory this is known as a restriction operation.
-
-        TclRAL syntax:
-            relation restrict <relationValue> <tupleVariable> <expression>
-
-        TclRAL command example:
-            relation restrict ${Attribute} t {[string match {<unresolved>} [tuple extract $t Type]] &&
-                [string match {Elevator Management} [tuple extract $t Domain]]}
-
-        Generated from this PyRAL input:
-            relation: Attribute
-            restriction: 'Type:<unresolved>, Domain:Elevator Management'
-
-
+        :param rname1:
+        :param rname2:
         :param tclral: The TclRAL session
-        :param relation: Name of a relation variable where the operation is applied
-        :param restriction: A string in Scrall notation that specifies the restriction criteria
-        :param svar_name: An optional session variable that holds the result
-        :return: The TclRAL string result representing the restricted tuple set
+        :param svar_name: Relation result is stored in this optional TclRAL variable for subsequent operations to use
+        :return Resulting relation as a TclRAL string
         """
-        # Parse the restriction expression
-        # Split out matches on comma delimiter as a list of strings
-        match_strings = restriction.split(',')
-        # Break each match on the ':' into attr and value as a dictionary
-        attr_vals = {a[0].strip(): a[1].strip() for a in [m.split(':') for m in match_strings]}
-        # Now build the selection expression from each dictionary item
-        rexpr = "{"  # Selection expression is surrounded by brackets
-        for attribute,value in attr_vals.items():
-            # We AND them all together with the && tcl operator
-            rexpr += f"[string match {{{value}}} [tuple extract $t {attribute}]] && " # For use with restrict command
-            # rexpr += f"[string match {{{value}}} ${attribute}] && " # For use with restrictwith command
-        # Remove the trailing && and return the complete selection expression
-        rexpr = rexpr.rstrip(' &&') + "}"
-
-        # Add it to the restrictwith command and evaluate
-        # result = tclral.eval("relation restrict $Attribute a {[string match <unresolved> [tuple extract $a Type]]}")
-        cmd = f"set {_relation} [relation restrict ${{{relation}}} t {rexpr}]"
+        cmd = f'set {{{_relation}}} [relation join ${{{rname1}}} ${rname2}]'
         result = Command.execute(tclral, cmd)
         if svar_name:  # Save the result using the supplied session variable name
             cls.set_var(tclral, svar_name)
@@ -127,6 +97,11 @@ class Relation:
     @classmethod
     def rename(cls, tclral: Tk, names: Dict[str, str], relation: str=_relation, svar_name: Optional[str]=None) -> str:
         """
+        (NOTE: I only just NOW realized that the TclRAL join command provides an option to specify multiple renames
+        as part of a join, because, of course it does! Argghh. So there may not be any need to perform multiple renames
+        at once, but hey, there's no harm in providing potentially superfluous functionality as it does at least
+        handle the single rename case. - LS)
+
         Given an input relation, rename one or more attributes from old to new names. This is useful when you want
         to join two relvars on attributes with differing names.
 
@@ -169,17 +144,47 @@ class Relation:
         return result # Result of the final rename (all renames in place)
 
     @classmethod
-    def join(cls, tclral: Tk, rname2: str, rname1: str=_relation, svar_name: Optional[str]=None) -> str:
+    def restrict(cls, tclral: Tk, restriction: str, relation: str=_relation, svar_name: Optional[str]=None) -> str:
         """
-        Project attributes over relation
+        Here we select zero or more tuples that match the supplied criteria.
 
-        :param rname1:
-        :param rname2:
+        In relational theory this is known as a restriction operation.
+
+        TclRAL syntax:
+            relation restrict <relationValue> <tupleVariable> <expression>
+
+        TclRAL command example:
+            relation restrict ${Attribute} t {[string match {<unresolved>} [tuple extract $t Type]] &&
+                [string match {Elevator Management} [tuple extract $t Domain]]}
+
+        Generated from this PyRAL input:
+            relation: Attribute
+            restriction: 'Type:<unresolved>, Domain:Elevator Management'
+
+
         :param tclral: The TclRAL session
-        :param svar_name: Relation result is stored in this optional TclRAL variable for subsequent operations to use
-        :return Resulting relation as a TclRAL string
+        :param relation: Name of a relation variable where the operation is applied
+        :param restriction: A string in Scrall notation that specifies the restriction criteria
+        :param svar_name: An optional session variable that holds the result
+        :return: The TclRAL string result representing the restricted tuple set
         """
-        cmd = f'set {{{_relation}}} [relation join ${{{rname1}}} ${rname2}]'
+        # Parse the restriction expression
+        # Split out matches on comma delimiter as a list of strings
+        match_strings = restriction.split(',')
+        # Break each match on the ':' into attr and value as a dictionary
+        attr_vals = {a[0].strip(): a[1].strip() for a in [m.split(':') for m in match_strings]}
+        # Now build the selection expression from each dictionary item
+        rexpr = "{"  # Selection expression is surrounded by brackets
+        for attribute,value in attr_vals.items():
+            # We AND them all together with the && tcl operator
+            rexpr += f"[string match {{{value}}} [tuple extract $t {attribute}]] && " # For use with restrict command
+            # rexpr += f"[string match {{{value}}} ${attribute}] && " # For use with restrictwith command
+        # Remove the trailing && and return the complete selection expression
+        rexpr = rexpr.rstrip(' &&') + "}"
+
+        # Add it to the restrictwith command and evaluate
+        # result = tclral.eval("relation restrict $Attribute a {[string match <unresolved> [tuple extract $a Type]]}")
+        cmd = f"set {_relation} [relation restrict ${{{relation}}} t {rexpr}]"
         result = Command.execute(tclral, cmd)
         if svar_name:  # Save the result using the supplied session variable name
             cls.set_var(tclral, svar_name)
