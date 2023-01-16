@@ -84,7 +84,7 @@ class Attribute:
                              relvar_name='Attribute',
                              id={'Name':a['Name'], 'Class':a['Class'], 'Domain':domain},
                              update={'Type': assign_type})
-        Relvar.relformat(db=mmdb, relvar='Attribute')
+        Relation.print(mmdb, 'Attribute')
 
 
     @classmethod
