@@ -6,8 +6,9 @@ import logging
 from typing import List, Dict, Any
 from PyRAL.rtypes import Attribute, Mult, delim
 from PyRAL.transaction import Transaction
+from PyRAL.command import Command
 from collections import namedtuple
-from tkinter import Tk, TclError
+from tkinter import Tk
 
 class Relvar:
     """
@@ -17,27 +18,6 @@ class Relvar:
     But each space delimiter will be replaced with an underscore delimiter before submitting to TclRAL
     """
     _logger = logging.getLogger(__name__)
-
-    @classmethod
-    def command(cls, tclral: Tk, cmd: str, log: bool=True) -> str:
-        """
-        Executes a TclRAL command via the supplied session and returns TclRAL's string result.
-
-        :param tclral: The TclRAL session
-        :param cmd: A TclRAL command string
-        :param log:  If false, the result will not be logged. Useful when no meaningful result is expected
-        :return: The string received as a result of executing the command
-        """
-        cls._logger.info(f"cmd: {cmd}")
-        try:
-            result = tclral.eval(cmd)
-        except TclError as e:
-            cls._logger.exception(e)
-            raise
-
-        if log:
-            cls._logger.info(f"result: {result}")
-        return result
 
     # TclRAL commands organized in alphabetic order to match the TclRAL man pages
 
@@ -83,10 +63,10 @@ class Relvar:
               f" {to_relvar} {to_attr_str} {to_mult.value}"
 
         # Execute the command and ignore the result
-        cls.command(tclral, cmd=cmd, log=False)
+        Command.execute(tclral, cmd=cmd, log=False)
         # Verify and log the constraint by executing the TclRAL constraint command
         verify_cmd = f"relvar constraint info {name}"
-        cls.command(tclral, cmd=verify_cmd)
+        Command.execute(tclral, cmd=verify_cmd)
 
     @classmethod
     def create_correlation(cls, tclral: Tk, name: str, correlation_relvar: str,
@@ -170,10 +150,10 @@ class Relvar:
               f"{correl_b_attrs_str} {a_mult.value} {b_relvar} {b_ref_attrs_str}"
 
         # Execute the command and log the result
-        cls.command(tclral, cmd=cmd, log=False)
+        Command.execute(tclral, cmd=cmd, log=False)
         # Verify and log the constraint by executing the TclRAL constraint command
         verify_cmd = f"relvar constraint info {name}"
-        cls.command(tclral, cmd=verify_cmd)
+        Command.execute(tclral, cmd=verify_cmd)
 
     @classmethod
     def insert(cls, relvar: str, tuples: List[namedtuple]):
@@ -266,10 +246,10 @@ class Relvar:
 
         cmd = f"relvar partition {name} {superclass_name} {super_attrs_str} {all_subs}"
         # Execute the command and log the result
-        cls.command(tclral, cmd=cmd, log=False)
+        Command.execute(tclral, cmd=cmd, log=False)
         # Verify and log the constraint by executing the TclRAL constraint command
         verify_cmd = f"relvar constraint info {name}"
-        cls.command(tclral, cmd=verify_cmd)
+        Command.execute(tclral, cmd=verify_cmd)
 
     @classmethod
     def create_relvar(cls, tclral: Tk, name: str, attrs: List[Attribute], ids: Dict[int, List[str]]) -> str:
@@ -313,7 +293,7 @@ class Relvar:
 
         # Build and execute the TclRAL command
         cmd = f"relvar create {name} {header} {id_list}"
-        return cls.command(tclral, cmd)
+        return Command.execute(tclral, cmd)
 
     @classmethod
     def updateone(cls, tclral: Tk, relvar_name: str, id:Dict, update:Dict[str,Any]):
@@ -348,4 +328,4 @@ class Relvar:
         for u_attr,u_val in update.items():
             update_str += u_attr + " {" + u_val + "}"
         cmd = f'relvar updateone {relvar_name} t {{{id_str}}} {{tuple update $t {update_str}}}'
-        return cls.command(tclral, cmd)
+        return Command.execute(tclral, cmd)
