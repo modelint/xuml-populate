@@ -11,6 +11,7 @@ from class_model_dsl.populate.lineage import Lineage
 from class_model_dsl.populate.subsystem import Subsystem
 from PyRAL.transaction import Transaction
 from PyRAL.relvar import Relvar
+from PyRAL.relation import Relation
 from class_model_dsl.populate.pop_types import\
     Domain_i, Modeled_Domain_i, Domain_Partition_i, Subsystem_i
 
@@ -33,7 +34,6 @@ class Domain:
         :param mmdb:  Metamodel database
         :param name:  Name of the domain
         :param subsystems:  All parsed subsystems for the domain
-        :return:
         """
         cls._logger.info(f"Populating modeled domain [{domain.Name}]")
 
@@ -52,25 +52,25 @@ class Domain:
                 Domain_Partition_i(Number=s.subsystem['range'][0], Domain=domain.Name)
             ])
         Transaction.execute()
-        Relvar.relformat(db=mmdb, relvar='Domain')
-        Relvar.relformat(db=mmdb, relvar='Modeled_Domain')
-        Relvar.relformat(db=mmdb, relvar='Realized_Domain')
-        Relvar.relformat(db=mmdb, relvar='Subsystem')
-        Relvar.relformat(db=mmdb, relvar='Domain_Partition')
+        Relation.print(mmdb, 'Domain')
+        Relation.print(mmdb, 'Modeled_Domain')
+        Relation.print(mmdb, 'Realized_Domain')
+        Relation.print(mmdb, 'Subsystem')
+        Relation.print(mmdb, 'Domain_Partition')
 
         # Insert classes
         for s in subsystems.values():
             subsys = Subsystem(record=s)
             for c in s.classes:
                 MMclass.populate(mmdb=mmdb, domain=domain.Name, subsystem=subsys, record=c)
-        Relvar.relformat(db=mmdb, relvar='Class')
-        Relvar.relformat(db=mmdb, relvar='Alias')
-        Relvar.relformat(db=mmdb, relvar='Attribute')
-        Relvar.relformat(db=mmdb, relvar='Identifier')
-        Relvar.relformat(db=mmdb, relvar='Super_Identifier')
-        Relvar.relformat(db=mmdb, relvar='Irreducible_Identifier')
-        Relvar.relformat(db=mmdb, relvar='Identifier_Attribute')
-        Relvar.relformat(db=mmdb, relvar='Non_Derived_Attribute')
+        Relation.print(mmdb, 'Class')
+        Relation.print(mmdb, 'Alias')
+        Relation.print(mmdb, 'Attribute')
+        Relation.print(mmdb, 'Identifier')
+        Relation.print(mmdb, 'Super_Identifier')
+        Relation.print(mmdb, 'Irreducible_Identifier')
+        Relation.print(mmdb, 'Identifier_Attribute')
+        Relation.print(mmdb, 'Non_Derived_Attribute')
 
         # Insert relationships
         cls._logger.info("Populating user model relationships")
@@ -79,34 +79,34 @@ class Domain:
             for r in s.rels:
                 Relationship.populate(mmdb=mmdb, domain=domain.Name, subsystem=subsys, record=r)
 
-        Relvar.relformat(db=mmdb, relvar='Relationship')
-        Relvar.relformat(db=mmdb, relvar='Association')
-        Relvar.relformat(db=mmdb, relvar='Binary_Association')
-        Relvar.relformat(db=mmdb, relvar='Perspective')
-        Relvar.relformat(db=mmdb, relvar='Asymmetric_Perspective')
-        Relvar.relformat(db=mmdb, relvar='T_Perspective')
-        Relvar.relformat(db=mmdb, relvar='P_Perspective')
-        Relvar.relformat(db=mmdb, relvar='Association_Class')
-        Relvar.relformat(db=mmdb, relvar='Generalization')
-        Relvar.relformat(db=mmdb, relvar='Superclass')
-        Relvar.relformat(db=mmdb, relvar='Subclass')
-        Relvar.relformat(db=mmdb, relvar='Facet')
-        Relvar.relformat(db=mmdb, relvar='Minimal_Partition')
-        Relvar.relformat(db=mmdb, relvar='Ordinal_Relationship')
-        Relvar.relformat(db=mmdb, relvar='Reference')
-        Relvar.relformat(db=mmdb, relvar='Association_Reference')
-        Relvar.relformat(db=mmdb, relvar='Simple_Association_Reference')
-        Relvar.relformat(db=mmdb, relvar='Referring_Class')
-        Relvar.relformat(db=mmdb, relvar='Association_Class_Reference')
-        Relvar.relformat(db=mmdb, relvar='T_Reference')
-        Relvar.relformat(db=mmdb, relvar='P_Reference')
-        Relvar.relformat(db=mmdb, relvar='Generalization_Reference')
-        Relvar.relformat(db=mmdb, relvar='Formalizing_Class_Role')
-        Relvar.relformat(db=mmdb, relvar='Attribute_Reference')
+        Relation.print(mmdb, 'Relationship')
+        Relation.print(mmdb, 'Association')
+        Relation.print(mmdb, 'Binary_Association')
+        Relation.print(mmdb, 'Perspective')
+        Relation.print(mmdb, 'Asymmetric_Perspective')
+        Relation.print(mmdb, 'T_Perspective')
+        Relation.print(mmdb, 'P_Perspective')
+        Relation.print(mmdb, 'Association_Class')
+        Relation.print(mmdb, 'Generalization')
+        Relation.print(mmdb, 'Superclass')
+        Relation.print(mmdb, 'Subclass')
+        Relation.print(mmdb, 'Facet')
+        Relation.print(mmdb, 'Minimal_Partition')
+        Relation.print(mmdb, 'Ordinal_Relationship')
+        Relation.print(mmdb, 'Reference')
+        Relation.print(mmdb, 'Association_Reference')
+        Relation.print(mmdb, 'Simple_Association_Reference')
+        Relation.print(mmdb, 'Referring_Class')
+        Relation.print(mmdb, 'Association_Class_Reference')
+        Relation.print(mmdb, 'T_Reference')
+        Relation.print(mmdb, 'P_Reference')
+        Relation.print(mmdb, 'Generalization_Reference')
+        Relation.print(mmdb, 'Formalizing_Class_Role')
+        Relation.print(mmdb, 'Attribute_Reference')
         Attribute.ResolveAttrTypes(mmdb=mmdb, domain=domain.Name)
         cls._logger.info("Populating lineage")
         # Reprinting these for lineage debugging purposes
         Lineage.Derive(mmdb=mmdb, domain=domain.Name)
-        Relvar.relformat(db=mmdb, relvar='Lineage')
-        Relvar.relformat(db=mmdb, relvar='Class_In_Lineage')
+        Relation.print(mmdb, 'Lineage')
+        Relation.print(mmdb, 'Class_In_Lineage')
         print()

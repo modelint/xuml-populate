@@ -72,7 +72,7 @@ class Attribute:
                                    restriction=f'Type:<unresolved>, Domain:{domain}')
         result = Relation.project(db=mmdb, attributes=['Name', 'Class'])
         uattrs = Relation.make_pyrel(relation=result, name='Unresoved Attrs')
-        Relation.relformat2(uattrs)
+        Relation.relformat(uattrs)
 
         # Rather than batch all the updates, we do them one by one
         # This reduces the search space for each subsequent type resolution
@@ -109,19 +109,19 @@ class Attribute:
         Relation.rename(db=mmdb, old_name='To_attribute', new_name='Name', relation='Attribute_Reference')
         result = Relation.rename(db=mmdb, old_name='To_class', new_name='Class')
         ar_rename = Relation.make_pyrel(relation=result, name='AR Rename')
-        Relation.relformat2(ar_rename)
+        Relation.relformat(ar_rename)
 
         # Then we join the renamed Attribute Reference with Attribute to get the 'to attributes'
         result = Relation.join(db=mmdb, rname2='Attribute')
         nj = Relation.make_pyrel(relation=result, name='Join')
-        Relation.relformat2(nj)
+        Relation.relformat(nj)
 
         # Finally, we restrict and project on our from attribute to get its reference type
         result = Relation.restrict(db=mmdb,
                                    restriction=f'From_attribute:{attr_name},'
                                                f'From_class:{class_name}, Domain:{domain_name}')
         from_attrs = Relation.make_pyrel(relation=result, name='Restrict from attr')
-        Relation.relformat2(from_attrs)
+        Relation.relformat(from_attrs)
         # The same attribute could participate in multiple References, so we just pick one arbitrarily
         aref = from_attrs.body[0]
         to_name, to_class, to_type = aref['Name'], aref['Class'], aref['Type']

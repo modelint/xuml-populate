@@ -352,6 +352,7 @@ class Relvar:
         cmd = f'relvar updateone {relvar_name} t {{{id_str}}} {{tuple update $t {update_str}}}'
         return cls.command(tclral, cmd)
 
+
     @classmethod
     def relformat(cls, db: Tk, relvar: str):
         """

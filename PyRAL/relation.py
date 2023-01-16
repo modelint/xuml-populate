@@ -5,13 +5,11 @@ relation.py – Operations on relations
 import logging
 import re
 from tabulate import tabulate
-from typing import List, Dict, Optional, TYPE_CHECKING
+from typing import List, Optional
 from PyRAL.rtypes import RelationValue
-from PyRAL.pyral_exceptions import RestrictOneOnZeroCardinality
-from collections import namedtuple
+from PyRAL.command import Command
 
-if TYPE_CHECKING:
-    from tkinter import Tk
+from tkinter import Tk
 
 # If we want to apply successive (nested) operations in TclRAL we need to have the result
 # of each TclRAL command saved in tcl variable. So each time we execute a command that produces
@@ -166,6 +164,17 @@ class Relation:
         return result
 
     @classmethod
+    def get_rval_string(cls, tclral: Tk, variable_name:str) -> str:
+        """
+        Obtain a relation from a TclRAL variable
+
+        :param tclral: The TclRAL session
+        :param variable_name: Name of a variable containing a relation defined in that session
+        :return: TclRAL string representing the relation value
+        """
+        return Command.execute(tclral, cmd=f"set {variable_name}")
+
+    @classmethod
     def make_pyrel(cls, relation: str, name: str=_relation ) -> RelationValue:
         """
         Take a relation obtained from TclRAL and convert it into a pythonic relation value.
@@ -223,7 +232,7 @@ class Relation:
         # Handle case where there are zero body tuples
         at_least_one_tuple = b.strip('{} ')  # Empty string if no tuples in body
         if not at_least_one_tuple:
-            return RelationValue(header=header, body={})
+            return RelationValue(name=name, header=header, body={})
 
         # There is at least one body tuple
         if len(header) > 1:
@@ -240,9 +249,19 @@ class Relation:
         rval = RelationValue(name=name, header=header, body=body)
         return rval
 
+    @classmethod
+    def print(cls, tclral: 'Tk', variable_name: str):
+        """
+        Given the name of a TclRAL relation variable, obtain its value and print it as a table.
+
+        :param tclral: The TclRAL session
+        :param variable_name:
+        """
+        rval = cls.make_pyrel(relation=cls.get_rval_string(tclral, variable_name), name=variable_name)
+        cls.relformat(rval)
 
     @classmethod
-    def relformat2(cls, rval: RelationValue):
+    def relformat(cls, rval: RelationValue):
         """
         Formats the relation into a table and prints it using the imported tabulation module
 
@@ -251,90 +270,7 @@ class Relation:
         # Now we have what we need to generate a table
         # Print the relvar name if supplied, otherwise use the default name for the latest result
         tablename = rval.name if rval.name else '<unnamed>'
-        print(f"\n-- Relation: {tablename} --")
+        print(f"\n-- {tablename} --")
         attr_names = list(rval.header.keys())
         brows = [list(row.values()) for row in rval.body]
         print(tabulate(tabular_data=brows, headers=attr_names, tablefmt="outline"))  # That last parameter chooses our table style
-
-    @classmethod
-    def relformat(cls, db: 'Tk', relation: str):
-        """
-        Prints a table of the specified relation population.
-
-        We obtain the value of the supplied relation from TclRAL as a single string.
-        We need to parse this string into attributes, types, and attribute values for
-        each tuple so that we can display the data as a table using the imported tabulate
-        module.
-
-        :param db: The TclRAL session
-        :param relation: The value (a relation) of this variable is displayed
-        """
-        # The tcl set command returns a variable value, in this case a relation
-        # result = tclral.eval(f"set {relation}")
-
-        # The result is a single, very long string, representing the value of the
-        # relation.
-
-        # First we split the header from the body. The header consists of attribute and
-        # type names surrounded by a pair of brackets like this: {attr1 type1 attr2 type2 ... }
-        # followed by a space and then the body (all the tuples) also between a pair of braces.
-
-        h, b = relation.split('}', 1)  # Split at the first closing bracket to obtain header and body strings
-        h = h.strip('{')  # Remove the open brace from the header string
-        h_items = h.split(' ')  # There will be no spaces in any of the names, so we break on the space delimiter
-        h_attrs = h_items[::2]  # Every even numbered item (0,2, ...) is an attribute name
-        h_types = h_items[1::2]  # Every odd one is a type name
-        deg = len(h_attrs)  # The degree of the relation is the number of attributes (columns)
-
-        # Now we process the body
-        # Each tuple is surrounded by brackets so our first stop is to split them all out into distinct tuple strings
-        body = b.split('} {')
-        body[0] = body[0].lstrip(' {')  # Remove any preceding space or brackets from the first tuple
-        # Each tuple alternates with the attribute name and the attribute value
-        # We want to extract just the values to create the table rows
-        # To complicate matters, values may contain spaces. TclRAL attribute names do not.
-        # A multi-word value is surrounded by brackets
-        # So you might see a tuple like this: Floor_height 32.6 Name {Lower lobby}
-        # We need a regex component that will extract the bracketed space delimited values
-        # As well as the non-bracketed single word values
-        value_pattern = r"([{}<>\w ]*)"  # Grab a string of any combination of brackets, word characters and spaces
-        # Now we build this component into an alternating pattern of attribute and value items
-        # for the attributes in our relation header
-        tuple_pattern = ""
-        for a in h_attrs:
-            tuple_pattern += f"{a} {value_pattern} "
-        tuple_pattern = tuple_pattern.rstrip(' ')  # Removes the final trailing space
-        # Now we can use the constructed tuple pattern regex to extract a list of values
-        # from each row to match our attribute list order
-        # Here we apply the tuple_pattern regex to each body row stripping the brackets from each value
-        # and end up with a list of unbracketed body row values
-
-        # For tabulate we need a list for the columns and a list of lists for the rows
-
-        # Handle case where there are zero attributes
-        b_rows = None  # Default assumption
-        if deg == 0:
-            h_attrs = ['<deg 0>']
-
-        # Handle case where there are zero body tuples
-        at_least_one_tuple = b.strip('{} ')  # Empty string if no tuples in body
-
-        # Table with zero columns and one tuple
-        # There cannot be many tuples since they would be duplicates, which are not allowed
-        if deg == 0 and at_least_one_tuple:
-            b_rows = [['<dee>']]  # Tabledee
-
-        # There is at least one body tuple
-        if at_least_one_tuple:
-            if deg > 1:
-                # More than one column and the regex match returns a convenient tuple in the zero element
-                b_rows = [[f.strip('{}') for f in re.findall(tuple_pattern, row)[0]] for row in body]
-            elif deg == 1:
-                # If there is only one match (value), regex returns a string rather than a tuple
-                # in the zero element. We need to embed this string in a list
-                b_rows = [[re.findall(tuple_pattern, row)[0].strip('{}') for row in body]]
-            # Either way, b_rows is a list of lists
-
-        # Now we have what we need to generate a table
-        print(f"\n-- Relation: {relation} --")
-        print(tabulate(b_rows, h_attrs, tablefmt="outline"))  # That last parameter chooses our table style
