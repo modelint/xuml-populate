@@ -67,8 +67,8 @@ class Relvar:
             Mc - zero or more
             1c - zero or one
 
-        :param tclral:
-        :param name:
+        :param tclral: The tclRAL session
+        :param name: Name of the association, an association Rnum in SM xUML
         :param from_relvar: The referring relvar (source)
         :param from_attrs: The referential attributes in the source relvar
         :param from_mult: Multiplicity conditionality associated with the source side of the association
@@ -141,7 +141,7 @@ class Relvar:
                     {Identifier Class Domain} + Identifier
                     {Number Class Domain} {Attribute Class Domain} * Attribute {Name Class Domain}
 
-        :param tclral:  The TclRAL session
+        :param tclral: The TclRAL session
         :param name: Name of the correlation
         :param correlation_relvar: Name of the relvar holding the correlation
         :param correl_a_attrs: Attrs in correlation relvar referencing a-side relvar
@@ -208,8 +208,8 @@ class Relvar:
         Note that the emtpy set may be provided which results in a no-op.
         PyRAL supports this feature by allowing an empty list of tuples to be specified
 
-        :relvar: The name of an existing relvar
-        :tuples: A list of tuples named such that the attributes exactly match the relvar header
+        :param relvar: The name of an existing relvar
+        :param tuples: A list of tuples named such that the attributes exactly match the relvar header
         """
         cmd = f"relvar insert {relvar} "
         for t in tuples:
@@ -221,6 +221,57 @@ class Relvar:
         cmd = cmd[:-1]
         Transaction.append_statement(statement=cmd)
 
+    @classmethod
+    def create_partition(cls, tclral: Tk, name: str,
+                         superclass_name: str, super_attrs: List[str], subs: Dict[str, List[str]]):
+        """
+        A partition is defined such that the set of tuples in a super relvar is referenced by
+        the tuples distributed across a set of one or more sub relvars. Each tuple in a sub
+        relvar references some tuple in the super relvar and each tuple in the super relvar is
+        referenced by one tuple in one of its sub relvars.
+
+        This constraint implies that the tuples in the super relvar are completely partitioned
+        into the disjoint sub sets given by the complete set of sub relvars.
+
+        This constraint is used in SM xUML to support generalization relationships where
+        a superclass instance population is paritioned across two or more subclass instance
+        populations.
+
+        The TclRAL syntax is:
+            relvar partition <name> <super> <superAttrList>
+                <sub1> <sub1AttrList>
+                ...
+
+        A TclRAL command example is:
+            relvar partition R14 Subsystem_Element {Label Domain} Relationship {Rnum Domain} Class {Cnum Domain}
+
+        This is generated from the PyRAL input:
+            name: 'R14'
+            superclass_name: 'Subsystem Element'
+            super_attrs: ['Label', 'Domain']
+            subs: {'Relationship': ['Rnum', 'Domain'], 'Class':['Cnum', 'Domain']}
+
+        In the above examples both Relationship.Rnum and Class.Cnum refer to the Subsystem Element.Label
+        attribute. So the ordering of identifier attributes for each relvar is significant.
+
+        :param tclral: The tclRAL session
+        :param name: Name of the partition, a generalizaiton rnum in SM xUML
+        :param superclass_name: Name of the superclass relvar
+        :param super_attrs: A list of attributes constituting an identifier of the superclass referenced by
+        :param subs:
+        """
+        super_attrs_str = '{' + ' '.join(super_attrs) + '}'
+        all_subs = ""
+        for subname, attrs in subs.items():
+            all_subs += subname + ' ' + '{' + ' '.join(attrs) + '} '
+        all_subs = all_subs[:-1]
+
+        cmd = f"relvar partition {name} {superclass_name} {super_attrs_str} {all_subs}"
+        # Execute the command and log the result
+        cls.command(tclral, cmd=cmd, log=False)
+        # Verify and log the constraint by executing the TclRAL constraint command
+        verify_cmd = f"relvar constraint info {name}"
+        cls.command(tclral, cmd=verify_cmd)
 
     @classmethod
     def create_relvar(cls, tclral: Tk, name: str, attrs: List[Attribute], ids: Dict[int, List[str]]) -> str:
@@ -267,28 +318,30 @@ class Relvar:
         return cls.command(tclral, cmd)
 
     @classmethod
-    def create_partition(cls, db: Tk, name: str,
-                         superclass_name: str, super_attrs: List[str], subs: Dict[str, List[str]]):
+    def updateone(cls, tclral: Tk, relvar_name: str, id:Dict, update:Dict[str,Any]):
         """
-        relvar partition name superclass_name superAttrList
-            sub1 sub1AttrList
-            ...
+        Modifies in place at most one tuple of the relvar's value.
 
-        """
-        super_attrs_str = '{' + ' '.join(super_attrs) + '}'
-        all_subs = ""
-        for subname, attrs in subs.items():
-            all_subs += subname + ' ' + '{' + ' '.join(attrs) + '} '
-        all_subs = all_subs[:-1]
+        TclRAL syntax:
+            relvar updateone <relvarName> <tupleVarName> <id-name-value-list> <script>
 
-        cmd = f"relvar partition {name} {superclass_name} {super_attrs_str} {all_subs}"
-        db.eval(cmd)
-        result = db.eval(f"relvar constraint info {name}")
-        cls._logger.info(result)
+        Here is an example where an instance of Attribute in the SM Metamodel has its Type attribute updated:
+        The TclRAL command (all on one line, but idented for readability here) is:
+            relvar updateone Attribute t
+                {Name {Floor} Class {Accessible Shaft Level} Domain {Elevator Management} }
+                {tuple update $t Type {Level Name}}
 
-    @classmethod
-    def updateone(cls, db: Tk, relvar_name: str, id:Dict, update:Dict[str,Any]):
-        """
+        Generated from the PyRAL:
+            relvar_name: 'Attribute'
+            id: {'Name': 'Floor', 'Class': 'Accessible Shaft Level', 'Domain': 'Elevator Management'}
+            update: {'Type': 'Level Name'}
+
+        :param tclral: The tclRAL session
+        :param relvar_name: The relvar to be updated
+        :param id: Identifier value for the tuple to be updated
+        :param update: A dictionary of attribute value pairs whose values will be applied
+        :return: A relation value with the same heading as the value held in relvarName and whose body contains either
+        the single tuple that was updated or is empty if no matching tuple was found.
         """
         id_str = ""
         for id_attr,id_val in id.items():
@@ -297,7 +350,7 @@ class Relvar:
         for u_attr,u_val in update.items():
             update_str += u_attr + " {" + u_val + "}"
         cmd = f'relvar updateone {relvar_name} t {{{id_str}}} {{tuple update $t {update_str}}}'
-        result = db.eval(cmd)
+        return cls.command(tclral, cmd)
 
 
     @classmethod

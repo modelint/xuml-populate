@@ -302,5 +302,5 @@ class Metamodel:
                 referring_subclass_name = unspace(g['source']['class'])
                 subclasses[referring_subclass_name] = [unspace(a) for a in g['source']['attrs']]
 
-        Relvar.create_partition(db=cls.db, name=rnum, superclass_name=unspace(superclass_name),
+        Relvar.create_partition(tclral=cls.db, name=rnum, superclass_name=unspace(superclass_name),
                                 super_attrs=superclass_attrs, subs=subclasses)

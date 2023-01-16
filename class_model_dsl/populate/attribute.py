@@ -80,7 +80,7 @@ class Attribute:
             assign_type = cls.ResolveAttr(mmdb=mmdb,
                 attr_name=a['Name'], class_name=a['Class'], domain_name=domain
             )
-            Relvar.updateone(db=mmdb,
+            Relvar.updateone(tclral=mmdb,
                              relvar_name='Attribute',
                              id={'Name':a['Name'], 'Class':a['Class'], 'Domain':domain},
                              update={'Type': assign_type})
