@@ -27,7 +27,7 @@ class Generalization:
     genrefs = None
 
     @classmethod
-    def populate(cls, mmdb: 'Tk', domain, rnum: str, record):
+    def populate(cls, mmdb: 'Tk', domain: str, rnum: str, record):
         """Constructor"""
 
         cls.rnum = rnum
@@ -45,24 +45,24 @@ class Generalization:
         # Populate
         cls._logger.info(f"Populating Generalization [{cls.rnum}]")
         Relvar.insert(relvar='Generalization', tuples=[
-            Generalization_i(Rnum=cls.rnum, Domain=domain['name'], Superclass=cls.superclass)
+            Generalization_i(Rnum=cls.rnum, Domain=domain, Superclass=cls.superclass)
         ])
         # Superclass
         Relvar.insert(relvar='Facet', tuples=[
-            Facet_i(Rnum=cls.rnum, Domain=domain['name'], Class=cls.superclass)
+            Facet_i(Rnum=cls.rnum, Domain=domain, Class=cls.superclass)
         ])
         Relvar.insert(relvar='Superclass', tuples=[
-            Superclass_i(Rnum=cls.rnum, Domain=domain['name'], Class=cls.superclass)
+            Superclass_i(Rnum=cls.rnum, Domain=domain, Class=cls.superclass)
         ])
         for subclass in cls.subclasses:
             Relvar.insert(relvar='Facet', tuples=[
-                Facet_i(Rnum=cls.rnum, Domain=domain['name'], Class=subclass)
+                Facet_i(Rnum=cls.rnum, Domain=domain, Class=subclass)
             ])
             Relvar.insert(relvar='Subclass', tuples=[
-                Subclass_i(Rnum=cls.rnum, Domain=domain['name'], Class=subclass)
+                Subclass_i(Rnum=cls.rnum, Domain=domain, Class=subclass)
             ])
         Relvar.insert(relvar='Minimal_Partition', tuples=[
-            Minimal_Partition_i(Rnum=cls.rnum, Domain=domain['name'],
+            Minimal_Partition_i(Rnum=cls.rnum, Domain=domain,
             A_subclass=cls.subclasses[0], B_subclass=cls.subclasses[1])
         ])
 
@@ -76,15 +76,15 @@ class Generalization:
             Relvar.insert(relvar='Reference', tuples=[
                 Reference_i(Ref='G',
                             From_class=ref['source']['class'], To_class=ref['target']['class'],
-                            Rnum=cls.rnum, Domain=domain['name'])
+                            Rnum=cls.rnum, Domain=domain)
             ])
             Relvar.insert(relvar='Generalization_Reference', tuples=[
                 Generalization_Reference_i(Ref_type='G',
                             Subclass=ref['source']['class'], Superclass=ref['target']['class'],
-                            Rnum=cls.rnum, Domain=domain['name'])
+                            Rnum=cls.rnum, Domain=domain)
             ])
             Relvar.insert(relvar='Formalizing_Class_Role', tuples=[
-                Formalizing_Class_Role_i(Class=ref['source']['class'], Rnum=cls.rnum, Domain=domain['name'])
+                Formalizing_Class_Role_i(Class=ref['source']['class'], Rnum=cls.rnum, Domain=domain)
             ])
             # Create attribute references for each subclass -> superclass reference
             for from_attr, to_attr in zip(ref['source']['attrs'], ref['target']['attrs']):
@@ -92,5 +92,5 @@ class Generalization:
                     Attribute_Reference_i(From_attribute=from_attr, From_class=ref['source']['class'],
                                           To_attribute=to_attr, To_class=ref['target']['class'],
                                           Ref='G',
-                                          Domain=domain['name'], To_identifier=ref['id'], Rnum=cls.rnum)
+                                          Domain=domain, To_identifier=ref['id'], Rnum=cls.rnum)
                 ])

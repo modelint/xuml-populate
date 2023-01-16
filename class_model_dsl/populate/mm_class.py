@@ -28,7 +28,7 @@ class MMclass:
     identifiers = None
 
     @classmethod
-    def populate(cls, mmdb: 'Tk', domain, subsystem, record):
+    def populate(cls, mmdb: 'Tk', domain: str, subsystem, record):
         """Constructor"""
 
         cls.record = record
@@ -43,22 +43,22 @@ class MMclass:
         cls._logger.info(f"Populating class [{cls.name}]")
         Transaction.open(db=mmdb)
         Relvar.insert(relvar='Element', tuples=[
-            Element_i(Label=cls.cnum, Domain=domain['name'])
+            Element_i(Label=cls.cnum, Domain=domain)
         ])
         Relvar.insert(relvar='Subsystem_Element', tuples=[
-            Subsystem_Element_i(Label=cls.cnum, Domain=domain['name'], Subsystem=subsystem.name)
+            Subsystem_Element_i(Label=cls.cnum, Domain=domain, Subsystem=subsystem.name)
         ])
         Relvar.insert(relvar='Class', tuples=[
-            Class_i(Name=cls.name, Cnum=cls.cnum, Domain=domain['name'])
+            Class_i(Name=cls.name, Cnum=cls.cnum, Domain=domain)
         ])
         if cls.alias:
             Relvar.insert(relvar='Alias', tuples=[
-                Alias_i(Name=cls.name, Class=cls.name, Domain=domain['name'])
+                Alias_i(Name=cls.name, Class=cls.name, Domain=domain)
             ])
 
         cls.identifiers = set()  # For each newly created class we clear the id set
         for a in cls.record['attributes']:
-            Attribute.populate(mmdb=mmdb, domain=domain['name'], cname=cls.name,
+            Attribute.populate(mmdb=mmdb, domain=domain, cname=cls.name,
                                class_identifiers=cls.identifiers, record=a)
 
         Transaction.execute()

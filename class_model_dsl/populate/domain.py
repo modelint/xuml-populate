@@ -3,6 +3,7 @@ domain.py – Convert parsed domain to a relation
 """
 
 import logging
+from typing import TYPE_CHECKING
 from class_model_dsl.populate.attribute import Attribute
 from class_model_dsl.populate.mm_class import MMclass
 from class_model_dsl.populate.relationship import Relationship
@@ -13,6 +14,9 @@ from PyRAL.relvar import Relvar
 from class_model_dsl.populate.pop_types import\
     Domain_i, Modeled_Domain_i, Domain_Partition_i, Subsystem_i
 
+if TYPE_CHECKING:
+    from tkinter import Tk
+
 class Domain:
     """
     Create a domain relation
@@ -21,54 +25,44 @@ class Domain:
     subsystem_counter = {}
 
     @classmethod
-    def populate(cls, mmdb, domain, subsystems):
+    def populate(cls, mmdb: 'Tk', domain:Domain_i, subsystems):
         """
+        Insert all user model elements in this Domain into the corresponding Metamodel classes.
 
-        :param domain:
+        :param domain: Name of the domain
         :param mmdb:  Metamodel database
         :param name:  Name of the domain
         :param subsystems:  All parsed subsystems for the domain
         :return:
         """
-        cls._logger.info(f"Populating modeled domain [{domain['name']}]")
+        cls._logger.info(f"Populating modeled domain [{domain.Name}]")
 
         Transaction.open(db=mmdb)
-        Relvar.insert(relvar='Domain', tuples=[
-            Domain_i(Name=domain['name'], Alias=domain['alias']),
-            ])
+        Relvar.insert(relvar='Domain', tuples=[ domain,])
         # # TODO: For now assume this is always a modeled domain, but need a way to specify a realized domain
         Relvar.insert(relvar='Modeled_Domain', tuples=[
-            Modeled_Domain_i(Name=domain['name']),
+            Modeled_Domain_i(Name=domain.Name),
             ])
         for s in subsystems.values():
             Relvar.insert(relvar='Subsystem', tuples=[
                 Subsystem_i(Name=s.subsystem['name'], First_element_number=s.subsystem['range'][0],
-                            Domain=domain['name'], Alias=s.subsystem['alias']),
+                            Domain=domain.Name, Alias=s.subsystem['alias']),
             ])
             Relvar.insert(relvar='Domain_Partition', tuples=[
-                Domain_Partition_i(Number=s.subsystem['range'][0], Domain=domain['name'])
+                Domain_Partition_i(Number=s.subsystem['range'][0], Domain=domain.Name)
             ])
         Transaction.execute()
-        domain_pop = Relvar.population(db=mmdb, relvar='Domain')
         Relvar.relformat(db=mmdb, relvar='Domain')
-        modeled_domain_pop = Relvar.population(db=mmdb, relvar='Modeled_Domain')
         Relvar.relformat(db=mmdb, relvar='Modeled_Domain')
         Relvar.relformat(db=mmdb, relvar='Realized_Domain')
-        subsystem_pop = Relvar.population(db=mmdb, relvar='Subsystem')
         Relvar.relformat(db=mmdb, relvar='Subsystem')
-        domain_partition_pop = Relvar.population(db=mmdb, relvar='Domain_Partition')
         Relvar.relformat(db=mmdb, relvar='Domain_Partition')
-        cls._logger.info("Domain subsytem population:")
-        cls._logger.info(f"Domain Population\n{domain_pop}")
-        cls._logger.info(f"Modeled Domain\n{modeled_domain_pop}")
-        cls._logger.info(f"Subsystem\n{subsystem_pop}")
-        cls._logger.info(f"Domain Paritition\n{domain_partition_pop}")
 
         # Insert classes
         for s in subsystems.values():
             subsys = Subsystem(record=s)
             for c in s.classes:
-                MMclass.populate(mmdb=mmdb, domain=domain, subsystem=subsys, record=c)
+                MMclass.populate(mmdb=mmdb, domain=domain.Name, subsystem=subsys, record=c)
         Relvar.relformat(db=mmdb, relvar='Class')
         Relvar.relformat(db=mmdb, relvar='Alias')
         Relvar.relformat(db=mmdb, relvar='Attribute')
@@ -83,7 +77,7 @@ class Domain:
         for s in subsystems.values():
             subsys = Subsystem(record=s)
             for r in s.rels:
-                Relationship.populate(mmdb=mmdb, domain=domain, subsystem=subsys, record=r)
+                Relationship.populate(mmdb=mmdb, domain=domain.Name, subsystem=subsys, record=r)
 
         Relvar.relformat(db=mmdb, relvar='Relationship')
         Relvar.relformat(db=mmdb, relvar='Association')
@@ -109,11 +103,10 @@ class Domain:
         Relvar.relformat(db=mmdb, relvar='Generalization_Reference')
         Relvar.relformat(db=mmdb, relvar='Formalizing_Class_Role')
         Relvar.relformat(db=mmdb, relvar='Attribute_Reference')
-        print("Done")
-        Attribute.ResolveAttrTypes(mmdb=mmdb, domain=domain['name'])
+        Attribute.ResolveAttrTypes(mmdb=mmdb, domain=domain.Name)
         cls._logger.info("Populating lineage")
         # Reprinting these for lineage debugging purposes
-        Lineage.Derive(mmdb=mmdb, domain=domain['name'])
+        Lineage.Derive(mmdb=mmdb, domain=domain.Name)
         Relvar.relformat(db=mmdb, relvar='Lineage')
         Relvar.relformat(db=mmdb, relvar='Class_In_Lineage')
         print()

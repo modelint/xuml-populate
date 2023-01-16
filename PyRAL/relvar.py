@@ -352,18 +352,6 @@ class Relvar:
         cmd = f'relvar updateone {relvar_name} t {{{id_str}}} {{tuple update $t {update_str}}}'
         return cls.command(tclral, cmd)
 
-
-    @classmethod
-    def population(cls, db: Tk, relvar: str):
-        """
-
-        :param db:
-        :param relvar:
-        :return:
-        """
-        result = db.eval(f"set {relvar}")
-        # tclral.eval(f"puts ${relvar}")
-
     @classmethod
     def relformat(cls, db: Tk, relvar: str):
         """

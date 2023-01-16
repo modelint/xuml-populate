@@ -26,7 +26,7 @@ class Relationship:
     rnum = None
 
     @classmethod
-    def populate(cls, mmdb: 'Tk', domain, subsystem, record):
+    def populate(cls, mmdb: 'Tk', domain: str, subsystem, record):
         """Constructor"""
 
         cls.record = record
@@ -35,13 +35,13 @@ class Relationship:
         # Populate relationship
         Transaction.open(db=mmdb)
         Relvar.insert(relvar='Element', tuples=[
-            Element_i(Label=cls.rnum, Domain=domain['name'])
+            Element_i(Label=cls.rnum, Domain=domain)
         ])
         Relvar.insert(relvar='Subsystem_Element', tuples=[
-            Subsystem_Element_i(Label=cls.rnum, Domain=domain['name'], Subsystem=subsystem.name)
+            Subsystem_Element_i(Label=cls.rnum, Domain=domain, Subsystem=subsystem.name)
         ])
         Relvar.insert(relvar='Relationship', tuples=[
-            Rel_i(Rnum=cls.rnum, Domain=domain['name'])
+            Rel_i(Rnum=cls.rnum, Domain=domain)
         ])
 
         # Populate based on relationship type

@@ -11,14 +11,10 @@ For our purposes we will use the Elevator Management domain as one of our user /
 import sys
 import logging
 from pathlib import Path
-# from class_model_dsl.xuml.metamodel import Metamodel
 from class_model_dsl.parse.model_parser import ModelParser
 from class_model_dsl.mp_exceptions import ModelParseError, MPIOException, MultipleDomainsException
 from class_model_dsl.populate.domain import Domain
-# from class_model_dsl.populate.lineage import Lineage
-# from class_model_dsl.populate.attribute import ResolveAttrTypes
-# from class_model_dsl.populate.mm_class import MMclass
-
+from class_model_dsl.populate.pop_types import Domain_i
 
 class UserModel:
     """
@@ -89,23 +85,8 @@ class UserModel:
                 cls._logger.error(f"Multiple domains: {cls.domain}, {subsys.domain}]")
                 raise MultipleDomainsException
 
-        Domain.populate(mmdb=Database.tclRAL, domain=cls.domain, subsystems=cls.model_subsystem)
+
+        Domain.populate(mmdb=Database.tclRAL,
+                        domain=Domain_i(Name=cls.domain['name'], Alias=cls.domain['alias']),
+                        subsystems=cls.model_subsystem)
         pass
-
-        # for c in cls.subsystem.classes:
-        #     MMclass.populate(domain=domain, record=c)
-
-        # Insert relationships
-        # self.logger.info("Populating relationships")
-        # for r in self.record.rels:
-        #     Relationship(domain=self, subsys=s, record=r)
-
-        # self.domain = Domain(model=self, record=self.subsystem)
-
-        # for relvar_name, relation in self.population.items():
-        #     t = SMmetaDB.Relvars[relvar_name]
-        #     if relation:
-        #         self.tclral.Connection.execute(t.insert(), relation)  # Sqlalchemy populates the table schema
-
-        # cls._logger.info("Populating lineage")
-        # Lineage(domain=self.domain)
