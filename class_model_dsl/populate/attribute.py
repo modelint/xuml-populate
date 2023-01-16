@@ -98,22 +98,27 @@ class Attribute:
         not <unresolved>, we return it. Otherwise, we recursively apply the same process to the *To attribute*. The chain
         of references must eventually land on a specified type if the model has been properly formalized.
 
-        :param mmdb:
-        :param attr: Unresolved attribute: A referential attribute with an unresolved type
-        :return:  Type name to assign
+        :param mmdb: The metamodel db session
+        :param attr_name: Unresolved attribute: A referential attribute with an unresolved type
+        :param class_name:
+        :param domain_name:
+        :return: Type name to assign
         """
         cls._logger.info(f"Resolving attribute type [{class_name}.{attr_name}]")
         # We join the two relvars on the To_attribute so that we can obtain that attribute's Type
 
-        # First we must rename two attributes in the Attribute Reference class
-        Relation.rename(mmdb, names={'To_attribute': 'Name', 'To_class': 'Class'},
-                                 relation='Attribute_Reference', svar_name='ar_rename')
-        Relation.print(mmdb, 'ar_rename')
+        Relation.join(mmdb, rname1='Attribute', rname2='Attribute_Reference',
+                      attrs={'Name':'To_attribute', 'Class':'To_class', 'Domain':'Domain'})
 
-
-        # Then we join the renamed Attribute Reference with Attribute to get the 'to attributes'
-        Relation.join(tclral=mmdb, rname2='Attribute', svar_name='Attr_JOIN_Attribute_Reference')
-        Relation.print(mmdb, 'Attr_JOIN_Attribute_Reference')
+        # # First we must rename two attributes in the Attribute Reference class
+        # Relation.rename(mmdb, names={'To_attribute': 'Name', 'To_class': 'Class'},
+        #                          relation='Attribute_Reference', svar_name='ar_rename')
+        # Relation.print(mmdb, 'ar_rename')
+        #
+        #
+        # # Then we join the renamed Attribute Reference with Attribute to get the 'to attributes'
+        # Relation.join(tclral=mmdb, rname2='Attribute', svar_name='Attr_JOIN_Attribute_Reference')
+        Relation.print(mmdb, table_name='Attribute JOIN Attribute Reference')
 
         # Finally, we restrict and project on our from attribute to get its reference type
         result = Relation.restrict(tclral=mmdb,

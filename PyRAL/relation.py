@@ -78,17 +78,35 @@ class Relation:
         tclral.eval(f"set {name} ${{{_relation}}}")
 
     @classmethod
-    def join(cls, tclral: Tk, rname2: str, rname1: str=_relation, svar_name: Optional[str]=None) -> str:
+    def make_attr_list(cls, attrs: Dict[str, str]) -> str:
         """
-        Perform a natural join on two relations
+        Makes a TclRAL attrList to be inserted in a command
+        :param attrs:
+        :return:
+        """
+        attr_list = "{"
+        for k,v in attrs.items():
+            attr_list += f"{k} {v} "
+        return attr_list[:-1] + "}"
 
-        :param rname1:
-        :param rname2:
+    @classmethod
+    def join(cls, tclral: Tk, rname2: str, rname1: str=_relation, attrs: Dict[str, str]={},
+             svar_name: Optional[str]=None) -> str:
+        """
+        Perform a natural join on two relations using an optional attribute mapping. If no attributes are specified,
+        the join is performed on same named attributes.
+
         :param tclral: The TclRAL session
+        :param rname1: Name of one relvar to join
+        :param rname2: Name of the other relvar
+        :param attrs: Dictionary in format { r1.attr_name: r2.attr_name, ... }
         :param svar_name: Relation result is stored in this optional TclRAL variable for subsequent operations to use
         :return Resulting relation as a TclRAL string
         """
-        cmd = f'set {{{_relation}}} [relation join ${{{rname1}}} ${rname2}]'
+        cmd = f'set {{{_relation}}} [relation join ${{{rname1}}} ${rname2}'
+        if attrs:
+            cmd += " -using " + cls.make_attr_list(attrs)
+        cmd += ']'
         result = Command.execute(tclral, cmd)
         if svar_name:  # Save the result using the supplied session variable name
             cls.set_var(tclral, svar_name)
@@ -245,8 +263,8 @@ class Relation:
         The body component will be a list of relational tuples each defined as a dictionary
         with a key matching some attribute of the header and a value for that attribute.
 
-        :param name: An optional relvar name
         :param relation: A TclRAL string representing a relation
+        :param name: An optional relvar name
         :return: A RelationValue constructed from the provided relation string
         """
         # First check for the dee/dum edge cases
@@ -312,22 +330,25 @@ class Relation:
         return rval
 
     @classmethod
-    def print(cls, tclral: 'Tk', variable_name: str=_relation):
+    def print(cls, tclral: 'Tk', variable_name: str=_relation, table_name:Optional[str]=None):
         """
         Given the name of a TclRAL relation variable, obtain its value and print it as a table.
 
         :param tclral: The TclRAL session
-        :param variable_name:
+        :param variable_name: Name of the TclRAL variable to print, also used to name the table if no table_name
+        :param table_name:  If supplied, this name is used instead of the variable name to name the printed table
         """
-        rval = cls.make_pyrel(relation=cls.get_rval_string(tclral, variable_name), name=variable_name)
+        # convert the TclRAL string value held in the session variable into a PyRAL relation and print it
+        rval = cls.make_pyrel(relation=cls.get_rval_string(tclral, variable_name),
+                              name=table_name if table_name else variable_name)
         cls.relformat(rval)
 
     @classmethod
     def relformat(cls, rval: RelationValue):
         """
-        Formats the relation into a table and prints it using the imported tabulation module
+        Formats the PyRAL relation into a table and prints it using the imported tabulation module
 
-        :param rval: A pyRAL relation value
+        :param rval: A PyRAL relation value
         """
         # Now we have what we need to generate a table
         # Print the relvar name if supplied, otherwise use the default name for the latest result
