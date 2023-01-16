@@ -3,10 +3,7 @@ transaction.py -- Database transaction
 """
 import logging
 from PyRAL.pyral_exceptions import IncompleteTransactionPending, NoOpenTransaction
-from typing import TYPE_CHECKING
-
-if TYPE_CHECKING:
-    import tkinter
+from tkinter import Tk
 
 class Transaction:
     """
@@ -18,21 +15,21 @@ class Transaction:
     _logger = logging.getLogger(__name__)
     _result = None
     _schema = []
-    _db = None
+    _tclral = None
 
     @classmethod
-    def open(cls, db):
+    def open(cls, tclral: Tk):
         """
         Starts a new empty transaction by ensuring that there are no statements
-
-        :return:
         """
-        cls._db = db
+        # TODO: As it stands, only one Transaction is open for all potential tclral instances.
+        # TODO: We should make the class methods instance based and tie each instance of Transaction to a single
+        # TODO: TclRAL session. (For now it works since we aren't yet opening multiple TclRAL sessions simultaneously.
+        cls._tclral = tclral
         if cls._statements:
             cls._logger.error(f"New transaction opened before closing previous.")
             raise IncompleteTransactionPending
         cls._statements = []
-        return
 
     @classmethod
     def append_statement(cls, statement: str):
@@ -55,7 +52,7 @@ class Transaction:
         cls._cmd = f"relvar eval " + "{\n    " + '\n    '.join(cls._statements) + "\n}"
         cls._logger.info(f"Executing transaction:")
         cls._logger.info(cls._cmd)
-        cls._result = cls._db.eval(cls._cmd)
+        cls._result = cls._tclral.eval(cls._cmd)
         cls._statements = None  # The statements have been executed
         cls._logger.info(f"With result: [{cls._result}]")
 

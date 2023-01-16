@@ -37,7 +37,7 @@ class Domain:
         """
         cls._logger.info(f"Populating modeled domain [{domain.Name}]")
 
-        Transaction.open(db=mmdb)
+        Transaction.open(tclral=mmdb)
         Relvar.insert(relvar='Domain', tuples=[ domain,])
         # # TODO: For now assume this is always a modeled domain, but need a way to specify a realized domain
         Relvar.insert(relvar='Modeled_Domain', tuples=[

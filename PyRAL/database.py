@@ -40,7 +40,7 @@ class Database:
 
         :return:
         """
-        Transaction.open(db=cls.tclRAL)
+        Transaction.open(tclral=cls.tclRAL)
 
     @classmethod
     def save(cls, dbname):

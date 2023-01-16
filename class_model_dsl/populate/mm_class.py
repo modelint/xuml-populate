@@ -41,7 +41,7 @@ class MMclass:
         #
         # Populate class
         cls._logger.info(f"Populating class [{cls.name}]")
-        Transaction.open(db=mmdb)
+        Transaction.open(tclral=mmdb)
         Relvar.insert(relvar='Element', tuples=[
             Element_i(Label=cls.cnum, Domain=domain)
         ])

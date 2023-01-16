@@ -33,7 +33,7 @@ class Relationship:
         cls.rnum = record['rnum']
 
         # Populate relationship
-        Transaction.open(db=mmdb)
+        Transaction.open(tclral=mmdb)
         Relvar.insert(relvar='Element', tuples=[
             Element_i(Label=cls.rnum, Domain=domain)
         ])

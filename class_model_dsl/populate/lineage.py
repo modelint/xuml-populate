@@ -198,7 +198,7 @@ class Lineage:
             cls.lnums += 1
             lnum = 'L' + (str(cls.lnums))
             cls._logger.info(f"Populating lineage [{lnum}]")
-            Transaction.open(db=cls.mmdb)
+            Transaction.open(tclral=cls.mmdb)
             Relvar.insert(relvar='Element', tuples=[
                 Element_i(Label=lnum, Domain=cls.domain)
             ])

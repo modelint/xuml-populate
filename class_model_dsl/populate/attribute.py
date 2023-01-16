@@ -98,7 +98,7 @@ class Attribute:
         not <unresolved>, we return it. Otherwise, we recursively apply the same process to the *To attribute*. The chain
         of references must eventually land on a specified type if the model has been properly formalized.
 
-        :param mmdb: The metamodel db session
+        :param mmdb: The metamodel tclral session
         :param attr_name: Unresolved attribute: A referential attribute with an unresolved type
         :param class_name:
         :param domain_name:
