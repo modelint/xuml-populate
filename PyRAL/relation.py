@@ -113,6 +113,26 @@ class Relation:
         return result
 
     @classmethod
+    def project(cls, tclral: Tk, attributes: List[str], relation: str=_relation, svar_name: Optional[str]=None) -> str:
+        """
+        Returns a relation whose heading consists of only a set of selected attributes.
+        The body of the result consists of the corresponding tuples from the specified relation,
+        removing any duplicates created by considering only a subset of the attributes.
+
+        :param tclral: The TclRAL session
+        :param attributes: Attributes to be projected
+        :param relation: The relation to be projected
+        :param svar_name: Relation result is stored in this optional TclRAL variable for subsequent operations to use
+        :return Resulting relation as a TclRAL string
+        """
+        projection = ' '.join(attributes)
+        cmd = f'set {_relation} [relation project ${{{relation}}} {projection.strip()}]'
+        result = Command.execute(tclral, cmd)
+        if svar_name:  # Save the result using the supplied session variable name
+            cls.set_var(tclral, svar_name)
+        return result
+
+    @classmethod
     def rename(cls, tclral: Tk, names: Dict[str, str], relation: str=_relation, svar_name: Optional[str]=None) -> str:
         """
         (NOTE: I only just NOW realized that the TclRAL join command provides an option to specify multiple renames
@@ -239,24 +259,6 @@ class Relation:
         :return Subtraction relation as a TclRAL string
         """
         cmd = f'set {_relation} [relation minus ${{{rname1}}} ${rname2}]'
-        result = Command.execute(tclral, cmd)
-        if svar_name:  # Save the result using the supplied session variable name
-            cls.set_var(tclral, svar_name)
-        return result
-
-    @classmethod
-    def project(cls, tclral: Tk, attributes: List[str], relation: str=_relation, svar_name: Optional[str]=None) -> str:
-        """
-        Project attributes over relation
-
-        :param tclral: The TclRAL session
-        :param attributes: Attributes to be projected
-        :param relation: The relation to be projected
-        :param svar_name: Relation result is stored in this optional TclRAL variable for subsequent operations to use
-        :return Resulting relation as a TclRAL string
-        """
-        projection = ' '.join(attributes)
-        cmd = f'set {_relation} [relation project ${{{relation}}} {projection.strip()}]'
         result = Command.execute(tclral, cmd)
         if svar_name:  # Save the result using the supplied session variable name
             cls.set_var(tclral, svar_name)
