@@ -68,9 +68,9 @@ class Attribute:
         """
 
         # Get the set of all attributes with unresolved types
-        Relation.restrict(db=mmdb, relation='Attribute',
-                                   restriction=f'Type:<unresolved>, Domain:{domain}')
-        result = Relation.project(db=mmdb, attributes=['Name', 'Class'])
+        Relation.restrict(tclral=mmdb, relation='Attribute',
+                          restriction=f'Type:<unresolved>, Domain:{domain}')
+        result = Relation.project(tclral=mmdb, attributes=['Name', 'Class'])
         uattrs = Relation.make_pyrel(relation=result, name='Unresoved Attrs')
         Relation.relformat(uattrs)
 
@@ -106,18 +106,18 @@ class Attribute:
         # We join the two relvars on the To_attribute so that we can obtain that attribute's Type
 
         # First we must rename two attributes in the Attribute Reference class
-        Relation.rename(db=mmdb, old_name='To_attribute', new_name='Name', relation='Attribute_Reference')
-        result = Relation.rename(db=mmdb, old_name='To_class', new_name='Class')
+        Relation.rename(tclral=mmdb, old_name='To_attribute', new_name='Name', relation='Attribute_Reference')
+        result = Relation.rename(tclral=mmdb, old_name='To_class', new_name='Class')
         ar_rename = Relation.make_pyrel(relation=result, name='AR Rename')
         Relation.relformat(ar_rename)
 
         # Then we join the renamed Attribute Reference with Attribute to get the 'to attributes'
-        result = Relation.join(db=mmdb, rname2='Attribute')
+        result = Relation.join(tclral=mmdb, rname2='Attribute')
         nj = Relation.make_pyrel(relation=result, name='Join')
         Relation.relformat(nj)
 
         # Finally, we restrict and project on our from attribute to get its reference type
-        result = Relation.restrict(db=mmdb,
+        result = Relation.restrict(tclral=mmdb,
                                    restriction=f'From_attribute:{attr_name},'
                                                f'From_class:{class_name}, Domain:{domain_name}')
         from_attrs = Relation.make_pyrel(relation=result, name='Restrict from attr')

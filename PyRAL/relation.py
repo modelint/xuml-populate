@@ -65,9 +65,42 @@ class Relation:
         return sexpr.rstrip(' &&') + "}"
 
     @classmethod
-    def restrict(cls, db: 'Tk', restriction: str, relation: str=_relation, svar_name: Optional[str]=None) -> str:
+    def set_var(cls, tclral: Tk, name: str):
         """
-        Perform a restriction and return the result
+        Set a temporary TclRAL relation variable to the most recent returned result.
+        This allows us to save a particular TclRAL return value string so that we can plug it
+        into a subsequent TclRAL operation.
+
+        :param tclral: The TclRAL session
+        :param name: The variable name (must be a legal Tcl variable name
+        """
+        session_variable_names.add(name)
+        tclral.eval(f"set {name} ${{{_relation}}}")
+
+    @classmethod
+    def restrict(cls, tclral: Tk, restriction: str, relation: str=_relation, svar_name: Optional[str]=None) -> str:
+        """
+        Here we select zero or more tuples that match the supplied criteria.
+
+        In relational theory this is known as a restriction operation.
+
+        TclRAL syntax:
+            relation restrict <relationValue> <tupleVariable> <expression>
+
+        TclRAL command example:
+            relation restrict ${Attribute} t {[string match {<unresolved>} [tuple extract $t Type]] &&
+                [string match {Elevator Management} [tuple extract $t Domain]]}
+
+        Generated from this PyRAL input:
+            relation: Attribute
+            restriction: 'Type:<unresolved>, Domain:Elevator Management'
+
+
+        :param tclral: The TclRAL session
+        :param relation: Name of a relation variable where the operation is applied
+        :param restriction: A string in Scrall notation that specifies the restriction criteria
+        :param svar_name: An optional session variable that holds the result
+        :return: The TclRAL string result representing the restricted tuple set
         """
         # Parse the restriction expression
         # Split out matches on comma delimiter as a list of strings
@@ -86,15 +119,13 @@ class Relation:
         # Add it to the restrictwith command and evaluate
         # result = tclral.eval("relation restrict $Attribute a {[string match <unresolved> [tuple extract $a Type]]}")
         cmd = f"set {_relation} [relation restrict ${{{relation}}} t {rexpr}]"
-        result = db.eval(cmd)
-        check = db.eval(f"set {{{_relation}}}")
+        result = Command.execute(tclral, cmd)
         if svar_name:  # Save the result using the supplied session variable name
-            session_variable_names.add(svar_name)
-            db.eval(f"set {svar_name} ${{{_relation}}}")
+            cls.set_var(tclral, svar_name)
         return result
 
     @classmethod
-    def rename(cls, db: 'Tk', old_name: str, new_name:str, relation: str=_relation, svar_name: Optional[str]=None) -> str:
+    def rename(cls, tclral: Tk, old_name: str, new_name:str, relation: str=_relation, svar_name: Optional[str]=None) -> str:
         """
         Rename attribute from old to new name
         :old_name: Current name of the attribute
@@ -102,54 +133,51 @@ class Relation:
         :return Resulting relation as a TclRAL string
         """
         cmd = f'set {_relation} [relation rename ${{{relation}}} {old_name} {new_name}]'
-        result = db.eval(cmd)
+        result = Command.execute(tclral, cmd)
         if svar_name:  # Save the result using the supplied session variable name
-            session_variable_names.add(svar_name)
-            db.eval(f"set {svar_name} ${{{_relation}}}")
+            cls.set_var(tclral, svar_name)
         return result
 
     @classmethod
-    def join(cls, db: 'Tk', rname2: str, rname1: str=_relation, svar_name: Optional[str]=None) -> str:
+    def join(cls, tclral: Tk, rname2: str, rname1: str=_relation, svar_name: Optional[str]=None) -> str:
         """
         Project attributes over relation
 
         :param rname1:
         :param rname2:
-        :param db: The TclRAL session
+        :param tclral: The TclRAL session
         :param svar_name: Relation result is stored in this optional TclRAL variable for subsequent operations to use
         :return Resulting relation as a TclRAL string
         """
         cmd = f'set {{{_relation}}} [relation join ${{{rname1}}} ${rname2}]'
-        result = db.eval(cmd)
+        result = Command.execute(tclral, cmd)
         if svar_name:  # Save the result using the supplied session variable name
-            session_variable_names.add(svar_name)
-            db.eval(f"set {svar_name} ${{{_relation}}}")
+            cls.set_var(tclral, svar_name)
         return result
 
     @classmethod
-    def subtract(cls, db: 'Tk', rname2: str, rname1: str=_relation, svar_name: Optional[str]=None) -> str:
+    def subtract(cls, tclral: Tk, rname2: str, rname1: str=_relation, svar_name: Optional[str]=None) -> str:
         """
         Subtract relation2 from relation1
 
         :param rname1:
         :param rname2:
-        :param db: The TclRAL session
+        :param tclral: The TclRAL session
         :param svar_name: Relation result is stored in this optional TclRAL variable for subsequent operations to use
         :return Resulting relation as a TclRAL string
         """
         cmd = f'set {_relation} [relation minus ${{{rname1}}} ${rname2}]'
-        result = db.eval(cmd)
+        result = Command.execute(tclral, cmd)
         if svar_name:  # Save the result using the supplied session variable name
-            session_variable_names.add(svar_name)
-            db.eval(f"set {svar_name} ${{{_relation}}}")
+            cls.set_var(tclral, svar_name)
         return result
 
     @classmethod
-    def project(cls, db: 'Tk', attributes: List[str], relation: str=_relation, svar_name: Optional[str]=None) -> str:
+    def project(cls, tclral: Tk, attributes: List[str], relation: str=_relation, svar_name: Optional[str]=None) -> str:
         """
         Project attributes over relation
 
-        :param db: The TclRAL session
+        :param tclral: The TclRAL session
         :param attributes: Attributes to be projected
         :param relation: The relation to be projected
         :param svar_name: Relation result is stored in this optional TclRAL variable for subsequent operations to use
@@ -157,10 +185,9 @@ class Relation:
         """
         projection = ' '.join(attributes)
         cmd = f'set {_relation} [relation project ${{{relation}}} {projection.strip()}]'
-        result = db.eval(cmd)
+        result = Command.execute(tclral, cmd)
         if svar_name:  # Save the result using the supplied session variable name
-            session_variable_names.add(svar_name)
-            db.eval(f"set {svar_name} ${{{_relation}}}")
+            cls.set_var(tclral, svar_name)
         return result
 
     @classmethod

@@ -44,9 +44,9 @@ class Lineage:
         # These constitute 'leaves'. We use them as starting points as we step through a set of generalizations
         # to identify lineages.
 
-        Relation.project(db=mmdb, attributes=['Class', 'Domain'], relation='Subclass', svar_name='subs')
-        Relation.project(db=mmdb, attributes=['Class', 'Domain'], relation='Superclass', svar_name='supers')
-        r = Relation.subtract(db=mmdb, rname1='subs', rname2='supers')
+        Relation.project(mmdb, attributes=['Class', 'Domain'], relation='Subclass', svar_name='subs')
+        Relation.project(mmdb, attributes=['Class', 'Domain'], relation='Superclass', svar_name='supers')
+        r = Relation.subtract(mmdb, rname1='subs', rname2='supers')
         leaf_tuples = Relation.make_pyrel(relation=r, name='leaf tuples')
         leaf_classes = [t['Class'] for t in leaf_tuples.body]
 
@@ -93,8 +93,8 @@ class Lineage:
         # Get all adjacent relationships, if any, on the civisit class that have not already been traversed
         # Could be either superclass_name or subclasses, so we search Facets
         # Get all Facets that cvisit participates in
-        Relation.restrict(db=cls.mmdb, restriction=f"Class:{cvisit}, Domain:{cls.domain}", relation="Facet")
-        r = Relation.project(db=cls.mmdb, attributes=["Rnum",])
+        Relation.restrict(tclral=cls.mmdb, restriction=f"Class:{cvisit}, Domain:{cls.domain}", relation="Facet")
+        r = Relation.project(tclral=cls.mmdb, attributes=["Rnum", ])
         s = Relation.make_pyrel(relation=r, name="possible steps")
         # Grab the result being careful to exclude prior traversals so we don't walk around in circles!
         adj_rels = [r['Rnum'] for r in s.body if r['Rnum'] not in cls.xrels and r['Rnum'] != rvisit]
@@ -158,18 +158,18 @@ class Lineage:
         :param domain:
         :return:
         """
-        Relation.restrict(db=cls.mmdb, relation='Subclass', restriction=f"Rnum:{grel}, Domain:{cls.domain}")
-        r = Relation.project(db=cls.mmdb, attributes=['Class',])
+        Relation.restrict(tclral=cls.mmdb, relation='Subclass', restriction=f"Rnum:{grel}, Domain:{cls.domain}")
+        r = Relation.project(tclral=cls.mmdb, attributes=['Class', ])
         s = Relation.make_pyrel(relation=r)
 
         return {t['Class'] for t in s}
 
     @classmethod
     def isSubclass(cls, grel: str, cname: str) -> bool:
-        Relation.restrict(db=cls.mmdb,
-                              relation='Subclass',
-                              restriction=f"Class:{cname}, Rnum:{grel}, Domain:{cls.domain}")
-        r = Relation.project(db=cls.mmdb, attributes=[])
+        Relation.restrict(tclral=cls.mmdb,
+                          relation='Subclass',
+                          restriction=f"Class:{cname}, Rnum:{grel}, Domain:{cls.domain}")
+        r = Relation.project(tclral=cls.mmdb, attributes=[])
         s = Relation.make_pyrel(relation=r)
         return bool(s.body)
 
@@ -182,8 +182,8 @@ class Lineage:
         :param domain:  A the name of the domain
         :return:
         """
-        Relation.restrict(db=cls.mmdb, relation='Superclass', restriction=f"Rnum:{grel}, Domain:{cls.domain}")
-        r = Relation.project(db=cls.mmdb, attributes=["Class",])
+        Relation.restrict(tclral=cls.mmdb, relation='Superclass', restriction=f"Rnum:{grel}, Domain:{cls.domain}")
+        r = Relation.project(tclral=cls.mmdb, attributes=["Class", ])
         s = Relation.make_pyrel(relation=r)
         return s.body[0]['Class']
 
