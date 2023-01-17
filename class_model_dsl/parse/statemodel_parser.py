@@ -1,12 +1,12 @@
 """ statemodel_parser.py – First attempt to parse class block """
 
-from flatland.flatland_exceptions import ModelGrammarFileOpen, ModelInputFileOpen, ModelInputFileEmpty
-from flatland.flatland_exceptions import ModelParseError
-from flatland.input.statemodel_visitor import StateModelVisitor
+from class_model_dsl.mp_exceptions import ModelGrammarFileOpen, ModelInputFileOpen, ModelInputFileEmpty
+from class_model_dsl.mp_exceptions import ModelParseError
+from class_model_dsl.parse.statemodel_visitor import StateModelVisitor
 from arpeggio import visit_parse_tree, NoMatch
 from arpeggio.cleanpeg import ParserPEG
 from collections import namedtuple
-from flatland.input.nocomment import nocomment
+from class_model_dsl.parse.nocomment import nocomment
 import os
 from pathlib import Path
 

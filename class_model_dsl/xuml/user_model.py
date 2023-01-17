@@ -12,6 +12,7 @@ import sys
 import logging
 from pathlib import Path
 from class_model_dsl.parse.model_parser import ModelParser
+from class_model_dsl.parse.statemodel_parser import StateModelParser
 from class_model_dsl.mp_exceptions import ModelParseError, MPIOException, MultipleDomainsException
 from class_model_dsl.populate.domain import Domain
 from class_model_dsl.populate.pop_types import Domain_i
@@ -31,6 +32,8 @@ class UserModel:
     user_model_path = None
     model_subsystem = {}  # Parsed subsystems, keyed by subsystem file name
     subsystem = None
+    statemodels = {} # Parsed state models, keyed by name (class or rnum)
+    statemodel = None
     model = None
     domain = None
 
@@ -42,19 +45,39 @@ class UserModel:
         """
         cls._logger.info(f"Processing user class models in : [{user_model_pkg}]")
         cls.user_model_pkg = user_model_pkg
+
+        # Load the class model subsystems
         for subsys_cm_file in cls.user_model_pkg.glob("*.xcm"):
-            cls._logger.info(f"Processing user subsystem cm file: [{subsys_cm_file}]")
-            cls.parse(cm_path=subsys_cm_file)
+            cls._logger.info(f"Processing user subsystem class model file: [{subsys_cm_file}]")
+            cls.parse_cm(cm_path=subsys_cm_file)
+        # Load and parse the state models
+        for sm_file in cls.user_model_pkg.glob("*.xsm"):
+            cls._logger.info(f"Processing user subsystem state model file: [{sm_file}]")
+            cls.parse_sm(sm_path=sm_file)
         cls.populate()
-        # TODO: Resolve unresolved attribute types
-        # ResolveAttrTypes()
 
     @classmethod
-    def parse(cls, cm_path):
+    def parse_sm(cls, sm_path: Path):
         """
-        Parse the model
+        Parse the state model
 
-        :return:
+        :param sm_path:
+        """
+        sname = sm_path.stem
+        try:
+            cls.statemodel = StateModelParser(model_file_path=sm_path, debug=False)
+        except MPIOException as e:
+            sys.exit(e)
+        try:
+            cls.statemodels[sname] = cls.model.parse()
+        except ModelParseError as e:
+            sys.exit(e)
+        return cls.statemodels[sname]
+
+    @classmethod
+    def parse_cm(cls, cm_path: Path):
+        """
+        Parse the class model
         """
         sname = cm_path.stem
         try:
@@ -89,4 +112,3 @@ class UserModel:
         Domain.populate(mmdb=Database.tclRAL,
                         domain=Domain_i(Name=cls.domain['name'], Alias=cls.domain['alias']),
                         subsystems=cls.model_subsystem)
-        pass

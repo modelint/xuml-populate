@@ -53,7 +53,7 @@ class ModelParser:
         if not self.model_text:
             raise ModelInputFileEmpty(self.model_file_path)
 
-    def parse(self):
+    def parse(self) -> Subsystem:
         """
         Parse the model file and return the content
         :return:  The abstract syntax tree content of interest

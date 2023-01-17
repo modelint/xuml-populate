@@ -1,0 +1,185 @@
+event.xmmmetadata
+    Title : State Subsystem / Shlaer-Mellor Metamodel
+    Author : Leon Starr
+    Document ID : mint.sm-meta.class.td.4
+    Version : 3.4.3
+    /// Creation date : January 21, 2012
+    Modification date : April 24, 2022
+    Organization : Model Integration, LLC / www.modelint.com
+    Copyright notice > MIT
+    Organization logo > mint
+subsystem State
+class Assigner
+attributes
+    Rnum {I, R501, R502}
+    Domain {I, R501, R502}
+--
+class Association <import:Relationship>
+attributes
+    Rnum {I}
+    Domain {I}
+--
+class Class <import:Class And Attribute>
+attributes
+    Name {I}
+    Domain {I}
+--
+class Constrained Loop <import:Relationship>
+attributes
+    CLnum {I}
+    Domain {I}
+--
+class Deletion State
+attributes
+    Name {I, R511}
+    Class {I, R513, R511}
+    Domain {I, R513, R511}
+--
+class Effective Event <import:Event>
+attributes
+    Name {I}
+    State model {I}
+    Domain {I}
+--
+class Event Response
+attributes
+    State {I, R505}
+    Event {I, R505}
+    State model {I, R505}
+    Domain {I, R505}
+--
+class Initial Pseudo State
+attributes
+    Class {I, R510, R508}
+    Domain {I, R510, R508}
+--
+class Lifecycle
+attributes
+    Class {I, R500, R502}
+    Domain {I, R500, R502}
+--
+class Multiple Assigner
+attributes
+    Rnum {I, R514}
+    Domain {I, R514, R517, R518}
+    Loop {R517c}
+    Partitioning class {R518c}
+--
+class Non Deletion State
+attributes
+    Name {I, R511}
+    State model {I, R511, R503}
+    Domain {I, R511, R503}
+--
+class Non Transition
+attributes
+    State {I, R506}
+    Event {I, R506}
+    State model {I, R506}
+    Domain {I, R506}
+    Behavior : NT Response
+    Reason : Description
+--
+class Real State
+attributes
+    Name {I, R510}
+    State model {I, R510, UR511}
+    Domain {I, R510, R504}
+    Activity {R504}
+--
+class Single Assigner
+attributes
+    Rnum {I, R514}
+    Domain {I, R514}
+--
+class State
+attributes
+    Name : State Name {I}
+    State model {I, UR510}
+    Domain {I}
+--
+class State Activity <import:Activity>
+attributes
+    Activity {I}
+    Domain {I}
+--
+class State Model
+attributes
+    Name : State Model Name {I, UR502}
+    Domain {I}
+--
+class Transition
+attributes
+    From state {I, R506}
+    Event {I, R506}
+    State model {I, R506, R507}
+    Domain {I, R506, R507}
+    To state {R507}
+--
+relationships
+    R500
+    specifies pattern of behavior for, 1 Class
+    behavior pattern is specified by, 1c Lifecycle
+--
+    R501
+    resolves competition on, 1 Association
+    competition is resolved by, 1c Assigner
+--
+    R502
+    State Model +
+        Lifecycle
+        Assigner
+--
+    R503
+    specifies period of time as, M Non Deletion State
+    partions time period on, 1 State Model
+--
+    R504
+    entry executes, 1 State Activity
+    is executed on transition into, 1 Real State
+--
+    R505
+    specifies response to, Mc Effective Event
+    is responded to in, M State
+    1 Event Response
+--
+    R506
+    Event Response +
+        Transition
+        Non Transition
+--
+    R507
+    specifies path to, 1 State
+    is arrived at via, Mc Transition
+--
+    R508
+    instances are created by delegation in, 1c Initial Pseudo State
+    is source of initial transition on, 1 Lifecycle
+--
+    R510
+    State +
+        Real State
+        Initial Pseudo State
+--
+    R511
+    Real State +
+        Deletion State
+        Non Deletion State
+--
+    R513
+    deletes instances in, 1 Lifecycle
+    instances are deleted after entering, Mc Deletion State
+--
+    R514
+    Assigner +
+        Single Assigner
+        Multiple Assigner
+--
+    R517
+    manages within constraint set by, 1 Constrained Loop
+    establishes constraint for, Mc Multiple Assigner
+--
+    R518
+    managed instance subset is partitioned by, 1 Class
+    partitions managed instance subset for, Mc Multiple Assigner
+--
