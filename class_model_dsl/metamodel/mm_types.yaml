@@ -11,6 +11,7 @@ Domain Name : string
 Element Label : string
 Element Number : int
 Enumeration Value : string
+Event Name : string
 ID Number : int
 Lineage Number : string
 One Many : string
@@ -19,6 +20,8 @@ Reference Type : string
 Relationship Number : string
 Spanning Element Label : string
 Side : string
+State Name : string
+State Model Name : string
 Subsystem Alias : string
 Subsystem Name : string
 Subsystem Element Label : string
