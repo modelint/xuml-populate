@@ -9,7 +9,7 @@ metadata
     Copyright notice > MIT
     Organization logo > mint
 domain Metamodel, META
-subsystem State
+subsystem State, S 500-549
 class Assigner
 attributes
     Rnum : Relationship Number {I, R501, R502}

@@ -2,13 +2,14 @@ metadata
     Title : Event Subsystem / Shlaer-Mellor Metamodel
     Author : Leon Starr
     Document ID : mint.sm-meta.class.td.5
-    Version : 3.8.2
+    Version : 3.9.0
     /// Creation date : March 4, 2012
-    Modification date : March 23, 2022
+    Modification date : January 17, 2023
     Organization : Model Integration, LLC / www.modelint.com
     Copyright notice > MIT
     Organization logo > mint
-subsystem Event
+domain Metamodel, META
+subsystem Event, EV 550-599
 class Class <import:Class And Attribute>
 attributes
     Name {I}
@@ -16,91 +17,91 @@ attributes
 --
 class Delegated Event
 attributes
-    Name {I, R560}
-    Class {I, R560}
-    Domain {I, R560}
+    Name : Event Name {I, R560}
+    Class : Class Name {I, R560}
+    Domain : Domain Name {I, R560}
 --
 class Delegation On Generalization
 attributes
-    Delegated event {I, R569}
-    Superclass {I, R569}
-    Domain {I, R569}
+    Delegated event : Event Name {I, R569}
+    Superclass : Class Name {I, R569}
+    Domain : Domain Name {I, R569}
     Generalization {I, R569c}
 --
 class Effective Event
 attributes
     Name {I, R560}
     State model {I, R560, UR554}
-    Domain {I, R560}
+    Domain : Domain Name {I, R560}
 --
 class Event
 attributes
     Name {I}
     Subsystem element {I, UR560}
-    Domain {I}
+    Domain : Domain Name {I}
 --
 class Event Parameter
 attributes
     Name : Input Name {I}
     Event specification {I, R563}
     Subsystem element {I, R563}
-    Domain {I, R563}
+    Domain : Domain Name {I, R563}
     Type : Type Name
 --
 class Event Specification
 attributes
     Name : Event Name {I}
     Subsystem element {I, UR550}
-    Domain {I}
+    Domain : Domain Name {I}
 --
 class Generalization <import:Relationship>
 attributes
     Rnum {I}
-    Domain {I}
+    Domain : Domain Name {I}
 --
 class Forwarded Delegated Event
 attributes
     Name {I, R561, R552}
-    Class {I, R561, R552}
-    Domain {I, R561, R552}
+    Class : Class Name {I, R561, R552}
+    Domain : Domain Name {I, R561, R552}
 --
 class Forwarded Effective Event
 attributes
     Name {I, R554, R552}
-    Class {I, R554, R552}
-    Domain {I, R554, R552}
+    Class : Class Name {I, R554, R552}
+    Domain : Domain Name {I, R554, R552}
 --
 class Forwarded Event
 attributes
     Name {I, R553}
-    Subclass {I, R553}
-    Domain {I, R553}
-    Superclass {R553}
-    Generalization {R553}
+    Subclass : Class Name {I, R553}
+    Domain : Domain Name {I, R553}
+    Superclass : Class Name {R553}
+    Generalization : Relationship Number {R553}
 --
 class Monomorphic Event
 attributes
-    Name {I, R557, R554}
-    State model {I, R557, R554}
-    Domain {I, R557, R554}
+    Name : Event Name {I, R557, R554}
+    State model : State Model NameI, R557, R554}
+    Domain : Domain Name {I, R557, R554}
 --
 class Monomorphic Event Specification
 attributes
-    Name {I, R550}
-    State model {I, R550, R565}
-    Domain {I, R550, R565}
+    Name : Event Name {I, R550}
+    State model : State Model NameI, R550, R565}
+    Domain : Domain Name {I, R550, R565}
 --
 class Polymorphic Event Specification
 attributes
-    Name {I, R550, R558}
-    Class {I, R551c, R550, R558}
-    Domain {I, R551, R550, R558}
+    Name : Event Name {I, R550, R558}
+    Class : Class Name {I, R551c, R550, R558}
+    Domain : Domain Name {I, R551, R550, R558}
 --
 class Root Delegated Event
 attributes
-    Name {I, R561, R558}
-    Class {I, I2, R561, R558}
-    Domain {I, I2, R561, R558}
+    Name : Event Name {I, R561, R558}
+    Class : Class Name {I, I2, R561, R558}
+    Domain : Domain Name {I, I2, R561, R558}
 --
 class State Model <import:State>
 attributes
@@ -118,54 +119,71 @@ relationships
     Event Specification +
         Monomorphic Event Specification
         Polymorphic Event Specification
+    Monomorphic Event Specification.(Name, State model, Domain) -> Event Specification.(Name, Subsystem element, Domain)
+    Polymorphic Event Specification.(Name, Class, Domain) -> Event Specification.(Name, Subsystem element, Domain)
 --
     R551
     defines, Mc Polymorphic Event Specification
     is defined on, 1 Class
+    Polymorphic Event Specification.(Class, Domain) -> Class.(Name, Domain)
 --
     R552
     Forwarded Event +
         Forwarded Effective Event
         Forwarded Delegated Event
+    <subclass>.(Name, Class, Domain) -> Forwarded Event.(Name, Subclass, Domain)
 --
     R553
     leads to, M Subclass
     is destination of, Mc Delegation On Generalization
     1 Forwarded Event
+    Forwarded Event.(Delegated event, Superclass, Generalization, Domain) -> Delegation On Generalization.(Delegated event, Superclass, Generalization, Domain)
+    Forwarded Event.(Generalization, Subclass, Domain) -> Subclass.(Rnum, Class, Domain)
 --
     R554
     Effective Event +
         Monomorphic Event
         Forwarded Effective Event
+    Monomorphic Event.(Name, State model, Domain) -> Non Delegated Event.(Name, State model, Domain)
+    Forwarded Effective Event.(Name, Class, Domain) -> Non Delegated Event.(Name, State model, Domain)
 --
     R557
     is detected as, 1 Monomorphic Event
     detects, 1 Monomorphic Event Specification
+    Monomorphic Event.(Name, State model, Domain) -> Monomorphic Event Specification.(Name, State model, Domain)
 --
     R558
     initiates delegation as, 1 Root Delegated Event
     is initial delegation of, 1 Polymorphic Event Specification
+    Polymorphic Event Specification.(Name, Class, Domain) -> Root Delegated Event.(Name, Class, Domain)
 --
     R560
     Event +
         Effective Event
         Delegated Event
+    Non Delegated Event.(Name, State model, Domain) -> Event.(Name, Subsystem element, Domain)
+    Delegated Event.(Name, Class, Domain) -> Event.(Name, Subsystem element, Domain)
 --
     R561
     Delegated Event +
         Root Delegated Event
         Forwarded Delegated Event
+    <subclass>.(Name, Class, Domain) -> Delegated Event.(Name, Class, Domain)
 --
     R563
     delivers data in, 1 Event Specification
     delivers data with, Mc Event Parameter
+    Event Parameter.(Event specification, Subsystem element, Domain) -> Event Specification.(Name, Subsystem element, Domain)
 --
     R565
     defines, Mc Monomorphic Event Specification
     is defined on, 1 State Model
+    Monomorphic Event Specification.(State model, Domain) -> State Model.(Name, Domain)
 --
     R569
     forwards, Mc Delegated Event
     is forwarded along, M Generalization
     1 Delegation On Generalization
+    Delegation On Generalization.(Delegated event, Superclass, Domain) -> Delegated Event.(Name, Class, Domain)
+    Delegation On Generalization.(Generalization, Domain) -> Generalization.(Rnum, Domain)
 --
