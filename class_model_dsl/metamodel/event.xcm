@@ -82,13 +82,13 @@ attributes
 class Monomorphic Event
 attributes
     Name : Event Name {I, R557, R554}
-    State model : State Model NameI, R557, R554}
+    State model : State Model Name {I, R557, R554}
     Domain : Domain Name {I, R557, R554}
 --
 class Monomorphic Event Specification
 attributes
     Name : Event Name {I, R550}
-    State model : State Model NameI, R550, R565}
+    State model : State Model Name {I, R550, R565}
     Domain : Domain Name {I, R550, R565}
 --
 class Polymorphic Event Specification
