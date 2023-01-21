@@ -24,10 +24,10 @@ class StateModelParser:
         - model_grammar -- The model grammar text read from the system grammar file
         - model_text -- The input model text read from the user supplied text file
     """
-    grammar_file_name = "model_markup/statemodel.peg"
+    grammar_file_name = "grammar/statemodel.peg"
     grammar_file = Path(__file__).parent.parent / grammar_file_name
     root_rule_name = 'statemodel'  # We don't draw a diagram larger than a single subsystem
-    xuml_model_dir = Path(__file__).parent.parent / "examples" / "elevator"
+    xuml_model_dir = Path(__file__).parent.parent / "input"
 
     def __init__(self, model_file_path, debug=True):
         """
@@ -82,12 +82,12 @@ class StateModelParser:
             os.system(f'dot -Tpdf {parse_tree_dot} -o {parse_tree_file}')
             os.system(f'dot -Tpdf {parser_model_dot} -o {model_file}')
             # Cleanup unneeded dot files, we just use the PDFs for now
-            parse_tree_dot.unlink(missing_ok=True)
-            parser_model_dot.unlink(missing_ok=True)
-            peg_tree_dot.unlink(missing_ok=True)
-            peg_model_dot.unlink(missing_ok=True)
+            # parse_tree_dot.unlink(missing_ok=True)
+            # parser_model_dot.unlink(missing_ok=True)
+            # peg_tree_dot.unlink(missing_ok=True)
+            # peg_model_dot.unlink(missing_ok=True)
         # Return the refined model data, checking sequence length
-        metadata = result.results.get('metadata')  # Optional section
+        metadata = result.results.get('metadata', None)  # Optional section
         domain = result.results.get('domain_header')
         lifecycle = result.results.get('lifecycle')
         assigner = result.results.get('assigner')
@@ -100,8 +100,3 @@ class StateModelParser:
             states=states,
             metadata=None if not metadata else metadata[0]
         )
-
-if __name__ == "__main__":
-    markup_path = Path(__file__).parent.parent / 'Test/door.xsm'
-    x = StateModelParser(model_file_path=markup_path, debug=True)
-    x.parse()

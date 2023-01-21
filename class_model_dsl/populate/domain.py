@@ -26,7 +26,7 @@ class Domain:
     subsystem_counter = {}
 
     @classmethod
-    def populate(cls, mmdb: 'Tk', domain:Domain_i, subsystems):
+    def populate(cls, mmdb: 'Tk', domain:Domain_i, subsystems, statemodels):
         """
         Insert all user model elements in this Domain into the corresponding Metamodel classes.
 
@@ -78,6 +78,10 @@ class Domain:
             subsys = Subsystem(record=s)
             for r in s.rels:
                 Relationship.populate(mmdb=mmdb, domain=domain.Name, subsystem=subsys, record=r)
+
+        # Insert state models
+        # TODO populate the state models
+        pass
 
         Relation.print(mmdb, 'Relationship')
         Relation.print(mmdb, 'Association')

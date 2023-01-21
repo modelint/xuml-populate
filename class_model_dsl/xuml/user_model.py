@@ -69,7 +69,7 @@ class UserModel:
         except MPIOException as e:
             sys.exit(e)
         try:
-            cls.statemodels[sname] = cls.model.parse()
+            cls.statemodels[sname] = cls.statemodel.parse()
         except ModelParseError as e:
             sys.exit(e)
         return cls.statemodels[sname]
@@ -108,7 +108,6 @@ class UserModel:
                 cls._logger.error(f"Multiple domains: {cls.domain}, {subsys.domain}]")
                 raise MultipleDomainsException
 
-
         Domain.populate(mmdb=Database.tclRAL,
                         domain=Domain_i(Name=cls.domain['name'], Alias=cls.domain['alias']),
-                        subsystems=cls.model_subsystem)
+                        subsystems=cls.model_subsystem, statemodels=cls.statemodels)

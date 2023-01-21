@@ -96,8 +96,3 @@ class ModelParser:
             metadata=None if not metadata else metadata[0]
         )
 
-
-if __name__ == "__main__":
-    markup_path = Path(__file__).parent.parent / 'input/ca1.xmm'
-    x = ModelParser(model_file_path=markup_path, debug=True)
-    x.parse()
