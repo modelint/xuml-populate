@@ -33,7 +33,7 @@ attributes
 class Deletion State
 attributes
     Name : State Name {I, R511}
-    Class {I, R513, R511}
+    Class : Class Name {I, R513, R511}
     Domain : Domain Name {I, R513, R511}
 --
 class Effective Event <import:Event>
@@ -186,7 +186,7 @@ relationships
     R513
     deletes instances in, 1 Lifecycle
     instances are deleted after entering, Mc Deletion State
-    Deletion State.(Class, Domain) -> Lifecycle,(Class, Domain)
+    Deletion State.(Class, Domain) -> Lifecycle.(Class, Domain)
 --
     R514
     Assigner +

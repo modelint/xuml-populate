@@ -6,6 +6,7 @@ Boolean : boolean
 Class Name : string
 Class Number : string
 Constrained Loop Number : string
+Description : string
 Domain Alias : string
 Domain Name : string
 Element Label : string
@@ -13,7 +14,9 @@ Element Number : int
 Enumeration Value : string
 Event Name : string
 ID Number : int
+Input Name : string
 Lineage Number : string
+NT Response : string
 One Many : string
 Phrase Name : string
 Reference Type : string
