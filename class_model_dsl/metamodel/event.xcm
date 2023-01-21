@@ -26,32 +26,32 @@ attributes
     Delegated event : Event Name {I, R569}
     Superclass : Class Name {I, R569}
     Domain : Domain Name {I, R569}
-    Generalization {I, R569c}
+    Generalization : Relationship Number {I, R569c}
 --
 class Effective Event
 attributes
-    Name {I, R560}
-    State model {I, R560, UR554}
+    Name : Event Name {I, R560}
+    State model : State Model Name {I, R560}
     Domain : Domain Name {I, R560}
 --
 class Event
 attributes
-    Name {I}
-    Subsystem element {I, UR560}
+    Name : Event Name {I}
+    State model : State Model Name {I}
     Domain : Domain Name {I}
 --
 class Event Parameter
 attributes
     Name : Input Name {I}
     Event specification {I, R563}
-    Subsystem element {I, R563}
+    State model : State Model Name {I, R563}
     Domain : Domain Name {I, R563}
     Type : Type Name
 --
 class Event Specification
 attributes
     Name : Event Name {I}
-    Subsystem element {I, UR550}
+    State model : State Model Name {I}
     Domain : Domain Name {I}
 --
 class Generalization <import:Relationship>
@@ -119,8 +119,8 @@ relationships
     Event Specification +
         Monomorphic Event Specification
         Polymorphic Event Specification
-    Monomorphic Event Specification.(Name, State model, Domain) -> Event Specification.(Name, Subsystem element, Domain)
-    Polymorphic Event Specification.(Name, Class, Domain) -> Event Specification.(Name, Subsystem element, Domain)
+    Monomorphic Event Specification.(Name, State model, Domain) -> Event Specification.(Name, State model, Domain)
+    Polymorphic Event Specification.(Name, Class, Domain) -> Event Specification.(Name, State model, Domain)
 --
     R551
     defines, Mc Polymorphic Event Specification
@@ -161,8 +161,8 @@ relationships
     Event +
         Effective Event
         Delegated Event
-    Non Delegated Event.(Name, State model, Domain) -> Event.(Name, Subsystem element, Domain)
-    Delegated Event.(Name, Class, Domain) -> Event.(Name, Subsystem element, Domain)
+    Non Delegated Event.(Name, State model, Domain) -> Event.(Name, State model, Domain)
+    Delegated Event.(Name, Class, Domain) -> Event.(Name, State model, Domain)
 --
     R561
     Delegated Event +
@@ -173,7 +173,7 @@ relationships
     R563
     delivers data in, 1 Event Specification
     delivers data with, Mc Event Parameter
-    Event Parameter.(Event specification, Subsystem element, Domain) -> Event Specification.(Name, Subsystem element, Domain)
+    Event Parameter.(Event specification, State model, Domain) -> Event Specification.(Name, State model, Domain)
 --
     R565
     defines, Mc Monomorphic Event Specification
