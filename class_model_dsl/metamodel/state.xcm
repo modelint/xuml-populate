@@ -139,7 +139,7 @@ relationships
     R503
     specifies period of time as, M Non Deletion State
     partions time period on, 1 State Model
-    State.(State model, Domain) -> State Model.(Name, Domain)
+    Non Deletion State.(State model, Domain) -> State Model.(Name, Domain)
 --
     R504
     entry executes, 1 State Activity
@@ -151,7 +151,7 @@ relationships
     is responded to in, M State
     1 Event Response
     Event Response.(State, State model, Domain) -> State.(Name, State model, Domain)
-    Event Response.(Event, State model, Domain) -> Effective Event.(ID, State model, Domain)
+    Event Response.(Event, State model, Domain) -> Effective Event.(Name, State model, Domain)
 --
     R506
     Event Response +
@@ -174,7 +174,8 @@ relationships
     State +
         Real State
         Initial Pseudo State
-    <subclass>.(Name, Class, Domain) -> State.(Name, State model, Domain)
+    Initial Pseudo State.(Name, Class, Domain) -> State.(Name, State model, Domain)
+    Real State.(Name, State model, Domain) -> State.(Name, State model, Domain)
 --
     R511
     Real State +
