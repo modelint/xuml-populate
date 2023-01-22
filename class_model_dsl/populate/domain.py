@@ -9,6 +9,7 @@ from class_model_dsl.populate.mm_class import MMclass
 from class_model_dsl.populate.relationship import Relationship
 from class_model_dsl.populate.lineage import Lineage
 from class_model_dsl.populate.subsystem import Subsystem
+from class_model_dsl.populate.state_model import StateModel
 from PyRAL.transaction import Transaction
 from PyRAL.relvar import Relvar
 from PyRAL.relation import Relation
@@ -81,7 +82,10 @@ class Domain:
 
         # Insert state models
         # TODO populate the state models
-        pass
+        for sm in statemodels.values():
+            StateModel.populate(mmdb, sm)
+            pass
+
 
         Relation.print(mmdb, 'Relationship')
         Relation.print(mmdb, 'Association')

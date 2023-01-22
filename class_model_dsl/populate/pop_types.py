@@ -76,3 +76,11 @@ Ordinal_Relationship = namedtuple('Ordinal_Relationship_i',
 # Lineage
 Lineage_i = namedtuple('Lineage_i', 'Lnum Domain')
 Class_In_Lineage_i = namedtuple('Class_In_Lineage_i', 'Class Lnum Domain')
+
+# State Model
+Lifecycle_i = namedtuple('Lifecycle_i', 'Class Domain')
+State_Model_i = namedtuple('State_Model_i', 'Name Domain')
+Non_Deletion_State_i = namedtuple('Non_Deletion_State_i', 'Name State_model Domain')
+Real_State_i = namedtuple('Real_State_i', 'Name State_model Domain')
+State_i = namedtuple('State_i', 'Name State_model Domain')
+

@@ -88,14 +88,18 @@ class StateModelParser:
             # peg_model_dot.unlink(missing_ok=True)
         # Return the refined model data, checking sequence length
         metadata = result.results.get('metadata', None)  # Optional section
-        domain = result.results.get('domain_header')
+        domain = result.results.get('domain_header')[0]
         lifecycle = result.results.get('lifecycle')
+        lifecycle_class = None if not lifecycle else lifecycle[0]['class']
         assigner = result.results.get('assigner')
+        assigner_rnum = None if not assigner else assigner[0]['rel']
         events = result.results.get('events')
         states = result.results.get('state_block')
         # You can draw classes without rels, but not the other way around!
         return StateModel(
-            domain=domain, lifecycle=lifecycle, assigner=assigner,
+            domain=domain,
+            lifecycle=lifecycle_class,
+            assigner=assigner_rnum,
             events={} if not events else events[0],
             states=states,
             metadata=None if not metadata else metadata[0]
