@@ -86,8 +86,9 @@ class Real State
 attributes
     Name : State Name {I, R510}
     State model : State Model Name {I, R510}
-    Domain : Domain Name {I, R510, R504}
-    Activity : Activity ID {R504}
+    Domain : Domain Name {I, R510}
+///    Domain : Domain Name {I, R510, R504}
+///    Activity : Activity ID {R504}
 --
 class Single Assigner
 attributes
@@ -141,11 +142,11 @@ relationships
     partions time period on, 1 State Model
     Non Deletion State.(State model, Domain) -> State Model.(Name, Domain)
 --
-    R504
-    entry executes, 1 State Activity
-    is executed on transition into, 1 Real State
-    Real State.(Activity, Domain) -> State Activity.(Activity, Domain)
---
+///    R504
+///    entry executes, 1 State Activity
+///    is executed on transition into, 1 Real State
+///    Real State.(Activity, Domain) -> State Activity.(Activity, Domain)
+///--
     R505
     specifies response to, Mc Effective Event
     is responded to in, M State

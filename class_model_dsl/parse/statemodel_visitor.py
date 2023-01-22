@@ -51,13 +51,13 @@ class StateModelVisitor(PTNodeVisitor):
     def visit_state_header(self, node, children):
         """
         There are four possible cases:
-            state name only (normal state)
+            state name only (non-deletion state)
             state name (creation transition with no event)
             state name (creation transition with event)
             state name (deletion state)
         """
         s = children[0]  # State name
-        t = 'normal' if len(children) == 1 else children[1]  # normal, creation or deletion
+        t = 'non_deletion' if len(children) == 1 else children[1]  # non_deletion, creation or deletion
         e = None if len(children) < 3 else children[2]  # creation event, if any
         assert not e or ( e and t == 'creation'), f'Creation event supplied for non creation event [{e}]'
         d = { 'state': s,  'type': t }  # we always have these two

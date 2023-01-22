@@ -82,10 +82,18 @@ class Domain:
 
         # Insert state models
         # TODO populate the state models
+        # StateModel.populate(mmdb, statemodels['transfer'])
         for sm in statemodels.values():
             StateModel.populate(mmdb, sm)
             pass
 
+        Relation.print(mmdb, 'State_Model')
+        Relation.print(mmdb, 'Lifecycle')
+        Relation.print(mmdb, 'State')
+        Relation.print(mmdb, 'Real_State')
+        Relation.print(mmdb, 'Non_Deletion_State')
+        Relation.print(mmdb, 'Initial_Pseudo_State')
+        Relation.print(mmdb, 'Deletion_State')
 
         Relation.print(mmdb, 'Relationship')
         Relation.print(mmdb, 'Association')

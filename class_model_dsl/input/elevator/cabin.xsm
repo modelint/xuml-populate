@@ -7,7 +7,7 @@ metadata
     Organization : Model Integration, LLC
     Copyright notice > MIT
     Organization logo > mint
-domain Elevator Application
+domain Elevator Management
 class Accessible Shaft Level
 events
     Doors secure
