@@ -40,9 +40,7 @@ parameter_name = name
 parameter = parameter_name sp? ':' sp? type_name
 parameter_set = parameter (',' sp parameter)*
 signature = '()' / '(' sp? parameter_set sp? ')'
-creation_event = '*' name
-normal_event = name
-event_spec = indent (creation_event / normal_event) signature? nl
+event_spec = indent event_name signature? nl
 events_header = "events" nl
 events = events_header event_spec* block_end
 

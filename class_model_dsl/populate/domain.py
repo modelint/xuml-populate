@@ -95,6 +95,13 @@ class Domain:
         Relation.print(mmdb, 'Initial_Pseudo_State')
         Relation.print(mmdb, 'Deletion_State')
 
+        Relation.print(mmdb, 'Event_Specification')
+        Relation.print(mmdb, 'Monomorphic_Event_Specification')
+        Relation.print(mmdb, 'Event_Parameter')
+        Relation.print(mmdb, 'Event')
+        Relation.print(mmdb, 'Monomorphic_Event')
+        Relation.print(mmdb, 'Effective_Event')
+
         Relation.print(mmdb, 'Relationship')
         Relation.print(mmdb, 'Association')
         Relation.print(mmdb, 'Binary_Association')

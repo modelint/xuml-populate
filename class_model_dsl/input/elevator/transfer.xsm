@@ -10,7 +10,7 @@ metadata
 domain Elevator Management
 class Transfer
 events
-    *initial
+    initial
     Execute
     Wait for cabin
     Dest change request( new dest: Level Name )

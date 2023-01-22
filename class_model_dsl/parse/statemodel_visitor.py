@@ -8,7 +8,7 @@ StateBlock = namedtuple('StateBlock', 'name type creation_event activity transit
 """The model data describing a state including its activity, optional creation event and optional exit transitions"""
 Parameter = namedtuple('Parameter', 'name type')
 """The name and data type of a parameter in a state model event signature"""
-EventSpec = namedtuple('EventSpec', 'name type signature')
+EventSpec = namedtuple('EventSpec', 'name signature')
 """The name of an event, its type (normal or creation) and parameter signature"""
 
 
@@ -100,16 +100,6 @@ class StateModelVisitor(PTNodeVisitor):
         name = ''.join(children)
         return name
 
-    def visit_creation_event(self, node, children):
-        """creation_event_name"""
-        name = ''.join(children)
-        return name, 'creation'
-
-    def visit_normal_event(self, node, children):
-        """normal_event_name"""
-        name = ''.join(children)
-        return name, 'normal'
-
     def visit_type_name(self, node, children):
         """All characters composing a data type name"""
         name = ''.join(children)
@@ -131,8 +121,8 @@ class StateModelVisitor(PTNodeVisitor):
         """event_name [signature]: Complete event specification including optional signature"""
         params = [] if len(children) < 2 else children[1]
         ename = children[0]  # name, type tuple
-        espec = EventSpec(name=ename[0], type=ename[1], signature=params)
-        return { ename[0]: espec }
+        espec = EventSpec(name=ename, signature=params)
+        return { ename: espec }
 
     def visit_events(self, node, children):
         """All event specifications, creation and normal, defined for a state machine"""

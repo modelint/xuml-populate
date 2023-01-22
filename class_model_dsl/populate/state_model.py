@@ -8,7 +8,9 @@ from PyRAL.transaction import Transaction
 from typing import TYPE_CHECKING
 
 from class_model_dsl.populate.pop_types import State_Model_i, Lifecycle_i,\
-    Non_Deletion_State_i, State_i, Real_State_i, Deletion_State_i, Initial_Pseudo_State_i
+    Non_Deletion_State_i, State_i, Real_State_i, Deletion_State_i, Initial_Pseudo_State_i,\
+    Event_Parameter_i, Event_Specification_i, Monomorphic_Event_Specification_i, Monomorphic_Event_i,\
+    Effective_Event_i, Event_i
 
 if TYPE_CHECKING:
     from tkinter import Tk
@@ -65,3 +67,30 @@ class StateModel:
                     Transaction.execute() # Execute for each added state
         else: # Assigner state model
             cls._logger.info(f"Populating Assigner [{rnum}]")
+
+        for espec in sm.events.values():
+            Transaction.open(mmdb)
+            Relvar.insert(relvar='Event', tuples=[
+                Event_i(Name=espec.name, State_model=sm_name, Domain=sm.domain)
+            ])
+            Relvar.insert(relvar='Effective_Event', tuples=[
+                Effective_Event_i(Name=espec.name, State_model=sm_name, Domain=sm.domain)
+            ])
+            Relvar.insert(relvar='Monomorphic_Event', tuples=[
+                Monomorphic_Event_i(Name=espec.name, State_model=sm_name, Domain=sm.domain)
+            ])
+            Relvar.insert(relvar='Event_Specification', tuples=[
+                Event_Specification_i(Name=espec.name, State_model=sm_name, Domain=sm.domain)
+            ])
+            Relvar.insert(relvar='Monomorphic_Event_Specification', tuples=[
+                Monomorphic_Event_Specification_i(Name=espec.name, State_model=sm_name, Domain=sm.domain)
+            ])
+            Transaction.execute()
+            if espec.signature:
+                for p in espec.signature:
+                    Transaction.open(mmdb)
+                    Relvar.insert(relvar='Event_Parameter', tuples=[
+                        Event_Parameter_i(Name=p.name, Event_specification=espec.name, Type=p.type,
+                                          State_model=sm_name, Domain=sm.domain)
+                    ])
+                    Transaction.execute()

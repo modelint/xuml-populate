@@ -80,9 +80,19 @@ Class_In_Lineage_i = namedtuple('Class_In_Lineage_i', 'Class Lnum Domain')
 # State Model
 Lifecycle_i = namedtuple('Lifecycle_i', 'Class Domain')
 State_Model_i = namedtuple('State_Model_i', 'Name Domain')
+
+# States
 Non_Deletion_State_i = namedtuple('Non_Deletion_State_i', 'Name State_model Domain')
 Real_State_i = namedtuple('Real_State_i', 'Name State_model Domain')
 State_i = namedtuple('State_i', 'Name State_model Domain')
 Deletion_State_i = namedtuple('Deletion_State_i', 'Name Class Domain')
 Initial_Pseudo_State_i = namedtuple('Initial_Pseudo_State_i', 'Name Class Domain')
+
+# Events
+Event_Parameter_i = namedtuple('Event_Parameter_i', 'Name Event_specification State_model Domain Type')
+Event_Specification_i = namedtuple('Event_Specification_i', 'Name State_model Domain')
+Monomorphic_Event_Specification_i = namedtuple('Monomorphic_Event_Specification_i', 'Name State_model Domain')
+Monomorphic_Event_i = namedtuple('Monomorphic_Event_i', 'Name State_model Domain')
+Effective_Event_i = namedtuple('Effective_Event_i', 'Name State_model Domain')
+Event_i = namedtuple('Event_i', 'Name State_model Domain')
 
