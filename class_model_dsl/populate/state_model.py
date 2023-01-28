@@ -40,6 +40,7 @@ class StateModel:
                 Lifecycle_i(Class=cname, Domain=sm.domain)
             ])
             pending_initial_nd_state = True # Transaction remains open until first Non Deletion State is added
+            # Populate the states
             for s in sm.states:
                 if not pending_initial_nd_state:  # We have executed a transaction to create the Lifecycle already
                     Transaction.open(mmdb)
@@ -66,8 +67,11 @@ class StateModel:
                 if not pending_initial_nd_state:
                     Transaction.execute() # Execute for each added state
         else: # Assigner state model
+            # TODO: Handle assigner state models
             cls._logger.info(f"Populating Assigner [{rnum}]")
 
+        # Populate the events
+        # TODO: Handle polymorphic events
         for espec in sm.events.values():
             Transaction.open(mmdb)
             Relvar.insert(relvar='Event', tuples=[
@@ -94,3 +98,8 @@ class StateModel:
                                           State_model=sm_name, Domain=sm.domain)
                     ])
                     Transaction.execute()
+
+        # Populate the transitions
+        for s in sm.states:
+            for t in s.transitions:
+                pass

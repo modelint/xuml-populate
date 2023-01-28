@@ -2,9 +2,9 @@ metadata
     Title : State Subsystem / Shlaer-Mellor Metamodel
     Author : Leon Starr
     Document ID : mint.sm-meta.class.td.4
-    Version : 3.5.0
+    Version : 3.6.0 /// Based on 3.5.0 in SM Metamodel
     /// Creation date : January 21, 2012
-    Modification date : January 17, 2023
+    Modification date : January 28, 2023
     Organization : Model Integration, LLC / www.modelint.com
     Copyright notice > MIT
     Organization logo > mint
@@ -42,18 +42,25 @@ attributes
     State model {I}
     Domain {I}
 --
-///class Event Response
-///attributes
-///    State : State Name {I, R505}
-///    Event : Event Name {I, R505}
-///    State model : State Model Name {I, R505}
-///    Domain : Domain Name {I, R505}
-///--
+class Event Response
+attributes
+    State : State Name {I, R505}
+    Event : Event Name {I, R505}
+    State model : State Model Name {I, R505}
+    Domain : Domain Name {I, R505}
+--
 class Initial Pseudo State
 attributes
     Name : State Name {R510, R508}
     Class : Class Name {I, R510, R508}
     Domain : Domain Name {I, R510, R508}
+--
+class Input Parameter
+attributes
+    Name {I, R509}
+    Signature {I, R509}
+    State model {I, R509}
+    Domain {I, R509}
 --
 class Lifecycle
 attributes
@@ -73,15 +80,15 @@ attributes
     State model : State Model Name {I, R511, R503}
     Domain : Domain Name {I, R511, R503}
 --
-///class Non Transition
-///attributes
-///    State : State Name {I, R506}
-///    Event : Event Name {I, R506}
-///    State model : State Model Name {I, R506}
-///    Domain : Domain Name {I, R506}
-///    Behavior : NT Response
-///    Reason : Description
-///--
+class Non Transition
+attributes
+    State : State Name {I, R506}
+    Event : Event Name {I, R506}
+    State model : State Model Name {I, R506}
+    Domain : Domain Name {I, R506}
+    Behavior : NT Response
+    Reason : Description
+--
 class Real State
 attributes
     Name : State Name {I, R510}
@@ -111,14 +118,27 @@ attributes
     Name : State Model Name {I}
     Domain : Domain Name {I}
 --
-///class Transition
-///attributes
-///    From state : State Name {I, R506}
-///    Event : Event Name {I, R506}
-///    State model : State Model Name {I, R506, R507}
-///    Domain : Domain Name {I, R506, R507}
-///    To state : State Name {R507}
-///--
+class State Model Parameter
+attributes
+    Name : Parameter Name {I}
+    State model {I, R512}
+    Domain {I, R512}
+    Type : Type Name
+--
+class State Signature
+attributes
+    ID : Signature ID {I}
+    State model {I, R515}
+    Domain {I, R515}
+--
+class Transition
+attributes
+    From state : State Name {I, R506}
+    Event : Event Name {I, R506}
+    State model : State Model Name {I, R506, R507}
+    Domain : Domain Name {I, R506, R507}
+    To state : State Name {R507}
+--
 relationships
     R500
     specifies pattern of behavior for, 1 Class
@@ -147,29 +167,36 @@ relationships
 ///    is executed on transition into, 1 Real State
 ///    Real State.(Activity, Domain) -> State Activity.(Activity, Domain)
 ///--
-///    R505
-///    specifies response to, Mc Effective Event
-///    is responded to in, M State
-///    1 Event Response
-///    Event Response.(State, State model, Domain) -> State.(Name, State model, Domain)
-///    Event Response.(Event, State model, Domain) -> Effective Event.(Name, State model, Domain)
-///--
-///    R506
-///    Event Response +
-///        Transition
-///        Non Transition
-///    Transition.(From state, Event, State model, Domain) -> Event Response.(State, Event, State model, Domain)
-///    Non Transition.(State, Event, State model, Domain) -> Event Response.(State, Event, State model, Domain)
-///--
-///    R507
-///    specifies path to, 1 State
-///    is arrived at via, Mc Transition
-///    Transition.(To state, State model, Domain) -> State.(Name, State model, Domain)
-///--
+    R505
+    specifies response to, Mc Effective Event
+    is responded to in, M State
+    1 Event Response
+    Event Response.(State, State model, Domain) -> State.(Name, State model, Domain)
+    Event Response.(Event, State model, Domain) -> Effective Event.(Name, State model, Domain)
+--
+    R506
+    Event Response +
+        Transition
+        Non Transition
+    Transition.(From state, Event, State model, Domain) -> Event Response.(State, Event, State model, Domain)
+    Non Transition.(State, Event, State model, Domain) -> Event Response.(State, Event, State model, Domain)
+--
+    R507
+    specifies path to, 1 State
+    is arrived at via, Mc Transition
+    Transition.(To state, State model, Domain) -> State.(Name, State model, Domain)
+--
     R508
     instances are created by delegation in, 1c Initial Pseudo State
     is source of initial transition on, 1 Lifecycle
     Initial Pseudo State.(Class, Domain) -> Lifecycle.(Class, Domain)
+--
+    R509
+    requires, Mc State Model Parameter
+    is required by, M State Signature
+    1 Input Parameter
+    Input Parameter.(Signature, State model, Domain) -> State Signature.(ID, State model, Domain)
+    Input Parameter.(Name, State model, Domain) -> State Model Parameter.(Name, State model, Domain)
 --
     R510
     State +
@@ -185,6 +212,11 @@ relationships
     Deletion State.(Name, Class, Domain) -> State.(Name, State model, Domain)
     Non Deletion State.(Name, State model, Domain) -> State.(Name, State model, Domain)
 --
+    R512
+    defines, Mc State Model Parameter
+    is defined in, 1 State Model
+    State Model Parameter.(State model, Domain) -> State Model.(Name, Domain)
+--
     R513
     deletes instances in, 1 Lifecycle
     instances are deleted after entering, Mc Deletion State
@@ -195,6 +227,11 @@ relationships
         Single Assigner
         Multiple Assigner
     <subclass>.(Rnum, Domain) -> Assigner.(Rnum, Domain)
+--
+    R515
+    defines input required by, M State
+    requires input defined by, 1 State Signature
+    State.(Signature, State model, Domain) -> State Signature.(ID, State model, Domain)
 --
     R517
     manages within constraint set by, 1 Constrained Loop
