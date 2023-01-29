@@ -18,11 +18,13 @@ Input Name : string
 Lineage Number : string
 NT Response : string
 One Many : string
+Parameter Name : string
 Phrase Name : string
 Reference Type : string
 Relationship Number : string
 Spanning Element Label : string
 Side : string
+Signature ID : int
 State Name : string
 State Model Name : string
 Subsystem Alias : string
