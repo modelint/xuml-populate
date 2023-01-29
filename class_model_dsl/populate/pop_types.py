@@ -83,7 +83,7 @@ State_Model_i = namedtuple('State_Model_i', 'Name Domain')
 
 # States
 Non_Deletion_State_i = namedtuple('Non_Deletion_State_i', 'Name State_model Domain')
-Real_State_i = namedtuple('Real_State_i', 'Name State_model Domain')
+Real_State_i = namedtuple('Real_State_i', 'Name State_model Domain Signature') # TODO: Add Activity attr later
 State_i = namedtuple('State_i', 'Name State_model Domain')
 Deletion_State_i = namedtuple('Deletion_State_i', 'Name Class Domain')
 Initial_Pseudo_State_i = namedtuple('Initial_Pseudo_State_i', 'Name Class Domain')

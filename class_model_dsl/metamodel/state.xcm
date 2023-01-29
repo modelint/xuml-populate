@@ -2,7 +2,7 @@ metadata
     Title : State Subsystem / Shlaer-Mellor Metamodel
     Author : Leon Starr
     Document ID : mint.sm-meta.class.td.4
-    Version : 3.6.0 /// Based on 3.5.0 in SM Metamodel
+    Version : 3.6.1 /// Based on 3.5.1 in SM Metamodel
     /// Creation date : January 21, 2012
     Modification date : January 28, 2023
     Organization : Model Integration, LLC / www.modelint.com
@@ -92,10 +92,10 @@ attributes
 class Real State
 attributes
     Name : State Name {I, R510}
-    State model : State Model Name {I, R510}
-    Domain : Domain Name {I, R510}
-///    Domain : Domain Name {I, R510, R504}
-///    Activity : Activity ID {R504}
+    State model : State Model Name {I, R510, R515}
+    Domain : Domain Name {I, R510, R515} /// TODO: Add R504 later
+    Signature : Signature ID {R515}
+///    TODO: Add later --- Activity : Activity ID {R504}
 --
 class Single Assigner
 attributes
@@ -229,9 +229,9 @@ relationships
     <subclass>.(Rnum, Domain) -> Assigner.(Rnum, Domain)
 --
     R515
-    defines input required by, M State
+    defines input required by, M Real State
     requires input defined by, 1 State Signature
-    State.(Signature, State model, Domain) -> State Signature.(ID, State model, Domain)
+    Real State.(Signature, State model, Domain) -> State Signature.(ID, State model, Domain)
 --
     R517
     manages within constraint set by, 1 Constrained Loop
