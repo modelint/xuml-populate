@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING
 
 from class_model_dsl.populate.pop_types import State_Model_i, Lifecycle_i,\
     Non_Deletion_State_i, State_i, Real_State_i, Deletion_State_i, Initial_Pseudo_State_i,\
-    State_Signature_i, Input_Parameter_i, State_Model_Parameter_i,\
+    State_Signature_i, State_Parameter_i,\
     Event_Specification_i, Monomorphic_Event_Specification_i, Monomorphic_Event_i,\
     Effective_Event_i, Event_i
 
@@ -35,6 +35,9 @@ class StateModel:
         Relvar.insert(relvar='State_Model', tuples=[
             State_Model_i(Name=sm_name, Domain=sm.domain)
         ])
+        Relvar.insert(relvar='State_Signature', tuples=[ # Default empty signature (no params)
+            State_Signature_i(ID=0, State_model=sm_name, Domain=sm.domain)
+        ])
         if cname: # Lifecycle state model
             cls._logger.info(f"Populating Lifecycle [{cname}]")
             Relvar.insert(relvar='Lifecycle', tuples=[
@@ -53,8 +56,8 @@ class StateModel:
                         Initial_Pseudo_State_i(Name=s.name, Class=cname, Domain=sm.domain)
                     ])
                 else:
-                    Relvar.insert(relvar='Real_State', tuples=[
-                        Real_State_i(Name=s.name, State_model=cname, Domain=sm.domain)
+                    Relvar.insert(relvar='Real_State', tuples=[ # Start off assuming an empty signature ID=0
+                        Real_State_i(Name=s.name, State_model=cname, Domain=sm.domain, Signature=0)
                     ])
                     if s.type == 'non_deletion':
                         Relvar.insert(relvar='Non_Deletion_State', tuples=[

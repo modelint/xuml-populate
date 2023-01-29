@@ -2,9 +2,9 @@ metadata
     Title : State Subsystem / Shlaer-Mellor Metamodel
     Author : Leon Starr
     Document ID : mint.sm-meta.class.td.4
-    Version : 3.6.1 /// Based on 3.5.1 in SM Metamodel
+    Version : 3.6.2 /// Based on 3.5.2 in SM Metamodel
     /// Creation date : January 21, 2012
-    Modification date : January 28, 2023
+    Modification date : January 29, 2023
     Organization : Model Integration, LLC / www.modelint.com
     Copyright notice > MIT
     Organization logo > mint
@@ -54,13 +54,6 @@ attributes
     Name : State Name {R510, R508}
     Class : Class Name {I, R510, R508}
     Domain : Domain Name {I, R510, R508}
---
-class Input Parameter
-attributes
-    Name {I, R509}
-    Signature {I, R509}
-    State model {I, R509}
-    Domain {I, R509}
 --
 class Lifecycle
 attributes
@@ -113,6 +106,14 @@ attributes
     Activity {I}
     Domain {I}
 --
+class State Parameter
+attributes
+    Name : Parameter Name {I}
+    Signature : Signature ID {I, R509}
+    State model : State Model Name {I, R509}
+    Domain : Domain Name {I, R509}
+    Type : Type Name
+--
 class State Model
 attributes
     Name : State Model Name {I}
@@ -121,15 +122,15 @@ attributes
 class State Model Parameter
 attributes
     Name : Parameter Name {I}
-    State model {I, R512}
-    Domain {I, R512}
+    State model : State Model Name {I, R512}
+    Domain : Domain Name {I, R512}
     Type : Type Name
 --
 class State Signature
 attributes
     ID : Signature ID {I}
-    State model {I, R515}
-    Domain {I, R515}
+    State model : State Model Name {I, R515}
+    Domain : Domain Name {I, R515}
 --
 class Transition
 attributes
@@ -192,11 +193,9 @@ relationships
     Initial Pseudo State.(Class, Domain) -> Lifecycle.(Class, Domain)
 --
     R509
-    requires, Mc State Model Parameter
-    is required by, M State Signature
-    1 Input Parameter
-    Input Parameter.(Signature, State model, Domain) -> State Signature.(ID, State model, Domain)
-    Input Parameter.(Name, State model, Domain) -> State Model Parameter.(Name, State model, Domain)
+    specifies, Mc State Parameter
+    is specified by, 1 State Signature
+    State Parameter.(Signature, State model, Domain) -> State Signature.(ID, State model, Domain)
 --
     R510
     State +

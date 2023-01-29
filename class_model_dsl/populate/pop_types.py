@@ -87,8 +87,7 @@ Real_State_i = namedtuple('Real_State_i', 'Name State_model Domain Signature') #
 State_i = namedtuple('State_i', 'Name State_model Domain')
 Deletion_State_i = namedtuple('Deletion_State_i', 'Name Class Domain')
 Initial_Pseudo_State_i = namedtuple('Initial_Pseudo_State_i', 'Name Class Domain')
-State_Model_Parameter_i = namedtuple('State_Model_Parameter_i', 'Name State_model Domain Type')
-Input_Parameter_i = namedtuple('Input_Parameter_i', 'Name Signature State_model Domain')
+State_Parameter_i = namedtuple('State_Parameter_i', 'Name Signature State_model Domain Type')
 State_Signature_i = namedtuple('State_Signature_i', 'ID State_model Domain')
 
 # Events
