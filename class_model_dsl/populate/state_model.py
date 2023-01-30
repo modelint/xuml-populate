@@ -45,6 +45,7 @@ class StateModel:
             ])
             pending_initial_nd_state = True # Transaction remains open until first Non Deletion State is added
             # Populate the states
+            # TODO: Create State parameters and state signature properly
             for s in sm.states:
                 if not pending_initial_nd_state:  # We have executed a transaction to create the Lifecycle already
                     Transaction.open(mmdb)
@@ -56,7 +57,9 @@ class StateModel:
                         Initial_Pseudo_State_i(Name=s.name, Class=cname, Domain=sm.domain)
                     ])
                 else:
-                    Relvar.insert(relvar='Real_State', tuples=[ # Start off assuming an empty signature ID=0
+                    # Start off assuming an empty signature ID=0
+                    # since we won't know the parameters until the events are processed
+                    Relvar.insert(relvar='Real_State', tuples=[
                         Real_State_i(Name=s.name, State_model=cname, Domain=sm.domain, Signature=0)
                     ])
                     if s.type == 'non_deletion':

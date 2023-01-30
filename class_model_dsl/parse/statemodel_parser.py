@@ -10,7 +10,7 @@ from class_model_dsl.parse.nocomment import nocomment
 import os
 from pathlib import Path
 
-StateModel = namedtuple('State_model', 'metadata domain lifecycle assigner events states')
+StateModel = namedtuple('Stae_model', 'metadata domain lifecycle assigner initial_transitions events states')
 
 class StateModelParser:
     """
@@ -95,6 +95,7 @@ class StateModelParser:
         assigner_rnum = None if not assigner else assigner[0]['rel']
         events = result.results.get('events')
         states = result.results.get('state_block')
+        itrans = result.results.get('initial_transitions')
         # You can draw classes without rels, but not the other way around!
         return StateModel(
             domain=domain,
@@ -102,5 +103,6 @@ class StateModelParser:
             assigner=assigner_rnum,
             events={} if not events else events[0],
             states=states,
+            initial_transitions=itrans,
             metadata=None if not metadata else metadata[0]
         )

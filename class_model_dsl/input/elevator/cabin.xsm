@@ -10,14 +10,15 @@ metadata
 domain Elevator Management
 class Accessible Shaft Level
 events
+    Startup
     Doors secure
     Prepare to move
-    Already there
+    Already thertate
     New transfer
     Take out of service
     Arrived at floor
     Change requested
-    Try redirect( new dest: Level Name )
+    Try redirect
     Transport unavailable
     Go
 --
@@ -71,7 +72,7 @@ transitions
     Arrived at floor > PICKUP DROPOFF
     Try redirect > Changing destination
 --
-state Changing destination
+state Changing destination( new dest: Level Name )
 activity
     TRAN.Go to floor( Dest floor: in.new dest, Shaft ) ?
          Cabin redirected( Updated dest: in.new dest ) -> /R53/Transfer

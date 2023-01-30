@@ -4,12 +4,15 @@ from arpeggio import PTNodeVisitor
 from collections import namedtuple
 
 # These named tuples help package up parsed data into meaningful chunks of state model content
-StateBlock = namedtuple('StateBlock', 'name type creation_event activity transitions')
-"""The model data describing a state including its activity, optional creation event and optional exit transitions"""
-Parameter = namedtuple('Parameter', 'name type')
-"""The name and data type of a parameter in a state model event signature"""
-EventSpec = namedtuple('EventSpec', 'name signature')
-"""The name of an event, its type (normal or creation) and parameter signature"""
+# To avoid a collision with any application tuple names, we append _p to indicate parser output
+StateBlock_p = namedtuple('StateBlock_p', 'state activity transitions')
+"""Parsed model data describing a state including its activity, optional creation event and optional exit transitions"""
+Parameter_p = namedtuple('Parameter_p', 'name type')
+"""Parsed name and data type of a parameter in a state model event signature"""
+StateSpec_p = namedtuple('StateSpec_p', 'name deletion signature')
+"""Parsed name of a real state, its type (deletion or non deletion) and state signature"""
+Transition_p = namedtuple('Transition_p', 'event to_state')
+"""Parsed transition with event and destination state"""
 
 
 class StateModelVisitor(PTNodeVisitor):
@@ -48,29 +51,47 @@ class StateModelVisitor(PTNodeVisitor):
     def visit_deletion(self, node, children):
         return 'deletion'
 
+    def visit_parameter_name(self, node, children):
+        """Model element name"""
+        name = ''.join(children)
+        return name
+
+    def visit_type_name(self, node, children):
+        """All characters composing a data type name"""
+        name = ''.join(children)
+        return name
+
+    def visit_parameter(self, node, children):
+        """param_name type_name"""
+        return Parameter_p(name=children[0], type=children[1])
+
+    def visit_parameter_set(self, node, children):
+        """list of { param_name: type_name } pairs"""
+        return children
+
+    def visit_signature(self, node, children):
+        """Strips out parentheses"""
+        return children[0]
+
     def visit_state_header(self, node, children):
         """
         There are four possible cases:
-            state name only (non-deletion state)
-            state name (creation transition with no event)
-            state name (creation transition with event)
-            state name (deletion state)
+            state name
+            state name (deletion)
+            state name (signature)
+            state name (signature) (deletion)
         """
-        s = children[0]  # State name
-        t = 'non_deletion' if len(children) == 1 else children[1]  # non_deletion, creation or deletion
-        e = None if len(children) < 3 else children[2]  # creation event, if any
-        assert not e or ( e and t == 'creation'), f'Creation event supplied for non creation event [{e}]'
-        d = { 'state': s,  'type': t }  # we always have these two
-        if e:
-            d.update({'creation_event': e})  # add optional creation event
-        return d
+        n = children[0]  # State name
+        clen = len(children)
+        deletion = True if clen > 1 and 'deletion' in children else False
+        sig = []
+        if deletion and clen == 3 or not deletion and clen == 2:
+            sig = children[1]
+        return StateSpec_p(name=n, deletion=deletion, signature=sig)
 
     def visit_transition(self, node, children):
         """event destination_state"""
-        d = { 'transition': {'event': children[0]} }
-        if len(children) > 1:
-            d['transition'].update({'dest': children[1]})
-        return children
+        return Transition_p(event=children[0], to_state=None if len(children) < 2 else children[1])
 
     def visit_transitions(self, node, children):
         """All transitions exiting a state including any creation transitions"""
@@ -85,9 +106,12 @@ class StateModelVisitor(PTNodeVisitor):
         s = children[0]  # State info
         a = children[1]  # Activity (could be empty, but always provided)
         t = [] if len(children) < 3 else children[2]  # Optional transitions
-        sblock = StateBlock(name=s['state'], creation_event=s.get('creation_event'),
-                            type=s['type'], activity=a, transitions=t)
+        sblock = StateBlock_p(state=s, activity=a, transitions=t)
         return sblock
+
+    # Initial transitions
+    def visit_initial_transitions(self, node, children):
+        return children
 
     # Events
     def visit_event_name(self, node, children):
@@ -95,39 +119,13 @@ class StateModelVisitor(PTNodeVisitor):
         name = ''.join(children)
         return name
 
-    def visit_parameter_name(self, node, children):
-        """Model element name"""
-        name = ''.join(children)
-        return name
-
-    def visit_type_name(self, node, children):
-        """All characters composing a data type name"""
-        name = ''.join(children)
-        return name
-
-    def visit_parameter(self, node, children):
-        """param_name type_name"""
-        return Parameter(name=children[0], type=children[1])
-
-    def visit_parameter_set(self, node, children):
-        """list of { param_name: type_name } pairs"""
-        return children
-
-    def visit_signature(self, node, children):
-        """Strips out parenthesis"""
+    def visit_event_spec(self, node, children):
+        """event_name"""
         return children[0]
 
-    def visit_event_spec(self, node, children):
-        """event_name [signature]: Complete event specification including optional signature"""
-        params = [] if len(children) < 2 else children[1]
-        ename = children[0]  # name, type tuple
-        espec = EventSpec(name=ename, signature=params)
-        return { ename: espec }
-
     def visit_events(self, node, children):
-        """All event specifications, creation and normal, defined for a state machine"""
-        d = {k: v for e in children for k, v in e.items()}
-        return d
+        """A list of event names"""
+        return {'events': children}
 
     # Scope
     def visit_assigner(self, node, children):

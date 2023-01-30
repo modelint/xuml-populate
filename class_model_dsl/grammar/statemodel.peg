@@ -7,15 +7,11 @@ nl = "\n" // New line
 sp = " " // Single space
 delim = r'[ _]' // Delimiter used inside of names
 indent = "    "  // Need indent for clarity and to signal unstructured lines of text
-// lword = r'[a-z][a-z]*' // Lower case only word (used in relationship phrase)
 rnum = r'O?R[1-9][0-9]*' // Relationship number
 word = r'[A-Za-z][A-Za-z0-9]*' // Word beginning with an alpha character
-// iword = r'[A-Z][A-Za-z0-9]*' // Initial cap word (used in Class and Subsystem names)
-// acword = r'[A-Z][A-Z0-9_]*' // All caps words for class abbreviations
 name = word (delim word)*  // A name is a sequence of one or more words separated by delimiters
 block_end = "--" nl?  // Signifies end of a block (within section)
 body_line = indent r'.*' nl // An unstructured line of text
-//icaps_name = iword (delim iword)*  // A name using initial caps only
 
 // State block
 state_name = name
@@ -24,23 +20,24 @@ transition_header = "transitions" nl
 transitions = transition_header transition*
 activity_header = "activity" nl
 activity = activity_header body_line* // A block of activity text (not parsed further)
-// deletion_state = state_name sp '!*'
-// initial_state = state_name sp '*' event_name
-// normal_state = state_name
-// state_header = "state" sp (initial_state / deletion_state / normal_state) nl
-creation = '*'
 deletion = '!*'
-state_header = "state" sp state_name (sp (deletion / creation event_name))? nl
-state_block = state_header activity transitions? block_end
-
-// Events
-event_name = name
 type_name = name
 parameter_name = name
 parameter = parameter_name sp? ':' sp? type_name
 parameter_set = parameter (',' sp parameter)*
 signature = '()' / '(' sp? parameter_set sp? ')'
-event_spec = indent event_name signature? nl
+//state_spec = state_name (sp deletion)?
+state_header = "state" sp state_name signature? (sp deletion)? nl
+// state_header = "state" sp state_spec signature? nl
+state_block = state_header activity transitions? block_end
+
+// Initial transitions
+it_header = "initial transitions" nl
+initial_transitions = it_header transition* block_end
+
+// Events
+event_name = name
+event_spec = indent event_name nl
 events_header = "events" nl
 events = events_header event_spec* block_end
 
@@ -52,12 +49,10 @@ domain_header = "domain" sp name nl
 // Metadata
 text_item = ':' sp* r'.*' // Field content can be any text
 resource_item = '>' sp* name
-//resource_item = '>' sp* (iword / lword) (delim (iword / lword))* // Resource is a name
-// item_name = iword (delim (iword / lword))* // Meta data item starts with initial cap
 data_item = indent name sp* (resource_item / text_item) nl // Metadata item
 metadata_header = "metadata" nl // Metadata header
 metadata = metadata_header data_item* // Header and set of metadata items
 
 // State Machine
 // In Executable UML a state model is either a lifecycle or an assigner
-statemodel = metadata? domain_header (lifecycle / assigner) events* state_block* EOF
+statemodel = metadata? domain_header (lifecycle / assigner) events* initial_transitions* state_block* EOF

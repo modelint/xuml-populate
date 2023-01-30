@@ -13,12 +13,12 @@ events
     initial
     Execute
     Wait for cabin
-    Dest change request( new dest: Level Name )
+    Dest change request
     Ready to go
     Cabin dispatched
     Stationary update
     Redirect requested
-    Cabin redirected( updated dest: Level Name )
+    Cabin redirected
     Update in motion
     Cabin at destination
     Reversal checked
@@ -27,7 +27,10 @@ events
     Requests cleared
     Door closed
 --
-state CREATED *initial
+initial transitions
+    initial > CREATED
+--
+state CREATED
 activity
     // Created in this state
 transitions
@@ -48,11 +51,11 @@ transitions
     Ready to go > Dispatching cabin
     Dest change request > Changing destination before cabin moves
 --
-state Changing destination before cabin moves
+state Changing destination before cabin moves( new dest: Level Name )
 activity
     // The cabin isn’t moving, so we can safely
     // relink to the new destination
-    Destination floor = in.updated dest
+    Destination floor = in.new dest
     Stationary update -> me
 transitions
     Stationary update > WAITING FOR CABIN
@@ -72,14 +75,14 @@ transitions
     Cabin redirected > Match new destination of cabin
     Cabin at destination > Check for cabin reversal
 --
-state Request redirect
+state Request redirect( new dest: Level Name )
 activity
     Try redirect( in.new dest ) -> /R53/Cabin
     Redirect requested -> me
 transitions
     Redirect requested > CABIN IN MOTION
 --
-state Match new destination of cabin
+state Match new destination of cabin( updated dest: Level Name )
 activity
     Destination floor = in.updated dest
     Update in motion -> me
