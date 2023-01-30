@@ -31,48 +31,46 @@ class StateModel:
         sm_name = cname if cname else rnum
 
         # Populate
-        Transaction.open(mmdb) # First transaction requires a Non Deletion State
+        Transaction.open(mmdb) # It is easiest to create all events and states at once before checking constraints
         Relvar.insert(relvar='State_Model', tuples=[
             State_Model_i(Name=sm_name, Domain=sm.domain)
-        ])
-        Relvar.insert(relvar='State_Signature', tuples=[ # Default empty signature (no params)
-            State_Signature_i(ID=0, State_model=sm_name, Domain=sm.domain)
         ])
         if cname: # Lifecycle state model
             cls._logger.info(f"Populating Lifecycle [{cname}]")
             Relvar.insert(relvar='Lifecycle', tuples=[
                 Lifecycle_i(Class=cname, Domain=sm.domain)
             ])
-            pending_initial_nd_state = True # Transaction remains open until first Non Deletion State is added
             # Populate the states
             # TODO: Create State parameters and state signature properly
+            signatures = {}
+            sig_id_counter = 1
             for s in sm.states:
-                if not pending_initial_nd_state:  # We have executed a transaction to create the Lifecycle already
-                    Transaction.open(mmdb)
                 Relvar.insert(relvar='State', tuples=[
-                    State_i(Name=s.name, State_model=cname, Domain=sm.domain)
+                    State_i(Name=s.state.name, State_model=cname, Domain=sm.domain)
                 ])
-                if s.type == 'creation':
-                    Relvar.insert(relvar='Initial_Pseudo_State', tuples=[
-                        Initial_Pseudo_State_i(Name=s.name, Class=cname, Domain=sm.domain)
+                sig_params = frozenset(s.state.signature)
+                if sig_params not in signatures.keys():
+                    # Add new signature if it doesn't exist
+                    sid = sig_id_counter
+                    sig_id_counter += 1
+                    signatures[sig_params] = sid
+                    Relvar.insert(relvar='State_Signature', tuples=[
+                        State_Signature_i(ID=sid, State_model=cname, Domain=sm.domain)
                     ])
                 else:
-                    # Start off assuming an empty signature ID=0
-                    # since we won't know the parameters until the events are processed
-                    Relvar.insert(relvar='Real_State', tuples=[
-                        Real_State_i(Name=s.name, State_model=cname, Domain=sm.domain, Signature=0)
+                    # Otherwise, just get the id of the matching signature
+                    sid = signatures[sig_params]
+                Relvar.insert(relvar='Real_State', tuples=[
+                    Real_State_i(Name=s.state.name, State_model=cname, Domain=sm.domain, Signature=sid)
+                ])
+                if not s.state.deletion:
+                    Relvar.insert(relvar='Non_Deletion_State', tuples=[
+                        Non_Deletion_State_i(Name=s.state.name, State_model=cname, Domain=sm.domain)
                     ])
-                    if s.type == 'non_deletion':
-                        Relvar.insert(relvar='Non_Deletion_State', tuples=[
-                            Non_Deletion_State_i(Name=s.name, State_model=cname, Domain=sm.domain)
-                        ])
-                        pending_initial_nd_state = False
-                    else:
-                        Relvar.insert(relvar='Deletion_State', tuples=[
-                            Deletion_State_i(Name=s.name, Class=cname, Domain=sm.domain)
-                        ])
-                if not pending_initial_nd_state:
-                    Transaction.execute() # Execute for each added state
+                else:
+                    Relvar.insert(relvar='Deletion_State', tuples=[
+                        Deletion_State_i(Name=s.state.name, Class=cname, Domain=sm.domain)
+                    ])
         else: # Assigner state model
             # TODO: Handle assigner state models
             cls._logger.info(f"Populating Assigner [{rnum}]")
@@ -96,7 +94,6 @@ class StateModel:
             Relvar.insert(relvar='Monomorphic_Event_Specification', tuples=[
                 Monomorphic_Event_Specification_i(Name=espec.name, State_model=sm_name, Domain=sm.domain)
             ])
-            Transaction.execute()
             if espec.signature:
                 for p in espec.signature:
                     Transaction.open(mmdb)
@@ -104,9 +101,11 @@ class StateModel:
                         Event_Parameter_i(Name=p.name, Event_specification=espec.name, Type=p.type,
                                           State_model=sm_name, Domain=sm.domain)
                     ])
-                    Transaction.execute()
 
         # Populate the transitions
         for s in sm.states:
             for t in s.transitions:
                 pass
+
+
+        Transaction.execute()

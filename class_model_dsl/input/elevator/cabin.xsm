@@ -8,9 +8,8 @@ metadata
     Copyright notice > MIT
     Organization logo > mint
 domain Elevator Management
-class Accessible Shaft Level
+class Cabin
 events
-    Startup
     Doors secure
     Prepare to move
     Already thertate
