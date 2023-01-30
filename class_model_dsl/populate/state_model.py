@@ -57,6 +57,9 @@ class StateModel:
                     Relvar.insert(relvar='State_Signature', tuples=[
                         State_Signature_i(ID=sid, State_model=cname, Domain=sm.domain)
                     ])
+                    for p in s.state.signature:
+                        # TODO: Create params
+                        pass
                 else:
                     # Otherwise, just get the id of the matching signature
                     sid = signatures[sig_params]
