@@ -97,3 +97,7 @@ Monomorphic_Event_i = namedtuple('Monomorphic_Event_i', 'Name State_model Domain
 Effective_Event_i = namedtuple('Effective_Event_i', 'Name State_model Domain')
 Event_i = namedtuple('Event_i', 'Name State_model Domain')
 
+# Transitions
+Event_Response_i = namedtuple('Event_Response_i', 'State Event State_model Domain')
+Transition_i = namedtuple('Transition_i', 'From_state Event State_model Domain To_state')
+Non_Transition_i = namedtuple('Non_Transition_i', 'State Event State_model Domain To_state Behavior Reason')

@@ -29,6 +29,14 @@ class CnumsExceeded(MDPopulationException):
     def __str__(self):
         return f'{pre}Exceeded maximum cnum {self.maxcnum} for subsystem. Adjust number range.{post}'
 
+class MismatchedStateSignature(MDPopulationException):
+    def __init__(self, event, state):
+        self.event = event
+        self.state = event
+
+    def __str__(self):
+        return f'{pre}Event spec <{self.event}> on transition into state [{self.state}] has a different signature.{post}'
+
 class LnumsExceeded(MDPopulationException):
     def __init__(self, maxlnum):
         self.maxlnum = maxlnum
