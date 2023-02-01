@@ -81,8 +81,6 @@ class Domain:
                 Relationship.populate(mmdb=mmdb, domain=domain.Name, subsystem=subsys, record=r)
 
         # Insert state models
-        # TODO populate the state models
-        # StateModel.populate(mmdb, statemodels['transfer'])
         for sm in statemodels.values():
             StateModel.populate(mmdb, sm)
             pass

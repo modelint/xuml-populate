@@ -125,7 +125,7 @@ class StateModelVisitor(PTNodeVisitor):
 
     def visit_events(self, node, children):
         """A list of event names"""
-        return {'events': children}
+        return list(children)
 
     # Scope
     def visit_assigner(self, node, children):

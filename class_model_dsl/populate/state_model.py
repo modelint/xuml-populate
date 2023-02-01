@@ -85,24 +85,31 @@ class StateModel:
 
         # Populate the events
         # TODO: Handle polymorphic events
-        for espec in sm.events.values():
+        for ev_name in sm.events:
             Relvar.insert(relvar='Event', tuples=[
-                Event_i(Name=espec.name, State_model=sm_name, Domain=sm.domain)
+                Event_i(Name=ev_name, State_model=sm_name, Domain=sm.domain)
             ])
             Relvar.insert(relvar='Effective_Event', tuples=[
-                Effective_Event_i(Name=espec.name, State_model=sm_name, Domain=sm.domain)
+                Effective_Event_i(Name=ev_name, State_model=sm_name, Domain=sm.domain)
             ])
             Relvar.insert(relvar='Monomorphic_Event', tuples=[
-                Monomorphic_Event_i(Name=espec.name, State_model=sm_name, Domain=sm.domain)
+                Monomorphic_Event_i(Name=ev_name, State_model=sm_name, Domain=sm.domain)
             ])
             Relvar.insert(relvar='Monomorphic_Event_Specification', tuples=[
-                Monomorphic_Event_Specification_i(Name=espec.name, State_model=sm_name, Domain=sm.domain)
+                Monomorphic_Event_Specification_i(Name=ev_name, State_model=sm_name, Domain=sm.domain)
             ])
             # Cannot create Event Specification until we process transitions to determine signature for at least
             # one target state
 
         # Populate the transitions
         inserted_especs = {}
+        for t in sm.initial_transitions:
+            sid = sigids[t.to_state]
+            Relvar.insert(relvar='Event_Specification', tuples=[
+                Event_Specification_i(Name=t.event, State_model=sm_name, Domain=sm.domain,
+                                      State_signature=sid)
+            ])
+            inserted_especs[t.event] = sid
         for s in sm.states:
             for t in s.transitions:
                 if t.to_state:
@@ -130,13 +137,25 @@ class StateModel:
                         Transition_i(From_state=s.state.name, Event=t.event, State_model=sm_name, Domain=sm.domain, To_state=t.to_state)
                     ])
                 else: # Create Non Transition ignore response
+                    Relvar.insert(relvar='Event_Response', tuples=[
+                        Event_Response_i(State=s.state.name, Event=t.event, State_model=sm_name, Domain=sm.domain)
+                    ])
                     Relvar.insert(relvar='Non_Transition', tuples=[
                         Non_Transition_i(State=s.state.name, Event=t.event, State_model=sm_name, Domain=sm.domain, Behavior='IGN', Reason="<none_specified>")
                     ])
 
-
-                        # Verify that to_state signature and
-                    pass
+        # All event specs have been created, now fill in the can't happens
+        for s in sm.states:
+            tr_ign_events = set(t.event for t in s.transitions)
+            for e in sm.events:
+                if e not in tr_ign_events:
+                    Relvar.insert(relvar='Event_Response', tuples=[
+                        Event_Response_i(State=s.state.name, Event=e, State_model=sm_name, Domain=sm.domain)
+                    ])
+                    Relvar.insert(relvar='Non_Transition', tuples=[
+                        Non_Transition_i(State=s.state.name, Event=e, State_model=sm_name, Domain=sm.domain,
+                                         Behavior='CH', Reason="<none_specified>")
+                    ])
 
 
         Transaction.execute()

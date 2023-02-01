@@ -101,8 +101,8 @@ class StateModelParser:
             domain=domain,
             lifecycle=lifecycle_class,
             assigner=assigner_rnum,
-            events={} if not events else events[0],
+            events=[] if not events else events[0],
             states=states,
-            initial_transitions=itrans,
+            initial_transitions=[] if not itrans else itrans[0],
             metadata=None if not metadata else metadata[0]
         )
