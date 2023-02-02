@@ -85,21 +85,6 @@ class Domain:
             StateModel.populate(mmdb, sm)
             pass
 
-        Relation.print(mmdb, 'State_Model')
-        Relation.print(mmdb, 'Lifecycle')
-        Relation.print(mmdb, 'State')
-        Relation.print(mmdb, 'Real_State')
-        Relation.print(mmdb, 'Non_Deletion_State')
-        Relation.print(mmdb, 'Initial_Pseudo_State')
-        Relation.print(mmdb, 'Deletion_State')
-
-        Relation.print(mmdb, 'Event_Specification')
-        Relation.print(mmdb, 'Monomorphic_Event_Specification')
-        Relation.print(mmdb, 'Event_Parameter')
-        Relation.print(mmdb, 'Event')
-        Relation.print(mmdb, 'Monomorphic_Event')
-        Relation.print(mmdb, 'Effective_Event')
-
         Relation.print(mmdb, 'Relationship')
         Relation.print(mmdb, 'Association')
         Relation.print(mmdb, 'Binary_Association')
@@ -130,4 +115,22 @@ class Domain:
         Lineage.Derive(mmdb=mmdb, domain=domain.Name)
         Relation.print(mmdb, 'Lineage')
         Relation.print(mmdb, 'Class_In_Lineage')
+
+        Relation.print(mmdb, 'State_Model')
+        Relation.print(mmdb, 'Lifecycle')
+        Relation.print(mmdb, 'State')
+        Relation.print(mmdb, 'Real_State')
+        Relation.print(mmdb, 'Non_Deletion_State')
+        Relation.print(mmdb, 'Initial_Pseudo_State')
+        Relation.print(mmdb, 'Deletion_State')
+        Relation.print(mmdb, 'Event_Response')
+        Relation.print(mmdb, 'Transition')
+        Relation.print(mmdb, 'Non_Transition')
+
+        Relation.print(mmdb, 'Event_Specification')
+        Relation.print(mmdb, 'Monomorphic_Event_Specification')
+        Relation.print(mmdb, 'Event')
+        Relation.print(mmdb, 'Monomorphic_Event')
+        Relation.print(mmdb, 'Effective_Event')
+
         print()
