@@ -2,7 +2,7 @@ metadata
     Title : State Subsystem / Shlaer-Mellor Metamodel
     Author : Leon Starr
     Document ID : mint.sm-meta.class.td.4
-    Version : 3.7.0 /// Based on 3.6.0 in SM Metamodel
+    Version : 3.7.1 /// Based on 3.6.0 in SM Metamodel
     /// Creation date : January 21, 2012
     Modification date : February 4, 2023
     Organization : Model Integration, LLC / www.modelint.com
@@ -51,7 +51,7 @@ attributes
 --
 class Initial Pseudo State
 attributes
-    Name : State Name {R510, R508}
+    Name : State Name {I, R510, R508} /// ID necessary to support R509 -> Transition
     Class : Class Name {I, R510, R508}
     Domain : Domain Name {I, R510, R508}
 --
@@ -110,7 +110,7 @@ attributes
 --
 class State Activity <import:Activity>
 attributes
-    Activity {I}
+    ID {I}
     Domain {I}
 --
 class State Model
@@ -120,9 +120,9 @@ attributes
 --
 class State Signature
 attributes
-    SIGnum : Signature Number {I, *I2, R837}
-    State model : State Model Name {*I2, R512}
-    Domain : Domain Name {I, *I2, R837, R512}
+    SIGnum : Signature Number {I, R837}
+    State model : State Model Name {R512}
+    Domain : Domain Name {I, R837, R512}
 --
 class Transition
 attributes
@@ -158,7 +158,7 @@ relationships
     R504
     entry executes, 1 State Activity
     is executed on transition into, 1 Real State
-    Real State.(Activity, Domain) -> State Activity.(Activity, Domain)
+    Real State.(Activity, Domain) -> State Activity.(ID, Domain)
 --
     R505
     specifies response to, Mc Effective Event
@@ -224,7 +224,7 @@ relationships
     R515
     defines input required by, M Real State
     requires input defined by, 1 State Signature
-    Real State.(Signature, State model, Domain) -> State Signature.(SIGnum, State model, Domain)
+    Real State.(Signature, Domain) -> State Signature.(SIGnum, Domain)
 --
     R517
     manages within constraint set by, 1 Constrained Loop

@@ -176,7 +176,7 @@ relationships
     R836
     defines input into, 1 External Entity Operation
     specifies required input with, 1 External Entity Operation Signature
-    External Entity Operation Signature.(External entity, Class, Domain) -> External Entity Operation.(Name, EE, Domain)
+    External Entity Operation Signature.(Operation, External entity, Domain) -> External Entity Operation.(Name, EE, Domain)
 --
     R837
     Signature +

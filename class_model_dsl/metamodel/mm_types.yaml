@@ -19,9 +19,10 @@ Flow ID : string
 ID Number : int
 Input Name : string
 Lineage Number : string
+Method Name : string
 NT Response : string
 One Many : string
-Operaion Name : string
+Operation Name : string
 Parameter Name : string
 Phrase Name : string
 Reference Type : string

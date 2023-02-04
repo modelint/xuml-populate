@@ -2,7 +2,7 @@ metadata
     Title : Event Subsystem / Shlaer-Mellor Metamodel
     Author : Leon Starr
     Document ID : mint.sm-meta.class.td.5
-    Version : 3.10.1 /// Based on xmm 3.9.1 in SM Metamodel
+    Version : 3.10.2 /// Based on xmm 3.9.1 in SM Metamodel
     /// Creation date : March 4, 2012
     Modification date : February 4, 2023
     Organization : Model Integration, LLC / www.modelint.com
@@ -45,7 +45,7 @@ attributes
     Name : Event Name {I}
     State model : State Model Name {I, R563}
     Domain : Domain Name {I, R563}
-    State signature : Signature Number {R563}
+    Signature : Signature Number {R563}
 --
 class Generalization <import:Relationship>
 attributes
@@ -172,7 +172,7 @@ relationships
     R563
     provides data required by, 1 State Signature
     has data provided by, M Event Specification
-    Event Specification.(State signature, State model, Domain) -> State Signature.(SIGnum, State model, Domain)
+    Event Specification.(Signature, Domain) -> State Signature.(SIGnum, Domain)
 --
     R565
     defines, Mc Monomorphic Event Specification

@@ -83,15 +83,15 @@ State_Model_i = namedtuple('State_Model_i', 'Name Domain')
 
 # States
 Non_Deletion_State_i = namedtuple('Non_Deletion_State_i', 'Name State_model Domain')
-Real_State_i = namedtuple('Real_State_i', 'Name State_model Domain Signature') # TODO: Add Activity attr later
+Real_State_i = namedtuple('Real_State_i', 'Name State_model Domain Signature Activity')
 State_i = namedtuple('State_i', 'Name State_model Domain')
 Deletion_State_i = namedtuple('Deletion_State_i', 'Name Class Domain')
 Initial_Pseudo_State_i = namedtuple('Initial_Pseudo_State_i', 'Name Class Domain')
-State_Parameter_i = namedtuple('State_Parameter_i', 'Name Signature State_model Domain Type')
-State_Signature_i = namedtuple('State_Signature_i', 'ID State_model Domain')
+State_Signature_i = namedtuple('State_Signature_i', 'SIGnum State_model Domain')
+Initial_Transition_i = namedtuple('Initial_Transition_i', 'From_state Class Domain Event')
 
 # Events
-Event_Specification_i = namedtuple('Event_Specification_i', 'Name State_model Domain, State_signature')
+Event_Specification_i = namedtuple('Event_Specification_i', 'Name State_model Domain, Signature')
 Monomorphic_Event_Specification_i = namedtuple('Monomorphic_Event_Specification_i', 'Name State_model Domain')
 Monomorphic_Event_i = namedtuple('Monomorphic_Event_i', 'Name State_model Domain')
 Effective_Event_i = namedtuple('Effective_Event_i', 'Name State_model Domain')
@@ -101,3 +101,6 @@ Event_i = namedtuple('Event_i', 'Name State_model Domain')
 Event_Response_i = namedtuple('Event_Response_i', 'State Event State_model Domain')
 Transition_i = namedtuple('Transition_i', 'From_state Event State_model Domain To_state')
 Non_Transition_i = namedtuple('Non_Transition_i', 'State Event State_model Domain Behavior Reason')
+
+# Activity
+# TODO: Add these

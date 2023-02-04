@@ -9,7 +9,7 @@ from PyRAL.transaction import Transaction
 from typing import TYPE_CHECKING
 from class_model_dsl.populate.pop_types import State_Model_i, Lifecycle_i,\
     Non_Deletion_State_i, State_i, Real_State_i, Deletion_State_i, Initial_Pseudo_State_i,\
-    State_Signature_i, State_Parameter_i,\
+    State_Signature_i, Initial_Transition_i,\
     Event_Response_i, Transition_i, Non_Transition_i,\
     Event_Specification_i, Monomorphic_Event_Specification_i, Monomorphic_Event_i,\
     Effective_Event_i, Event_i
@@ -58,7 +58,7 @@ class StateModel:
                     sig_id_counter += 1
                     signatures[sig_params] = sid
                     Relvar.insert(relvar='State_Signature', tuples=[
-                        State_Signature_i(ID=sid, State_model=cname, Domain=sm.domain)
+                        State_Signature_i(SIGnum=sid, State_model=cname, Domain=sm.domain)
                     ])
                     for p in s.state.signature:
                         Relvar.insert(relvar='State_Parameter', tuples=[
