@@ -2,9 +2,9 @@ metadata
     Title : Activity Subsystem / Shlaer-Mellor Metamodel
     Author : Leon Starr
     Document ID : mint.sm-meta.action.td.12
-    Version : 0.7.1
+    Version : 0.7.2
     /// Creation date : August 13, 2022
-    Modification date : February 2, 2023
+    Modification date : February 4, 2023
     Organization : Model Integration, LLC / www.modelint.com
     Copyright notice > MIT
     Organization logo > mint
@@ -72,9 +72,10 @@ attributes
 class Parameter
 attributes
     Name : Parameter Name {I}
-    Input flow {R834}
-    Activity {I, R828, R834}
+    Signature {I, R828}
     Domain {I, R828, R834}
+    Input flow {R834}
+    Activity {I, R834}
 --
 class Signature
 attributes
