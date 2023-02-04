@@ -2,9 +2,9 @@ metadata
     Title : State Subsystem / Shlaer-Mellor Metamodel
     Author : Leon Starr
     Document ID : mint.sm-meta.class.td.4
-    Version : 3.6.2 /// Based on 3.5.2 in SM Metamodel
+    Version : 3.7.0 /// Based on 3.6.0 in SM Metamodel
     /// Creation date : January 21, 2012
-    Modification date : January 29, 2023
+    Modification date : February 4, 2023
     Organization : Model Integration, LLC / www.modelint.com
     Copyright notice > MIT
     Organization logo > mint
@@ -55,6 +55,13 @@ attributes
     Class : Class Name {I, R510, R508}
     Domain : Domain Name {I, R510, R508}
 --
+class Initial Transition
+attributes
+    From state : State Name {I, R509}
+    Class : Class Name {I, R509}
+    Domain : Domain Name {I, R509}
+    Event : Event Name {I, R509}
+--
 class Lifecycle
 attributes
     Class : Class Name {I, R500, R502}
@@ -86,9 +93,9 @@ class Real State
 attributes
     Name : State Name {I, R510}
     State model : State Model Name {I, R510, R515}
-    Domain : Domain Name {I, R510, R515} /// TODO: Add R504 later
-    Signature : Signature ID {R515}
-///    TODO: Add later --- Activity : Activity ID {R504}
+    Domain : Domain Name {I, R510, R504, R515}
+    Signature : Signature Number {R515}
+    Activity : Activity ID {R504}
 --
 class Single Assigner
 attributes
@@ -106,31 +113,16 @@ attributes
     Activity {I}
     Domain {I}
 --
-class State Parameter
-attributes
-    Name : Parameter Name {I}
-    Signature : Signature ID {I, R509}
-    State model : State Model Name {I, R509}
-    Domain : Domain Name {I, R509}
-    Type : Type Name
---
 class State Model
 attributes
     Name : State Model Name {I}
     Domain : Domain Name {I}
 --
-class State Model Parameter
-attributes
-    Name : Parameter Name {I}
-    State model : State Model Name {I, R512}
-    Domain : Domain Name {I, R512}
-    Type : Type Name
---
 class State Signature
 attributes
-    ID : Signature ID {I}
-    State model : State Model Name {I, R515}
-    Domain : Domain Name {I, R515}
+    SIGnum : Signature Number {I, *I2, R837}
+    State model : State Model Name {*I2, R512}
+    Domain : Domain Name {I, *I2, R837, R512}
 --
 class Transition
 attributes
@@ -163,11 +155,11 @@ relationships
     partions time period on, 1 State Model
     Non Deletion State.(State model, Domain) -> State Model.(Name, Domain)
 --
-///    R504
-///    entry executes, 1 State Activity
-///    is executed on transition into, 1 Real State
-///    Real State.(Activity, Domain) -> State Activity.(Activity, Domain)
-///--
+    R504
+    entry executes, 1 State Activity
+    is executed on transition into, 1 Real State
+    Real State.(Activity, Domain) -> State Activity.(Activity, Domain)
+--
     R505
     specifies response to, Mc Effective Event
     is responded to in, M State
@@ -183,9 +175,9 @@ relationships
     Non Transition.(State, Event, State model, Domain) -> Event Response.(State, Event, State model, Domain)
 --
     R507
-    specifies path to, 1 State
+    specifies path to, 1 Real State
     is arrived at via, Mc Transition
-    Transition.(To state, State model, Domain) -> State.(Name, State model, Domain)
+    Transition.(To state, State model, Domain) -> Real State.(Name, State model, Domain)
 --
     R508
     instances are created by delegation in, 1c Initial Pseudo State
@@ -193,9 +185,11 @@ relationships
     Initial Pseudo State.(Class, Domain) -> Lifecycle.(Class, Domain)
 --
     R509
-    specifies, Mc State Parameter
-    is specified by, 1 State Signature
-    State Parameter.(Signature, State model, Domain) -> State Signature.(ID, State model, Domain)
+    must exit on, M Transition
+    exists from, 1c Initial Pseudo State
+    1 Initial Transition
+    Initial Transition.(From state, Class, Domain) -> Initial Pseudo State.(Name, Class, Domain)
+    Initial Transition.(From state, Event, Class, Domain) -> Transition.(From state, Event, State model, Domain)
 --
     R510
     State +
@@ -212,9 +206,9 @@ relationships
     Non Deletion State.(Name, State model, Domain) -> State.(Name, State model, Domain)
 --
     R512
-    defines, Mc State Model Parameter
+    defines, M State Signature
     is defined in, 1 State Model
-    State Model Parameter.(State model, Domain) -> State Model.(Name, Domain)
+    State Signature.(State model, Domain) -> State Model.(Name, Domain)
 --
     R513
     deletes instances in, 1 Lifecycle
@@ -230,7 +224,7 @@ relationships
     R515
     defines input required by, M Real State
     requires input defined by, 1 State Signature
-    Real State.(Signature, State model, Domain) -> State Signature.(ID, State model, Domain)
+    Real State.(Signature, State model, Domain) -> State Signature.(SIGnum, State model, Domain)
 --
     R517
     manages within constraint set by, 1 Constrained Loop
