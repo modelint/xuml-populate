@@ -103,7 +103,7 @@ Transition_i = namedtuple('Transition_i', 'From_state Event State_model Domain T
 Non_Transition_i = namedtuple('Non_Transition_i', 'State Event State_model Domain Behavior Reason')
 
 # Activity
-Activity_i = namedtuple('Activity_i', 'ID Domain')
+Activity_i = namedtuple('Activity_i', 'ID Domain, Actions')
 Asynchronous_Activity_i = namedtuple('Asynchronous_Activity_i', 'ID Domain')
 State_Activity_i = namedtuple('State_Activity_i', 'ID State State_model Domain')
 Signature_i = namedtuple('Signature_i', 'SIGnum Domain')

@@ -49,4 +49,5 @@ relationships
     Flow +
         Data Flow
         Control Flow
+    <subclass>.(ID, Activity, Domain) -> Flow.(ID, Activity, Domain)
 --

@@ -7,6 +7,7 @@ from class_model_dsl.mp_exceptions import MismatchedStateSignature
 from PyRAL.relvar import Relvar
 from PyRAL.transaction import Transaction
 from typing import TYPE_CHECKING
+from class_model_dsl.populate.activity import Activity
 from class_model_dsl.populate.pop_types import State_Model_i, Lifecycle_i,\
     Non_Deletion_State_i, State_i, Real_State_i, Deletion_State_i, Initial_Pseudo_State_i,\
     State_Signature_i, Initial_Transition_i,\

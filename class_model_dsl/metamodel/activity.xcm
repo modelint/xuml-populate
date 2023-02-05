@@ -14,6 +14,7 @@ class Activity
 attributes
     ID : Activity ID {I}
     Domain : Domain Name {I}
+    Actions : Description
 --
 class Asynchronous Activity
 attributes
