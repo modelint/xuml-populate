@@ -2,14 +2,14 @@ metadata
     Title : Activity Subsystem / Shlaer-Mellor Metamodel
     Author : Leon Starr
     Document ID : mint.sm-meta.action.td.12
-    Version : 0.7.1
+    Version : 0.7.2
     /// Creation date : August 13, 2022
     Modification date : February 4, 2023
     Organization : Model Integration, LLC / www.modelint.com
     Copyright notice > MIT
     Organization logo > mint
 domain Metamodel, META
-subsystem Activity, ACTIVITY 500-524
+subsystem Activity, ACTIVITY 825-850
 class Activity
 attributes
     ID : Activity ID {I}
@@ -52,7 +52,7 @@ attributes
 class External Entity Operation Signature
 attributes
     SIGnum : Signature Number {I, R837}
-    External entity : EE Name {I2, R836}
+    EE : EE Name {I2, R836}
     Operation : Operation Name {I2, R836}
     Domain : Domain Name {I, I2, R837, R836}
 --
@@ -76,7 +76,7 @@ attributes
     Signature : Signature Number {I, R828}
     Domain : Domain Name {I, R828, R834}
     Input flow : Flow ID {R834}
-    Activity : Activity ID {I, R834}
+    Activity : Activity ID {R834}
 --
 class Signature
 attributes
@@ -176,7 +176,7 @@ relationships
     R836
     defines input into, 1 External Entity Operation
     specifies required input with, 1 External Entity Operation Signature
-    External Entity Operation Signature.(Operation, External entity, Domain) -> External Entity Operation.(Name, EE, Domain)
+    External Entity Operation Signature.(Operation, EE, Domain) -> External Entity Operation.(Name, EE, Domain)
 --
     R837
     Signature +

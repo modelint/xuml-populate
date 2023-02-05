@@ -45,7 +45,6 @@ class StateModel:
                 Lifecycle_i(Class=cname, Domain=sm.domain)
             ])
             # Populate the states
-            # TODO: Create State parameters and state signature properly
             sig_id_counter = 1
             for s in sm.states:
                 Relvar.insert(relvar='State', tuples=[
