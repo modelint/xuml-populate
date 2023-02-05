@@ -103,4 +103,12 @@ Transition_i = namedtuple('Transition_i', 'From_state Event State_model Domain T
 Non_Transition_i = namedtuple('Non_Transition_i', 'State Event State_model Domain Behavior Reason')
 
 # Activity
-# TODO: Add these
+Activity_i = namedtuple('Activity_i', 'ID Domain')
+Asynchronous_Activity_i = namedtuple('Asynchronous_Activity_i', 'ID Domain')
+State_Activity_i = namedtuple('State_Activity_i', 'ID State State_model Domain')
+Signature_i = namedtuple('Signature_i', 'SIGnum Domain')
+Parameter_i = namedtuple('Parameter_i', 'Name Signature Domain Input flow')
+
+# Flow
+Data_Flow_i = namedtuple('Data_Flow_i', 'ID Activity Domain')
+Flow_i = namedtuple('Flow_i', 'ID Activity Domain')

@@ -1,0 +1,52 @@
+metadata
+    Title : Flow Subsystem / Shlaer-Mellor Metamodel
+    Author : Leon Starr
+    Document ID : mint.sm-meta.action.td.2
+    Version : 1.4.0 /// Excerpt based on xmm 1.4.0 - just enough to support Activity Subsystem for now
+    /// Creation date : September 10, 2021
+    Modification date : February 4, 2022
+    Organization : Model Integration, LLC / www.modelint.com
+    Copyright notice > MIT
+    Organization logo > mint
+domain Metamodel, META
+subsystem Flow, FLOW 800-824
+class Activity <import:Activity>
+attributes
+    ID {I}
+    Domain {I}
+--
+class Attribute <import:Class Attribute>
+attributes
+    Name {I}
+    Class {I}
+    Domain {I}
+--
+class Class <import:Class Attribute>
+attributes
+    Name {I}
+    Domain {I}
+--
+class Control Flow
+attributes
+    ID : Flow ID {I, R800}
+    Activity : Activity ID {I, R800}
+    Domain : Domain Name {I, R800}
+--
+class Data Flow
+attributes
+    ID : Flow ID {I, R800}
+    Activity : Activity ID {I, R800}
+    Domain : Domain Name {I, R800}
+--
+class Flow
+attributes
+    ID : Flow ID {I}
+    Activity : Activity ID {I, R807}
+    Domain : Domain Name {I, R807}
+--
+relationships
+    R800
+    Flow +
+        Data Flow
+        Control Flow
+--
