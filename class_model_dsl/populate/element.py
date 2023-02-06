@@ -6,6 +6,7 @@ import logging
 from PyRAL.relvar import Relvar
 from typing import TYPE_CHECKING
 from class_model_dsl.populate.pop_types import Element_i, Spanning_Element_i, Subsystem_Element_i
+# TODO: Add spanning element support
 
 if TYPE_CHECKING:
     from tkinter import Tk
@@ -51,7 +52,7 @@ class Element:
             Element_i(Label=label, Domain=domain_name)
         ])
         Relvar.insert(relvar='Subsystem_Element', tuples=[
-            Subsystem_Element_i(Label=label, Domain=domain_name, Subsystem=subsystem)
+            Subsystem_Element_i(Label=label, Domain=domain_name, Subsystem=subsystem_name)
         ])
         return label
 

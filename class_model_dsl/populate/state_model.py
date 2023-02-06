@@ -29,7 +29,7 @@ class StateModel:
     _logger = logging.getLogger(__name__)
 
     @classmethod
-    def populate(cls, mmdb: 'Tk', sm):
+    def populate(cls, mmdb: 'Tk', subsys: str, sm):
         """Constructor"""
 
         cname = sm.lifecycle
@@ -55,7 +55,12 @@ class StateModel:
                     State_i(Name=s.state.name, State_model=cname, Domain=sm.domain)
                 ])
                 # Create its Activity
-                anum = Activity.populate_state(state=s.state.name, state_model=cname, domain_name=sm.domain)
+                anum = Activity.populate_state(mmdb,
+                    state=s.state.name, subsys_name=subsys, actions=s.activity,
+                    state_model=cname, domain_name=sm.domain,
+                )
+                pass
+                # TODO: Continue with signature, etc
 
 
 

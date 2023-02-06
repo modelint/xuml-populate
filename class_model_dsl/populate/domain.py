@@ -62,8 +62,16 @@ class Domain:
         # Insert classes
         for s in subsystems.values():
             subsys = Subsystem(record=s)
+            cls._logger.info("Populating classes")
             for c in s.classes:
                 MMclass.populate(mmdb=mmdb, domain=domain.Name, subsystem=subsys, record=c)
+            cls._logger.info("Populating relationships")
+            for r in s.rels:
+                Relationship.populate(mmdb=mmdb, domain=domain.Name, subsystem=subsys, record=r)
+            cls._logger.info("Populating state models")
+            for sm in statemodels.values():
+                StateModel.populate(mmdb, subsys=subsys.name, sm=sm)
+
         Relation.print(mmdb, 'Class')
         Relation.print(mmdb, 'Alias')
         Relation.print(mmdb, 'Attribute')
@@ -72,19 +80,6 @@ class Domain:
         Relation.print(mmdb, 'Irreducible_Identifier')
         Relation.print(mmdb, 'Identifier_Attribute')
         Relation.print(mmdb, 'Non_Derived_Attribute')
-
-        # Insert relationships
-        cls._logger.info("Populating user model relationships")
-        for s in subsystems.values():
-            subsys = Subsystem(record=s)
-            for r in s.rels:
-                Relationship.populate(mmdb=mmdb, domain=domain.Name, subsystem=subsys, record=r)
-
-        # Insert state models
-        for sm in statemodels.values():
-            StateModel.populate(mmdb, sm)
-            pass
-
         Relation.print(mmdb, 'Relationship')
         Relation.print(mmdb, 'Association')
         Relation.print(mmdb, 'Binary_Association')
@@ -109,13 +104,6 @@ class Domain:
         Relation.print(mmdb, 'Generalization_Reference')
         Relation.print(mmdb, 'Formalizing_Class_Role')
         Relation.print(mmdb, 'Attribute_Reference')
-        Attribute.ResolveAttrTypes(mmdb=mmdb, domain=domain.Name)
-        cls._logger.info("Populating lineage")
-        # Reprinting these for lineage debugging purposes
-        Lineage.Derive(mmdb=mmdb, domain=domain.Name)
-        Relation.print(mmdb, 'Lineage')
-        Relation.print(mmdb, 'Class_In_Lineage')
-
         Relation.print(mmdb, 'State_Model')
         Relation.print(mmdb, 'Lifecycle')
         Relation.print(mmdb, 'State')
@@ -126,11 +114,19 @@ class Domain:
         Relation.print(mmdb, 'Event_Response')
         Relation.print(mmdb, 'Transition')
         Relation.print(mmdb, 'Non_Transition')
-
         Relation.print(mmdb, 'Event_Specification')
         Relation.print(mmdb, 'Monomorphic_Event_Specification')
         Relation.print(mmdb, 'Event')
         Relation.print(mmdb, 'Monomorphic_Event')
         Relation.print(mmdb, 'Effective_Event')
+
+        Attribute.ResolveAttrTypes(mmdb=mmdb, domain=domain.Name)
+        cls._logger.info("Populating lineage")
+
+        # Reprinting these for lineage debugging purposes
+        Lineage.Derive(mmdb=mmdb, domain=domain.Name)
+        Relation.print(mmdb, 'Lineage')
+        Relation.print(mmdb, 'Class_In_Lineage')
+
 
         print()

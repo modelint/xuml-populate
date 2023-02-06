@@ -10,7 +10,7 @@ from class_model_dsl.parse.nocomment import nocomment
 import os
 from pathlib import Path
 
-StateModel = namedtuple('Stae_model', 'metadata domain lifecycle assigner initial_transitions events states')
+StateModel = namedtuple('State_model', 'metadata domain lifecycle assigner initial_transitions events states')
 
 class StateModelParser:
     """

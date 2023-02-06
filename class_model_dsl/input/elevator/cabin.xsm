@@ -24,6 +24,7 @@ events
 state READY TO GO
 activity
     Ready to go -> /R53/Transfer
+    Also do this -> Nowhere // for test only
 transitions
     Take out of service > OUT OF SERVICE
     Go > Requesting transport
