@@ -18,10 +18,23 @@ class Activity:
     Create a State Model relation
     """
     _logger = logging.getLogger(__name__)
-    _avnum_counters = {}  # A separate counter per domain
+    _anum_counters = {}  # A separate counter per domain
 
     @classmethod
-    def populate(cls, mmdb: 'Tk', record):
+    def init_counter(cls, domain_name: str) -> str:
+        # Should refactor this into an Element population numbering method
+        if domain_name not in cls._anum_counters:
+            cls._anum_counters[domain_name] = 1
+        else:
+            cls._anum_counters[domain_name] += 1
+        return f'A{cls._anum_counters[domain_name]}'
+
+    @classmethod
+    def populate_state(cls, mmdb: 'Tk', state: str, state_model: str, domain_name: str) -> str:
         """Constructor"""
+
+        anum = cls.init_counter(domain_name)
+
+
         pass
 

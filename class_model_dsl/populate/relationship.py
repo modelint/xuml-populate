@@ -3,6 +3,7 @@ relationship.py – Convert parsed relationship to a relation
 """
 
 import logging
+from class_model_dsl.populate.element import Element
 from class_model_dsl.populate.generalization import Generalization
 from class_model_dsl.populate.binary_association import BinaryAssociation
 from class_model_dsl.populate.ordinal import Ordinal
@@ -34,12 +35,8 @@ class Relationship:
 
         # Populate relationship
         Transaction.open(tclral=mmdb)
-        Relvar.insert(relvar='Element', tuples=[
-            Element_i(Label=cls.rnum, Domain=domain)
-        ])
-        Relvar.insert(relvar='Subsystem_Element', tuples=[
-            Subsystem_Element_i(Label=cls.rnum, Domain=domain, Subsystem=subsystem.name)
-        ])
+
+        Element.populate_labeled_subys_element(mmdb, label=cls.rnum, subsystem=subsystem.name, domain_name=domain)
         Relvar.insert(relvar='Relationship', tuples=[
             Rel_i(Rnum=cls.rnum, Domain=domain)
         ])

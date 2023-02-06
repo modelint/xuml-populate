@@ -5,9 +5,9 @@ mm_class.py – Convert parsed class to a relation
 import logging
 from PyRAL.transaction import Transaction
 from PyRAL.relvar import Relvar
+from class_model_dsl.populate.element import Element
 from class_model_dsl.populate.attribute import Attribute
-from class_model_dsl.populate.pop_types import\
-    Element_i, Subsystem_Element_i,Class_i, Alias_i
+from class_model_dsl.populate.pop_types import Class_i, Alias_i
 
 from typing import TYPE_CHECKING
 
@@ -42,12 +42,7 @@ class MMclass:
         # Populate class
         cls._logger.info(f"Populating class [{cls.name}]")
         Transaction.open(tclral=mmdb)
-        Relvar.insert(relvar='Element', tuples=[
-            Element_i(Label=cls.cnum, Domain=domain)
-        ])
-        Relvar.insert(relvar='Subsystem_Element', tuples=[
-            Subsystem_Element_i(Label=cls.cnum, Domain=domain, Subsystem=subsystem.name)
-        ])
+        Element.populate_labeled_subys_element(mmdb, label=cls.cnum, subsystem=subsystem.name, domain_name=domain)
         Relvar.insert(relvar='Class', tuples=[
             Class_i(Name=cls.name, Cnum=cls.cnum, Domain=domain)
         ])

@@ -19,19 +19,25 @@ class Flow:
     _activity_nums = {}
 
     @classmethod
-    def populate(cls, mmdb: 'Tk', domain_name):
+    def populate(cls, mmdb: 'Tk', anum, domain_name) -> int:
         """Constructor"""
 
-        next_flow_id = 1
+        activity_id = f'{domain_name}:{anum}' # combine attributes to get id
+        if activity_id not in cls._activity_nums.keys():
+            cls._activity_nums[activity_id] = 1
 
         # Populate
+        fid = cls._activity_nums[activity_id]
         Relvar.insert(relvar='Flow', tuples=[
-            Flow_i(ID=next_flow_id, Domain=domain_name)
+            Flow_i(ID=fid, Domain=domain_name)
         ])
         Relvar.insert(relvar='Data_Flow', tuples=[
-            Data_Flow_i(ID=next_flow_id, Domain=domain_name)
+            Data_Flow_i(ID=fid, Domain=domain_name)
         ])
-        next_flow_id += 1
+        # Increment the flow id counter for this activity
+        cls._activity_nums[activity_id] +=1
+
+        return fid
 
         # Just enough here to support Activity Subsystem population
         # TODO: Add the rest of this subsystem later

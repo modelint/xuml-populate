@@ -9,6 +9,7 @@ from PyRAL.transaction import Transaction
 from typing import TYPE_CHECKING
 from class_model_dsl.populate.signature import Signature_i
 from class_model_dsl.populate.signature import Signature
+from class_model_dsl.populate.flow import Flow
 from class_model_dsl.populate.activity import Activity
 from class_model_dsl.populate.pop_types import State_Model_i, Lifecycle_i,\
     Non_Deletion_State_i, State_i, Real_State_i, Deletion_State_i, Initial_Pseudo_State_i,\
@@ -49,9 +50,16 @@ class StateModel:
             ])
             # Populate the states
             for s in sm.states:
+                # Create Real State and all associated model elements
                 Relvar.insert(relvar='State', tuples=[
                     State_i(Name=s.state.name, State_model=cname, Domain=sm.domain)
                 ])
+                # Create its Activity
+                anum = Activity.populate_state(state=s.state.name, state_model=cname, domain_name=sm.domain)
+
+
+
+
                 sig_params = frozenset(s.state.signature)
                 if sig_params not in signatures.keys():
                     # Add new signature if it doesn't exist
@@ -63,6 +71,8 @@ class StateModel:
                     ])
                     # Now we need to create Data Flows and Parameters
                     for p in s.state.signature:
+                        # Create a Data flow
+                        # flowid = Flow.populate(mmdb, anum=)
                         Relvar.insert(relvar='Parameter', tuples=[
                             Parameter_i(Name=p.name, Signature=signum, Domain=sm.domain, Input_flow=None, Type=None)
                         ])
