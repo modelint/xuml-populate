@@ -64,7 +64,7 @@ class StateModel:
                     # Now we need to create Data Flows and Parameters
                     for p in s.state.signature:
                         Relvar.insert(relvar='Parameter', tuples=[
-                            Parameter_i(Name=p.name, Signature=signum, Domain=sm.domain, Input_flow)
+                            Parameter_i(Name=p.name, Signature=signum, Domain=sm.domain, Input_flow=None, Type=None)
                         ])
                 else:
                     # Otherwise, just get the id of the matching signature

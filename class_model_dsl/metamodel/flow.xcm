@@ -29,19 +29,20 @@ attributes
 class Control Flow
 attributes
     ID : Flow ID {I, R800}
-    Activity : Activity ID {I, R800}
+    Activity : Activity Number {I, R800}
     Domain : Domain Name {I, R800}
 --
 class Data Flow
 attributes
     ID : Flow ID {I, R800}
-    Activity : Activity ID {I, R800}
+    Activity : Activity Number {I, R800}
     Domain : Domain Name {I, R800}
+    Type : Type Name /// Here temporarily until complete subsystem added
 --
 class Flow
 attributes
     ID : Flow ID {I}
-    Activity : Activity ID {I, R807}
+    Activity : Activity Number {I, R807}
     Domain : Domain Name {I, R807}
 --
 relationships

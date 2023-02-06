@@ -77,7 +77,7 @@ attributes
     Signature : Signature Number {I, R828}
     Domain : Domain Name {I, R828, R834}
     Input flow : Flow ID {R834}
-    Activity : Activity ID {R834}
+    Activity : Activity Number {R834}
 --
 class Signature
 attributes
@@ -110,7 +110,7 @@ attributes
 --
 class Synchronous Output
 attributes
-    Activity : Activity ID {I, R829, R831}
+    Activity : Activity Number {I, R829, R831}
     Output flow : Flow ID {I2, R831}
     Domain : Domain Name {I, R829, R831}
 --

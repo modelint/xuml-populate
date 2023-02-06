@@ -110,5 +110,5 @@ Signature_i = namedtuple('Signature_i', 'SIGnum Domain')
 Parameter_i = namedtuple('Parameter_i', 'Name Signature Domain Input_flow Type')
 
 # Flow
-Data_Flow_i = namedtuple('Data_Flow_i', 'ID Activity Domain')
+Data_Flow_i = namedtuple('Data_Flow_i', 'ID Activity Domain Type')
 Flow_i = namedtuple('Flow_i', 'ID Activity Domain')

@@ -95,7 +95,7 @@ attributes
     State model : State Model Name {I, R510, R515}
     Domain : Domain Name {I, R510, R504, R515}
     Signature : Signature Number {R515}
-    Activity : Activity ID {R504}
+    Activity : Activity Number {R504}
 --
 class Single Assigner
 attributes
@@ -110,7 +110,7 @@ attributes
 --
 class State Activity <import:Activity>
 attributes
-    ID {I}
+    Anum {I}
     Domain {I}
 --
 class State Model
@@ -158,7 +158,7 @@ relationships
     R504
     entry executes, 1 State Activity
     is executed on transition into, 1 Real State
-    Real State.(Activity, Domain) -> State Activity.(ID, Domain)
+    Real State.(Activity, Domain) -> State Activity.(Anum, Domain)
 --
     R505
     specifies response to, Mc Effective Event
