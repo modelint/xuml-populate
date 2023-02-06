@@ -42,7 +42,7 @@ class MMclass:
         # Populate class
         cls._logger.info(f"Populating class [{cls.name}]")
         Transaction.open(tclral=mmdb)
-        Element.populate_labeled_subys_element(mmdb, label=cls.cnum, subsystem=subsystem.name, domain_name=domain)
+        Element.populate_labeled_subys_element(mmdb, label=cls.cnum, subsystem_name=subsystem.name, domain_name=domain)
         Relvar.insert(relvar='Class', tuples=[
             Class_i(Name=cls.name, Cnum=cls.cnum, Domain=domain)
         ])

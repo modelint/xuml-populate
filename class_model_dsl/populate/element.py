@@ -20,23 +20,30 @@ class Element:
     _num_counters = {}  # A separate number counter per domain
 
     @classmethod
-    def init_counter(cls, key: str) -> str:
+    def init_counter(cls, key: str) -> int:
+        """
+        Create a new counter using the supplied key if it does not already exist in the num counter dict
+
+        :param key: Usually the domain name but could be subsystem_name:domain_name or something else
+        :return: The next available number
+        """
         # Should refactor this into an Element population numbering method
         if key not in cls._num_counters:
             cls._num_counters[key] = 1
         else:
             cls._num_counters[key] += 1
-        return f'A{cls._num_counters[key]}'
+        return cls._num_counters[key]
 
     @classmethod
-    def populate_unlabeled_subsys_element(cls, mmdb: 'Tk', prefix: str, domain_name: str) -> str:
+    def populate_unlabeled_subsys_element(cls, mmdb: 'Tk', prefix: str, subsystem_name: str, domain_name: str) -> str:
         """
         Generates a label for a new Subsystem Element and populates it
 
         :param mmdb: The Metamodel DB
-        :param prefix:
-        :param domain_name:
-        :return:
+        :param prefix: Prefixed to counter to create unique string label
+        :param subsystem_name: The name of the subsystem since these are Subsystem Elements
+        :param domain_name: The element belongs to this domain
+        :return: generated label such as SIG12, A47, etc
         """
 
         label = f'{prefix}{cls.init_counter(key=domain_name)}'
@@ -49,7 +56,7 @@ class Element:
         return label
 
     @classmethod
-    def populate_labeled_subys_element(cls, mmdb: 'Tk', label: str, subsystem: str, domain_name: str):
+    def populate_labeled_subys_element(cls, mmdb: 'Tk', label: str, subsystem_name: str, domain_name: str):
         """
         Populates pre-labeled Subsystem Element such as cnum and rnum
 
@@ -60,7 +67,7 @@ class Element:
         system for the most part. They are not specified in the xcm files for now (but may be later)
         :param mmdb: The Metamodel DB
         :param label: The user or generated label such as R812 for rnums or C7 for cnums
-        :param subsystem: The name of the subsystem since these are Subsystem Elements
+        :param subsystem_name: The name of the subsystem since these are Subsystem Elements
         :param domain_name: The element belongs to this domain
         """
 
@@ -70,5 +77,5 @@ class Element:
             Element_i(Label=label, Domain=domain_name)
         ])
         Relvar.insert(relvar='Subsystem_Element', tuples=[
-            Subsystem_Element_i(Label=label, Domain=domain_name, Subsystem=subsystem)
+            Subsystem_Element_i(Label=label, Domain=domain_name, Subsystem=subsystem_name)
         ])

@@ -36,7 +36,7 @@ class Relationship:
         # Populate relationship
         Transaction.open(tclral=mmdb)
 
-        Element.populate_labeled_subys_element(mmdb, label=cls.rnum, subsystem=subsystem.name, domain_name=domain)
+        Element.populate_labeled_subys_element(mmdb, label=cls.rnum, subsystem_name=subsystem.name, domain_name=domain)
         Relvar.insert(relvar='Relationship', tuples=[
             Rel_i(Rnum=cls.rnum, Domain=domain)
         ])
