@@ -7,13 +7,15 @@ from class_model_dsl.mp_exceptions import MismatchedStateSignature
 from PyRAL.relvar import Relvar
 from PyRAL.transaction import Transaction
 from typing import TYPE_CHECKING
+from class_model_dsl.populate.signature import Signature_i
+from class_model_dsl.populate.signature import Signature
 from class_model_dsl.populate.activity import Activity
 from class_model_dsl.populate.pop_types import State_Model_i, Lifecycle_i,\
     Non_Deletion_State_i, State_i, Real_State_i, Deletion_State_i, Initial_Pseudo_State_i,\
     State_Signature_i, Initial_Transition_i,\
     Event_Response_i, Transition_i, Non_Transition_i,\
     Event_Specification_i, Monomorphic_Event_Specification_i, Monomorphic_Event_i,\
-    Effective_Event_i, Event_i
+    Effective_Event_i, Event_i, Parameter_i
 
 if TYPE_CHECKING:
     from tkinter import Tk
@@ -46,7 +48,6 @@ class StateModel:
                 Lifecycle_i(Class=cname, Domain=sm.domain)
             ])
             # Populate the states
-            sig_id_counter = 1
             for s in sm.states:
                 Relvar.insert(relvar='State', tuples=[
                     State_i(Name=s.state.name, State_model=cname, Domain=sm.domain)
@@ -54,15 +55,16 @@ class StateModel:
                 sig_params = frozenset(s.state.signature)
                 if sig_params not in signatures.keys():
                     # Add new signature if it doesn't exist
-                    sid = sig_id_counter
-                    sig_id_counter += 1
-                    signatures[sig_params] = sid
+                    # First create signature superclass instance in Activity subsystem
+                    signum = Signature.populate(mmdb, sm.domain)
+                    signatures[sig_params] = signum # Save the SIGnum as a value, keyed to the frozen params
                     Relvar.insert(relvar='State_Signature', tuples=[
-                        State_Signature_i(SIGnum=sid, State_model=cname, Domain=sm.domain)
+                        State_Signature_i(SIGnum=signum, State_model=cname, Domain=sm.domain)
                     ])
+                    # Now we need to create Data Flows and Parameters
                     for p in s.state.signature:
-                        Relvar.insert(relvar='State_Parameter', tuples=[
-                            State_Parameter_i(Name=p.name, Signature=sid, State_model=cname, Domain=sm.domain, Type=p.type)
+                        Relvar.insert(relvar='Parameter', tuples=[
+                            Parameter_i(Name=p.name, Signature=signum, Domain=sm.domain, Input_flow)
                         ])
                 else:
                     # Otherwise, just get the id of the matching signature

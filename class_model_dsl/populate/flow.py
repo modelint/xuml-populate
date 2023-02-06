@@ -16,6 +16,7 @@ class Flow:
     Create a Flow relation
     """
     _logger = logging.getLogger(__name__)
+    _activity_nums = {}
 
     @classmethod
     def populate(cls, mmdb: 'Tk', domain_name):

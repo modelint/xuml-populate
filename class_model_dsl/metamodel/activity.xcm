@@ -2,7 +2,7 @@ metadata
     Title : Activity Subsystem / Shlaer-Mellor Metamodel
     Author : Leon Starr
     Document ID : mint.sm-meta.action.td.12
-    Version : 0.7.2
+    Version : 0.7.3
     /// Creation date : August 13, 2022
     Modification date : February 4, 2023
     Organization : Model Integration, LLC / www.modelint.com
@@ -12,18 +12,18 @@ domain Metamodel, META
 subsystem Activity, ACTIVITY 825-850
 class Activity
 attributes
-    ID : Activity ID {I}
+    Anum : Activity Number {I}
     Domain : Domain Name {I}
     Actions : Description
 --
 class Asynchronous Activity
 attributes
-    ID : Activity ID {I, R825}
+    Anum : Activity Number {I, R825}
     Domain : Domain Name {I, R825}
 --
 class Asynchronous External Entity Operation
 attributes
-    ID : Activity ID {I, R830}
+    Anum : Activity Number {I, R830}
     Name : Operation Name {I2, R832}
     EE : EE Name {I2, R832}
     Domain : Domain Name {I, I2, R830, R832}
@@ -59,7 +59,7 @@ attributes
 --
 class Method
 attributes
-    ID : Activity ID {I, R826}
+    Anum : Activity Number {I, R826}
     Name : Method Name {I2}
     Class : Class Name {I2, R827}
     Domain : Domain Name {I, I2, R826, R827}
@@ -86,7 +86,7 @@ attributes
 --
 class State Activity
 attributes
-    ID : Activity ID {I, R830}
+    Anum : Activity Number {I, R830}
     State : State Name {I2, R831}
     State model : State Model Name {I2, R831}
     Domain : Domain Name {I, I2, R830, R831}
@@ -98,12 +98,12 @@ attributes
 --
 class Synchronous Activity
 attributes
-    ID : Activity ID {I, R825}
+    Anum : Activity Number {I, R825}
     Domain : Domain Name {I, R825}
 --
 class Synchronous External Entity Operation
 attributes
-    ID : Activity ID {I, R826}
+    Anum : Activity Number {I, R826}
     Name : Operation Name {I2, R832}
     EE : EE Name {I2, R832}
     Domain : Domain Name {I, I2, R826, R832}
@@ -119,13 +119,13 @@ relationships
     Activity +
         Asynchronous Activity
         Synchronous Activity
-    <subclass>.(ID, Domain) -> Activity.(ID, Domain)
+    <subclass>.(Anum, Domain) -> Activity.(Anum, Domain)
 --
     R826
     Synchronous Activity +
         Method
         Synchronous External Entity Operation
-    <subclass>.(ID, Domain) -> Activity.(ID, Domain)
+    <subclass>.(Anum, Domain) -> Activity.(Anum, Domain)
 --
     R827
     defines, Mc Method
@@ -140,13 +140,13 @@ relationships
     R829
     produces, 1c Synchronous Output
     is produced by, 1 Synchronous Activity
-    Synchronous Output.(Activity, Domain) -> Synchronous Activity.(ID, Domain)
+    Synchronous Output.(Activity, Domain) -> Synchronous Activity.(Anum, Domain)
 --
     R830
     Asynchronous Activity +
         State Activity
         Asynchronous External Entity Operation
-    <subclass>.(ID, Domain) -> Activity.(ID, Domain)
+    <subclass>.(Anum, Domain) -> Activity.(Anum, Domain)
 --
     R831
     is fed by, 1c Synchronous Output
