@@ -91,7 +91,7 @@ State_Signature_i = namedtuple('State_Signature_i', 'SIGnum State_model Domain')
 Initial_Transition_i = namedtuple('Initial_Transition_i', 'From_state Class Domain Event')
 
 # Events
-Event_Specification_i = namedtuple('Event_Specification_i', 'Name State_model Domain, Signature')
+Event_Specification_i = namedtuple('Event_Specification_i', 'Name State_model Domain, State_signature')
 Monomorphic_Event_Specification_i = namedtuple('Monomorphic_Event_Specification_i', 'Name State_model Domain')
 Monomorphic_Event_i = namedtuple('Monomorphic_Event_i', 'Name State_model Domain')
 Effective_Event_i = namedtuple('Effective_Event_i', 'Name State_model Domain')
@@ -107,7 +107,7 @@ Activity_i = namedtuple('Activity_i', 'Anum Domain, Actions')
 Asynchronous_Activity_i = namedtuple('Asynchronous_Activity_i', 'Anum Domain')
 State_Activity_i = namedtuple('State_Activity_i', 'Anum State State_model Domain')
 Signature_i = namedtuple('Signature_i', 'SIGnum Domain')
-Parameter_i = namedtuple('Parameter_i', 'Name Signature Domain Input_flow Type')
+Parameter_i = namedtuple('Parameter_i', 'Name Signature Domain Input_flow Activity')
 
 # Flow
 Data_Flow_i = namedtuple('Data_Flow_i', 'ID Activity Domain Type')

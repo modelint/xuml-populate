@@ -19,11 +19,13 @@ class Signature:
     _logger = logging.getLogger(__name__)
 
     @classmethod
-    def populate(cls, mmdb: 'Tk', domain_name) -> str:
+    def populate(cls, mmdb: 'Tk', subsys_name: str, domain_name: str) -> str:
         """Constructor"""
 
         # Populate
-        SIGnum = Element.populate_unlabeled_subsys_element(mmdb, prefix='SIG', domain_name=domain_name)
+        SIGnum = Element.populate_unlabeled_subsys_element(mmdb, prefix='SIG',
+                                                           subsystem_name=subsys_name,
+                                                           domain_name=domain_name)
         Relvar.insert(relvar='Signature', tuples=[
             Signature_i(SIGnum=SIGnum, Domain=domain_name)
         ])

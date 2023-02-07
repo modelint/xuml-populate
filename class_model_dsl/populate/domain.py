@@ -72,6 +72,15 @@ class Domain:
             for sm in statemodels.values():
                 StateModel.populate(mmdb, subsys=subsys.name, sm=sm)
 
+        Attribute.ResolveAttrTypes(mmdb=mmdb, domain=domain.Name)
+        cls._logger.info("Populating lineage")
+
+        # Reprinting these for lineage debugging purposes
+        Lineage.Derive(mmdb=mmdb, domain=domain.Name)
+        Relation.print(mmdb, 'Lineage')
+        Relation.print(mmdb, 'Class_In_Lineage')
+
+
         Relation.print(mmdb, 'Class')
         Relation.print(mmdb, 'Alias')
         Relation.print(mmdb, 'Attribute')
@@ -119,14 +128,5 @@ class Domain:
         Relation.print(mmdb, 'Event')
         Relation.print(mmdb, 'Monomorphic_Event')
         Relation.print(mmdb, 'Effective_Event')
-
-        Attribute.ResolveAttrTypes(mmdb=mmdb, domain=domain.Name)
-        cls._logger.info("Populating lineage")
-
-        # Reprinting these for lineage debugging purposes
-        Lineage.Derive(mmdb=mmdb, domain=domain.Name)
-        Relation.print(mmdb, 'Lineage')
-        Relation.print(mmdb, 'Class_In_Lineage')
-
 
         print()

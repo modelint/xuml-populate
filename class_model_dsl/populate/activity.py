@@ -35,7 +35,7 @@ class Activity:
             Asynchronous_Activity_i(Anum=Anum, Domain=domain_name)
         ])
         Relvar.insert(relvar='State_Activity', tuples=[
-            Asynchronous_Activity_i(Anum=Anum, Domain=domain_name)
+            State_Activity_i(Anum=Anum, State=state, State_model=state_model, Domain=domain_name)
         ])
         return Anum
 

@@ -21,6 +21,15 @@ events
     Transport unavailable
     Go
 --
+state Changing destination( new dest: Level Name )
+activity
+    TRAN.Go to floor( Dest floor: in.new dest, Shaft ) ?
+         Cabin redirected( Updated dest: in.new dest ) -> /R53/Transfer
+
+    Change requested -> me
+transitions
+    Change requested > MOVING
+--
 state READY TO GO
 activity
     Ready to go -> /R53/Transfer
@@ -71,15 +80,6 @@ transitions
     Take out of service > EMERGENCY BRAKING
     Arrived at floor > PICKUP DROPOFF
     Try redirect > Changing destination
---
-state Changing destination( new dest: Level Name )
-activity
-    TRAN.Go to floor( Dest floor: in.new dest, Shaft ) ?
-         Cabin redirected( Updated dest: in.new dest ) -> /R53/Transfer
-
-    Change requested -> me
-transitions
-    Change requested > MOVING
 --
 state Requesting transport
 activity

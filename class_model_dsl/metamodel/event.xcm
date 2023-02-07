@@ -45,7 +45,7 @@ attributes
     Name : Event Name {I}
     State model : State Model Name {I, R563}
     Domain : Domain Name {I, R563}
-    Signature : Signature Number {R563}
+    State signature : Signature Number {R563}
 --
 class Generalization <import:Relationship>
 attributes
@@ -172,7 +172,7 @@ relationships
     R563
     provides data required by, 1 State Signature
     has data provided by, M Event Specification
-    Event Specification.(Signature, Domain) -> State Signature.(SIGnum, Domain)
+    Event Specification.(State signature, Domain) -> State Signature.(SIGnum, Domain)
 --
     R565
     defines, Mc Monomorphic Event Specification

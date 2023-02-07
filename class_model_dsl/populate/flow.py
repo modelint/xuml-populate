@@ -19,7 +19,7 @@ class Flow:
     _activity_nums = {}
 
     @classmethod
-    def populate(cls, mmdb: 'Tk', anum, domain_name) -> int:
+    def populate(cls, mmdb: 'Tk', anum, domain_name, flow_type: str) -> int:
         """Constructor"""
 
         activity_id = f'{domain_name}:{anum}' # combine attributes to get id
@@ -29,10 +29,10 @@ class Flow:
         # Populate
         fid = cls._activity_nums[activity_id]
         Relvar.insert(relvar='Flow', tuples=[
-            Flow_i(ID=fid, Domain=domain_name)
+            Flow_i(ID=fid, Activity=anum, Domain=domain_name)
         ])
         Relvar.insert(relvar='Data_Flow', tuples=[
-            Data_Flow_i(ID=fid, Domain=domain_name)
+            Data_Flow_i(ID=fid, Activity=anum, Domain=domain_name, Type=flow_type)
         ])
         # Increment the flow id counter for this activity
         cls._activity_nums[activity_id] +=1

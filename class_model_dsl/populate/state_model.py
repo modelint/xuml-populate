@@ -7,7 +7,6 @@ from class_model_dsl.mp_exceptions import MismatchedStateSignature
 from PyRAL.relvar import Relvar
 from PyRAL.transaction import Transaction
 from typing import TYPE_CHECKING
-from class_model_dsl.populate.signature import Signature_i
 from class_model_dsl.populate.signature import Signature
 from class_model_dsl.populate.flow import Flow
 from class_model_dsl.populate.activity import Activity
@@ -35,7 +34,7 @@ class StateModel:
         cname = sm.lifecycle
         rnum = sm.assigner
         sm_name = cname if cname else rnum
-        sigids = {}  # Remember signature of each inserted state for processing transitions
+        signums = {}  # Remember signature of each inserted state for processing transitions
         signatures = {}
 
         # Populate
@@ -59,17 +58,12 @@ class StateModel:
                     state=s.state.name, subsys_name=subsys, actions=s.activity,
                     state_model=cname, domain_name=sm.domain,
                 )
-                pass
-                # TODO: Continue with signature, etc
-
-
-
-
+                # Signature
                 sig_params = frozenset(s.state.signature)
-                if sig_params not in signatures.keys():
+                if sig_params not in signatures:
                     # Add new signature if it doesn't exist
                     # First create signature superclass instance in Activity subsystem
-                    signum = Signature.populate(mmdb, sm.domain)
+                    signum = Signature.populate(mmdb, subsys_name=subsys, domain_name=sm.domain)
                     signatures[sig_params] = signum # Save the SIGnum as a value, keyed to the frozen params
                     Relvar.insert(relvar='State_Signature', tuples=[
                         State_Signature_i(SIGnum=signum, State_model=cname, Domain=sm.domain)
@@ -77,17 +71,18 @@ class StateModel:
                     # Now we need to create Data Flows and Parameters
                     for p in s.state.signature:
                         # Create a Data flow
-                        # flowid = Flow.populate(mmdb, anum=)
+                        flowid = Flow.populate(mmdb, anum=anum, domain_name=sm.domain, flow_type=p.type)
                         Relvar.insert(relvar='Parameter', tuples=[
-                            Parameter_i(Name=p.name, Signature=signum, Domain=sm.domain, Input_flow=None, Type=None)
+                            Parameter_i(Name=p.name, Signature=signum, Domain=sm.domain,
+                                        Input_flow=flowid, Activity=anum)
                         ])
                 else:
                     # Otherwise, just get the id of the matching signature
-                    sid = signatures[sig_params]
+                    signum = signatures[sig_params]
                 Relvar.insert(relvar='Real_State', tuples=[
-                    Real_State_i(Name=s.state.name, State_model=cname, Domain=sm.domain, Signature=sid)
+                    Real_State_i(Name=s.state.name, State_model=cname, Domain=sm.domain, Signature=signum, Activity=anum)
                 ])
-                sigids[s.state.name] = sid # We need to look up the sid when matching events on incoming transitions
+                signums[s.state.name] = signum # We need to look up the sid when matching events on incoming transitions
                 if not s.state.deletion:
                     Relvar.insert(relvar='Non_Deletion_State', tuples=[
                         Non_Deletion_State_i(Name=s.state.name, State_model=cname, Domain=sm.domain)
@@ -121,27 +116,27 @@ class StateModel:
         # Populate the transitions
         inserted_especs = {}
         for t in sm.initial_transitions:
-            sid = sigids[t.to_state]
+            signum = signums[t.to_state]
             Relvar.insert(relvar='Event_Specification', tuples=[
                 Event_Specification_i(Name=t.event, State_model=sm_name, Domain=sm.domain,
-                                      State_signature=sid)
+                                      State_signature=signum)
             ])
-            inserted_especs[t.event] = sid
+            inserted_especs[t.event] = signum
         for s in sm.states:
             for t in s.transitions:
                 if t.to_state:
                     # Insert or check event spec signature
-                    if t.event not in inserted_especs.keys():
+                    if t.event not in inserted_especs:
                         # The event spec will assume the signature of the first target state encountered
-                        sid = sigids[t.to_state]
+                        signum = signums[t.to_state]
                         Relvar.insert(relvar='Event_Specification', tuples=[
                             Event_Specification_i(Name=t.event, State_model=sm_name, Domain=sm.domain,
-                                                  State_signature=sid)
+                                                  State_signature=signum)
                         ])
-                        inserted_especs[t.event] = sid  # Remember for matching in the else clause below
+                        inserted_especs[t.event] = signum  # Remember for matching in the else clause below
                     else:
                         # We need to verify that the to_state's signature matches that of the event spec
-                        state_sig = sigids[t.to_state]
+                        state_sig = signums[t.to_state]
                         espec_sig = inserted_especs[t.event]
                         if state_sig != espec_sig:
                             cls._logger.error(f"Mismatched espec sig: <{t.event}:{espec_sig}> state sig: [{t.to_state}:{state_sig}]")
