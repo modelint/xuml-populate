@@ -29,13 +29,13 @@ class Relvar:
         :param tclral: The TclRAL database
         :return:
         """
-        cmd = 'relvar names'
-        names = Command.execute(tclral, cmd).split(' ::')
-        if names:
-            names[0] = names[0].lstrip('::')
-            names.sort()
-            for n in names:
-                Relation.print(tclral, n)
+        cmd = 'relvar names' # TclRAL returns all relvar names as a single string
+        # strip off first '::' and then split the rest on ' ::'
+        relvar_names = Command.execute(tclral, cmd).lstrip('::').split(' ::')
+        if relvar_names:
+            relvar_names.sort()
+            for r in relvar_names:
+                Relation.print(tclral, r)
         else:
             print("No relvars to print")
 
