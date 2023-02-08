@@ -20,6 +20,7 @@ from class_model_dsl.populate.pop_types import State_Model_i, Lifecycle_i,\
 if TYPE_CHECKING:
     from tkinter import Tk
 
+ISP = 'Initial_Pseudo_State'  # Name of initial pseudo state
 
 class StateModel:
     """
@@ -115,14 +116,44 @@ class StateModel:
 
         # Populate the transitions
         inserted_especs = {}
+        if sm.initial_transitions:
+            # Create the intial pseudo state
+            Relvar.insert(relvar=ISP, tuples=[
+                Initial_Pseudo_State_i(Name=ISP, Class=sm_name, Domain=sm.domain)
+            ])
+            Relvar.insert(relvar='State', tuples=[
+                State_i(Name=ISP, State_model=sm_name, Domain=sm.domain)
+            ])
         for t in sm.initial_transitions:
+            Relvar.insert(relvar='Initial_Transition', tuples=[
+                Initial_Transition_i(From_state=ISP, Class=sm_name, Domain=sm.domain, Event=t.event)
+            ])
             signum = signums[t.to_state]
             Relvar.insert(relvar='Event_Specification', tuples=[
                 Event_Specification_i(Name=t.event, State_model=sm_name, Domain=sm.domain,
                                       State_signature=signum)
             ])
             inserted_especs[t.event] = signum
+            Relvar.insert(relvar='Event_Response', tuples=[
+                Event_Response_i(State=ISP, Event=t.event, State_model=sm_name, Domain=sm.domain)
+            ])
+            Relvar.insert(relvar='Transition', tuples=[
+                Transition_i(From_state=ISP, Event=t.event, State_model=sm_name, Domain=sm.domain,
+                             To_state=t.to_state)
+            ])
+            for e in sm.events:
+                if e != t.event:
+                    Relvar.insert(relvar='Event_Response', tuples=[
+                        Event_Response_i(State=ISP, Event=e, State_model=sm_name, Domain=sm.domain)
+                    ])
+                    Relvar.insert(relvar='Non_Transition', tuples=[
+                        Non_Transition_i(State=ISP, Event=e, State_model=sm_name, Domain=sm.domain,
+                                         Behavior='CH', Reason="Transition is only legal response from initial pseudo state")
+                    ])
+
         for s in sm.states:
+            if s.state.deletion:
+                break;  # There are no transitions out of a deletion state
             for t in s.transitions:
                 if t.to_state:
                     # Insert or check event spec signature
@@ -168,6 +199,5 @@ class StateModel:
                         Non_Transition_i(State=s.state.name, Event=e, State_model=sm_name, Domain=sm.domain,
                                          Behavior='CH', Reason="<none_specified>")
                     ])
-
 
         Transaction.execute()
