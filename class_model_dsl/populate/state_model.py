@@ -195,9 +195,10 @@ class StateModel:
                     Relvar.insert(relvar='Event_Response', tuples=[
                         Event_Response_i(State=s.state.name, Event=e, State_model=sm_name, Domain=sm.domain)
                     ])
+                    ch_reason = "<none_specified>" if not s.state.deletion else "Event cannot happen in deletion state"
                     Relvar.insert(relvar='Non_Transition', tuples=[
                         Non_Transition_i(State=s.state.name, Event=e, State_model=sm_name, Domain=sm.domain,
-                                         Behavior='CH', Reason="<none_specified>")
+                                         Behavior='CH', Reason=ch_reason)
                     ])
 
         Transaction.execute()
