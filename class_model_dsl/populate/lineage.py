@@ -125,14 +125,12 @@ class Lineage:
                 cls.xrels.add(arel)
                 walk = cls.step(walk=walk, cvisit=superclass, rvisit=arel)
             else:  # hopping down to a subclass
-                print()
                 # We are going to branch out to one or more subclasses
                 # (Any of our subclasses adjacent to some excluded relationship cannot be added)
                 # Get all the subclass class names
                 subclasses = cls.findSubclasses(grel=arel)
                 visit_subs = subclasses.difference(cls.xclasses)
                 for s in visit_subs:
-                    print()
                     # Start a new branch if there is more than one subclass to visit
                     fork = True if len(visit_subs) > 1 else False
                     if fork:
@@ -142,11 +140,9 @@ class Lineage:
                             walk.append(branch)
                         else:
                             cls.xclasses.remove(s)
-                            print()
                     else:
                         walk = cls.step(walk=walk, cvisit=s, rvisit=arel)
                 cls.xrels.add(arel)
-        print()
         return walk
 
     @classmethod

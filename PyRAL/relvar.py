@@ -7,6 +7,7 @@ from typing import List, Dict, Any
 from PyRAL.rtypes import Attribute, Mult, delim
 from PyRAL.transaction import Transaction
 from PyRAL.command import Command
+from PyRAL.relation import Relation
 from collections import namedtuple
 from tkinter import Tk
 
@@ -20,6 +21,24 @@ class Relvar:
     _logger = logging.getLogger(__name__)
 
     # TclRAL commands organized in alphabetic order to match the TclRAL man pages
+    @classmethod
+    def printall(cls, tclral: Tk):
+        """
+        Print out all relvar relations in the tclRAL database in alphabetic order
+
+        :param tclral: The TclRAL database
+        :return:
+        """
+        cmd = 'relvar names'
+        names = Command.execute(tclral, cmd).split(' ::')
+        if names:
+            names[0] = names[0].lstrip('::')
+            names.sort()
+            for n in names:
+                Relation.print(tclral, n)
+        else:
+            print("No relvars to print")
+
 
     @classmethod
     def create_association(cls, tclral: Tk, name: str,
