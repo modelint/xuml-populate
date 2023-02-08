@@ -12,7 +12,6 @@ from class_model_dsl.populate.subsystem import Subsystem
 from class_model_dsl.populate.state_model import StateModel
 from PyRAL.transaction import Transaction
 from PyRAL.relvar import Relvar
-from PyRAL.relation import Relation
 from class_model_dsl.populate.pop_types import\
     Domain_i, Modeled_Domain_i, Domain_Partition_i, Subsystem_i
 
@@ -73,6 +72,7 @@ class Domain:
         # Reprinting these for lineage debugging purposes
         Lineage.Derive(mmdb=mmdb, domain=domain.Name)
 
+        # Print out the populated metamodel
         Relvar.printall(mmdb)
         pass
 

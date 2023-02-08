@@ -58,6 +58,7 @@ def main():
         UserModel.load(user_model_pkg=user_model_path)
 
     logger.info("No problemo")  # We didn't die on an exception, basically
+    print("\nNo problemo")
 
 
 if __name__ == "__main__":
