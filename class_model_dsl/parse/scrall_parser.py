@@ -4,8 +4,6 @@ from class_model_dsl.sp_exceptions import ScrallGrammarFileOpen, ScrallParseErro
 from class_model_dsl.parse.scrall_visitor import ScrallVisitor
 from arpeggio import visit_parse_tree, NoMatch
 from arpeggio.cleanpeg import ParserPEG
-from collections import namedtuple
-from typing import List
 import os # For issuing system commands to generate diagnostic files
 from pathlib import Path
 
