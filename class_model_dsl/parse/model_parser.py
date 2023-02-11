@@ -9,6 +9,7 @@ from collections import namedtuple
 import os
 from pathlib import Path
 
+# This is the parse / visitor output
 Subsystem = namedtuple('Subsystem', 'subsystem domain classes rels metadata')
 
 class ModelParser:
@@ -23,9 +24,10 @@ class ModelParser:
         - model_grammar -- The model grammar text read from the system grammar file
         - model_text -- The input model text read from the user supplied text file
     """
+    root_rule_name = 'subsystem' # The required name of the highest level parse element
+
     grammar_file_name = "grammar/class_model.peg"
     grammar_file = Path(__file__).parent.parent / grammar_file_name
-    root_rule_name = 'subsystem'
     xuml_model_dir = Path(__file__).parent.parent / "input"
 
     def __init__(self, model_file_path, debug=True):
@@ -33,7 +35,7 @@ class ModelParser:
         Constructor
 
         :param model_file_path:  Where to find the user supplied model input file
-        :param debug:  Debug flag
+        :param debug:  class attribute
         """
         self.debug = debug
         self.model_file_path = model_file_path

@@ -1,12 +1,11 @@
 """ scrall_parser.py """
 
 from scrall_exceptions import ScrallParseError
-from scrall_visitor import ScrallVisitor
+from class_model_dsl.parse.scrall_visitor import ScrallVisitor
 from arpeggio import visit_parse_tree, NoMatch
 from arpeggio.cleanpeg import ParserPEG
 from pathlib import Path
 import os
-from collections import namedtuple
 from nocomment import nocomment
 
 class ScrallParser:

@@ -23,6 +23,9 @@ class Activity:
                        subsys_name: str, domain_name: str) -> str:
         """Constructor"""
 
+        cls.parse(actions)
+        pass
+
         # Create the Susbystem Element and obtain a unique Anum
         Anum = Element.populate_unlabeled_subsys_element(mmdb,
                                                          prefix='A',
@@ -39,9 +42,6 @@ class Activity:
         ])
         return Anum
 
-
-
-
-
+    @classmethod
+    def parse(cls, actions):
         pass
-
