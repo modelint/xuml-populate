@@ -1,15 +1,13 @@
 """ scrall_parser.py """
 
-# from class_model_dsl.mp_exceptions import
+from class_model_dsl.sp_exceptions import ScrallGrammarFileOpen, ScrallParseError
 from class_model_dsl.parse.scrall_visitor import ScrallVisitor
 from arpeggio import visit_parse_tree, NoMatch
 from arpeggio.cleanpeg import ParserPEG
 from collections import namedtuple
-import os
+from typing import List
+import os # For issuing system commands to generate diagnostic files
 from pathlib import Path
-
-# This is each line of the parse / visitor output
-Statement = namedtuple('Statement', 'text parse') # Not sure if this is needed
 
 class ScrallParser:
     """
@@ -17,10 +15,12 @@ class ScrallParser:
 
         Attributes
 
-        - debug -- debug flag (used to set arpeggio parser mode)
-        - grammar_file -- (class based) Name of the system file defining the Scrall grammar
+        - scrall_grammar -- Text read from the Scrall grammar file
         - scrall_text -- Unparsed scrall text input for a single metamodel activity (state, method, operation)
     """
+    scrall_grammar = None # We haven't read it in yet
+    scrall_text = None # User will provide this
+
     root_rule_name = 'activity' # The required name of the highest level parse element
 
     # Useful paths within the project
@@ -35,57 +35,47 @@ class ScrallParser:
     parse_tree_dot = diagnostics_path / f"{root_rule_name}_parse_tree.dot"
     parser_model_dot = diagnostics_path / f"{root_rule_name}_peg_parser_model.dot"
 
-    def __init__(self, scrall_text: str, debug=True):
+    @classmethod
+    def parse(cls, scrall_text: str, debug=False):  # TODO: define output using named tuple from visitor
         """
-        Constructor
+        Parse a Scrall activity
 
-        :param debug: class attribute
+        :param scrall_text: The text of a complete activity written in Scrall
+        :param debug: Debug mode prints out diagnostic .dots and pdfs of the grammar and parse
+        :return: A list of parsed Scrall statements
         """
-        self.debug = debug
-
         # Read the grammar file
-        self.scrall_grammar = open(ScrallParser.grammar_file, 'r').read()
+        try:
+            cls.scrall_grammar = open(cls.grammar_file, 'r').read()
+        except OSError as e:
+            raise ScrallGrammarFileOpen(cls.grammar_file)
 
-        self.scrall_text = scrall_text
+        cls.scrall_text = scrall_text # Text is passed in directly as argument, so no need to read file
 
 
-    def parse(self) -> List[Statement]:
-        """
-        Parse the layout file and return the content
-        :return: The abstract syntax tree content of interest
-        """
         # Create an arpeggio parser for our model grammar that does not eliminate whitespace
         # We interpret newlines and indents in our grammar, so whitespace must be preserved
-        parser = ParserPEG(self.scrall_grammar, ScrallParser.root_rule_name, skipws=False, debug=self.debug)
-        # Now create an abstract syntax tree from our layout text
+        parser = ParserPEG(cls.scrall_grammar, cls.root_rule_name, skipws=False, debug=debug)
+        # Now create an abstract syntax tree from our Scrall activity text
         try:
-            parse_tree = parser.parse(self.scrall_text)
+            parse_tree = parser.parse(cls.scrall_text)
         except NoMatch as e:
-            raise ScrallParseError(e)
+            raise ScrallParseError(e) from None
 
         # Transform that into a result that is better organized with grammar artifacts filtered out
-        result = visit_parse_tree(parse_tree, ScrallVisitor(debug=self.debug))
-        if self.debug:
+        result = visit_parse_tree(parse_tree, ScrallVisitor(debug=debug))
+        if debug:
             # Transform dot files into pdfs
-
             peg_tree_dot = "peggrammar_parse_tree.dot"
             peg_model_dot = "peggrammar_parser_model.dot"
             os.system(f'dot -Tpdf {ScrallParser.parse_tree_dot} -o {ScrallParser.parse_tree_pdf}')
             os.system(f'dot -Tpdf {ScrallParser.parser_model_dot} -o {ScrallParser.grammar_model_pdf}')
-            # Cleanup unneeded dot files, we just use the PDFs for now
+            # Delete dot files since we are only interested in the generated PDFs
+            # Comment this part out if you want to retain the dot files
             Path(ScrallParser.parse_tree_dot).unlink(True)
             Path(ScrallParser.parse_tree_dot).unlink(True)
             Path(ScrallParser.parser_model_dot).unlink(True)
             Path(peg_tree_dot).unlink(True)
             Path(peg_model_dot).unlink(True)
+
         return result
-
-
-if __name__ == "__main__":
-    # For diagnostics
-    scrall_path = Path(__file__).parent.parent / "Examples" / 'e1.scrall'
-    x = ScrallParser(scrall_file_path=scrall_path, debug=True)
-    try:
-        x.parse()
-    except ScrallParseError as e:
-        print(e)
