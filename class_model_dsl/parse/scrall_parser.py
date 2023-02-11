@@ -27,7 +27,7 @@ class ScrallParser:
     diagnostics_path = project / "diagnostics" # All parser diagnostic output goes here
 
     # Files
-    grammar_file = project / "scrall.peg" # We parse using this peg grammar
+    grammar_file = grammar_path / "scrall.peg" # We parse using this peg grammar
     grammar_model_pdf = diagnostics_path / "scrall_model.pdf"
     parse_tree_pdf = diagnostics_path / "scrall_parse_tree.pdf"
     parse_tree_dot = diagnostics_path / f"{root_rule_name}_parse_tree.dot"

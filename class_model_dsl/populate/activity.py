@@ -5,6 +5,7 @@ activity.py – Populate an activity instance in PyRAL
 import logging
 from PyRAL.relvar import Relvar
 from class_model_dsl.populate.element import Element
+from class_model_dsl.parse.scrall_parser import ScrallParser
 from typing import TYPE_CHECKING
 from class_model_dsl.populate.pop_types import Activity_i, Asynchronous_Activity_i,\
     State_Activity_i, Signature_i, Parameter_i
@@ -44,4 +45,6 @@ class Activity:
 
     @classmethod
     def parse(cls, actions):
+        test_text = '\n'.join(["Hello  ", "// comment"]) + "\n"
+        ScrallParser.parse(scrall_text=test_text)
         pass
