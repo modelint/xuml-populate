@@ -2,10 +2,13 @@
 // Do not put trailing comment in last line of grammar. Arpeggio will complain!
 
 activity = statement* EOF
-statement = name? nl
-name = word (NAME_GLUE word)* // One word or a sequence of delimited words (name used for most model elements)
+statement = term? nl
+term = name / expr
+expr = name ' ' 'and' ' ' name
+name = ignore_keywords word (NAME_GLUE word)* // One word or a sequence of delimited words (name used for most model elements)
 NAME_GLUE = r'[ _]'
 word = r'[A-Za-z][A-Za-z0-9]*' // nl: Whitespace and comments clumped together as virutal newline
 nl = comment / whitespace
 comment = r'[ ]*//.*\n'
 whitespace = r'[ ]*\n'
+ignore_keywords = (!" and" !"and ")
