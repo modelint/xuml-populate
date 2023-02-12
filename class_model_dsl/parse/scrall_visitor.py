@@ -10,12 +10,11 @@ class ScrallVisitor(PTNodeVisitor):
         return children
 
     def visit_name(self, node, children):
+        """ Join words and delimiters """
         return ''.join(children)
 
-    def visit_word(self, node, children):
-        return node.value
-
-    def visit_comment(self, node, children):
-        return children
+    def visit_nl(self, node, children):
+        """ Discard comments and blank lines """
+        return None
 
 
