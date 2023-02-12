@@ -45,6 +45,7 @@ class Activity:
 
     @classmethod
     def parse(cls, actions):
-        test_text = '\n'.join(["Hello  ", "// comment"]) + "\n"
+        test_text = '\n'.join(["Outside temperature in deg // inline comment", "// standalone comment"]) + "\n"
+        print(test_text)
         ScrallParser.parse(scrall_text=test_text)
         pass

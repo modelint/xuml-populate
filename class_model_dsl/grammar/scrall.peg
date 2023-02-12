@@ -1,6 +1,8 @@
 // Scrall grammar – Diagnostic Version (limited capability)
 
 activity = statement* EOF
-statement = scrall_text? nl?
-scrall_text = r'[a-zA-Z0-9_]*'
-nl = r'[ ]*\n' / r'//.*\n'
+statement = name? nl
+name = word (NAME_GLUE word)* // One word or a sequence of delimited words (name used for most model elements)
+NAME_GLUE = r'[ _]'
+word = r'[A-Za-z][A-Za-z0-9]*'
+nl = r'[ ]*//.*\n' / r'[ ]*\n'
