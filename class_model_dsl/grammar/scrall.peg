@@ -1,14 +1,14 @@
 // Scrall grammar – Diagnostic Version (limited capability)
 // Do not put trailing comment in last line of grammar. Arpeggio will complain!
 
-activity = statement* EOF
-statement = term? nl
-term = name / expr
-expr = name ' ' 'and' ' ' name
-name = ignore_keywords word (NAME_GLUE word)* // One word or a sequence of delimited words (name used for most model elements)
+activity = action* EOF
+action = signal_action? nl
+signal_action = name ' ' SENDTO ' ' destination
+destination = name
+name = word (NAME_GLUE word)* // One word or a sequence of delimited words (name used for most model elements)
+SENDTO = '->'
 NAME_GLUE = r'[ _]'
-word = r'[A-Za-z][A-Za-z0-9]*' // nl: Whitespace and comments clumped together as virutal newline
-nl = comment / whitespace
+word = r'[A-Za-z][A-Za-z0-9]*'
+nl = comment / whitespace // nl: Whitespace and comments clumped together as virutal newline
 comment = r'[ ]*//.*\n'
 whitespace = r'[ ]*\n'
-ignore_keywords = (!" and" !"and ")
