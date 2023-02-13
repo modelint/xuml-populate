@@ -9,8 +9,10 @@ class ScrallVisitor(PTNodeVisitor):
     def visit_activity(self, node, children):
         return [c for c in children if c]
 
-    def visit_action(self, node, children):
+
+    def visit_statement(self, node, children):
         return children
+
 
     def visit_signal_action(self, node, children):
         return Signal_a(event_name=children[0]['name'], path=children[1]['path'])
@@ -28,6 +30,14 @@ class ScrallVisitor(PTNodeVisitor):
     def visit_name(self, node, children):
         """ Join words and delimiters """
         return {'name': ''.join(children)}
+
+    def visit_LINEWRAP(self, node, children):
+        """ Discard space character """
+        return None
+
+    def visit_EOL(self, node, children):
+        """ Discard space character """
+        return None
 
     def visit_SP(self, node, children):
         """ Discard space character """

@@ -44,8 +44,7 @@ class Activity:
 
     @classmethod
     def parse(cls, actions, debug=False):
-        test_text = '\n'.join(["Cabin at destination -> /R53/Transfer // inline comment", "// standalone comment"]) + "\n"
-        # test_text = '\n'.join(["Outside and temperature in deg // inline comment", "// standalone comment"]) + "\n"
+        test_text = "// start\n\nCabin at destination -> // wrapping\n    /R53/Transfer //another comment \n//final\n"
         print(test_text)
         result = ScrallParser.parse(scrall_text=test_text, debug=True)
         pass
