@@ -2,8 +2,8 @@
 // Do not put trailing comment in last line of grammar. Arpeggio will complain!
 
 activity = action* EOF
-action = signal_action? nl
-signal_action = name SP+ SENDTO SP+ path
+action = signal_action?
+signal_action = name SP+ SENDTO (SP+ / NL INDENT) path NL
 path = hop*
 hop = '/' (rnum / name) // rnum must be first since name can also match rnum
 name = word (NAME_GLUE word)* // One word or a sequence of delimited words (name used for most model elements)
@@ -11,7 +11,6 @@ SENDTO = '->'
 NAME_GLUE = r'[ _]'
 rnum = r'O?R[1-9][0-9]*' // Relationship number (name used for relationships)
 word = r'[A-Za-z][A-Za-z0-9]*'
-SP = ' ' // single space
-nl = comment / whitespace // nl: Whitespace and comments clumped together as virutal newline
-comment = r'[ ]*//.*\n'
-whitespace = r'[ ]*\n'
+INDENT = '    '
+SP = ' '
+NL = '\n'

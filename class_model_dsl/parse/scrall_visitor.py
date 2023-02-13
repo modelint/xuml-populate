@@ -29,11 +29,15 @@ class ScrallVisitor(PTNodeVisitor):
         """ Join words and delimiters """
         return {'name': ''.join(children)}
 
+    def visit_INDENT(self, node, children):
+        """ Discard space character """
+        return None
+
     def visit_SP(self, node, children):
         """ Discard space character """
         return None
 
-    def visit_nl(self, node, children):
+    def visit_NL(self, node, children):
         """ Discard comments and blank lines """
         return None
 
