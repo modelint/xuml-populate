@@ -44,7 +44,7 @@ class Activity:
 
     @classmethod
     def parse(cls, actions, debug=False):
-        test_text = "Cabin at destination ->\n    /R53/Transfer\n"
+        test_text = "Cabin at destination -> // wrapping\n    /R53/Transfer //another comment \n"
         print(test_text)
         result = ScrallParser.parse(scrall_text=test_text, debug=True)
         pass

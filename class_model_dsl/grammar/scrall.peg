@@ -3,7 +3,7 @@
 
 activity = action* EOF
 action = signal_action?
-signal_action = name SP+ SENDTO (SP+ / NL INDENT) path NL
+signal_action = name SP+ SENDTO (LINEWRAP / SP+) path EOL
 path = hop*
 hop = '/' (rnum / name) // rnum must be first since name can also match rnum
 name = word (NAME_GLUE word)* // One word or a sequence of delimited words (name used for most model elements)
@@ -11,6 +11,9 @@ SENDTO = '->'
 NAME_GLUE = r'[ _]'
 rnum = r'O?R[1-9][0-9]*' // Relationship number (name used for relationships)
 word = r'[A-Za-z][A-Za-z0-9]*'
+LINEWRAP = SP* comment INDENT / NL INDENT
 INDENT = '    '
+EOL = SP* (NL / comment)
 SP = ' '
 NL = '\n'
+comment = r'//.*\n'
