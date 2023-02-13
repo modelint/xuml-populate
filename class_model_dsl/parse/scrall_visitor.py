@@ -2,7 +2,7 @@
 from arpeggio import PTNodeVisitor
 from collections import namedtuple
 
-Signal_a = namedtuple('Signal_a', 'event_name destination')
+Signal_a = namedtuple('Signal_a', 'event_name path')
 
 class ScrallVisitor(PTNodeVisitor):
 
@@ -13,11 +13,18 @@ class ScrallVisitor(PTNodeVisitor):
         return children
 
     def visit_signal_action(self, node, children):
-        return Signal_a(event_name=children[0], destination=children[1]['destination'])
-        return children
+        return Signal_a(event_name=children[0], path=children[1]['path'])
 
-    def visit_destination(self, node, children):
-        return {'destination': children[0]}
+    def visit_path(self, node, children):
+        return {'path': children}
+
+    def visit_hop(self, node, children):
+        return children[0]
+
+    def visit_rnum(self, node, children):
+        """ Join words and delimiters """
+        pass
+        return ''.join(children)
 
     def visit_name(self, node, children):
         """ Join words and delimiters """

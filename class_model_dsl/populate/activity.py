@@ -25,7 +25,6 @@ class Activity:
         """Constructor"""
 
         cls.parse(actions)
-        pass
 
         # Create the Susbystem Element and obtain a unique Anum
         Anum = Element.populate_unlabeled_subsys_element(mmdb,
@@ -44,8 +43,8 @@ class Activity:
         return Anum
 
     @classmethod
-    def parse(cls, actions, debug=True):
-        test_text = '\n'.join(["Cabin at destination -> here // inline comment", "// standalone comment"]) + "\n"
+    def parse(cls, actions, debug=False):
+        test_text = '\n'.join(["Cabin at destination -> /R53/Transfer // inline comment", "// standalone comment"]) + "\n"
         # test_text = '\n'.join(["Outside and temperature in deg // inline comment", "// standalone comment"]) + "\n"
         print(test_text)
         result = ScrallParser.parse(scrall_text=test_text, debug=True)

@@ -56,7 +56,7 @@ class ScrallParser:
 
         # Create an arpeggio parser for our model grammar that does not eliminate whitespace
         # We interpret newlines and indents in our grammar, so whitespace must be preserved
-        parser = ParserPEG(cls.scrall_grammar, cls.root_rule_name, skipws=False, debug=debug)
+        parser = ParserPEG(cls.scrall_grammar, cls.root_rule_name, ignore_case=True, skipws=False, debug=debug)
         # Now create an abstract syntax tree from our Scrall activity text
         try:
             parse_tree = parser.parse(cls.scrall_text)

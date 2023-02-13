@@ -3,8 +3,10 @@
 
 activity = action* EOF
 action = signal_action? nl
-signal_action = name ' ' SENDTO ' ' destination
-destination = name
+signal_action = name ' ' SENDTO ' ' path
+path = hop*
+hop = '/' (name / rnum)
+rnum = r'O?R[1-9][0-9]*' // Relationship number (name used for relationships)
 name = word (NAME_GLUE word)* // One word or a sequence of delimited words (name used for most model elements)
 SENDTO = '->'
 NAME_GLUE = r'[ _]'
