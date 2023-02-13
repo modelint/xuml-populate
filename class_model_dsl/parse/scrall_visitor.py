@@ -13,7 +13,7 @@ class ScrallVisitor(PTNodeVisitor):
         return children
 
     def visit_signal_action(self, node, children):
-        return Signal_a(event_name=children[0], path=children[1]['path'])
+        return Signal_a(event_name=children[0]['name'], path=children[1]['path'])
 
     def visit_path(self, node, children):
         return {'path': children}
@@ -23,12 +23,15 @@ class ScrallVisitor(PTNodeVisitor):
 
     def visit_rnum(self, node, children):
         """ Join words and delimiters """
-        pass
-        return ''.join(children)
+        return {'rnum': node.value}
 
     def visit_name(self, node, children):
         """ Join words and delimiters """
-        return ''.join(children)
+        return {'name': ''.join(children)}
+
+    def visit_SP(self, node, children):
+        """ Discard space character """
+        return None
 
     def visit_nl(self, node, children):
         """ Discard comments and blank lines """
