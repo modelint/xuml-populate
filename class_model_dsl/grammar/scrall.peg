@@ -1,8 +1,9 @@
 // Scrall grammar – Diagnostic Version (limited capability)
 // Do not put trailing comment in last line of grammar. Arpeggio will complain!
 
-activity = action* EOF
-action = (signal_action / EOL)
+activity = statement* EOF
+statement = action / EOL
+action = signal_action
 signal_action = name SP+ SENDTO (LINEWRAP / SP+) path EOL
 path = hop*
 hop = '/' (rnum / name) // rnum must be first since name can also match rnum
