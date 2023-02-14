@@ -2,8 +2,10 @@
 from arpeggio import PTNodeVisitor
 from collections import namedtuple
 
-Signal_a = namedtuple('Signal_a', 'event_name signature path')
-Parameter_a = namedtuple('Parameter_a', 'name type')
+Signal_a = namedtuple('Signal_a', 'event supplied_params dest')
+"""Signal sent to trigger event at destination with optional supplied parameters"""
+Supplied_Parameter_a = namedtuple('Supplied_Parameter_a', 'pname fname')
+"""Parameter name and flow name pair for a set of supplied parameters"""
 
 class ScrallVisitor(PTNodeVisitor):
 
@@ -17,19 +19,24 @@ class ScrallVisitor(PTNodeVisitor):
 
     def visit_signal_action(self, node, children):
         """
-        Returns event_name ?signature path
+        Returns event_name ?supplied_params instance_set
         """
-        sig = [] if len(children) == 2 else children[1]
-        return Signal_a(event_name=children[0], signature=sig, path=children[-1]['path'])
+        params = [] if len(children) == 2 else children[1]
+        return Signal_a(event=children[0], supplied_params=params, dest=children[-1]['path'])
 
     def visit_param(self, node, children):
-        return Parameter_a(name=children[0], type=children[1])
+        """
+        <flow name> or <parameter name> <flow name> is parsed. If only a flow name is present, it means
+        that the supplied flow has the same name Ex: ( shaft id ) as that of the required parameter. Short for
+        ( shaft id : shaft id ). This is a convenience that elminates the need for name doubling in a supplied
+        parameter set
+        """
+        f = children[-1] # Last value is always the flow name
+        p = children[0] if len(children) > 1 else f # First value is the parameter name only if followed by a flow name
+        return Supplied_Parameter_a(pname=p, fname=f)
 
-    def visit_signature(self, node, children):
+    def visit_supplied_params(self, node, children):
         return children
-
-    def visit_type_qual(self, node, children):
-        return children[0]
 
     def visit_path(self, node, children):
         return {'path': children}
