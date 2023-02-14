@@ -16,7 +16,7 @@ name = word (NAME_GLUE word)* // One word or a sequence of delimited words (name
 
 
 // Supplied parameter set, can be empty:  ()
-supplied_params = '(' SP* (param SP* (',' SP+ param SP*)*)? ')'
+supplied_params = '(' (LINEWRAP / SP*) (param SP* (',' SP+ param SP*)*)? LINEWRAP? ')'
 param = name (SP* ':' SP* name)?
 
 SENDTO = '->' // Signal action operator
@@ -24,7 +24,7 @@ NAME_GLUE = r'[ _]' // delmits words within a name
 rnum = r'O?R[1-9][0-9]*' // Relationship number (name used for relationships)
 word = r'[A-Za-z][A-Za-z0-9]*'
 LINEWRAP = SP* comment INDENT / NL INDENT // nl indent with possible spaces and comment on wrapped line
-INDENT = '    ' // Four spaces
+INDENT = SP SP+ // At least two spaces
 EOL = SP* (NL / comment) // end of line: Comments, blank lines, whitespace we can omit from the parser result
 SP = ' '
 NL = '\n'
