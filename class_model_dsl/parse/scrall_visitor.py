@@ -73,7 +73,7 @@ class ScrallVisitor(PTNodeVisitor):
         """ Discard space character """
         return None
 
-    def visit_nl(self, node, children):
+    def visit_NL(self, node, children):
         """ Discard comments and blank lines """
         return None
 
