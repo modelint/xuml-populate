@@ -3,14 +3,13 @@
 
 activity = statement* EOF
 statement = signal_action / EOL
-signal_action = name SP+ SENDTO (LINEWRAP / SP+) path EOL
+signal_action = name signature? SP+ SENDTO (LINEWRAP / SP+) path EOL
 path = hop* // path to some instance set represented by a name
 hop = '/' (rnum / name) // rnum must be first since name can also match rnum
 name = word (NAME_GLUE word)* // One word or a sequence of delimited words (name used for most model elements)
 
-// Operation call
-opcall = name signature
-signature = '(' SP* (param SP+ (',' SP+ param SP*)*)? ')'
+// Signature
+signature = '(' SP* (param SP* (',' SP+ param SP*)*)? ')'
 param = name type_qual?
 type_qual = SP* ':' SP* name
 
