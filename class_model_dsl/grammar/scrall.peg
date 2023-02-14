@@ -2,11 +2,18 @@
 // Do not put trailing comment in last line of grammar. Arpeggio will complain!
 
 activity = statement* EOF
-statement = signal_action / EOL
+statement = signal_action / sync_call / EOL
+
+// Actions: each must terminate with EOL and optional lineraps inside
+// at strategic locations
 signal_action = name supplied_params? SP+ SENDTO (LINEWRAP / SP+) path EOL
+sync_call = name '.' name supplied_params? EOL
+
 path = hop* // path to some instance set represented by a name
 hop = '/' (rnum / name) // rnum must be first since name can also match rnum
 name = word (NAME_GLUE word)* // One word or a sequence of delimited words (name used for most model elements)
+
+
 
 // Supplied parameter set, can be empty:  ()
 supplied_params = '(' SP* (param SP* (',' SP+ param SP*)*)? ')'

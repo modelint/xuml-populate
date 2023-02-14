@@ -44,7 +44,8 @@ class Activity:
 
     @classmethod
     def parse(cls, actions, debug=False):
-        test_text = "Cabin at destination( floor : Height, direction ) -> /R53/Transfer\n"
+        test_text = "TRAN.Goto floor( floor : Height, direction )\n"
+        # test_text = "Cabin at destination( floor : Height, direction ) -> /R53/Transfer\n"
         # test_text = "Cabin at destination( floor : Height, dir : Direction ) -> /R53/Transfer\n"
         # test_text = "Cabin at destination( floor : Height, dir : Direction ) -> /R53/Transfer\n"
         # test_text = "Cabin at destination() -> /R53/Transfer\n"

@@ -6,6 +6,7 @@ Signal_a = namedtuple('Signal_a', 'event supplied_params dest')
 """Signal sent to trigger event at destination with optional supplied parameters"""
 Supplied_Parameter_a = namedtuple('Supplied_Parameter_a', 'pname fname')
 """Parameter name and flow name pair for a set of supplied parameters"""
+Sync_Call_a = namedtuple('Sync_Call_a', 'op_name supplied_params dest')
 
 class ScrallVisitor(PTNodeVisitor):
 
@@ -16,6 +17,14 @@ class ScrallVisitor(PTNodeVisitor):
     def visit_statement(self, node, children):
         return children
 
+
+    def visit_sync_call(self, node, children):
+        """
+        Children are dest, op_name, ?supplied_params
+        Returns op_name ?supplied_params dest
+        """
+        params = [] if len(children) == 2 else children[-1]
+        return Sync_Call_a(op_name=children[0], supplied_params=params, dest=children[0])
 
     def visit_signal_action(self, node, children):
         """
