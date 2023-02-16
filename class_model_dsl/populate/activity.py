@@ -3,6 +3,7 @@ activity.py – Populate an activity instance in PyRAL
 """
 
 import logging
+from pathlib import Path
 from PyRAL.relvar import Relvar
 from class_model_dsl.populate.element import Element
 from class_model_dsl.parse.scrall_parser import ScrallParser
@@ -44,7 +45,12 @@ class Activity:
 
     @classmethod
     def parse(cls, actions, debug=False):
-        test_text = "TRAN.Goto floor(\n      floor : Height,\n   direction\n  )\n"
+        # Read the test file
+        test_file_dir = Path(__file__).parent.parent / "input/scrall"
+        test_file_path = test_file_dir / "test.scrall"
+        test_text = open(test_file_path, 'r').read() + "\n"
+
+        # test_text = "TRAN.Goto floor(\n      floor : Height,\n   direction\n  )\n"
         # test_text = "Cabin at destination( floor : Height, direction ) -> /R53/Transfer\n"
         # test_text = "Cabin at destination( floor : Height, dir : Direction ) -> /R53/Transfer\n"
         # test_text = "Cabin at destination( floor : Height, dir : Direction ) -> /R53/Transfer\n"
