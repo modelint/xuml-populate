@@ -2,24 +2,38 @@
 // Do not put trailing comment in last line of grammar. Arpeggio will complain!
 
 activity = statement* EOF
-statement = signal_action / sync_call / EOL
+statement = signal_action / sync_call / assignment / EOL
 
-// Actions: each must terminate with EOL and optional lineraps inside
-// at strategic locations
+// Actions: each must terminate with EOL
 signal_action = name supplied_params? SP+ SENDTO (LINEWRAP / SP+) path EOL
 sync_call = name '.' name supplied_params? EOL
+assignment = name SP+ ('.=' / '..=') SP+ inst_set EOL
 
-path = hop* // path to some instance set represented by a name
-hop = '/' (rnum / name) // rnum must be first since name can also match rnum
-name = word (NAME_GLUE word)* // One word or a sequence of delimited words (name used for most model elements)
-
-
+// Signal
+SENDTO = '->' // Signal action operator
 
 // Supplied parameter set, can be empty:  ()
 supplied_params = '(' (LINEWRAP / SP*) (param SP* (',' (LINEWRAP / SP+) param SP*)*)? LINEWRAP? ')'
 param = name (SP* ':' SP* name)?
 
-SENDTO = '->' // Signal action operator
+// Instance set
+inst_set = (path / sync_call / name) selection?
+selection = '(' (LINEWRAP / SP*) criteria (LINEWRAP / SP*) ')'
+criteria = restriction / card ',' (LINEWRAP / SP+) restriction / card
+card = '1' / '*'
+restriction = attr_criteria ( SP* ',' (LINEWRAP / SP+) attr_criteria)*
+attr_criteria = attr_order / value_comparison
+attr_order = ORDER name
+value_comparison = ORDER? 'its.'? name SP* (':' / '==' / COMPARE) SP* scalar_flow
+ORDER = '+^' / '-^'
+COMPARE = r'[<>][=]?'
+
+scalar_flow = name ('.' name)?
+
+path = name? hop+ // path to some instance set represented by a name
+hop = '/' (rnum / name) // rnum must be first since name can also match rnum
+name = word (NAME_GLUE word)* // One word or a sequence of delimited words (name used for most model elements)
+
 NAME_GLUE = r'[ _]' // delmits words within a name
 rnum = r'O?R[1-9][0-9]*' // Relationship number (name used for relationships)
 word = r'[A-Za-z][A-Za-z0-9]*'

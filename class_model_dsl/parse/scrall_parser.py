@@ -33,8 +33,11 @@ class ScrallParser:
     parse_tree_pdf = diagnostics_path / "scrall_parse_tree.pdf"
     parse_tree_dot = root / f"{root_rule_name}_parse_tree.dot"
     parser_model_dot = root / f"{root_rule_name}_peg_parser_model.dot"
-    tree_dot = root / "peggrammar_parse_tree.dot"
-    model_dot = root / "peggrammar_parser_model.dot"
+
+    pg_tree_dot = root / "peggrammar_parse_tree.dot"
+    pg_model_dot = root / "peggrammar_parser_model.dot"
+    pg_tree_pdf = diagnostics_path / "peggrammar_parse_tree.pdf"
+    pg_model_pdf = diagnostics_path / "peggrammar_parser_model.pdf"
 
     @classmethod
     def parse(cls, scrall_text: str, debug=False):  # TODO: define output using named tuple from visitor
@@ -57,6 +60,15 @@ class ScrallParser:
         # Create an arpeggio parser for our model grammar that does not eliminate whitespace
         # We interpret newlines and indents in our grammar, so whitespace must be preserved
         parser = ParserPEG(cls.scrall_grammar, cls.root_rule_name, ignore_case=True, skipws=False, debug=debug)
+        if debug:
+            # Transform dot files into pdfs
+            # os.system(f'dot -Tpdf {cls.pg_tree_dot} -o {cls.pg_tree_pdf}')
+            # os.system(f'dot -Tpdf {cls.pg_model_dot} -o {cls.pg_model_pdf}')
+            os.system(f'dot -Tpdf {cls.parser_model_dot} -o {cls.grammar_model_pdf}')
+            cls.parser_model_dot.unlink(True)
+            cls.pg_tree_dot.unlink(True)
+            cls.pg_model_dot.unlink(True)
+
         # Now create an abstract syntax tree from our Scrall activity text
         try:
             parse_tree = parser.parse(cls.scrall_text)
@@ -65,15 +77,12 @@ class ScrallParser:
 
         # Transform that into a result that is better organized with grammar artifacts filtered out
         result = visit_parse_tree(parse_tree, ScrallVisitor(debug=debug))
+
         if debug:
             # Transform dot files into pdfs
             os.system(f'dot -Tpdf {cls.parse_tree_dot} -o {cls.parse_tree_pdf}')
-            os.system(f'dot -Tpdf {cls.parser_model_dot} -o {cls.grammar_model_pdf}')
             # Delete dot files since we are only interested in the generated PDFs
             # Comment this part out if you want to retain the dot files
             cls.parse_tree_dot.unlink(True)
-            cls.parser_model_dot.unlink(True)
-            cls.tree_dot.unlink(True)
-            cls.model_dot.unlink(True)
 
         return result

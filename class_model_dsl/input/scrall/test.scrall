@@ -1,4 +1,6 @@
-TRAN.Goto floor(
+icall in progress .= xfer/R49/Floor Service( Direction: cabin in shaft.Travel direction )
+
+TRAN.Goto floor( // here's a comment
     floor : Height,
     direction
 )
