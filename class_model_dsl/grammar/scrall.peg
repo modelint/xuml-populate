@@ -2,31 +2,37 @@
 // Do not put trailing comment in last line of grammar. Arpeggio will complain!
 
 activity = statement* EOF
-statement = signal_action / sync_call / inst_assignment / EOL
+statement = signal_action / sync_invocation / inst_assignment / EOL
 
 // Actions: each must terminate with EOL
 signal_action = name supplied_params? SP+ SENDTO (LINEWRAP / SP+) path EOL
-sync_call = name '.' call EOL
-call = name supplied_params? EOL
-param_set = name supplied_params? EOL
-inst_assignment = name SP+ ('.=' / '..=') SP+ inst_set EOL
+sync_invocation = call EOL
 
 // Signal
 SENDTO = '->' // Signal action operator
 
+// Synchronous invocation
+call = name '.' op
+op = name supplied_params?
 // Supplied parameter set, can be empty:  ()
 supplied_params = '(' (LINEWRAP / SP*) (param SP* (',' (LINEWRAP / SP+) param SP*)*)? LINEWRAP? ')'
 param = name (SP* ':' SP* name)?
 
-// Instance set
-inst_set = (path / sync_call / scalar_flow) selection?
+// Instance assignment
+inst_assignment = name SP+ INST_ASSIGN_OP SP+ inst_flow EOL
+INST_ASSIGN_OP = '.=' / '..='
+
+// Instance flow
+inst_flow = inst_set_source selection?
+inst_set_source = call / path / name
+
 selection = '(' (LINEWRAP / SP*) criteria (LINEWRAP / SP*) ')'
-criteria = restriction / card ',' (LINEWRAP / SP+) restriction / card
-card = '1' / '*'
-restriction = attr_criteria ( SP* ',' (LINEWRAP / SP+) attr_criteria)*
-attr_criteria = attr_order / value_comparison
+criteria = (card SP* ',' SP+ restriction) / CARD / restriction
+CARD = '1' / '*'
+restriction = attr_comparison ( SP* ',' (LINEWRAP / SP+) attr_comparison)*
+attr_comparison = attr_order / comparison
 attr_order = ORDER name
-value_comparison = ORDER? 'its.'? name SP* (':' / '==' / COMPARE) SP* scalar_flow
+comparison = ORDER? 'its.'? name SP* (':' / '==' / COMPARE) SP* scalar_flow
 ORDER = '+^' / '-^'
 COMPARE = r'[<>][=]?'
 
