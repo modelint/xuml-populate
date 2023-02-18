@@ -17,6 +17,29 @@ class ScrallVisitor(PTNodeVisitor):
     def visit_statement(self, node, children):
         return children
 
+    def visit_assignment(self, node, children):
+        return children
+
+    def visit_inst_set(self, node, children):
+        return children
+
+    def visit_selection(self, node, children):
+        return children
+
+    def visit_criteria(self, node, children):
+        return children
+
+    def visit_restriction(self, node, children):
+        return children
+
+    def visit_value_comparision(self, node, children):
+        return children
+
+    def visit_scalar_flow(self, node, children):
+        return children
+
+    def visit_call(self, node, children):
+        return children
 
     def visit_sync_call(self, node, children):
         """

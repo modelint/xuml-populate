@@ -2,12 +2,14 @@
 // Do not put trailing comment in last line of grammar. Arpeggio will complain!
 
 activity = statement* EOF
-statement = signal_action / sync_call / assignment / EOL
+statement = signal_action / sync_call / inst_assignment / EOL
 
 // Actions: each must terminate with EOL
 signal_action = name supplied_params? SP+ SENDTO (LINEWRAP / SP+) path EOL
-sync_call = name '.' name supplied_params? EOL
-assignment = name SP+ ('.=' / '..=') SP+ inst_set EOL
+sync_call = name '.' call EOL
+call = name supplied_params? EOL
+param_set = name supplied_params? EOL
+inst_assignment = name SP+ ('.=' / '..=') SP+ inst_set EOL
 
 // Signal
 SENDTO = '->' // Signal action operator
@@ -17,7 +19,7 @@ supplied_params = '(' (LINEWRAP / SP*) (param SP* (',' (LINEWRAP / SP+) param SP
 param = name (SP* ':' SP* name)?
 
 // Instance set
-inst_set = (path / sync_call / name) selection?
+inst_set = (path / sync_call / scalar_flow) selection?
 selection = '(' (LINEWRAP / SP*) criteria (LINEWRAP / SP*) ')'
 criteria = restriction / card ',' (LINEWRAP / SP+) restriction / card
 card = '1' / '*'
@@ -28,7 +30,7 @@ value_comparison = ORDER? 'its.'? name SP* (':' / '==' / COMPARE) SP* scalar_flo
 ORDER = '+^' / '-^'
 COMPARE = r'[<>][=]?'
 
-scalar_flow = name ('.' name)?
+scalar_flow = name ('.' ( call / name ))?
 
 path = name? hop+ // path to some instance set represented by a name
 hop = '/' (rnum / name) // rnum must be first since name can also match rnum
