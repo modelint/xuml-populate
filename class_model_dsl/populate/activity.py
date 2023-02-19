@@ -6,7 +6,8 @@ import logging
 from pathlib import Path
 from PyRAL.relvar import Relvar
 from class_model_dsl.populate.element import Element
-from class_model_dsl.parse.scrall_parser import ScrallParser
+# from class_model_dsl.parse.scrall_parser import ScrallParser
+from class_model_dsl.test.scrall.path.scrall_parser import ScrallParser
 from typing import TYPE_CHECKING
 from class_model_dsl.populate.pop_types import Activity_i, Asynchronous_Activity_i,\
     State_Activity_i, Signature_i, Parameter_i
@@ -46,8 +47,8 @@ class Activity:
     @classmethod
     def parse(cls, actions, debug=False):
         # Read the test file
-        test_file_dir = Path(__file__).parent.parent / "input/scrall"
-        test_file_path = test_file_dir / "test.scrall"
+        test_file_dir = Path(__file__).parent.parent / "test" / "scrall" / "path"
+        test_file_path = test_file_dir / "path.scrall"
         test_text = open(test_file_path, 'r').read() + "\n"
 
         # test_text = "TRAN.Goto floor(\n      floor : Height,\n   direction\n  )\n"

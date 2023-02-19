@@ -5,15 +5,12 @@ activity = statement* EOF
 statement = signal_action / sync_invocation / inst_assignment / EOL
 
 // Actions: each must terminate with EOL
-signal_action = name supplied_params? SP+ SENDTO (LINEWRAP / SP+) path EOL
+signal_action = name supplied_params? SP+ '->' (LINEWRAP / SP+) dest EOL
+dest = path / name
 sync_invocation = call EOL
 
-// Signal
-SENDTO = '->' // Signal action operator
-
 // Synchronous invocation
-call = name '.' op
-op = name supplied_params?
+call = name '.' name supplied_params?
 // Supplied parameter set, can be empty:  ()
 supplied_params = '(' (LINEWRAP / SP*) (param SP* (',' (LINEWRAP / SP+) param SP*)*)? LINEWRAP? ')'
 param = name (SP* ':' SP* name)?
