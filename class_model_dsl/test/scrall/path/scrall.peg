@@ -1,5 +1,3 @@
-// Scrall grammar – path test
-
 activity = statement* EOF
 statement = path / EOL
 
@@ -12,5 +10,5 @@ rnum = r'O?R[1-9][0-9]*' // Relationship number (name used for relationships)
 word = r'[A-Za-z][A-Za-z0-9]*'
 LINEWRAP = EOL SP* // end of line followed by optional indent on next line
 EOL = SP* COMMENT? '\n' // end of line: Comments, blank lines, whitespace we can omit from the parser result
+COMMENT = '//' r'.*' // Comment slashes don't work if included in the regular expression for some reason
 SP = ' '
-COMMENT = r'//.*'

@@ -59,7 +59,7 @@ class ScrallParser:
 
         # Create an arpeggio parser for our model grammar that does not eliminate whitespace
         # We interpret newlines and indents in our grammar, so whitespace must be preserved
-        parser = ParserPEG(cls.scrall_grammar, cls.root_rule_name, ignore_case=True, skipws=False, debug=debug)
+        parser = ParserPEG(cls.scrall_grammar, cls.root_rule_name, comment_rule_name='COMMENT', ignore_case=True, skipws=False, debug=debug)
         if debug:
             # Transform dot files into pdfs
             # os.system(f'dot -Tpdf {cls.pg_tree_dot} -o {cls.pg_tree_pdf}')

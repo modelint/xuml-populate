@@ -7,7 +7,6 @@ class ScrallVisitor(PTNodeVisitor):
     def visit_activity(self, node, children):
         return [c for c in children if c]
 
-
     def visit_statement(self, node, children):
         return children
 
