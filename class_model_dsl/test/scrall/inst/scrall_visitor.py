@@ -2,9 +2,10 @@
 from arpeggio import PTNodeVisitor
 from collections import namedtuple
 
-Supplied_Parameter_a = namedtuple('Supplied_Parameter_a', 'pname fname')
+Supplied_Parameter_a = namedtuple('Supplied_Parameter_a', 'pname sval')
 """Parameter name and flow name pair for a set of supplied parameters"""
 Call_a = namedtuple('Call_a', 'op_name supplied_params dest')
+Attr_Access_a = namedtuple('Attr_Access_a', 'cname attr')
 
 class ScrallVisitor(PTNodeVisitor):
 
@@ -34,12 +35,16 @@ class ScrallVisitor(PTNodeVisitor):
         ( shaft id : shaft id ). This is a convenience that elminates the need for name doubling in a supplied
         parameter set
         """
-        f = children[-1] # Last value is always the flow name
+        s = children[-1] # Last value is always the flow name
         p = children[0] if len(children) > 1 else f # First value is the parameter name only if followed by a flow name
-        return Supplied_Parameter_a(pname=p, fname=f)
+        return Supplied_Parameter_a(pname=p, sval=s)
 
     def visit_supplied_params(self, node, children):
         return children
+
+    def visit_attr_access(self, node, children):
+        return Attr_Access_a(cname=children[0], attr=children[1])
+
 
     def visit_name(self, node, children):
         """ Join words and delimiters """

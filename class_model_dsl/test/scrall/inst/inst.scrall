@@ -1,1 +1,2 @@
 cabin.get nearest()
+cabin.get furthest( a: x.y )
