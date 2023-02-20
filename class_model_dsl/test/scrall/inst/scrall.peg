@@ -1,0 +1,15 @@
+activity = statement* EOF
+statement = call? EOL
+
+call = name '.' operation
+operation = name '(' SP* (supplied_params SP*)? ')'
+supplied_params = param (',' param)*
+param = name (SP* ':' SP* name)?
+
+name = word (NAME_GLUE word)* // One word or a sequence of delimited words (name used for most model elements)
+NAME_GLUE = r'[ _]' // delmits words within a name
+word = r'[A-Za-z][A-Za-z0-9]*'
+LINEWRAP = EOL SP* // end of line followed by optional indent on next line
+EOL = SP* COMMENT? '\n' // end of line: Comments, blank lines, whitespace we can omit from the parser result
+COMMENT = '//' r'.*' // Comment slashes don't work if included in the regular expression for some reason
+SP = ' '
