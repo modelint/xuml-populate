@@ -6,7 +6,7 @@ operation = name '(' SP* (supplied_params SP*)? ')'
 supplied_params = param (',' param)*
 param = name (SP* ':' SP* scalar)?
 
-scalar = attr_access / name
+scalar = call / attr_access / name
 attr_access = name '.' name
 
 name = word (NAME_GLUE word)* // One word or a sequence of delimited words (name used for most model elements)

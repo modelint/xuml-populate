@@ -1,2 +1,3 @@
+cabin.reach( b: bank.fastest() )
 cabin.get nearest()
 cabin.get furthest( a: x.y )
