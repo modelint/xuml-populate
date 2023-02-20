@@ -1,7 +1,7 @@
-activity = statement* EOF
+activity = statement* EOF // path-inst test
 statement = instance_set? EOL
 
-instance_set = (call / selection / name)
+instance_set = (path / call / selection / name)
 selection = name '(' SP* select_phrase SP* ')'
 select_phrase = (CARD ',' SP* criteria / criteria / CARD )
 criteria = attr_comparison (',' SP* attr_comparison)*
@@ -20,8 +20,12 @@ param = name (SP* ':' SP* scalar)?
 scalar = call / attr_access / name
 attr_access = name '.' name
 
+path = name? hop+ // path to some instance set represented by a name
+hop = '/' (rnum / name) // rnum must be first since name can also match rnum
+
 name = word (NAME_GLUE word)* // One word or a sequence of delimited words (name used for most model elements)
 NAME_GLUE = r'[ _]' // delmits words within a name
+rnum = r'O?R[1-9][0-9]*' // Relationship number (name used for relationships)
 word = r'[A-Za-z][A-Za-z0-9]*'
 LINEWRAP = EOL SP* // end of line followed by optional indent on next line
 EOL = SP* COMMENT? '\n' // end of line: Comments, blank lines, whitespace we can omit from the parser result

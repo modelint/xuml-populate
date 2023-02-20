@@ -1,4 +1,4 @@
-activity = statement* EOF
+activity = statement* EOF // inst test
 statement = instance_set? EOL
 
 instance_set = (call / selection / name)

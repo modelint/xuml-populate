@@ -1,4 +1,4 @@
-activity = statement* EOF
+activity = statement* EOF // path test
 statement = path / EOL
 
 path = name? hop+ // path to some instance set represented by a name

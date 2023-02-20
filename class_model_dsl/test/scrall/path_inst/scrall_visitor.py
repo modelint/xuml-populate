@@ -71,6 +71,16 @@ class ScrallVisitor(PTNodeVisitor):
     def visit_attr_access(self, node, children):
         return Attr_Access_a(cname=children[0], attr=children[1])
 
+    def visit_path(self, node, children):
+        return {'path': children}
+
+    def visit_hop(self, node, children):
+        return children[0]
+
+    def visit_rnum(self, node, children):
+        """ Join words and delimiters """
+        return {'rnum': node.value}
+
 
     def visit_name(self, node, children):
         """ Join words and delimiters """
