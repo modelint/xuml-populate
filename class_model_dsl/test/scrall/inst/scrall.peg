@@ -1,5 +1,16 @@
 activity = statement* EOF
-statement = call? EOL
+statement = instance_set? EOL
+
+instance_set = (call / selection / name)
+selection = name '(' SP* select_phrase SP* ')'
+select_phrase = (CARD ',' SP* criteria / criteria / CARD )
+criteria = attr_comparison (',' SP* attr_comparison)*
+attr_comparison = RANK? REFLEX? name comparison
+comparison = SP* (':' / '==' / COMPARE) SP* scalar
+CARD = '1' / '*'
+RANK = '+^' / '-^'
+REFLEX = 'its.'
+COMPARE = ':' / '==' / '>=' / '>' / '<=' / '<'
 
 call = name '.' operation
 operation = name '(' SP* (supplied_params SP*)? ')'
