@@ -1,3 +1,4 @@
+/R5/Shaft.Cabin(id: myshaft)/R7/Door
 /R12/Bank
 Aircraft(Speed: v, Height > h)
 Bank(*)

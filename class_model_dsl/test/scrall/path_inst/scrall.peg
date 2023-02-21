@@ -21,7 +21,7 @@ scalar = call / attr_access / name
 attr_access = name '.' name
 
 path = name? hop+ // path to some instance set represented by a name
-hop = '/' (rnum / name) // rnum must be first since name can also match rnum
+hop = '/' (rnum / call / name) // rnum must be first since name can also match rnum
 
 name = word (NAME_GLUE word)* // One word or a sequence of delimited words (name used for most model elements)
 NAME_GLUE = r'[ _]' // delmits words within a name
