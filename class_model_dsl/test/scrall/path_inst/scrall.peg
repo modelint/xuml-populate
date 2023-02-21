@@ -4,13 +4,23 @@ statement = instance_set? EOL
 instance_set = (path / call / selection / name)
 selection = name '(' SP* select_phrase SP* ')'
 select_phrase = (CARD ',' SP* criteria / criteria / CARD )
-criteria = attr_comparison (',' SP* attr_comparison)*
+//criteria = attr_comparison (',' SP* attr_comparison)*
 attr_comparison = RANK? REFLEX? name comparison?
 comparison = SP* (':' / '==' / COMPARE) SP* scalar
 CARD = '1' / '*'
 RANK = '+^' / '-^'
 REFLEX = 'its.'
 COMPARE = ':' / '==' / '>=' / '>' / '<=' / '<'
+
+criteria = SP* logical_or SP*
+logical_or = logical_and (SP+ OR SP+ logical_and)*
+logical_and = logical_not (( (SP+ AND) / ',') SP+ logical_not)*
+logical_not = (NOT SP+)? attr_comparison
+
+
+OR = 'or'
+AND = 'and'
+NOT = '!' / 'not'
 
 call = name '.' operation
 operation = name '(' SP* (supplied_params SP*)? ')'
@@ -26,7 +36,8 @@ hop = '/' (rnum / call / name) // rnum must be first since name can also match r
 name = word (NAME_GLUE word)* // One word or a sequence of delimited words (name used for most model elements)
 NAME_GLUE = r'[ _]' // delmits words within a name
 rnum = r'O?R[1-9][0-9]*' // Relationship number (name used for relationships)
-word = r'[A-Za-z][A-Za-z0-9]*'
+word = ignore_keywords r'[A-Za-z][A-Za-z0-9]*'
+ignore_keywords = !" true" !"true " !" false" !"false " !" and" !"and " !" or" !"or " !" not" !"not " !" its" !"its " ! " me" !" me"
 LINEWRAP = EOL SP* // end of line followed by optional indent on next line
 EOL = SP* COMMENT? '\n' // end of line: Comments, blank lines, whitespace we can omit from the parser result
 COMMENT = '//' r'.*' // Comment slashes don't work if included in the regular expression for some reason
