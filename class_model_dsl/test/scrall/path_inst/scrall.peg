@@ -5,7 +5,7 @@ instance_set = (path / call / selection / name)
 selection = name '(' SP* select_phrase SP* ')'
 select_phrase = (CARD ',' SP* criteria / criteria / CARD )
 criteria = attr_comparison (',' SP* attr_comparison)*
-attr_comparison = RANK? REFLEX? name comparison
+attr_comparison = RANK? REFLEX? name comparison?
 comparison = SP* (':' / '==' / COMPARE) SP* scalar
 CARD = '1' / '*'
 RANK = '+^' / '-^'

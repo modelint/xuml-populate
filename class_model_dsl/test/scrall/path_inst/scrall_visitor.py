@@ -36,7 +36,9 @@ class ScrallVisitor(PTNodeVisitor):
         return children
 
     def visit_attr_comparison(self, node, children):
-        return Attr_Comparison_a(attr=children[0], op=children[1][0], scalar=children[1][1])
+        op, scalar = (':', 'true') if len(children) == 1 else children[1]
+        # op, scalar = (':', 'true') if len(children) == 1 else (children[1][0], children[1][1])
+        return Attr_Comparison_a(attr=children[0], op=op, scalar=scalar)
 
     def visit_comparison(self, node, children):
         return children
