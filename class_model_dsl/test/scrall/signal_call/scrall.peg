@@ -1,12 +1,12 @@
 activity = statement* EOF // sig-call test
-statement = (inst_assignment / signal_action)? EOL
+statement = (inst_assignment / signal_action / call)? EOL
 
 signal_action = name supplied_params? SP+ '->' (LINEWRAP / SP+) instance_set
 
 inst_assignment = name SP+ INST_ASSIGN SP+ instance_set
 INST_ASSIGN = '.=' / '..='
 
-instance_set = (path / call / selection / name)
+instance_set = (path / selection / name)
 selection = name '(' SP* select_phrase SP* ')'
 select_phrase = (CARD ',' SP* criteria / criteria / CARD )
 attr_comparison = RANK? REFLEX? name comparison?
@@ -26,7 +26,7 @@ OR = 'or'
 AND = 'and'
 NOT = '!' / 'not'
 
-call = name '.' operation
+call = instance_set '.' operation
 operation = name supplied_params
 supplied_params = '(' SP* (param (',' param)*)? SP* ')'
 param = name (SP* ':' SP* scalar)?

@@ -1,1 +1,5 @@
+tower.nearest plane().Land( Runway: north)
+Aircraft(1).Land( Runway: north)
 Alert( level: high) -> Aircraft(Speed: v and Height > h)
+my plane .= Aircraft(Speed: v and Height > h)
+my plane.Land( Runway: north)
