@@ -1,0 +1,1 @@
+Alert( level: high) -> Aircraft(Speed: v and Height > h)
