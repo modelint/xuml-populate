@@ -1,5 +1,8 @@
-activity = statement* EOF // path-inst test
-statement = instance_set? EOL
+activity = statement* EOF // iassign test
+statement = inst_assignment? EOL
+
+inst_assignment = name SP+ INST_ASSIGN SP+ instance_set
+INST_ASSIGN = '.=' / '..='
 
 instance_set = (path / call / selection / name)
 selection = name '(' SP* select_phrase SP* ')'

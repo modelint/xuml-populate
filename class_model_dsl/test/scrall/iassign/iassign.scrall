@@ -1,0 +1,1 @@
+my plane .= Aircraft(Speed: v and Height > h)
