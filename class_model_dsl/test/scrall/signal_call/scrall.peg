@@ -1,7 +1,7 @@
 activity = statement* EOF // sig-call test
 statement = (inst_assignment / signal_action)? EOL
 
-signal_action = name ('(' SP* supplied_params? ')')? SP+ '->' (LINEWRAP / SP+) instance_set
+signal_action = name supplied_params? SP+ '->' (LINEWRAP / SP+) instance_set
 
 inst_assignment = name SP+ INST_ASSIGN SP+ instance_set
 INST_ASSIGN = '.=' / '..='
@@ -27,8 +27,8 @@ AND = 'and'
 NOT = '!' / 'not'
 
 call = name '.' operation
-operation = name '(' SP* (supplied_params SP*)? ')'
-supplied_params = param (',' param)*
+operation = name supplied_params
+supplied_params = '(' SP* (param (',' param)*)? SP* ')'
 param = name (SP* ':' SP* scalar)?
 
 scalar = call / attr_access / name
