@@ -1,5 +1,6 @@
 activity = statement* EOF // sig-call test
 statement = (inst_assignment / signal_action / call)? EOL
+//statement = call? EOL
 
 signal_action = name supplied_params? SP+ '->' (LINEWRAP / SP+) instance_set
 
@@ -28,7 +29,7 @@ NOT = '!' / 'not'
 
 call = instance_set operation+
 operation = '.' name supplied_params
-supplied_params = '(' SP* (param (',' param)*)? SP* ')'
+supplied_params = '(' SP* (param (',' SP+ param)*)? SP* ')'
 param = name (SP* ':' SP* scalar)?
 
 scalar = call / attr_access / name
@@ -36,10 +37,10 @@ attr_access = name '.' name
 
 path = name? hop+ // path to some instance set represented by a name
 hop = '/' (rnum / call / name) // rnum must be first since name can also match rnum
-
 name = word (NAME_GLUE word)* // One word or a sequence of delimited words (name used for most model elements)
 NAME_GLUE = r'[ _]' // delmits words within a name
 rnum = r'O?R[1-9][0-9]*' // Relationship number (name used for relationships)
+//word = r'[A-Za-z][A-Za-z0-9]*'
 word = ignore_keywords r'[A-Za-z][A-Za-z0-9]*'
 ignore_keywords = !" true" !"true " !" false" !"false " !" and" !"and " !" or" !"or " !" not" !"not " !" its" !"its " ! " me" !" me"
 LINEWRAP = EOL SP* // end of line followed by optional indent on next line

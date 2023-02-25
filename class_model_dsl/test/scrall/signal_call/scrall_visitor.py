@@ -89,7 +89,7 @@ class ScrallVisitor(PTNodeVisitor):
         parameter set
         """
         s = children[-1] # Last value is always the flow name
-        p = children[0] if len(children) > 1 else f # First value is the parameter name only if followed by a flow name
+        p = children[0] if len(children) > 1 else s # First value is the parameter name only if followed by a flow name
         return Supplied_Parameter_a(pname=p, sval=s)
 
     def visit_supplied_params(self, node, children):
