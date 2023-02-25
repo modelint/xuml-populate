@@ -4,7 +4,8 @@ from collections import namedtuple
 
 Supplied_Parameter_a = namedtuple('Supplied_Parameter_a', 'pname sval')
 """Parameter name and flow name pair for a set of supplied parameters"""
-Call_a = namedtuple('Call_a', 'op_name supplied_params dest')
+Op_a = namedtuple('Op_a', 'op_name supplied_params')
+Call_a = namedtuple('Call_a', 'iset ops')
 Attr_Access_a = namedtuple('Attr_Access_a', 'cname attr')
 Attr_Comparison_a = namedtuple('Attr_Comparison_a', 'attr op scalar')
 Selection_a = namedtuple('Selection_a', 'cname card criteria')
@@ -69,7 +70,7 @@ class ScrallVisitor(PTNodeVisitor):
         return children
 
     def visit_call(self, node, children):
-        return Call_a(op_name=children[1]['op_name'], supplied_params=children[1]['params'], dest=children[0])
+        return Call_a(iset=children[0], ops=children[1:])
 
     def visit_operation(self, node, children):
         """
@@ -78,8 +79,7 @@ class ScrallVisitor(PTNodeVisitor):
         """
         op_name = children[0]
         params = [] if len(children) == 1 else children[-1]
-        return {'op_name': op_name, 'params': params}
-
+        return Op_a(op_name=op_name, supplied_params=params)
 
     def visit_param(self, node, children):
         """
@@ -124,9 +124,3 @@ class ScrallVisitor(PTNodeVisitor):
     def visit_SP(self, node, children):
         """ Discard space character """
         return None
-    #
-    # def visit_NL(self, node, children):
-    #     """ Discard comments and blank lines """
-    #     return None
-
-

@@ -50,12 +50,6 @@ class Activity:
         test_file_dir = Path(__file__).parent.parent / "test" / "scrall" / "signal_call"
         test_file_path = test_file_dir / "sig-call.scrall"
         test_text = open(test_file_path, 'r').read() + "\n"
-
-        # test_text = "TRAN.Goto floor(\n      floor : Height,\n   direction\n  )\n"
-        # test_text = "Cabin at destination( floor : Height, direction ) -> /R53/Transfer\n"
-        # test_text = "Cabin at destination( floor : Height, dir : Direction ) -> /R53/Transfer\n"
-        # test_text = "Cabin at destination( floor : Height, dir : Direction ) -> /R53/Transfer\n"
-        # test_text = "Cabin at destination() -> /R53/Transfer\n"
         print(test_text)
         result = ScrallParser.parse(scrall_text=test_text, debug=True)
         pass
