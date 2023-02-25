@@ -6,7 +6,7 @@ signal_action = name supplied_params? SP+ '->' (LINEWRAP / SP+) instance_set
 inst_assignment = name SP+ INST_ASSIGN SP+ instance_set
 INST_ASSIGN = '.=' / '..='
 
-instance_set = (path / selection / name)
+instance_set = (operation / path / selection / name)
 selection = name '(' SP* select_phrase SP* ')'
 select_phrase = (CARD ',' SP* criteria / criteria / CARD )
 attr_comparison = RANK? REFLEX? name comparison?
@@ -26,8 +26,8 @@ OR = 'or'
 AND = 'and'
 NOT = '!' / 'not'
 
-call = instance_set '.' operation
-operation = name supplied_params
+call = instance_set operation
+operation = '.' name supplied_params
 supplied_params = '(' SP* (param (',' param)*)? SP* ')'
 param = name (SP* ':' SP* scalar)?
 
@@ -40,8 +40,9 @@ hop = '/' (rnum / call / name) // rnum must be first since name can also match r
 name = word (NAME_GLUE word)* // One word or a sequence of delimited words (name used for most model elements)
 NAME_GLUE = r'[ _]' // delmits words within a name
 rnum = r'O?R[1-9][0-9]*' // Relationship number (name used for relationships)
-word = ignore_keywords r'[A-Za-z][A-Za-z0-9]*'
-ignore_keywords = !" true" !"true " !" false" !"false " !" and" !"and " !" or" !"or " !" not" !"not " !" its" !"its " ! " me" !" me"
+//word = ignore_keywords r'[A-Za-z][A-Za-z0-9]*'
+word = r'[A-Za-z][A-Za-z0-9]*'
+//ignore_keywords = !" true" !"true " !" false" !"false " !" and" !"and " !" or" !"or " !" not" !"not " !" its" !"its " ! " me" !" me"
 LINEWRAP = EOL SP* // end of line followed by optional indent on next line
 EOL = SP* COMMENT? '\n' // end of line: Comments, blank lines, whitespace we can omit from the parser result
 COMMENT = '//' r'.*' // Comment slashes don't work if included in the regular expression for some reason
