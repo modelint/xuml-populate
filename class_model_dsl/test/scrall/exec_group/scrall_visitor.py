@@ -13,6 +13,7 @@ Inst_Assignment_a = namedtuple('Inst_Assignment_a', 'lhs card rhs')
 Signal_a = namedtuple('Signal_a', 'event supplied_params dest')
 Signal_Action_a = namedtuple('Signal_Action_a', 'event supplied_params dest delay')
 Block_a = namedtuple('Block_a', 'actions')
+Line_cluster_a = namedtuple('Line_cluster_a', 'actions')
 """Signal sent to trigger event at destination with optional supplied parameters"""
 
 class ScrallVisitor(PTNodeVisitor):
@@ -21,16 +22,16 @@ class ScrallVisitor(PTNodeVisitor):
         return [c for c in children if c]
 
     def visit_execution_group(self, node, children):
-        return children
+        return children[0]
 
     def visit_line_cluster(self, node, children):
-        return children
+        return Line_cluster_a(actions=children)
 
     def visit_block(self, node, children):
         return Block_a(actions=children)
 
     def visit_action(self, node, children):
-        return children
+        return children[0]
 
     def visit_signal_action(self, node, children):
         """
