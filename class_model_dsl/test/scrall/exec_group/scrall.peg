@@ -1,14 +1,9 @@
 activity = execution_group* EOF // exec_group test
-execution_group = block / (SP* line_cluster)
+execution_group = sequence_token* (block / (SP* line_cluster)) sequence_token*
 block = '{' LINEWRAP* execution_group* '}' EOL
 line_cluster = action (SP* ';' SP* action)* EOL
 
-//action_block = '{' (__ execution_group __)+ '}' __
-//initial_sequence_token = r'[ \t]*\[' name ']' SPACE* // SPACE* sequence_token SPACE* (??)
-//sequence_token = '[' name ']' SPACE*
-//input_sequence_set = initial_sequence_token sequence_token*
-//output_sequence_set = sequence_token* NEWLINE
-//execution_group = input_sequence_set? (action_block / line_cluster / action) SPACE* output_sequence_set?
+sequence_token = '[' name ']' SP*
 
 action = (inst_assignment / signal_action / call)?
 
