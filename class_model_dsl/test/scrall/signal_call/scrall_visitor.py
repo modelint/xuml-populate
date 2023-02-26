@@ -11,6 +11,7 @@ Attr_Comparison_a = namedtuple('Attr_Comparison_a', 'attr op scalar')
 Selection_a = namedtuple('Selection_a', 'cname card criteria')
 Inst_Assignment_a = namedtuple('Inst_Assignment_a', 'lhs card rhs')
 Signal_a = namedtuple('Signal_a', 'event supplied_params dest')
+Signal_Action_a = namedtuple('Signal_Action_a', 'event supplied_params dest delay')
 """Signal sent to trigger event at destination with optional supplied parameters"""
 
 class ScrallVisitor(PTNodeVisitor):
@@ -25,8 +26,16 @@ class ScrallVisitor(PTNodeVisitor):
         """
         Returns event_name ?supplied_params instance_set
         """
+        s = children[0]
+        delay = None if len(children) < 2 else children[1]['delay']
+        return Signal_Action_a(event=s.event, supplied_params=s.supplied_params, dest=s.dest, delay=delay)
+
+    def visit_signal(self, node, children):
         params = [] if len(children) == 2 else children[1]
         return Signal_a(event=children[0], supplied_params=params, dest=children[-1])
+
+    def visit_delay(self, node, children):
+        return {'delay': children[0]}
 
 
     def visit_inst_assignment(self, node, children):

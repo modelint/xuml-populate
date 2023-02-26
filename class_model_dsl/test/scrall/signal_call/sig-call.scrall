@@ -4,4 +4,4 @@ my plane.Land( Runway: north)
 TRAN.Goto floor(floor : Height, direction)
 Cabin at destination( floor : Height, direction ) -> /R53/Transfer
 Cabin at destination( floor : Height, dir : Direction ) -> /R53/Transfer
-Cabin at destination() -> /R53/Transfer
+Cabin at destination() -> /R53/Transfer @ wait time

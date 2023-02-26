@@ -2,7 +2,9 @@ activity = statement* EOF // sig-call test
 statement = (inst_assignment / signal_action / call)? EOL
 //statement = call? EOL
 
-signal_action = name supplied_params? SP+ '->' (LINEWRAP / SP+) instance_set
+signal_action = signal delay?
+signal = name supplied_params? SP+ '->' (LINEWRAP / SP+) instance_set
+delay = SP+ '@' SP+ name
 
 inst_assignment = name SP+ INST_ASSIGN SP+ instance_set
 INST_ASSIGN = '.=' / '..='
