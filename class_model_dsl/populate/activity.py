@@ -7,7 +7,7 @@ from pathlib import Path
 from PyRAL.relvar import Relvar
 from class_model_dsl.populate.element import Element
 # from class_model_dsl.parse.scrall_parser import ScrallParser
-from class_model_dsl.test.scrall.signal_call.scrall_parser import ScrallParser
+from class_model_dsl.test.scrall.exec_group.scrall_parser import ScrallParser
 from typing import TYPE_CHECKING
 from class_model_dsl.populate.pop_types import Activity_i, Asynchronous_Activity_i,\
     State_Activity_i, Signature_i, Parameter_i
@@ -47,8 +47,8 @@ class Activity:
     @classmethod
     def parse(cls, actions, debug=False):
         # Read the test file
-        test_file_dir = Path(__file__).parent.parent / "test" / "scrall" / "signal_call"
-        test_file_path = test_file_dir / "sig-call.scrall"
+        test_file_dir = Path(__file__).parent.parent / "test" / "scrall" / "exec_group"
+        test_file_path = test_file_dir / "exec_group.scrall"
         test_text = open(test_file_path, 'r').read() + "\n"
         print(test_text)
         result = ScrallParser.parse(scrall_text=test_text, debug=True)

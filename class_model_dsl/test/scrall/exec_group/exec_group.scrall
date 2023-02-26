@@ -1,0 +1,7 @@
+Aircraft(1).Land( Runway: north)
+my plane .= Aircraft(Speed: v and Height > h)
+my plane.Land( Runway: north)
+TRAN.Goto floor(floor : Height, direction)
+Cabin at destination( floor : Height, direction ) -> /R53/Transfer
+Cabin at destination( floor : Height, dir : Direction ) -> /R53/Transfer
+Cabin at destination() -> /R53/Transfer @ wait time
