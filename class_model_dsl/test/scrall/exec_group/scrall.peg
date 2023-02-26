@@ -1,6 +1,16 @@
-activity = statement* EOF // exec_group test
-statement = (inst_assignment / signal_action / call)? EOL
-//statement = call? EOL
+activity = execution_group* EOF // exec_group test
+execution_group = block / (SP* line_cluster)
+block = '{' LINEWRAP* execution_group* '}' EOL
+line_cluster = action (SP* ';' SP* action)* EOL
+
+//action_block = '{' (__ execution_group __)+ '}' __
+//initial_sequence_token = r'[ \t]*\[' name ']' SPACE* // SPACE* sequence_token SPACE* (??)
+//sequence_token = '[' name ']' SPACE*
+//input_sequence_set = initial_sequence_token sequence_token*
+//output_sequence_set = sequence_token* NEWLINE
+//execution_group = input_sequence_set? (action_block / line_cluster / action) SPACE* output_sequence_set?
+
+action = (inst_assignment / signal_action / call)?
 
 signal_action = signal delay?
 signal = name supplied_params? SP+ '->' (LINEWRAP / SP+) instance_set
@@ -42,9 +52,9 @@ hop = '/' (rnum / call / name) // rnum must be first since name can also match r
 name = word (NAME_GLUE word)* // One word or a sequence of delimited words (name used for most model elements)
 NAME_GLUE = r'[ _]' // delmits words within a name
 rnum = r'O?R[1-9][0-9]*' // Relationship number (name used for relationships)
-//word = r'[A-Za-z][A-Za-z0-9]*'
-word = ignore_keywords r'[A-Za-z][A-Za-z0-9]*'
-ignore_keywords = !" true" !"true " !" false" !"false " !" and" !"and " !" or" !"or " !" not" !"not " !" its" !"its " ! " me" !" me"
+word = r'[A-Za-z][A-Za-z0-9]*'
+//word = ignore_keywords r'[A-Za-z][A-Za-z0-9]*'
+//ignore_keywords = !" true" !"true " !" false" !"false " !" and" !"and " !" or" !"or " !" not" !"not " !" its" !"its " ! " me" !" me"
 LINEWRAP = EOL SP* // end of line followed by optional indent on next line
 EOL = SP* COMMENT? '\n' // end of line: Comments, blank lines, whitespace we can omit from the parser result
 COMMENT = '//' r'.*' // Comment slashes don't work if included in the regular expression for some reason
