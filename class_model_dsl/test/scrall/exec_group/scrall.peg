@@ -1,8 +1,7 @@
 activity = execution_unit* EOF // exec_group test
 execution_unit = input_tokens? action_group output_tokens? EOL
-action_group = block / line_cluster
+action_group = SP* (block / action)
 block = '{' LINEWRAP* execution_unit* '}'
-line_cluster = SP* action (SP* ';' SP* action)*
 
 input_tokens = sequence_token+
 output_tokens = sequence_token+
