@@ -1,5 +1,1 @@
-okay? {
-    Aircraft(1).Land( Runway: north)
-    Cabin at destination() -> /R53/Transfer<X>
-    Arrived() -> there
-} : Unarrived() -> there
+!* aircraft

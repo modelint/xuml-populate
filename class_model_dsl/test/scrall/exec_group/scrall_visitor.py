@@ -16,6 +16,7 @@ Block_a = namedtuple('Block_a', 'actions')
 Sequence_Token_a = namedtuple('Sequence_Token_a', 'name')
 Execution_Unit_a = namedtuple('Execution_Unit_a', 'input_tokens output_tokens action_group')
 Decision_a = namedtuple('Decision_a', 'input true_result false_result')
+Delete_Action_a = namedtuple('Delete_Action_a', 'instance_set')
 """Signal sent to trigger event at destination with optional supplied parameters"""
 
 class ScrallVisitor(PTNodeVisitor):
@@ -30,6 +31,10 @@ class ScrallVisitor(PTNodeVisitor):
         otok = None if not otok else otok[0]
         ag = children.results.get('action_group')[0]
         return Execution_Unit_a(input_tokens=itok, output_tokens=otok, action_group=ag)
+
+    def visit_delete(self, node, children):
+        iset = children.results.get('instance_set')
+        return Delete_Action_a(instance_set=iset)
 
     def visit_block(self, node, children):
         return Block_a(actions=children)

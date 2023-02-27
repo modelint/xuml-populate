@@ -12,7 +12,9 @@ decision = name true_result false_result?
 true_result = '?' SP* action_group
 false_result = SP* ':' SP* action_group
 
-action = (decision / inst_assignment / signal_action / call)?
+delete = '!*' SP* instance_set
+
+action = (delete / decision / inst_assignment / signal_action / call)?
 
 signal_action = signal delay?
 signal = name supplied_params? SP+ '->' (LINEWRAP / SP+) instance_set
