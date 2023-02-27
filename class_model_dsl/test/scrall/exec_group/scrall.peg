@@ -9,7 +9,11 @@ output_tokens = sequence_token+
 sequence_token = SP* '<' token_name '>' SP*
 token_name = r'[A-Za-z0-9]+'
 
-action = (inst_assignment / signal_action / call)?
+decision = name true_result false_result?
+true_result = '?' SP* action_group
+false_result = SP* ':' SP* action_group
+
+action = (decision / inst_assignment / signal_action / call)?
 
 signal_action = signal delay?
 signal = name supplied_params? SP+ '->' (LINEWRAP / SP+) instance_set

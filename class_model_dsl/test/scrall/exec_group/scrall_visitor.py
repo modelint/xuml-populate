@@ -16,6 +16,7 @@ Block_a = namedtuple('Block_a', 'actions')
 Line_Cluster_a = namedtuple('Line_Cluster_a', 'actions')
 Sequence_Token_a = namedtuple('Sequence_Token_a', 'name')
 Execution_Unit_a = namedtuple('Execution_Unit_a', 'input_tokens output_tokens action_group')
+Decision_a = namedtuple('Decision_a', 'input true_result false_result')
 """Signal sent to trigger event at destination with optional supplied parameters"""
 
 class ScrallVisitor(PTNodeVisitor):
@@ -40,6 +41,15 @@ class ScrallVisitor(PTNodeVisitor):
         return Block_a(actions=children)
 
     def visit_action(self, node, children):
+        return children[0]
+
+    def visit_decision(self, node, children):
+        return Decision_a(input=children[0], true_result=children[1], false_result=None if len(children) < 3 else children[2])
+
+    def visit_true_result(self, node, children):
+        return children[0]
+
+    def visit_false_result(self, node, children):
         return children[0]
 
     def visit_input_tokens(self, node, children):
