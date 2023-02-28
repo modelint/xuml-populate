@@ -17,6 +17,8 @@ Sequence_Token_a = namedtuple('Sequence_Token_a', 'name')
 Execution_Unit_a = namedtuple('Execution_Unit_a', 'input_tokens output_tokens action_group')
 Decision_a = namedtuple('Decision_a', 'input true_result false_result')
 Delete_Action_a = namedtuple('Delete_Action_a', 'instance_set')
+Case_a = namedtuple('Case_a', 'enums execution_unit')
+Scalar_Switch_a = namedtuple('Scalar_Switch_a', 'scalar_input_flow cases')
 """Signal sent to trigger event at destination with optional supplied parameters"""
 
 class ScrallVisitor(PTNodeVisitor):
@@ -31,6 +33,18 @@ class ScrallVisitor(PTNodeVisitor):
         otok = None if not otok else otok[0]
         ag = children.results.get('action_group')[0]
         return Execution_Unit_a(input_tokens=itok, output_tokens=otok, action_group=ag)
+
+    def visit_scalar_switch(self, node, children):
+        return Scalar_Switch_a(scalar_input_flow=children[0], cases=children[1:])
+
+    def visit_case_block(self, node, children):
+        return children
+
+    def visit_case(self, node, children):
+        return Case_a(enums=children.results['enum_value'], execution_unit=children.results['execution_unit'][0])
+
+    def visit_enum_value(self, node, children):
+        return children.results['name'][0]
 
     def visit_delete(self, node, children):
         iset = children.results.get('instance_set')

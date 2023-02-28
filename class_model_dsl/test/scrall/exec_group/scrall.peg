@@ -1,28 +1,46 @@
 activity = execution_unit* EOF // exec_group test
 execution_unit = input_tokens? action_group output_tokens? EOL
-action_group = SP* (block / action)
+action_group = SP* (block / action) // Set of actions with a common control flow in/out
 block = '{' LINEWRAP* execution_unit* '}'
+action = (delete / scalar_switch / decision / inst_assignment / signal_action / call)?
 
-input_tokens = sequence_token+
-output_tokens = sequence_token+
-sequence_token = SP* '<' token_name '>' SP*
-token_name = r'[A-Za-z0-9]+'
+// Explicit sequence using control flow inputs and outputs
+input_tokens = sequence_token+ // Control flow input
+output_tokens = sequence_token+ // Control flow output
+sequence_token = SP* '<' token_name '>' SP* // Named control flow
+token_name = r'[A-Za-z0-9]+' // No spaces in token names, often singal digit: <1>
 
-decision = name true_result false_result?
-true_result = '?' SP* action_group
-false_result = SP* ':' SP* action_group
+// Decision action
+decision = name true_result false_result? // Control flow version of an if-then
+true_result = '?' SP* action_group // If
+false_result = SP* ':' SP* action_group // Else
 
+// Switch action
+//switch = scalar_switch / subclass_switch
+scalar_switch = name '?' SP* case_block // Boolean expr triggers case_block
+case_block = '{' LINEWRAP* case+ '}'
+case = (SP* enum_value)+ SP* ':' (LINEWRAP* / SP*) execution_unit
+enum_value = '.' name // Scalar switch has enum value cases
+
+// Delete action
 delete = '!*' SP* instance_set
 
-action = (delete / decision / inst_assignment / signal_action / call)?
-
+// Signal action
 signal_action = signal delay?
 signal = name supplied_params? SP+ '->' (LINEWRAP / SP+) instance_set
 delay = SP+ '@' SP+ name
 
+// Instance assignment action
 inst_assignment = name SP+ INST_ASSIGN SP+ instance_set
 INST_ASSIGN = '.=' / '..='
 
+// Synchronous call action (method or ee operation)
+call = instance_set operation+
+operation = '.' name supplied_params
+supplied_params = '(' SP* (param (',' SP+ param)*)? SP* ')'
+param = name (SP* ':' SP* scalar)?
+
+// Instance set
 instance_set = (operation / path / selection / name)
 selection = name '(' SP* select_phrase SP* ')'
 select_phrase = (CARD ',' SP* criteria / criteria / CARD )
@@ -38,27 +56,26 @@ logical_or = logical_and (SP+ OR SP+ logical_and)*
 logical_and = logical_not (( (SP+ AND) / ',') SP+ logical_not)*
 logical_not = (NOT SP+)? attr_comparison
 
-
 OR = 'or'
 AND = 'and'
 NOT = '!' / 'not'
 
-call = instance_set operation+
-operation = '.' name supplied_params
-supplied_params = '(' SP* (param (',' SP+ param)*)? SP* ')'
-param = name (SP* ':' SP* scalar)?
+scalar = call / attr_access / name // May yield a scalar value
+attr_access = name '.' name // Attribute value accessor <class>.<attr>
 
-scalar = call / attr_access / name
-attr_access = name '.' name
-
+// Relationship traversal
 path = name? hop+ // path to some instance set represented by a name
 hop = '/' (rnum / call / selection / name) // rnum must be first since name can also match rnum
+
+// Names
 name = word (NAME_GLUE word)* // One word or a sequence of delimited words (name used for most model elements)
 NAME_GLUE = r'[ _]' // delmits words within a name
 rnum = r'O?R[1-9][0-9]*' // Relationship number (name used for relationships)
 word = r'[A-Za-z][A-Za-z0-9]*'
 //word = ignore_keywords r'[A-Za-z][A-Za-z0-9]*'
 //ignore_keywords = !" true" !"true " !" false" !"false " !" and" !"and " !" or" !"or " !" not" !"not " !" its" !"its " ! " me" !" me"
+
+// Whitespace and comments
 LINEWRAP = EOL SP* // end of line followed by optional indent on next line
 EOL = SP* COMMENT? '\n' // end of line: Comments, blank lines, whitespace we can omit from the parser result
 COMMENT = '//' r'.*' // Comment slashes don't work if included in the regular expression for some reason
