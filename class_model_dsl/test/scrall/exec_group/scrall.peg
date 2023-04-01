@@ -8,7 +8,7 @@ action = (delete / scalar_switch / decision / inst_assignment / signal_action / 
 input_tokens = sequence_token+ // Control flow input
 output_tokens = sequence_token+ // Control flow output
 sequence_token = SP* '<' token_name '>' SP* // Named control flow
-token_name = r'[A-Za-z0-9]+' // No spaces in token names, often singal digit: <1>
+token_name = r'[A-Za-z0-9_]+' // No spaces in token names, often single digit: <1>
 
 // Decision action
 decision = name true_result false_result? // Control flow version of an if-then
