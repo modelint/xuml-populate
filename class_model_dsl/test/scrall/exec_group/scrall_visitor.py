@@ -8,7 +8,7 @@ Op_a = namedtuple('Op_a', 'op_name supplied_params')
 Call_a = namedtuple('Call_a', 'iset ops')
 Attr_Access_a = namedtuple('Attr_Access_a', 'cname attr')
 Attr_Comparison_a = namedtuple('Attr_Comparison_a', 'attr op scalar')
-Selection_a = namedtuple('Selection_a', 'cname card criteria')
+Selection_a = namedtuple('Selection_a', 'card criteria')
 Inst_Assignment_a = namedtuple('Inst_Assignment_a', 'lhs card rhs')
 Signal_a = namedtuple('Signal_a', 'event supplied_params dest')
 Signal_Action_a = namedtuple('Signal_Action_a', 'event supplied_params dest delay')
@@ -101,33 +101,34 @@ class ScrallVisitor(PTNodeVisitor):
         return {'iset' : children}
 
     def visit_selection(self, node, children):
-        return Selection_a(cname=children[0], card=children[1][0], criteria=None if len(children[1]) != 2 else children[1][1])
+        # return Selection_a(card=children[0], criteria=None)
+        return Selection_a(card=children[0][0], criteria=None if len(children[0]) < 2 else children[0][1])
 
     def visit_select_phrase(self, node, children):
-        char1 = children[0][0]
-        explicit_card = char1 if char1 in ('1', '*') else None
-        card = explicit_card if explicit_card else '*'
-        if len(children) == 1 and explicit_card:
-            return [card]
+        explicit_card = children.results.get('CARD')
+        card = '*' if not explicit_card else explicit_card[0]
+        criteria = children.results.get('criteria')
+        if criteria:
+            return [card, criteria[0]]
         else:
-            return [card, children[-1]]
+            return [card]
 
     def visit_criteria(self, node, children):
         return children
 
     def visit_attr_comparison(self, node, children):
-        op, scalar = (':', 'true') if len(children) == 1 else children[1]
-        # op, scalar = (':', 'true') if len(children) == 1 else (children[1][0], children[1][1])
-        return Attr_Comparison_a(attr=children[0], op=op, scalar=scalar)
+        rhs_compare = children.results.get('comparison')
+        op, scalar = (':', 'true') if not rhs_compare else rhs_compare[0]
+        return Attr_Comparison_a(attr=children.results['name'][0], op=op, scalar=scalar)
 
     def visit_logical_or(self, node, children):
-        return children
+        return children[0]
 
     def visit_logical_and(self, node, children):
-        return children
+        return children[0]
 
     def visit_logical_not(self, node, children):
-        return children
+        return children[0]
 
 
     def visit_comparison(self, node, children):

@@ -41,9 +41,10 @@ supplied_params = '(' SP* (param (',' SP+ param)*)? SP* ')'
 param = name (SP* ':' SP* scalar)?
 
 // Instance set
-instance_set = (operation / path / selection / name)
-selection = name '(' SP* select_phrase SP* ')'
-select_phrase = (CARD ',' SP* criteria / criteria / CARD )
+instance_set = (name / path) (selection / operation / path)*
+selection = '(' SP* select_phrase SP* ')'
+select_phrase = CARD
+select_phrase = ( (CARD ',' SP* criteria) / CARD / criteria )
 attr_comparison = RANK? REFLEX? name comparison?
 comparison = SP* (':' / '==' / COMPARE) SP* scalar
 CARD = '1' / '*'
@@ -64,8 +65,9 @@ scalar = call / attr_access / name // May yield a scalar value
 attr_access = name '.' name // Attribute value accessor <class>.<attr>
 
 // Relationship traversal
-path = name? hop+ // path to some instance set represented by a name
-hop = '/' (rnum / call / selection / name) // rnum must be first since name can also match rnum
+// We keep path components simple, always beginning with the '/' symbol
+path = hop+ // path to some instance set
+hop = '/' (rnum / name) // just a sequence of rels and phrase or class names
 
 // Names
 name = word (NAME_GLUE word)* // One word or a sequence of delimited words (name used for most model elements)

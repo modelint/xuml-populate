@@ -17,3 +17,7 @@ okay? {
     Arrived() -> there
 } : Unarrived() -> there
 !* /R1/Aircraft( landed )/R3/ATC(*)
+valve position? {
+    .open .stuck : close -> my valve
+    .closed : open -> my valve
+}
