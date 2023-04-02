@@ -2,7 +2,7 @@ activity = execution_unit* EOF // exec_group test
 execution_unit = input_tokens? action_group output_tokens? EOL
 action_group = SP* (block / action) // Set of actions with a common control flow in/out
 block = '{' LINEWRAP* execution_unit* '}'
-action = (delete / scalar_switch / decision / inst_assignment / signal_action / call)?
+action = (call / delete / scalar_switch / decision / inst_assignment / signal_action )?
 
 // Explicit sequence using control flow inputs and outputs
 input_tokens = sequence_token+ // Control flow input
@@ -35,7 +35,7 @@ inst_assignment = name SP+ INST_ASSIGN SP+ instance_set
 INST_ASSIGN = '.=' / '..='
 
 // Synchronous call action (method or ee operation)
-call = instance_set operation+
+call = instance_set // Post-parse verify that last element is an operation, otherwise invalid call
 operation = '.' name supplied_params
 supplied_params = '(' SP* (param (',' SP+ param)*)? SP* ')'
 param = name (SP* ':' SP* scalar)?

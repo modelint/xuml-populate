@@ -21,3 +21,4 @@ valve position? {
     .open .stuck : close -> my valve
     .closed : open -> my valve
 }
+a ..= Cabin(*).Closest()/R2/Shaft.Nearest()(id : shaft)
