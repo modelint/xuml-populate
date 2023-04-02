@@ -55,7 +55,7 @@ COMPARE = ':' / '==' / '>=' / '>' / '<=' / '<'
 criteria = SP* logical_or SP*
 logical_or = logical_and (SP+ OR SP+ logical_and)*
 logical_and = logical_not (( (SP+ AND) / ',') SP+ logical_not)*
-logical_not = (NOT SP+)? attr_comparison
+logical_not = (NOT SP+)? (attr_comparison / ("(" criteria ")") )
 
 OR = 'or'
 AND = 'and'
