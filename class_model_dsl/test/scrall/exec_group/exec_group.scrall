@@ -1,1 +1,1 @@
-tower/R1/Zone
+my plane .= Aircraft(Speed: v and not Height > h)

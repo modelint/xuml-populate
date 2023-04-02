@@ -2,7 +2,7 @@ activity = execution_unit* EOF // exec_group test
 execution_unit = input_tokens? action_group output_tokens? EOL
 action_group = SP* (block / action) // Set of actions with a common control flow in/out
 block = '{' LINEWRAP* execution_unit* '}'
-action = (call / delete / scalar_switch / decision / inst_assignment / signal_action )?
+action = (delete / scalar_switch / decision / inst_assignment / signal_action / call)?
 
 // Explicit sequence using control flow inputs and outputs
 input_tokens = sequence_token+ // Control flow input
@@ -61,7 +61,7 @@ OR = 'or'
 AND = 'and'
 NOT = '!' / 'not'
 
-scalar = call / attr_access / name // May yield a scalar value
+scalar = attr_access / name operation / name // May yield a scalar value
 attr_access = name '.' name // Attribute value accessor <class>.<attr>
 
 // Relationship traversal
@@ -73,9 +73,9 @@ hop = '/' (rnum / name) // just a sequence of rels and phrase or class names
 name = word (NAME_GLUE word)* // One word or a sequence of delimited words (name used for most model elements)
 NAME_GLUE = r'[ _]' // delmits words within a name
 rnum = r'O?R[1-9][0-9]*' // Relationship number (name used for relationships)
-word = r'[A-Za-z][A-Za-z0-9]*'
-//word = ignore_keywords r'[A-Za-z][A-Za-z0-9]*'
-//ignore_keywords = !" true" !"true " !" false" !"false " !" and" !"and " !" or" !"or " !" not" !"not " !" its" !"its " ! " me" !" me"
+//word = r'[A-Za-z][A-Za-z0-9]*'
+word = ignore_keywords r'[A-Za-z][A-Za-z0-9]*'
+ignore_keywords = !" true" !"true " !" false" !"false " !" and" !"and " !" or" !"or " !" not" !"not " !" its" !"its " ! " me" !" me"
 
 // Whitespace and comments
 LINEWRAP = EOL SP* // end of line followed by optional indent on next line

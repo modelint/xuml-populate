@@ -11,6 +11,7 @@ Attr_Comparison_a = namedtuple('Attr_Comparison_a', 'attr op scalar')
 Selection_a = namedtuple('Selection_a', 'card criteria')
 Inst_Assignment_a = namedtuple('Inst_Assignment_a', 'lhs card rhs')
 Signal_a = namedtuple('Signal_a', 'event supplied_params dest')
+"""Signal sent to trigger event at destination with optional supplied parameters"""
 Signal_Action_a = namedtuple('Signal_Action_a', 'event supplied_params dest delay')
 Block_a = namedtuple('Block_a', 'actions')
 Sequence_Token_a = namedtuple('Sequence_Token_a', 'name')
@@ -19,7 +20,10 @@ Decision_a = namedtuple('Decision_a', 'input true_result false_result')
 Delete_Action_a = namedtuple('Delete_Action_a', 'instance_set')
 Case_a = namedtuple('Case_a', 'enums execution_unit')
 Scalar_Switch_a = namedtuple('Scalar_Switch_a', 'scalar_input_flow cases')
-"""Signal sent to trigger event at destination with optional supplied parameters"""
+AND_a = namedtuple('AND_a', 'a b')
+OR_a = namedtuple('OR_a', 'a b')
+NOT_a = namedtuple('OR_a', 'op a')
+"""op is 'not' if 'not' specified, otherwise noop"""
 
 class ScrallVisitor(PTNodeVisitor):
 
@@ -122,14 +126,19 @@ class ScrallVisitor(PTNodeVisitor):
         return Attr_Comparison_a(attr=children.results['name'][0], op=op, scalar=scalar)
 
     def visit_logical_or(self, node, children):
-        return children[0]
+        a = children[0]
+        b = None if len(children) < 2 else children[1]
+        return OR_a(a,b)
 
     def visit_logical_and(self, node, children):
-        return children[0]
+        a = children[0]
+        b = None if len(children) < 2 else children[1]
+        return AND_a(a,b)
 
     def visit_logical_not(self, node, children):
-        return children[0]
-
+        op = 'not' if len(children) > 1 else None
+        a = children[0] if not op else children[1]
+        return NOT_a(op,a)
 
     def visit_comparison(self, node, children):
         return children
