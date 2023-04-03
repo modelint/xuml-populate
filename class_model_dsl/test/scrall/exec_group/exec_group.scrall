@@ -1,1 +1,26 @@
+tower.nearest plane().Land( Runway: north)
+Aircraft(1).Land( Runway: north)
+my plane .= Aircraft(Speed: v and Height > h)
+my plane .= Aircraft(Speed: v and not (Height > h or Length < l))
+my plane.Land( Runway: north)
+TRAN.Goto floor(floor : Height, direction)
+Cabin at destination( floor : Height, direction ) -> /R53/Transfer
+Cabin at destination( floor : Height, dir : Direction ) -> /R53/Transfer
+Cabin at destination() -> /R53/Transfer
+<1>{
+    Aircraft(1).Land( Runway: north)
+    Cabin at destination() -> /R53/Transfer<X>
+    <X>Arrived() -> there
+}<2><3>
+okay? {
+    Aircraft(1).Land( Runway: north)
+    Cabin at destination() -> /R53/Transfer<X>
+    Arrived() -> there
+} : Unarrived() -> there
+!* /R1/Aircraft( landed )/R3/ATC(*)
+valve position? {
+    .open .stuck : close -> my valve
+    .closed : open -> my valve
+}
+a ..= Cabin(*).Closest()/R2/Shaft.Nearest()(id : shaft)
 speed = myaircraft.groundspeed + area.checkwind() * airspeed

@@ -1,5 +1,5 @@
 activity = execution_unit* EOF // exec_group test
-execution_unit = input_tokens? action_group output_tokens? EOL
+execution_unit = input_tokens? action_group output_tokens? EOL+
 action_group = SP* (block / action) // Set of actions with a common control flow in/out
 block = '{' LINEWRAP* execution_unit* '}'
 action = (scalar_assignment / delete / scalar_switch / decision / inst_assignment / signal_action / call)?
@@ -71,7 +71,6 @@ UNARY = ADD
 ADD = ("+" / "-")
 MULT = ("*" / "/")
 
-//scalar = attr_access / name // Debug scalar expr, delete when finished
 scalar = name operation / attr_access / name // May yield a scalar value
 attr_access = name '.' name // Attribute value accessor <class>.<attr>
 
