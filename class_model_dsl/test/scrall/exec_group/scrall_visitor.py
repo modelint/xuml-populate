@@ -23,6 +23,10 @@ Scalar_Switch_a = namedtuple('Scalar_Switch_a', 'scalar_input_flow cases')
 AND_a = namedtuple('AND_a', 'a b')
 OR_a = namedtuple('OR_a', 'a b')
 NOT_a = namedtuple('OR_a', 'op a')
+FACTOR_a = namedtuple('FACTOR_a', 'op a b')
+ADD_a = namedtuple('ADD_a', 'op a b')
+EXPR_a = namedtuple('EXPR_a', 'op a b')
+Scalar_Assignment_a = namedtuple('Scalar_Assignment_a', 'lhs rhs')
 """op is 'not' if 'not' specified, otherwise noop"""
 
 class ScrallVisitor(PTNodeVisitor):
@@ -168,6 +172,22 @@ class ScrallVisitor(PTNodeVisitor):
 
     def visit_supplied_params(self, node, children):
         return children
+
+    def visit_scalar_assignment(self, node, children):
+        return Scalar_Assignment_a(*children)
+
+    def visit_scalar_expr(self, node, children):
+        a, b = children.results['term']
+        add_op = children.results.get('ADD')
+        factor_op = children.results.get('MULT')
+        e = ADD_a(add_op, a, b) if add_op else FACTOR_a(factor_op, a, b)
+        return e
+
+    def visit_term(self, node, children):
+        return children[0]
+
+    def visit_factor(self, node, children):
+        return children[0]
 
     def visit_attr_access(self, node, children):
         return Attr_Access_a(cname=children[0], attr=children[1])

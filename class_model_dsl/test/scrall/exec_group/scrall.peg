@@ -2,7 +2,7 @@ activity = execution_unit* EOF // exec_group test
 execution_unit = input_tokens? action_group output_tokens? EOL
 action_group = SP* (block / action) // Set of actions with a common control flow in/out
 block = '{' LINEWRAP* execution_unit* '}'
-action = (delete / scalar_switch / decision / inst_assignment / signal_action / call)?
+action = (scalar_assignment / delete / scalar_switch / decision / inst_assignment / signal_action / call)?
 
 // Explicit sequence using control flow inputs and outputs
 input_tokens = sequence_token+ // Control flow input
@@ -61,7 +61,18 @@ OR = 'or'
 AND = 'and'
 NOT = '!' / 'not'
 
-scalar = attr_access / name operation / name // May yield a scalar value
+// math and boolean operator precedence
+scalar_assignment = name SP* '=' SP* scalar_expr
+scalar_expr = term (SP? ADD SP? term)*
+term = factor (SP? MULT SP? factor)*
+factor = UNARY? (scalar / "(" scalar_expr ")")
+
+UNARY = ADD
+ADD = ("+" / "-")
+MULT = ("*" / "/")
+
+scalar = name // Debug scalar expr, delete when finished
+//scalar = attr_access / name operation / name // May yield a scalar value
 attr_access = name '.' name // Attribute value accessor <class>.<attr>
 
 // Relationship traversal
