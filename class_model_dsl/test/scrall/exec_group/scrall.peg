@@ -65,14 +65,14 @@ NOT = '!' / 'not'
 scalar_assignment = name SP* '=' SP* scalar_expr
 scalar_expr = term (SP? ADD SP? term)*
 term = factor (SP? MULT SP? factor)*
-factor = UNARY? (scalar / "(" scalar_expr ")")
+factor = UNARY? (scalar / "(" SP* scalar_expr SP* ")")
 
 UNARY = ADD
 ADD = ("+" / "-")
 MULT = ("*" / "/")
 
-scalar = name // Debug scalar expr, delete when finished
-//scalar = attr_access / name operation / name // May yield a scalar value
+//scalar = attr_access / name // Debug scalar expr, delete when finished
+scalar = name operation / attr_access / name // May yield a scalar value
 attr_access = name '.' name // Attribute value accessor <class>.<attr>
 
 // Relationship traversal

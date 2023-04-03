@@ -26,6 +26,7 @@ NOT_a = namedtuple('OR_a', 'op a')
 FACTOR_a = namedtuple('FACTOR_a', 'op a b')
 ADD_a = namedtuple('ADD_a', 'op a b')
 EXPR_a = namedtuple('EXPR_a', 'op a b')
+SCALAR_a = namedtuple('SCALAR_a', 's m')
 Scalar_Assignment_a = namedtuple('Scalar_Assignment_a', 'lhs rhs')
 """op is 'not' if 'not' specified, otherwise noop"""
 
@@ -177,17 +178,31 @@ class ScrallVisitor(PTNodeVisitor):
         return Scalar_Assignment_a(*children)
 
     def visit_scalar_expr(self, node, children):
-        a, b = children.results['term']
         add_op = children.results.get('ADD')
-        factor_op = children.results.get('MULT')
-        e = ADD_a(add_op, a, b) if add_op else FACTOR_a(factor_op, a, b)
+        if not add_op:
+            return children[0]
+        else:
+            a, b = children.results['term']
+            e = ADD_a(add_op, a, b)
         return e
 
     def visit_term(self, node, children):
-        return children[0]
+        if len(children) == 1:
+            return children[0]
+        else:
+            a, b = children.results['factor']
+            factor_op = children.results['MULT'][0]
+            return FACTOR_a(factor_op, a, b)
 
     def visit_factor(self, node, children):
-        return children[0]
+        """
+        unary? ( scalar / scalar_exp )
+        """
+        if len(children) == 2:
+            s, m = children
+        else:
+            s, m = None, children[0]
+        return SCALAR_a( s, m )
 
     def visit_attr_access(self, node, children):
         return Attr_Access_a(cname=children[0], attr=children[1])

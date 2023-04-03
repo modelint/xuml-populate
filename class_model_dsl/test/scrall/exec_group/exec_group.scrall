@@ -1,1 +1,1 @@
-fruit = apple + pear
+speed = myaircraft.groundspeed + area.checkwind() * airspeed
