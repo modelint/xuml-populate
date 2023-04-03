@@ -46,7 +46,7 @@ selection = '(' SP* select_phrase SP* ')'
 select_phrase = CARD
 select_phrase = ( (CARD ',' SP* criteria) / CARD / criteria )
 attr_comparison = RANK? REFLEX? name comparison?
-comparison = SP* (':' / '==' / COMPARE) SP* scalar
+comparison = SP* (':' / '==' / COMPARE) SP* scalar_expr
 CARD = '1' / '*'
 RANK = '+^' / '-^'
 REFLEX = 'its.'

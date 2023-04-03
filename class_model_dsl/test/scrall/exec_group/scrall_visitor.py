@@ -7,7 +7,7 @@ Supplied_Parameter_a = namedtuple('Supplied_Parameter_a', 'pname sval')
 Op_a = namedtuple('Op_a', 'op_name supplied_params')
 Call_a = namedtuple('Call_a', 'iset ops')
 Attr_Access_a = namedtuple('Attr_Access_a', 'cname attr')
-Attr_Comparison_a = namedtuple('Attr_Comparison_a', 'attr op scalar')
+Attr_Comparison_a = namedtuple('Attr_Comparison_a', 'attr op scalar_expr')
 Selection_a = namedtuple('Selection_a', 'card criteria')
 Inst_Assignment_a = namedtuple('Inst_Assignment_a', 'lhs card rhs')
 Signal_a = namedtuple('Signal_a', 'event supplied_params dest')
@@ -127,8 +127,8 @@ class ScrallVisitor(PTNodeVisitor):
 
     def visit_attr_comparison(self, node, children):
         rhs_compare = children.results.get('comparison')
-        op, scalar = (':', 'true') if not rhs_compare else rhs_compare[0]
-        return Attr_Comparison_a(attr=children.results['name'][0], op=op, scalar=scalar)
+        op, scalar_expr = (':', 'true') if not rhs_compare else rhs_compare[0]
+        return Attr_Comparison_a(attr=children.results['name'][0], op=op, scalar_expr=scalar_expr)
 
     def visit_logical_or(self, node, children):
         a = children[0]
