@@ -63,10 +63,10 @@ scalar_logical_or = scalar_logical_and (SP* OR SP* scalar_logical_and)*
 scalar_logical_and = equality (SP* AND SP* equality)*
 equality = comparison (SP* EQUAL SP* comparison)*
 comparison = addition (SP* COMPARE SP* addition)*
-addition = mult (SP* ADD SP* mult)*
-mult = exponent (SP* MULT SP* exponent)*
-exponent = scalar_logical_not (EXP scalar_logical_not)*
-scalar_logical_not = (NOT SP*)? "-"? (scalar / "(" SP* scalar_expr SP* ")")
+addition = factor (SP* ADD SP* factor)*
+factor = exponent (SP* MULT SP* exponent)*
+exponent = term (EXP term)*
+term = (NOT SP*)? "-"? (scalar / "(" SP* scalar_expr SP* ")")
 
 scalar = name operation / attr_access / name // May yield a scalar value
 

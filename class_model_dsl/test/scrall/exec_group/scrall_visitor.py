@@ -22,10 +22,11 @@ Case_a = namedtuple('Case_a', 'enums execution_unit')
 Scalar_Switch_a = namedtuple('Scalar_Switch_a', 'scalar_input_flow cases')
 AND_a = namedtuple('AND_a', 'a b')
 OR_a = namedtuple('OR_a', 'a b')
-NOT_a = namedtuple('OR_a', 'op a')
+NOT_a = namedtuple('NOT_a', 'op a')
 FACTOR_a = namedtuple('FACTOR_a', 'op a b')
 ADD_a = namedtuple('ADD_a', 'op a b')
-EXPR_a = namedtuple('EXPR_a', 'op a b')
+EQUALITY_a = namedtuple('EQUALITY_a', 'op a b')
+EXPONENT_a = namedtuple('EXPONENT', 'op a b')
 SCALAR_a = namedtuple('SCALAR_a', 's m')
 Scalar_Assignment_a = namedtuple('Scalar_Assignment_a', 'lhs rhs')
 """op is 'not' if 'not' specified, otherwise noop"""
@@ -150,6 +151,11 @@ class ScrallVisitor(PTNodeVisitor):
         a = children[0] if not op else children[1]
         return NOT_a(op,a)
 
+    def visit_scalar_logical_and(self, node, children):
+        a = children[0]
+        b = None if len(children) < 2 else children[1]
+        return AND_a(a,b)
+
     def visit_scalar_logical_or(self, node, children):
         a = children[0]
         b = None if len(children) < 2 else children[1]
@@ -196,15 +202,31 @@ class ScrallVisitor(PTNodeVisitor):
             e = ADD_a(add_op, a, b)
         return e
 
-    def visit_term(self, node, children):
+    def visit_factor(self, node, children):
         if len(children) == 1:
             return children[0]
         else:
-            a, b = children.results['factor']
+            a, b = children.results['exponent']
             factor_op = children.results['MULT'][0]
             return FACTOR_a(factor_op, a, b)
 
-    def visit_factor(self, node, children):
+    def visit_equality(self, node, children):
+        if len(children) == 1:
+            return children[0]
+        else:
+            a, b = children.results['exponent']
+            exp_op = children.results['EQUAL'][0]
+            return EQUALITY_a(exp_op, a, b)
+
+    def visit_exponent(self, node, children):
+        if len(children) == 1:
+            return children[0]
+        else:
+            a, b = children.results['exponent']
+            exp_op = children.results['EXP'][0]
+            return EXPONENT_a(exp_op, a, b)
+
+    def visit_term(self, node, children):
         """
         unary? ( scalar / scalar_exp )
         """
