@@ -45,7 +45,7 @@ instance_set = (name / path) (selection / operation / path)*
 selection = '(' SP* select_phrase SP* ')'
 select_phrase = ( (CARD ',' SP* criteria) / CARD / criteria )
 attr_comparison = RANK? REFLEX? name comparison? // attr_name
-comparison = SP* COMPARE SP* scalar_expr
+comparison = SP* (MATCH / COMPARE) SP* scalar_expr
 CARD = '1' / '*'
 RANK = '+^' / '-^'
 REFLEX = 'its.'
@@ -66,7 +66,7 @@ comparison = addition (SP* COMPARE SP* addition)*
 addition = mult (SP* ADD SP* mult)*
 mult = exponent (SP* MULT SP* exponent)*
 exponent = scalar_logical_not (EXP scalar_logical_not)*
-logical_not = (NOT SP*)? "-"? (scalar / "(" SP* scalar_expr SP* ")")
+scalar_logical_not = (NOT SP*)? "-"? (scalar / "(" SP* scalar_expr SP* ")")
 
 scalar = name operation / attr_access / name // May yield a scalar value
 
@@ -74,7 +74,9 @@ OR = 'or'
 AND = 'and'
 NOT = '!' / 'not'
 EXP = '^'
-COMPARE = ':' / '==' / '>=' / '>' / '<=' / '<'
+EQUAL = '==' / '!='
+MATCH = ':'
+COMPARE = '>=' / '>' / '<=' / '<'
 UNARY = ADD
 ADD = ("+" / "-")
 MULT = ("*" / "/")

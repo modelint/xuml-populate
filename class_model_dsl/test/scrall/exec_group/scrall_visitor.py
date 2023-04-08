@@ -145,6 +145,16 @@ class ScrallVisitor(PTNodeVisitor):
         a = children[0] if not op else children[1]
         return NOT_a(op,a)
 
+    def visit_scalar_logical_not(self, node, children):
+        op = 'not' if len(children) > 1 else None
+        a = children[0] if not op else children[1]
+        return NOT_a(op,a)
+
+    def visit_scalar_logical_or(self, node, children):
+        a = children[0]
+        b = None if len(children) < 2 else children[1]
+        return OR_a(a,b)
+
     def visit_comparison(self, node, children):
         return children
 
