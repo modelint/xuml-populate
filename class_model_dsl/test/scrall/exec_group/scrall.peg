@@ -56,7 +56,7 @@ logical_and = logical_not (( (SP+ AND) / ',') SP+ logical_not)*
 logical_not = (NOT SP+)? (attr_comparison / ("(" criteria ")") )
 
 // math and boolean operator precedence
-scalar_assignment = name SP* '=' SP* scalar_expr
+scalar_assignment = name SP* SCALAR_ASSIGN SP* scalar_expr
 
 scalar_expr = SP* scalar_logical_or SP*
 scalar_logical_or = scalar_logical_and (SP* OR SP* scalar_logical_and)*
@@ -70,6 +70,7 @@ term = (NOT SP*)? "-"? (scalar / "(" SP* scalar_expr SP* ")")
 
 scalar = name operation / attr_access / name // May yield a scalar value
 
+SCALAR_ASSIGN = '='
 OR = 'or'
 AND = 'and'
 NOT = '!' / 'not'

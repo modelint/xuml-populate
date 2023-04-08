@@ -28,6 +28,7 @@ ADD_a = namedtuple('ADD_a', 'op a b')
 EQUALITY_a = namedtuple('EQUALITY_a', 'op a b')
 EXPONENT_a = namedtuple('EXPONENT', 'op a b')
 SCALAR_a = namedtuple('SCALAR_a', 's m')
+COMPARISON_a = namedtuple('COMPARISON_a', 'op a b')
 Scalar_Assignment_a = namedtuple('Scalar_Assignment_a', 'lhs rhs')
 """op is 'not' if 'not' specified, otherwise noop"""
 
@@ -146,23 +147,33 @@ class ScrallVisitor(PTNodeVisitor):
         a = children[0] if not op else children[1]
         return NOT_a(op,a)
 
-    def visit_scalar_logical_not(self, node, children):
-        op = 'not' if len(children) > 1 else None
-        a = children[0] if not op else children[1]
-        return NOT_a(op,a)
-
     def visit_scalar_logical_and(self, node, children):
-        a = children[0]
-        b = None if len(children) < 2 else children[1]
-        return AND_a(a,b)
+        if len(children) == 1:
+            return children[0]
+        else:
+            a, b = children.results['equality']
+            return AND_a(a, b)
+        # a = children[0]
+        # b = None if len(children) < 2 else children[1]
+        # return AND_a(a,b)
 
     def visit_scalar_logical_or(self, node, children):
-        a = children[0]
-        b = None if len(children) < 2 else children[1]
-        return OR_a(a,b)
+        if len(children) == 1:
+            return children[0]
+        else:
+            a, b = children.results['scalar_logical_and']
+            return OR_a(a, b)
+        # a = children[0]
+        # b = None if len(children) < 2 else children[1]
+        # return OR_a(a,b)
 
     def visit_comparison(self, node, children):
-        return children
+        if len(children) == 1:
+            return children[0]
+        else:
+            a, b = children.results['addition']
+            compare_op = children.results['COMPARE'][0]
+            return COMPARISON_a(compare_op, a, b)
 
     def visit_call(self, node, children):
         return Call_a(iset=children[0], ops=children[1:])
@@ -201,6 +212,14 @@ class ScrallVisitor(PTNodeVisitor):
             a, b = children.results['term']
             e = ADD_a(add_op, a, b)
         return e
+
+    def visit_addition(self, node, children):
+        if len(children) == 1:
+            return children[0]
+        else:
+            a, b = children.results['factor']
+            add_op = children.results['ADD'][0]
+            return ADD_a(add_op, a, b)
 
     def visit_factor(self, node, children):
         if len(children) == 1:
