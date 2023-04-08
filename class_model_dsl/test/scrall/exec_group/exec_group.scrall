@@ -1,1 +1,1 @@
-my plane .= Aircraft(Speed: v * h + c)
+speed = myaircraft.groundspeed + area.checkwind() * airspeed

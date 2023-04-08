@@ -43,35 +43,42 @@ param = name (SP* ':' SP* scalar)?
 // Instance set
 instance_set = (name / path) (selection / operation / path)*
 selection = '(' SP* select_phrase SP* ')'
-select_phrase = CARD
 select_phrase = ( (CARD ',' SP* criteria) / CARD / criteria )
-attr_comparison = RANK? REFLEX? name comparison?
-comparison = SP* (':' / '==' / COMPARE) SP* scalar_expr
+attr_comparison = RANK? REFLEX? name comparison? // attr_name
+comparison = SP* COMPARE SP* scalar_expr
 CARD = '1' / '*'
 RANK = '+^' / '-^'
 REFLEX = 'its.'
-COMPARE = ':' / '==' / '>=' / '>' / '<=' / '<'
 
 criteria = SP* logical_or SP*
 logical_or = logical_and (SP+ OR SP+ logical_and)*
 logical_and = logical_not (( (SP+ AND) / ',') SP+ logical_not)*
 logical_not = (NOT SP+)? (attr_comparison / ("(" criteria ")") )
 
+// math and boolean operator precedence
+scalar_assignment = name SP* '=' SP* scalar_expr
+
+scalar_expr = SP* scalar_logical_or SP*
+scalar_logical_or = scalar_logical_and (SP* OR SP* scalar_logical_and)*
+scalar_logical_and = equality (SP* AND SP* equality)*
+equality = comparison (SP* EQUAL SP* comparison)*
+comparison = addition (SP* COMPARE SP* addition)*
+addition = mult (SP* ADD SP* mult)*
+mult = exponent (SP* MULT SP* exponent)*
+exponent = scalar_logical_not (EXP scalar_logical_not)*
+logical_not = (NOT SP*)? "-"? (scalar / "(" SP* scalar_expr SP* ")")
+
+scalar = name operation / attr_access / name // May yield a scalar value
+
 OR = 'or'
 AND = 'and'
 NOT = '!' / 'not'
-
-// math and boolean operator precedence
-scalar_assignment = name SP* '=' SP* scalar_expr
-scalar_expr = term (SP? ADD SP? term)*
-term = factor (SP? MULT SP? factor)*
-factor = UNARY? (scalar / "(" SP* scalar_expr SP* ")")
-
+EXP = '^'
+COMPARE = ':' / '==' / '>=' / '>' / '<=' / '<'
 UNARY = ADD
 ADD = ("+" / "-")
 MULT = ("*" / "/")
 
-scalar = name operation / attr_access / name // May yield a scalar value
 attr_access = name '.' name // Attribute value accessor <class>.<attr>
 
 // Relationship traversal
