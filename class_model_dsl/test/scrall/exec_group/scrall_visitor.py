@@ -285,23 +285,41 @@ class ScrallVisitor(PTNodeVisitor):
     def visit_hop(self, node, children):
         return children[0]
 
-    def visit_rnum(self, node, children):
-        """ Join words and delimiters """
+    # Names
+    @classmethod
+    def visit_rnum(cls, node, children):
+        """
+        r'O?R[1-9][0-9]*'
+        Relationship number such as R23
+
+        This is how relationships are named
+        """
         return {'rnum': node.value}
 
-
-    def visit_name(self, node, children):
+    @classmethod
+    def visit_name(cls, node, children):
         """ Join words and delimiters """
         return ''.join(children)
 
-    def visit_LINEWRAP(self, node, children):
-        """ Discard space character """
+    # Discarded whitespace and comments
+    @classmethod
+    def visit_LINEWRAP(cls, node, children):
+        """
+        EOL SP*
+        end of line followed by optional indent on next line
+        """
         return None
 
-    def visit_EOL(self, node, children):
-        """ Discard space character """
+    @classmethod
+    def visit_EOL(cls, node, children):
+        """
+        SP* COMMENT? '\n'
+
+        end of line: Spaces, Comments, blank lines, whitespace we can omit from the parser result
+        """
         return None
 
-    def visit_SP(self, node, children):
-        """ Discard space character """
+    @classmethod
+    def visit_SP(cls, node, children):
+        """ ' '  Single space character (SP) """
         return None
