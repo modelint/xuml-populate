@@ -24,3 +24,5 @@ valve position? {
 }
 a ..= Cabin(*).Closest()/R2/Shaft.Nearest()(id : shaft)
 speed = myaircraft.groundspeed + area.checkwind() * airspeed
+broken = not shaft.inservice
+wrong = not -(x * y)

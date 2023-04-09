@@ -64,9 +64,8 @@ scalar_logical_and = equality (SP* AND SP* equality)*
 equality = comparison (SP* EQUAL SP* comparison)*
 comparison = addition (SP* COMPARE SP* addition)*
 addition = factor (SP* ADD SP* factor)*
-factor = exponent (SP* MULT SP* exponent)*
-exponent = term (EXP term)*
-term = (NOT SP*)? "-"? (scalar / "(" SP* scalar_expr SP* ")")
+factor = term (SP* MULT SP* term)*
+term = (NOT SP*)? UNARY_MINUS? (scalar / "(" SP* scalar_expr SP* ")")
 
 scalar = name operation / attr_access / name // May yield a scalar value
 
@@ -78,7 +77,7 @@ EXP = '^'
 EQUAL = '==' / '!='
 MATCH = ':'
 COMPARE = '>=' / '>' / '<=' / '<'
-UNARY = ADD
+UNARY_MINUS = "-"
 ADD = ("+" / "-")
 MULT = ("*" / "/")
 

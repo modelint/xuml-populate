@@ -213,13 +213,7 @@ class ScrallVisitor(PTNodeVisitor):
         return Scalar_Assignment_a(*children)
 
     def visit_scalar_expr(self, node, children):
-        add_op = children.results.get('ADD')
-        if not add_op:
-            return children[0]
-        else:
-            a, b = children.results['term']
-            e = ADD_a(add_op, a, b)
-        return e
+        return children[0]
 
     def visit_addition(self, node, children):
         if len(children) == 1:
@@ -233,7 +227,7 @@ class ScrallVisitor(PTNodeVisitor):
         if len(children) == 1:
             return children[0]
         else:
-            a, b = children.results['exponent']
+            a, b = children.results['term']
             factor_op = children.results['MULT'][0]
             return MATH_a(factor_op, a, b)
 
@@ -241,27 +235,27 @@ class ScrallVisitor(PTNodeVisitor):
         if len(children) == 1:
             return children[0]
         else:
-            a, b = children.results['exponent']
+            a, b = children.results['comparison']
             exp_op = children.results['EQUAL'][0]
             return BOOL_a(exp_op, a, b)
-
-    def visit_exponent(self, node, children):
-        if len(children) == 1:
-            return children[0]
-        else:
-            a, b = children.results['exponent']
-            exp_op = children.results['EXP'][0]
-            return MATH_a(exp_op, a, b)
 
     def visit_term(self, node, children):
         """
         unary? ( scalar / scalar_exp )
         """
+        s = children.results.get('scalar')
+        s = s if s else children.results['scalar_expr']
+        scalar = s[0]
         if len(children) == 1:
-            return children[0]
-        else:
-            unary_op, a = children
-            return UNARY_a(unary_op, a)
+            return scalar
+        not_op = children.results.get('NOT')
+        unary_minus = children.results.get('UNARY_MINUS')
+        if unary_minus and not not_op:
+            return UNARY_a('-', scalar)
+        if not_op and not unary_minus:
+            return BOOL_a('NOT', scalar, None)
+        if unary_minus and not_op:
+            return BOOL_a('NOT', UNARY_a('-', scalar), None)
 
     def visit_attr_access(self, node, children):
         return Attr_Access_a(cname=children[0], attr=children[1])
