@@ -1,6 +1,7 @@
+f = A == B == C
 speed = myaircraft.groundspeed + area.checkwind() - airspeed
 a = b * c / d
-ok = a and b and c and d
+ok = a and b and c and d > x
 broken = not shaft.inservice
 wrong = not -(x * y)
 z = (a != b)

@@ -152,7 +152,7 @@ class ScrallVisitor(PTNodeVisitor):
 
     def visit_scalar_expr(self, node, children):
         """
-        scalar_logical_or
+        Returns a fully parsed scalar expression
         """
         return children[0]
 
@@ -160,6 +160,7 @@ class ScrallVisitor(PTNodeVisitor):
         """
         scalar_logical_and (OR scalar_logical_and)*
 
+        Returns a higher precedence operation or one or more OR'ed conjunctions
         """
         if len(children) == 1: # No OR operation
             return children[0]
@@ -170,6 +171,7 @@ class ScrallVisitor(PTNodeVisitor):
         """
         equality (AND equality)*
 
+        Returns a higher precedence operation or one or more AND'ed equalities
         """
         if len(children) == 1: # No AND operation
             return children[0]
@@ -177,18 +179,21 @@ class ScrallVisitor(PTNodeVisitor):
             return BOOL_a('AND', children)
 
     def visit_comparison(self, node, children):
+        """
+        comparison = addition (COMPARE addition)*
+
+        Returns a higher precedence operation or one or more compared additions (>, <=, etc)
+        """
         if len(children) == 1:
             return children[0]
         else:
-            a, b = children.results['addition']
-            compare_op = children.results['COMPARE'][0]
-            return BOOL_a(compare_op, a, b)
+            return BOOL_a(children.results['COMPARE'], children.results['addition'])
 
     def visit_addition(self, node, children):
         """
         factor (ADD factor)*
 
-        Returns a previously parsed factor or added/subtracted factors
+        Returns a higher precedence operation or one or more added/subtracted factors
         """
         if len(children) == 1:
             return children[0]
@@ -197,22 +202,20 @@ class ScrallVisitor(PTNodeVisitor):
 
     def visit_equality(self, node, children) -> BOOL_a:
         """
-        Boolean comparison operation examples:
-            a == b
-            a != b
+        comparison (EQUAL comparison)*
+
+        Returns a higher precedence operation or one or more equalities (==, !=)
         """
         if len(children) == 1:
             return children[0]
         else:
-            a, b = children.results['comparison']
-            exp_op = children.results['EQUAL'][0]
-            return BOOL_a(exp_op, a, b)
+            return BOOL_a(children.results['EQUAL'], children.results['comparison'])
 
     def visit_factor(self, node, children):
         """
         term (MULT term)*
 
-        Returns a previously parsed term or multipled/divided terms
+        Returns a higher precedence operation or one or more multipled/divided terms
         """
         if len(children) == 1:
             return children[0]
@@ -239,9 +242,9 @@ class ScrallVisitor(PTNodeVisitor):
         if unary_minus and not not_op:
             return UNARY_a('-', scalar)
         if not_op and not unary_minus:
-            return BOOL_a('NOT', scalar, None)
+            return BOOL_a('NOT', scalar)
         if unary_minus and not_op:
-            return BOOL_a('NOT', UNARY_a('-', scalar), None)
+            return BOOL_a('NOT', UNARY_a('-', scalar))
 
 
     # Synchronous method or operation
