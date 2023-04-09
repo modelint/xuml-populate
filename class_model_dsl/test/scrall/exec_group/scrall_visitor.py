@@ -20,9 +20,9 @@ Decision_a = namedtuple('Decision_a', 'input true_result false_result')
 Delete_Action_a = namedtuple('Delete_Action_a', 'instance_set')
 Case_a = namedtuple('Case_a', 'enums execution_unit')
 Scalar_Switch_a = namedtuple('Scalar_Switch_a', 'scalar_input_flow cases')
-MATH_a = namedtuple('MATH_a', 'op a b')
-UNARY_a = namedtuple('UNARY_a', 'op a')
-BOOL_a = namedtuple('BOOL_a', 'op a b')
+MATH_a = namedtuple('MATH_a', 'op operands')
+UNARY_a = namedtuple('UNARY_a', 'op operand')
+BOOL_a = namedtuple('BOOL_a', 'op operands')
 Scalar_Assignment_a = namedtuple('Scalar_Assignment_a', 'lhs rhs')
 
 class ScrallVisitor(PTNodeVisitor):
@@ -129,51 +129,52 @@ class ScrallVisitor(PTNodeVisitor):
         if len(children) == 1:
             return children[0]
         else:
-            a, b = children.results['logical_and']
-            return BOOL_a('OR', a, b)
-        # a = children[0]
-        # b = None if len(children) < 2 else children[1]
-        # return BOOL_a('OR', a, b)
+            return BOOL_a('OR', children)
 
     def visit_logical_and(self, node, children):
         if len(children) == 1:
             return children[0]
         else:
-            a, b = children.results['logical_not']
-            return BOOL_a('AND', a, b)
-        # a = children[0]
-        # b = None if len(children) < 2 else children[1]
-        # return BOOL_a('AND',a,b)
+            return BOOL_a('AND', children)
 
     def visit_logical_not(self, node, children):
         if len(children) == 1:
             return children[0]
         else:
             a = children[1]
-            return BOOL_a('NOT', a, None)
-        # op = 'not' if len(children) > 1 else None
-        # a = children[0] if not op else children[1]
-        # return BOOL_a(op, a, None)
+            return BOOL_a('NOT', list(a))
 
-    def visit_scalar_logical_and(self, node, children):
-        if len(children) == 1:
-            return children[0]
-        else:
-            a, b = children.results['equality']
-            return BOOL_a('AND', a, b)
-        # a = children[0]
-        # b = None if len(children) < 2 else children[1]
-        # return AND_a(a,b)
+    def visit_scalar_assignment(self, node, children):
+        return Scalar_Assignment_a(*children)
+
+
+    # Scalar expression
+
+    def visit_scalar_expr(self, node, children):
+        """
+        scalar_logical_or
+        """
+        return children[0]
 
     def visit_scalar_logical_or(self, node, children):
-        if len(children) == 1:
+        """
+        scalar_logical_and (OR scalar_logical_and)*
+
+        """
+        if len(children) == 1: # No OR operation
             return children[0]
         else:
-            a, b = children.results['scalar_logical_and']
-            return BOOL_a('OR', a, b)
-        # a = children[0]
-        # b = None if len(children) < 2 else children[1]
-        # return OR_a(a,b)
+            return BOOL_a('OR', children)
+
+    def visit_scalar_logical_and(self, node, children):
+        """
+        equality (AND equality)*
+
+        """
+        if len(children) == 1: # No AND operation
+            return children[0]
+        else:
+            return BOOL_a('AND', children)
 
     def visit_comparison(self, node, children):
         if len(children) == 1:
@@ -182,6 +183,68 @@ class ScrallVisitor(PTNodeVisitor):
             a, b = children.results['addition']
             compare_op = children.results['COMPARE'][0]
             return BOOL_a(compare_op, a, b)
+
+    def visit_addition(self, node, children):
+        """
+        factor (ADD factor)*
+
+        Returns a previously parsed factor or added/subtracted factors
+        """
+        if len(children) == 1:
+            return children[0]
+        else:
+            return MATH_a(children.results['ADD'], children.results['factor'])
+
+    def visit_equality(self, node, children) -> BOOL_a:
+        """
+        Boolean comparison operation examples:
+            a == b
+            a != b
+        """
+        if len(children) == 1:
+            return children[0]
+        else:
+            a, b = children.results['comparison']
+            exp_op = children.results['EQUAL'][0]
+            return BOOL_a(exp_op, a, b)
+
+    def visit_factor(self, node, children):
+        """
+        term (MULT term)*
+
+        Returns a previously parsed term or multipled/divided terms
+        """
+        if len(children) == 1:
+            return children[0]
+        else:
+            return MATH_a(children.results['MULT'], children.results['term'])
+
+    def visit_term(self, node, children):
+        """
+        NOT? UNARY_MINUS? (scalar / scalar_expr)
+        ---
+        If the not or unary minus operations are not specified, returns whatever was parsed out earlier,
+        either a simple scalar (attribute, attribute access, etc) or any scalar expression
+
+        Otherwise, a unary minus expression nested inside a boolean not operation, or just the boolean not,
+        or just the unary minus expressions individually are returned.
+        """
+        s = children.results.get('scalar')
+        s = s if s else children.results['scalar_expr']
+        scalar = s[0]
+        if len(children) == 1:
+            return scalar
+        not_op = children.results.get('NOT')
+        unary_minus = children.results.get('UNARY_MINUS')
+        if unary_minus and not not_op:
+            return UNARY_a('-', scalar)
+        if not_op and not unary_minus:
+            return BOOL_a('NOT', scalar, None)
+        if unary_minus and not_op:
+            return BOOL_a('NOT', UNARY_a('-', scalar), None)
+
+
+    # Synchronous method or operation
 
     def visit_call(self, node, children):
         return Call_a(iset=children[0], ops=children[1:])
@@ -209,53 +272,6 @@ class ScrallVisitor(PTNodeVisitor):
     def visit_supplied_params(self, node, children):
         return children
 
-    def visit_scalar_assignment(self, node, children):
-        return Scalar_Assignment_a(*children)
-
-    def visit_scalar_expr(self, node, children):
-        return children[0]
-
-    def visit_addition(self, node, children):
-        if len(children) == 1:
-            return children[0]
-        else:
-            a, b = children.results['factor']
-            add_op = children.results['ADD'][0]
-            return MATH_a(add_op, a, b)
-
-    def visit_factor(self, node, children):
-        if len(children) == 1:
-            return children[0]
-        else:
-            a, b = children.results['term']
-            factor_op = children.results['MULT'][0]
-            return MATH_a(factor_op, a, b)
-
-    def visit_equality(self, node, children):
-        if len(children) == 1:
-            return children[0]
-        else:
-            a, b = children.results['comparison']
-            exp_op = children.results['EQUAL'][0]
-            return BOOL_a(exp_op, a, b)
-
-    def visit_term(self, node, children):
-        """
-        unary? ( scalar / scalar_exp )
-        """
-        s = children.results.get('scalar')
-        s = s if s else children.results['scalar_expr']
-        scalar = s[0]
-        if len(children) == 1:
-            return scalar
-        not_op = children.results.get('NOT')
-        unary_minus = children.results.get('UNARY_MINUS')
-        if unary_minus and not not_op:
-            return UNARY_a('-', scalar)
-        if not_op and not unary_minus:
-            return BOOL_a('NOT', scalar, None)
-        if unary_minus and not_op:
-            return BOOL_a('NOT', UNARY_a('-', scalar), None)
 
     def visit_attr_access(self, node, children):
         return Attr_Access_a(cname=children[0], attr=children[1])
