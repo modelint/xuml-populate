@@ -1,1 +1,10 @@
-x ..= Aircraft(Speed: (v or x) or Height > h)
+// Scalar assignments
+speed 2 = myaircraft.groundspeed + area.checkwind() - airspeed
+a = b * c / d
+ok = a AND b and c and not (d > x)
+broken = !shaft.inservice
+z = (a != b)
+broken = not shaft.inservice
+wrong = not -(x * y)
+f = A == B == C
+my speed = myaircraft.groundspeed + area.checkwind() * airspeed

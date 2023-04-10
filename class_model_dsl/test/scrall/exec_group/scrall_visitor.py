@@ -12,8 +12,8 @@ Op_a = namedtuple('Op_a', 'op_name supplied_params')
 Call_a = namedtuple('Call_a', 'subject ops')
 """The subject of a call could be an instance set (method) or an external entity (ee operation)"""
 Attr_Access_a = namedtuple('Attr_Access_a', 'cname attr')
-Attr_Comparison_a = namedtuple('Attr_Comparison_a', 'attr op scalar_expr')
-Comparison_phrase_a = namedtuple('Comparison_phrase_a', 'op scalar_expr')
+# Attr_Comparison_a = namedtuple('Attr_Comparison_a', 'attr op scalar_expr')
+# Comparison_phrase_a = namedtuple('Comparison_phrase_a', 'op scalar_expr')
 Selection_a = namedtuple('Selection_a', 'card criteria')
 Inst_Assignment_a = namedtuple('Inst_Assignment_a', 'lhs card rhs')
 Signal_a = namedtuple('Signal_a', 'event supplied_params dest')
@@ -263,7 +263,9 @@ class ScrallVisitor(PTNodeVisitor):
         if len(children) == 1:
             return children[0]
         else:
-            return BOOL_a(children.results['EQUAL'], children.results['comparison'])
+            # Convert ':' to '==' if found
+            eq_map = ['==' if e in ('==',':') else '!=' for e in children.results['EQUAL']]
+            return BOOL_a(eq_map, children.results['comparison'])
 
     @classmethod
     def visit_factor(cls, node, children):

@@ -47,6 +47,7 @@ class Activity:
     @classmethod
     def parse(cls, actions, debug=False):
         # Read the test file
+        actions = "Bypassing for test" # Remove after diagnostics
         test_file_dir = Path(__file__).parent.parent / "test" / "scrall" / "exec_group"
         test_file_path = test_file_dir / "exec_group.scrall"
         test_text = open(test_file_path, 'r').read() + "\n"
