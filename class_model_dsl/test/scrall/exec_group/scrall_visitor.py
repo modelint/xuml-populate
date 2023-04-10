@@ -1,11 +1,16 @@
 """ scrall_visitor.py - exec_group test """
 from arpeggio import PTNodeVisitor
 from collections import namedtuple
+from class_model_dsl.sp_exceptions import ScrallCallWithoutOperation
+import logging
+
+_logger = logging.getLogger(__name__)
 
 Supplied_Parameter_a = namedtuple('Supplied_Parameter_a', 'pname sval')
 """Parameter name and flow name pair for a set of supplied parameters"""
 Op_a = namedtuple('Op_a', 'op_name supplied_params')
-Call_a = namedtuple('Call_a', 'iset ops')
+Call_a = namedtuple('Call_a', 'subject ops')
+"""The subject of a call could be an instance set (method) or an external entity (ee operation)"""
 Attr_Access_a = namedtuple('Attr_Access_a', 'cname attr')
 Attr_Comparison_a = namedtuple('Attr_Comparison_a', 'attr op scalar_expr')
 Comparison_phrase_a = namedtuple('Comparison_phrase_a', 'op scalar_expr')
@@ -109,7 +114,15 @@ class ScrallVisitor(PTNodeVisitor):
             rhs=children.results['instance_set']
         )
 
-    def visit_instance_set(self, node, children):
+    @classmethod
+    def visit_instance_set(cls, node, children):
+        """
+        (name / path) (selection / operation / path)*
+
+        An instance set begins with a required name (instance flow) or a path. The path can then be followed
+        by any sequence of selection, operation, and paths. The parser won't find two paths in sequence since
+        any encounter path will be fully consumed
+        """
         return {'iset' : children}
 
     @classmethod
@@ -127,55 +140,55 @@ class ScrallVisitor(PTNodeVisitor):
         """
         explicit_card = children.results.get('CARD')
         card = '*' if not explicit_card else explicit_card[0]
-        criteria = children.results.get('criteria')
+        criteria = children.results.get('scalar_expr')
         if criteria:
             return [card, criteria[0]]
         else:
             return [card]
 
-    @classmethod
-    def visit_criteria(cls, node, children):
-        """
-        logical_or
-        """
-        return children
+    # @classmethod
+    # def visit_criteria(cls, node, children):
+    #     """
+    #     logical_or
+    #     """
+    #     return children
+    #
+    # @classmethod
+    # def visit_attr_comparison(cls, node, children):
+    #     """
+    #     RANK? REFLEX? name comparison?
+    #
+    #     name is an attribute name to be compared
+    #     """
+    #     rhs_compare = children.results.get('comparison_phrase')
+    #     op, scalar_expr = (':', 'true') if not rhs_compare else rhs_compare[0]
+    #     return Attr_Comparison_a(attr=children.results['name'][0], op=op, scalar_expr=scalar_expr)
 
-    @classmethod
-    def visit_attr_comparison(cls, node, children):
-        """
-        RANK? REFLEX? name comparison?
+    # @classmethod
+    # def visit_comparison_phrase(cls, node, children):
+    #     return Comparison_phrase_a(*children)
 
-        name is an attribute name to be compared
-        """
-        rhs_compare = children.results.get('comparison_phrase')
-        op, scalar_expr = (':', 'true') if not rhs_compare else rhs_compare[0]
-        return Attr_Comparison_a(attr=children.results['name'][0], op=op, scalar_expr=scalar_expr)
-
-    @classmethod
-    def visit_comparison_phrase(cls, node, children):
-        return Comparison_phrase_a(*children)
-
-    @classmethod
-    def visit_logical_or(cls, node, children):
-        if len(children) == 1:
-            return children[0]
-        else:
-            return BOOL_a('OR', children)
-
-    @classmethod
-    def visit_logical_and(cls, node, children):
-        if len(children) == 1:
-            return children[0]
-        else:
-            return BOOL_a('AND', children.results['logical_not'])
-
-    @classmethod
-    def visit_logical_not(cls, node, children):
-        if len(children) == 1:
-            return children[0]
-        else:
-            a = children[1]
-            return BOOL_a('NOT', list(a))
+    # @classmethod
+    # def visit_logical_or(cls, node, children):
+    #     if len(children) == 1:
+    #         return children[0]
+    #     else:
+    #         return BOOL_a('OR', children.results['logical_and'])
+    #
+    # @classmethod
+    # def visit_logical_and(cls, node, children):
+    #     if len(children) == 1:
+    #         return children[0]
+    #     else:
+    #         return BOOL_a('AND', children.results['logical_not'])
+    #
+    # @classmethod
+    # def visit_logical_not(cls, node, children):
+    #     if len(children) == 1:
+    #         return children[0]
+    #     else:
+    #         a = children[1]
+    #         return BOOL_a('NOT', list(a))
 
     # Scalar assignment and operations
     @classmethod
@@ -202,7 +215,7 @@ class ScrallVisitor(PTNodeVisitor):
         if len(children) == 1: # No OR operation
             return children[0]
         else:
-            return BOOL_a('OR', children)
+            return BOOL_a('OR', children.results['scalar_logical_and'])
 
     @classmethod
     def visit_scalar_logical_and(cls, node, children):
@@ -214,7 +227,7 @@ class ScrallVisitor(PTNodeVisitor):
         if len(children) == 1: # No AND operation
             return children[0]
         else:
-            return BOOL_a('AND', children)
+            return BOOL_a('AND', children.results['equality'])
 
     @classmethod
     def visit_comparison(cls, node, children):
@@ -292,10 +305,20 @@ class ScrallVisitor(PTNodeVisitor):
 
     # Synchronous method or operation
 
-    def visit_call(self, node, children):
-        return Call_a(iset=children[0], ops=children[1:])
+    @classmethod
+    def visit_call(cls, node, children):
+        """
+        instance_set
+        Post-parse verify that last element is an operation, otherwise invalid call
+        """
+        if not isinstance(children[-1], Op_a):
+            # There's no terminating operation in the action, so this isn't a complete call
+            _logger.error(f"Call action without operation: [{children.results}]")
+            raise ScrallCallWithoutOperation(children.results)
+        return Call_a(subject=children[0], ops=children[1:])
 
-    def visit_operation(self, node, children):
+    @classmethod
+    def visit_operation(cls, node, children):
         """
         Children are name, ?supplied_params
         Returns op_name ?supplied_params dest
@@ -304,7 +327,8 @@ class ScrallVisitor(PTNodeVisitor):
         params = [] if len(children) == 1 else children[-1]
         return Op_a(op_name=op_name, supplied_params=params)
 
-    def visit_param(self, node, children):
+    @classmethod
+    def visit_param(cls, node, children):
         """
         <flow name> or <parameter name> <flow name> is parsed. If only a flow name is present, it means
         that the supplied flow has the same name Ex: ( shaft id ) as that of the required parameter. Short for
@@ -315,7 +339,8 @@ class ScrallVisitor(PTNodeVisitor):
         p = children[0] if len(children) > 1 else s # First value is the parameter name only if followed by a flow name
         return Supplied_Parameter_a(pname=p, sval=s)
 
-    def visit_supplied_params(self, node, children):
+    @classmethod
+    def visit_supplied_params(cls, node, children):
         return children
 
 

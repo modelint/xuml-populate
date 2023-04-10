@@ -1,1 +1,1 @@
-a ..= /R1/R2/Aircraft(alt: high * af, speed <= max speed )
+x ..= Aircraft(Speed: (v or x) or Height > h)

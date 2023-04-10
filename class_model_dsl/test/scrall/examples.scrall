@@ -32,3 +32,5 @@ a = b * c / d
 ok = a AND b and c and not (d > x)
 broken = !shaft.inservice
 z = (a != b)
+a ..= /R1/R2/Aircraft(alt: high * af, speed <= max speed )
+my plane .= Aircraft(Speed: (v or x) or Height > h)
