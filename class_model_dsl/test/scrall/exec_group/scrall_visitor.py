@@ -72,7 +72,13 @@ class ScrallVisitor(PTNodeVisitor):
     def visit_true_result(self, node, children):
         return children[0]
 
-    def visit_false_result(self, node, children):
+    @classmethod
+    def visit_false_result(cls, node, children):
+        """
+        ':' action_group
+
+        False case in a decision
+        """
         return children[0]
 
     def visit_input_tokens(self, node, children):

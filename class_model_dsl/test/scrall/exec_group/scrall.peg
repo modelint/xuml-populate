@@ -11,7 +11,7 @@ sequence_token = SP* '<' token_name '>' SP* // Named control flow
 token_name = r'[A-Za-z0-9_]+' // No spaces in token names, often single digit: <1>
 
 // Decision action
-decision = name true_result false_result? // Control flow version of an if-then
+decision = scalar_expr true_result false_result? // Control flow version of an if-then
 true_result = '?' SP* action_group // If
 false_result = SP* ':' SP* action_group // Else
 
