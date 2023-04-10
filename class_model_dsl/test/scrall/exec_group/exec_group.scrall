@@ -1,7 +1,1 @@
-f = A == B == C
-speed = myaircraft.groundspeed + area.checkwind() - airspeed
-a = b * c / d
-ok = a AND b and c and not (d > x)
-broken = !shaft.inservice
-wrong = not -(x * y)
-z = (a != b)
+a ..= /R1/R2/Aircraft(alt: high * af, speed <= max speed )

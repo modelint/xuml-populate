@@ -8,6 +8,7 @@ Op_a = namedtuple('Op_a', 'op_name supplied_params')
 Call_a = namedtuple('Call_a', 'iset ops')
 Attr_Access_a = namedtuple('Attr_Access_a', 'cname attr')
 Attr_Comparison_a = namedtuple('Attr_Comparison_a', 'attr op scalar_expr')
+Comparison_phrase_a = namedtuple('Comparison_phrase_a', 'op scalar_expr')
 Selection_a = namedtuple('Selection_a', 'card criteria')
 Inst_Assignment_a = namedtuple('Inst_Assignment_a', 'lhs card rhs')
 Signal_a = namedtuple('Signal_a', 'event supplied_params dest')
@@ -97,18 +98,33 @@ class ScrallVisitor(PTNodeVisitor):
         return {'delay': children[0]}
 
 
-    def visit_inst_assignment(self, node, children):
-        card = '1' if children[1] == '.=' else 'Mc'
-        return Inst_Assignment_a(lhs=children[0], card=card, rhs=children[2])
+    @classmethod
+    def visit_inst_assignment(cls, node, children):
+        """
+        name INST_ASSIGN instance_set
+        """
+        return Inst_Assignment_a(
+            lhs=children.results['name'][0],
+            card='1' if children.results['INST_ASSIGN'] == '.=' else 'Mc',
+            rhs=children.results['instance_set']
+        )
 
     def visit_instance_set(self, node, children):
         return {'iset' : children}
 
-    def visit_selection(self, node, children):
-        # return Selection_a(card=children[0], criteria=None)
+    @classmethod
+    def visit_selection(cls, node, children):
+        """
+        '(' select_phrase ')'
+        """
         return Selection_a(card=children[0][0], criteria=None if len(children[0]) < 2 else children[0][1])
 
-    def visit_select_phrase(self, node, children):
+    @classmethod
+    def visit_select_phrase(cls, node, children):
+        """
+        (CARD ',' criteria) / CARD / criteria
+
+        """
         explicit_card = children.results.get('CARD')
         card = '*' if not explicit_card else explicit_card[0]
         criteria = children.results.get('criteria')
@@ -117,46 +133,67 @@ class ScrallVisitor(PTNodeVisitor):
         else:
             return [card]
 
-    def visit_criteria(self, node, children):
+    @classmethod
+    def visit_criteria(cls, node, children):
+        """
+        logical_or
+        """
         return children
 
-    def visit_attr_comparison(self, node, children):
-        rhs_compare = children.results.get('comparison')
+    @classmethod
+    def visit_attr_comparison(cls, node, children):
+        """
+        RANK? REFLEX? name comparison?
+
+        name is an attribute name to be compared
+        """
+        rhs_compare = children.results.get('comparison_phrase')
         op, scalar_expr = (':', 'true') if not rhs_compare else rhs_compare[0]
         return Attr_Comparison_a(attr=children.results['name'][0], op=op, scalar_expr=scalar_expr)
 
-    def visit_logical_or(self, node, children):
+    @classmethod
+    def visit_comparison_phrase(cls, node, children):
+        return Comparison_phrase_a(*children)
+
+    @classmethod
+    def visit_logical_or(cls, node, children):
         if len(children) == 1:
             return children[0]
         else:
             return BOOL_a('OR', children)
 
-    def visit_logical_and(self, node, children):
+    @classmethod
+    def visit_logical_and(cls, node, children):
         if len(children) == 1:
             return children[0]
         else:
-            return BOOL_a('AND', children)
+            return BOOL_a('AND', children.results['logical_not'])
 
-    def visit_logical_not(self, node, children):
+    @classmethod
+    def visit_logical_not(cls, node, children):
         if len(children) == 1:
             return children[0]
         else:
             a = children[1]
             return BOOL_a('NOT', list(a))
 
-    def visit_scalar_assignment(self, node, children):
+    # Scalar assignment and operations
+    @classmethod
+    def visit_scalar_assignment(cls, node, children):
+        """
+        name SCALAR_ASSIGN scalar_expr
+        """
         return Scalar_Assignment_a(*children)
 
-
-    # Scalar expression
-
-    def visit_scalar_expr(self, node, children):
+    @classmethod
+    def visit_scalar_expr(cls, node, children):
         """
         Returns a fully parsed scalar expression
         """
         return children[0]
 
-    def visit_scalar_logical_or(self, node, children):
+    @classmethod
+    def visit_scalar_logical_or(cls, node, children):
         """
         scalar_logical_and (OR scalar_logical_and)*
 
@@ -167,7 +204,8 @@ class ScrallVisitor(PTNodeVisitor):
         else:
             return BOOL_a('OR', children)
 
-    def visit_scalar_logical_and(self, node, children):
+    @classmethod
+    def visit_scalar_logical_and(cls, node, children):
         """
         equality (AND equality)*
 
@@ -178,7 +216,8 @@ class ScrallVisitor(PTNodeVisitor):
         else:
             return BOOL_a('AND', children)
 
-    def visit_comparison(self, node, children):
+    @classmethod
+    def visit_comparison(cls, node, children):
         """
         comparison = addition (COMPARE addition)*
 
@@ -189,7 +228,8 @@ class ScrallVisitor(PTNodeVisitor):
         else:
             return BOOL_a(children.results['COMPARE'], children.results['addition'])
 
-    def visit_addition(self, node, children):
+    @classmethod
+    def visit_addition(cls, node, children):
         """
         factor (ADD factor)*
 
@@ -200,7 +240,8 @@ class ScrallVisitor(PTNodeVisitor):
         else:
             return MATH_a(children.results['ADD'], children.results['factor'])
 
-    def visit_equality(self, node, children) -> BOOL_a:
+    @classmethod
+    def visit_equality(cls, node, children) -> BOOL_a:
         """
         comparison (EQUAL comparison)*
 
@@ -211,7 +252,8 @@ class ScrallVisitor(PTNodeVisitor):
         else:
             return BOOL_a(children.results['EQUAL'], children.results['comparison'])
 
-    def visit_factor(self, node, children):
+    @classmethod
+    def visit_factor(cls, node, children):
         """
         term (MULT term)*
 
@@ -222,7 +264,8 @@ class ScrallVisitor(PTNodeVisitor):
         else:
             return MATH_a(children.results['MULT'], children.results['term'])
 
-    def visit_term(self, node, children):
+    @classmethod
+    def visit_term(cls, node, children):
         """
         NOT? UNARY_MINUS? (scalar / scalar_expr)
         ---
@@ -279,10 +322,15 @@ class ScrallVisitor(PTNodeVisitor):
     def visit_attr_access(self, node, children):
         return Attr_Access_a(cname=children[0], attr=children[1])
 
-    def visit_path(self, node, children):
+    # Relationship traversal (paths)
+    @classmethod
+    def visit_path(cls, node, children):
+        """ hop+  A sequence of hops """
         return {'path': children}
 
-    def visit_hop(self, node, children):
+    @classmethod
+    def visit_hop(cls, node, children):
+        """ '/' (rnum / name)  An rnum, phrase, or class name """
         return children[0]
 
     # Names

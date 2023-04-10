@@ -26,3 +26,9 @@ a ..= Cabin(*).Closest()/R2/Shaft.Nearest()(id : shaft)
 speed = myaircraft.groundspeed + area.checkwind() * airspeed
 broken = not shaft.inservice
 wrong = not -(x * y)
+f = A == B == C
+speed = myaircraft.groundspeed + area.checkwind() - airspeed
+a = b * c / d
+ok = a AND b and c and not (d > x)
+broken = !shaft.inservice
+z = (a != b)

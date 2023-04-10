@@ -43,9 +43,9 @@ param = name (SP* ':' SP* scalar)?
 // Instance set
 instance_set = (name / path) (selection / operation / path)*
 selection = '(' SP* select_phrase SP* ')'
-select_phrase = ( (CARD ',' SP* criteria) / CARD / criteria )
-attr_comparison = RANK? REFLEX? name comparison? // attr_name
-comparison = SP* (MATCH / COMPARE) SP* scalar_expr
+select_phrase = (CARD ',' SP* criteria) / CARD / criteria
+attr_comparison = RANK? REFLEX? name comparison_phrase? // attr_name
+comparison_phrase = SP* (MATCH / EQUAL / COMPARE) SP* scalar_expr
 CARD = '1' / '*'
 RANK = '+^' / '-^'
 REFLEX = 'its.'
