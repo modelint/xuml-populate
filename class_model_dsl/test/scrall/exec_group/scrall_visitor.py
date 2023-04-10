@@ -12,8 +12,6 @@ Op_a = namedtuple('Op_a', 'op_name supplied_params')
 Call_a = namedtuple('Call_a', 'subject ops')
 """The subject of a call could be an instance set (method) or an external entity (ee operation)"""
 Attr_Access_a = namedtuple('Attr_Access_a', 'cname attr')
-# Attr_Comparison_a = namedtuple('Attr_Comparison_a', 'attr op scalar_expr')
-# Comparison_phrase_a = namedtuple('Comparison_phrase_a', 'op scalar_expr')
 Selection_a = namedtuple('Selection_a', 'card criteria')
 Inst_Assignment_a = namedtuple('Inst_Assignment_a', 'lhs card rhs')
 Signal_a = namedtuple('Signal_a', 'event supplied_params dest')
@@ -66,18 +64,30 @@ class ScrallVisitor(PTNodeVisitor):
     def visit_action(self, node, children):
         return children[0]
 
-    def visit_decision(self, node, children):
+    @classmethod
+    def visit_decision(cls, node, children):
+        """
+        scalar_expr true_result false_result?
+
+        Control flow version of an if-then
+        """
         return Decision_a(input=children[0], true_result=children[1], false_result=None if len(children) < 3 else children[2])
 
-    def visit_true_result(self, node, children):
+    @classmethod
+    def visit_true_result(cls, node, children):
+        """
+        DECISION_OP action_group
+
+        Actions to be executed when the decision evaluates to true
+        """
         return children[0]
 
     @classmethod
     def visit_false_result(cls, node, children):
         """
-        ':' action_group
+        FALSE_RESULT_OP action_group
 
-        False case in a decision
+        Actions to be executed when the decision evaluates to false
         """
         return children[0]
 
@@ -101,11 +111,24 @@ class ScrallVisitor(PTNodeVisitor):
         delay = None if len(children) < 2 else children[1]['delay']
         return Signal_Action_a(event=s.event, supplied_params=s.supplied_params, dest=s.dest, delay=delay)
 
-    def visit_signal(self, node, children):
+    @classmethod
+    def visit_signal(cls, node, children):
+        """
+        name supplied_params? SIGNAL_OP instance_set
+
+        An event name, any supplied parameters, the '->' signal symbol and a target
+        instance set
+        """
         params = [] if len(children) == 2 else children[1]
         return Signal_a(event=children[0], supplied_params=params, dest=children[-1])
 
-    def visit_delay(self, node, children):
+    @classmethod
+    def visit_delay(cls, node, children):
+        """
+        DELAY_OP scalar_expr
+
+        A time or time interval
+        """
         return {'delay': children[0]}
 
 
@@ -151,50 +174,6 @@ class ScrallVisitor(PTNodeVisitor):
             return [card, criteria[0]]
         else:
             return [card]
-
-    # @classmethod
-    # def visit_criteria(cls, node, children):
-    #     """
-    #     logical_or
-    #     """
-    #     return children
-    #
-    # @classmethod
-    # def visit_attr_comparison(cls, node, children):
-    #     """
-    #     RANK? REFLEX? name comparison?
-    #
-    #     name is an attribute name to be compared
-    #     """
-    #     rhs_compare = children.results.get('comparison_phrase')
-    #     op, scalar_expr = (':', 'true') if not rhs_compare else rhs_compare[0]
-    #     return Attr_Comparison_a(attr=children.results['name'][0], op=op, scalar_expr=scalar_expr)
-
-    # @classmethod
-    # def visit_comparison_phrase(cls, node, children):
-    #     return Comparison_phrase_a(*children)
-
-    # @classmethod
-    # def visit_logical_or(cls, node, children):
-    #     if len(children) == 1:
-    #         return children[0]
-    #     else:
-    #         return BOOL_a('OR', children.results['logical_and'])
-    #
-    # @classmethod
-    # def visit_logical_and(cls, node, children):
-    #     if len(children) == 1:
-    #         return children[0]
-    #     else:
-    #         return BOOL_a('AND', children.results['logical_not'])
-    #
-    # @classmethod
-    # def visit_logical_not(cls, node, children):
-    #     if len(children) == 1:
-    #         return children[0]
-    #     else:
-    #         a = children[1]
-    #         return BOOL_a('NOT', list(a))
 
     # Scalar assignment and operations
     @classmethod

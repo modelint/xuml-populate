@@ -12,23 +12,27 @@ token_name = r'[A-Za-z0-9_]+' // No spaces in token names, often single digit: <
 
 // Decision action
 decision = scalar_expr true_result false_result? // Control flow version of an if-then
-true_result = '?' SP* action_group // If
-false_result = SP* ':' SP* action_group // Else
+true_result = DECISION_OP SP* action_group // If
+false_result = SP* FALSE_RESULT_OP SP* action_group // Else
+FALSE_RESULT_OP = ':'
 
 // Switch action
 //switch = scalar_switch / subclass_switch
-scalar_switch = name '?' SP* case_block // Boolean expr triggers case_block
+scalar_switch = name DECISION_OP SP* case_block // Boolean expr triggers case_block
 case_block = '{' LINEWRAP* case+ '}'
 case = (SP* enum_value)+ SP* ':' (LINEWRAP* / SP*) execution_unit
 enum_value = '.' name // Scalar switch has enum value cases
+DECISION_OP = '?'
 
 // Delete action
 delete = '!*' SP* instance_set
 
 // Signal action
 signal_action = signal delay?
-signal = name supplied_params? SP+ '->' (LINEWRAP / SP+) instance_set
-delay = SP+ '@' SP+ name
+signal = name supplied_params? SP+ SIGNAL_OP (LINEWRAP / SP+) instance_set
+delay = SP+ DELAY_OP SP+ scalar_expr
+DELAY_OP = '@'
+SIGNAL_OP = '->'
 
 // Instance assignment action
 inst_assignment = name SP+ INST_ASSIGN SP+ instance_set

@@ -1,5 +1,8 @@
+// Signals
+Cabin at destination() -> /R53/Transfer
+Cabin at destination() -> /R53/Transfer @ x.compute_delay()
 // Decision
-!inservice? {
+!inservice OR x.getClearance(id)? {
     Aircraft(1).Land( Runway: north)
     Cabin at destination() -> /R53/Transfer<X>
     Arrived() -> there
