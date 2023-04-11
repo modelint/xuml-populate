@@ -1,7 +1,7 @@
 """ scrall_visitor.py - exec_group test """
 from arpeggio import PTNodeVisitor
 from collections import namedtuple
-from class_model_dsl.sp_exceptions import ScrallCallWithoutOperation
+from class_model_dsl.sp_exceptions import ScrallCallWithoutOperation, ScrallMissingParameterName
 import logging
 
 _logger = logging.getLogger(__name__)
@@ -118,24 +118,48 @@ class ScrallVisitor(PTNodeVisitor):
     @classmethod
     def visit_action(cls, node, children):
         """
-        (scalar_assignment / delete / scalar_switch / decision / inst_assignment / signal_action / call)?
+        scalar_assignment / delete / scalar_switch / decision / inst_assignment / signal_action / call
 
         These are (or will be) a complete set of scrall actions. The ordering helps in some cases to prevent
         one type of action from being mistaken for another during the parse. You can't backgrack in a peg
         grammar, so you need to match the pattern right on the first scan.
+
+        There should be only one child element and it will be a named tuple defining the parsed action.
         """
         return children[0]
 
-    def visit_input_tokens(self, node, children):
+    # Control flow tokens
+    @classmethod
+    def visit_input_tokens(cls, node, children):
+        """
+        sequence_token+
+        """
         return children
 
-    def visit_output_tokens(self, node, children):
+    @classmethod
+    def visit_output_tokens(cls, node, children):
+        """
+        sequence_token+
+        """
         return children
 
-    def visit_sequence_token(self, node, children):
+    @classmethod
+    def visit_sequence_token(cls, node, children):
+        """
+        '<' token_name '>'
+
+         Named control flow
+        """
         return Sequence_Token_a(name=children[0])
 
-    def visit_token_name(self, node, children):
+    @classmethod
+    def visit_token_name(cls, node, children):
+        """
+        r'[A-Za-z0-9_]+'
+        No spaces in token names, often single digit: <1>
+
+        Since this is a terminal, we need to grab the name from the node.value
+        """
         return node.value
 
     # Created and delete actions
@@ -183,26 +207,36 @@ class ScrallVisitor(PTNodeVisitor):
 
         Boolean expr triggers case_block
         """
-        return Scalar_Switch_a(scalar_input_flow=children[0], cases=children[1:])
+        return Scalar_Switch_a(
+            scalar_input_flow=children.results['scalar_expr'],
+            cases=children.results['case_block'][0]
+        )
 
     @classmethod
     def visit_case_block(cls, node, children):
         """
+        '{' case+ '}'
 
+        One or more cases between brackets
         """
         return children
 
     @classmethod
     def visit_case(cls, node, children):
         """
+        enum_value+ ':' execution_unit
 
+        One or more enumerated values that triggers an execution unit
         """
-        return Case_a(enums=children.results['enum_value'], execution_unit=children.results['execution_unit'][0])
+        return Case_a(
+            enums=children.results['enum_value'],
+            execution_unit=children.results['execution_unit'][0]
+        )
 
     @classmethod
     def visit_enum_value(cls, node, children):
         """
-
+        '.' name
         """
         return children.results['name'][0]
 
@@ -212,8 +246,8 @@ class ScrallVisitor(PTNodeVisitor):
         """
         Returns event_name ?supplied_params instance_set
         """
-        s = children[0]
-        delay = None if len(children) < 2 else children[1]['delay']
+        s = children.results['signal'][0]
+        delay = children.results.get('delay')
         return Signal_Action_a(event=s.event, supplied_params=s.supplied_params, dest=s.dest, delay=delay)
 
     @classmethod
@@ -224,8 +258,12 @@ class ScrallVisitor(PTNodeVisitor):
         An event name, any supplied parameters, the '->' signal symbol and a target
         instance set
         """
-        params = [] if len(children) == 2 else children[1]
-        return Signal_a(event=children[0], supplied_params=params, dest=children[-1])
+        params = children.results.get('supplied_params', [])
+        return Signal_a(
+            event=children.results['name'],
+            supplied_params=params,
+            dest=children.results.get('instance_set')
+        )
 
     @classmethod
     def visit_delay(cls, node, children):
@@ -234,7 +272,7 @@ class ScrallVisitor(PTNodeVisitor):
 
         A time or time interval
         """
-        return {'delay': children[0]}
+        return children[0]
 
     # Instance set assignment and selection
     @classmethod
@@ -422,18 +460,28 @@ class ScrallVisitor(PTNodeVisitor):
     @classmethod
     def visit_param(cls, node, children):
         """
-        <flow name> or <parameter name> <flow name> is parsed. If only a flow name is present, it means
-        that the supplied flow has the same name Ex: ( shaft id ) as that of the required parameter. Short for
-        ( shaft id : shaft id ). This is a convenience that elminates the need for name doubling in a supplied
-        parameter set
+        (name ':')? scalar_expr
+
+        If only a scalar_expr is present, it means that the supplied expr has the same name
+        Ex: ( shaft id ) as that of the required parameter. Short for ( shaft id : shaft id ). This
+        is a convenience that elminates the need for name doubling in a supplied parameter set
         """
-        s = children[-1] # Last value is always the flow name
-        p = children[0] if len(children) > 1 else s # First value is the parameter name only if followed by a flow name
-        return Supplied_Parameter_a(pname=p, sval=s)
+        s = children.results['scalar_expr'][0]
+        p = children.results.get('name')
+        if not p and not isinstance(s,str):
+            _logger.error(f"Paramenter name not supplied with expression value: [{children.results}]")
+            raise ScrallMissingParameterName(children.results)
+        return Supplied_Parameter_a(pname=s if not p else p[0], sval=s)
 
     @classmethod
     def visit_supplied_params(cls, node, children):
-        return children
+        """
+        '(' (param (',' param)*)? ')'
+
+        Could be () or a list of multiple parameters
+
+        """
+        return children if children else None
 
 
     def visit_attr_access(self, node, children):
