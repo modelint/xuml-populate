@@ -30,6 +30,9 @@ MATH_a = namedtuple('MATH_a', 'op operands')
 UNARY_a = namedtuple('UNARY_a', 'op operand')
 BOOL_a = namedtuple('BOOL_a', 'op operands')
 Scalar_Assignment_a = namedtuple('Scalar_Assignment_a', 'lhs rhs')
+PATH_a = namedtuple('PATH_a', 'hops')
+INST_a = namedtuple('INST_a', 'components')
+R_a = namedtuple('R_a', 'rnum')
 
 class ScrallVisitor(PTNodeVisitor):
     """
@@ -295,7 +298,7 @@ class ScrallVisitor(PTNodeVisitor):
         by any sequence of selection, operation, and paths. The parser won't find two paths in sequence since
         any encounter path will be fully consumed
         """
-        return {'iset' : children}
+        return INST_a(children)
 
     @classmethod
     def visit_selection(cls, node, children):
@@ -491,7 +494,7 @@ class ScrallVisitor(PTNodeVisitor):
     @classmethod
     def visit_path(cls, node, children):
         """ hop+  A sequence of hops """
-        return {'path': children}
+        return PATH_a(children)
 
     @classmethod
     def visit_hop(cls, node, children):
@@ -507,7 +510,7 @@ class ScrallVisitor(PTNodeVisitor):
 
         This is how relationships are named
         """
-        return {'rnum': node.value}
+        return R_a(node.value)
 
     @classmethod
     def visit_name(cls, node, children):
