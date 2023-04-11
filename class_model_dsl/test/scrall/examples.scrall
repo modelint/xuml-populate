@@ -1,3 +1,9 @@
+// Tokens
+<1>{
+    Aircraft(1).Land( Runway: north)
+    Cabin at destination() -> /R53/Transfer<X>
+    <X>Arrived() -> there
+}<2><3>
 // Signals
 Cabin at destination() -> /R53/Transfer
 Cabin at destination() -> /R53/Transfer @ x.compute_delay()
@@ -15,12 +21,6 @@ valve position? {
     .open .stuck : close -> my valve
     .closed : open -> my valve
 }
-// Tokens
-<1>{
-    Aircraft(1).Land( Runway: north)
-    Cabin at destination() -> /R53/Transfer<X>
-    <X>Arrived() -> there
-}<2><3>
 // Scalar assignments
 speed 2 = myaircraft.groundspeed + area.checkwind() - airspeed
 a = b * c / d

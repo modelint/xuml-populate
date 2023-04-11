@@ -6,6 +6,8 @@ import logging
 
 _logger = logging.getLogger(__name__)
 
+# Here we define named tuples that we use to package up the parsed data
+# and return in the visit result.
 Supplied_Parameter_a = namedtuple('Supplied_Parameter_a', 'pname sval')
 """Parameter name and flow name pair for a set of supplied parameters"""
 Op_a = namedtuple('Op_a', 'op_name supplied_params')
@@ -30,40 +32,123 @@ BOOL_a = namedtuple('BOOL_a', 'op operands')
 Scalar_Assignment_a = namedtuple('Scalar_Assignment_a', 'lhs rhs')
 
 class ScrallVisitor(PTNodeVisitor):
+    """
+    Based on Arpeggio's generic node visitor
 
-    def visit_activity(self, node, children):
+    Here we visit each node of the abstract tree created by the Scrall parser
+    and return data in a format useful for validating a user's action language
+    and populating the Shlaer-Mellor metamodel.
+
+    See the scrall.peg file for the formal Scrall grammar.
+
+    The comments for each node visitor includes a more or less recent copy of the
+    relevant grammar syntax at the top of each visitor documentation block with
+    whitespace elements removed for easy reading.
+
+    When in doubt, consult the scrall.peg file.
+
+    Also consult the wiki in Leon Starr's Scrall repo for a full description of Scrall
+    and examples of usage.
+
+    The node and children parameters are rerquired for each visit method and may
+    or may not be referenced. Since they are uniform throughout, we do not include
+    them in in the comments. See the arpeggio docs for the basics of abstract tree
+    visiting.
+    """
+
+    @classmethod
+    def visit_activity(cls, node, children):
+        """
+        execution_unit* EOF
+
+        This is the root node. All Scrall language is built up to define a
+        single Shlaer-Mellor activity.
+
+        An activity is built up from any number of execution units, including zero.
+        It is perfectly okay to define an empty, non-functional activity. This happens
+        whenever you define a state, for example, which represents a context, but that does
+        not trigger any computation or communication.
+
+        Here we just remove any whitespace and return only the execution units.
+
+        The EOF symbol is a standard terminator at the root level for Arpeggio grammars.
+        It signals the parser that there is no more text to parse.
+        """
         return [c for c in children if c]
 
-    def visit_execution_unit(self, node, children):
+    @classmethod
+    def visit_execution_unit(cls, node, children):
+        """
+        input_tokens? action_group output_tokens? EOL+
+
+        An execution unit is a set of action groups.
+
+        When an action group completes execution it may enable any number of output tokens.
+        Each output token represents an outgoing control flow on a data flow diagram.
+        Any output token may feed into any number of other action groups in the form of an input token.
+
+        So the syntax defines which input tokens, if any enable this action group to execute and which
+        output tokens, if any are enabled upon execution of this action group.
+
+        Every execution unit is terminated by a new line.
+        """
         itok = children.results.get('input_tokens')
-        itok = None if not itok else itok[0]
         otok = children.results.get('output_tokens')
-        otok = None if not otok else otok[0]
         ag = children.results.get('action_group')[0]
-        return Execution_Unit_a(input_tokens=itok, output_tokens=otok, action_group=ag)
+        return Execution_Unit_a(
+            input_tokens=None if not itok else itok[0],
+            output_tokens=None if not otok else otok[0],
+            action_group=ag
+        )
 
-    def visit_scalar_switch(self, node, children):
-        return Scalar_Switch_a(scalar_input_flow=children[0], cases=children[1:])
 
-    def visit_case_block(self, node, children):
+    @classmethod
+    def visit_block(cls, node, children):
+        """
+        '{' execution_unit* '}'
+
+        We organize multiple execution units in a block (between brackets) when multiple
+        execution units are enabled by the same decision, case, or input tokens.
+
+        This correpsonds to the concept of one or more control flows on a data flow diagram
+        enabling multiple processes.
+        """
+        return Block_a(actions=children)
+
+    @classmethod
+    def visit_action(cls, node, children):
+        """
+        (scalar_assignment / delete / scalar_switch / decision / inst_assignment / signal_action / call)?
+
+        These are (or will be) a complete set of scrall actions. The ordering helps in some cases to prevent
+        one type of action from being mistaken for another during the parse. You can't backgrack in a peg
+        grammar, so you need to match the pattern right on the first scan.
+        """
+        return children[0]
+
+    def visit_input_tokens(self, node, children):
         return children
 
-    def visit_case(self, node, children):
-        return Case_a(enums=children.results['enum_value'], execution_unit=children.results['execution_unit'][0])
+    def visit_output_tokens(self, node, children):
+        return children
 
-    def visit_enum_value(self, node, children):
-        return children.results['name'][0]
+    def visit_sequence_token(self, node, children):
+        return Sequence_Token_a(name=children[0])
 
-    def visit_delete(self, node, children):
+    def visit_token_name(self, node, children):
+        return node.value
+
+    # Created and delete actions
+    @classmethod
+    def visit_delete(cls, node, children):
+        """
+        '!*' instance_set
+
+        """
         iset = children.results.get('instance_set')
         return Delete_Action_a(instance_set=iset)
 
-    def visit_block(self, node, children):
-        return Block_a(actions=children)
-
-    def visit_action(self, node, children):
-        return children[0]
-
+    # Decision and switch actions
     @classmethod
     def visit_decision(cls, node, children):
         """
@@ -91,19 +176,39 @@ class ScrallVisitor(PTNodeVisitor):
         """
         return children[0]
 
-    def visit_input_tokens(self, node, children):
+    @classmethod
+    def visit_scalar_switch(cls, node, children):
+        """
+        scalar_expr DECISION_OP case_block
+
+        Boolean expr triggers case_block
+        """
+        return Scalar_Switch_a(scalar_input_flow=children[0], cases=children[1:])
+
+    @classmethod
+    def visit_case_block(cls, node, children):
+        """
+
+        """
         return children
 
-    def visit_output_tokens(self, node, children):
-        return children
+    @classmethod
+    def visit_case(cls, node, children):
+        """
 
-    def visit_sequence_token(self, node, children):
-        return Sequence_Token_a(name=children[0])
+        """
+        return Case_a(enums=children.results['enum_value'], execution_unit=children.results['execution_unit'][0])
 
-    def visit_token_name(self, node, children):
-        return node.value
+    @classmethod
+    def visit_enum_value(cls, node, children):
+        """
 
-    def visit_signal_action(self, node, children):
+        """
+        return children.results['name'][0]
+
+    # Signal action
+    @classmethod
+    def visit_signal_action(cls, node, children):
         """
         Returns event_name ?supplied_params instance_set
         """
@@ -131,7 +236,7 @@ class ScrallVisitor(PTNodeVisitor):
         """
         return {'delay': children[0]}
 
-
+    # Instance set assignment and selection
     @classmethod
     def visit_inst_assignment(cls, node, children):
         """

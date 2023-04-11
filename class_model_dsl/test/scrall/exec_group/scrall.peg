@@ -18,7 +18,7 @@ FALSE_RESULT_OP = ':'
 
 // Switch action
 //switch = scalar_switch / subclass_switch
-scalar_switch = name DECISION_OP SP* case_block // Boolean expr triggers case_block
+scalar_switch = scalar_expr DECISION_OP SP* case_block // Boolean expr triggers case_block
 case_block = '{' LINEWRAP* case+ '}'
 case = (SP* enum_value)+ SP* ':' (LINEWRAP* / SP*) execution_unit
 enum_value = '.' name // Scalar switch has enum value cases
