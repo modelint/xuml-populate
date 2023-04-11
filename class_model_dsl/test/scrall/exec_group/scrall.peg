@@ -52,6 +52,8 @@ CARD = '1' / '*'
 RANK = '+^' / '-^'
 REFLEX = 'its.'
 IN = 'in.'
+TRUE = 'true' / 'TRUE'
+FALSE = 'false' / 'FALSE'
 
 // math and boolean operator precedence
 scalar_assignment = name SP* SCALAR_ASSIGN SP* scalar_expr
@@ -65,7 +67,7 @@ addition = factor (SP* ADD SP* factor)*
 factor = term (SP* MULT SP* term)*
 term = (NOT SP*)? UNARY_MINUS? (scalar / "(" SP* scalar_expr SP* ")")
 
-scalar = name operation / attr_access / name // May yield a scalar value
+scalar = TRUE / FALSE / name operation / attr_access / name // May yield a scalar value
 
 SCALAR_ASSIGN = '='
 OR = 'or' / 'OR'

@@ -29,6 +29,7 @@ Scalar_Switch_a = namedtuple('Scalar_Switch_a', 'scalar_input_flow cases')
 MATH_a = namedtuple('MATH_a', 'op operands')
 UNARY_a = namedtuple('UNARY_a', 'op operand')
 BOOL_a = namedtuple('BOOL_a', 'op operands')
+"""Boolean operation returns true or false"""
 Scalar_Assignment_a = namedtuple('Scalar_Assignment_a', 'lhs rhs')
 PATH_a = namedtuple('PATH_a', 'hops')
 INST_a = namedtuple('INST_a', 'components')
