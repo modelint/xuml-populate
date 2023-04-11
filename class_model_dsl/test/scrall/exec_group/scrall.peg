@@ -51,6 +51,7 @@ select_phrase = (CARD ',' SP* scalar_expr) / CARD / scalar_expr
 CARD = '1' / '*'
 RANK = '+^' / '-^'
 REFLEX = 'its.'
+IN = 'in.'
 
 // math and boolean operator precedence
 scalar_assignment = name SP* SCALAR_ASSIGN SP* scalar_expr

@@ -487,7 +487,13 @@ class ScrallVisitor(PTNodeVisitor):
         return children if children else None
 
 
-    def visit_attr_access(self, node, children):
+    @classmethod
+    def visit_attr_access(cls, node, children):
+        """
+        name '.' name
+
+        Attribute value accessor <class>.<attr>
+        """
         return Attr_Access_a(cname=children[0], attr=children[1])
 
     # Relationship traversal (paths)
