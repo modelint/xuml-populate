@@ -41,7 +41,7 @@ INST_ASSIGN = '.=' / '..='
 // Synchronous call action (method or ee operation)
 call = instance_set // Post-parse verify that last element is an operation, otherwise invalid call
 operation = '.' name supplied_params
-supplied_params = '(' SP* (param (';' SP+ param)*)? SP* ')'
+supplied_params = '(' SP* (param (',' SP+ param)*)? SP* ')'
 param = (name SP* ':' SP*)? scalar_expr
 
 // Instance set
@@ -71,7 +71,7 @@ scalar = TRUE / FALSE / name operation / attr_access / name // May yield a scala
 
 SCALAR_ASSIGN = '='
 OR = 'or' / 'OR'
-AND = 'and' / 'AND' / ','
+AND = 'and' / 'AND' / ';'
 NOT = '!' / 'not' / 'NOT'
 EQUAL = '==' / '!=' / ':'
 COMPARE = '>=' / '>' / '<=' / '<'
