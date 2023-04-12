@@ -42,7 +42,7 @@ INST_ASSIGN = '.=' / '..='
 call = instance_set // Post-parse verify that last element is an operation, otherwise invalid call
 operation = '.' name supplied_params
 supplied_params = '(' SP* (param (',' SP+ param)*)? SP* ')'
-param = (name SP* ':' SP*)? scalar_expr
+param = (name SP* ':' SP*)? scalar_expr // Comma above keeps scalar_expr from grabbing next param
 
 // Instance set
 instance_set = (name / path) (selection / operation / path)*
@@ -51,7 +51,7 @@ select_phrase = (CARD ',' SP* scalar_expr) / CARD / scalar_expr
 CARD = '1' / '*'
 RANK = '+^' / '-^'
 REFLEX = 'its.'
-IN = 'in.'
+IN = 'in'
 TRUE = 'true' / 'TRUE'
 FALSE = 'false' / 'FALSE'
 
@@ -67,11 +67,11 @@ addition = factor (SP* ADD SP* factor)*
 factor = term (SP* MULT SP* term)*
 term = (NOT SP*)? UNARY_MINUS? (scalar / "(" SP* scalar_expr SP* ")")
 
-scalar = TRUE / FALSE / name operation / attr_access / name // May yield a scalar value
+scalar = TRUE / FALSE / name operation / input_param / attr_access / name // May yield a scalar value
 
 SCALAR_ASSIGN = '='
 OR = 'or' / 'OR'
-AND = 'and' / 'AND' / ';'
+AND = 'and' / 'AND' / ';' // ; shorthand for anding attr comparisons in a selection phrase
 NOT = '!' / 'not' / 'NOT'
 EQUAL = '==' / '!=' / ':'
 COMPARE = '>=' / '>' / '<=' / '<'
@@ -80,6 +80,7 @@ ADD = ("+" / "-")
 MULT = ("*" / "/")
 
 attr_access = name '.' name // Attribute value accessor <class>.<attr>
+input_param =  IN '.' name
 
 // Relationship traversal
 // We keep path components simple, always beginning with the '/' symbol

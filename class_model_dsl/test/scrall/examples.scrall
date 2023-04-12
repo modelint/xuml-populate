@@ -30,10 +30,13 @@ z = (a != b)
 broken = not shaft.inservice
 wrong = not -(x * y)
 f = A == B == C
+m = not working and true
+b = Motor.Compute(x: c or d, y: e / f)
 my speed = myaircraft.groundspeed + area.checkwind() * airspeed
+y = in.hello * in.there
 // instance set assignments
 q ..= Cabin(*).Closest()/R2/Shaft.Nearest()(id : shaft)
-a ..= /R1/R2/Aircraft(alt: high * af, speed <= max speed )
+a ..= /R1/R2/Aircraft(alt: high * af; speed <= max speed )
 my plane .= Aircraft(Speed: (v or x) or Height > h)
 b ..= Cabin(*).Closest()/R2/Shaft.Nearest()(id : shaft)
 my plane2 .= Aircraft(Speed: v and Height > h)

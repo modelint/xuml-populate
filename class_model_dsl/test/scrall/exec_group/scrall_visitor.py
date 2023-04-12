@@ -34,6 +34,8 @@ Scalar_Assignment_a = namedtuple('Scalar_Assignment_a', 'lhs rhs')
 PATH_a = namedtuple('PATH_a', 'hops')
 INST_a = namedtuple('INST_a', 'components')
 R_a = namedtuple('R_a', 'rnum')
+IN_a = namedtuple('IN_a', 'name')
+"""Input parameter"""
 
 class ScrallVisitor(PTNodeVisitor):
     """
@@ -487,6 +489,13 @@ class ScrallVisitor(PTNodeVisitor):
         """
         return children if children else None
 
+    @classmethod
+    def visit_input_param(cls, node, children):
+        """
+        IN '.' name
+
+        """
+        return IN_a(children[0])
 
     @classmethod
     def visit_attr_access(cls, node, children):
