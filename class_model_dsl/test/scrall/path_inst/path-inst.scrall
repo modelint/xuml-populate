@@ -1,8 +1,0 @@
-Aircraft(Speed: v and Height > h)
-Shaft(not Inservice)
-Shaft(Inservice, bank: mybank)
-Floor(height > bottom floor)
-/R5/Shaft.Cabin(id: myshaft)/R7/Door
-/R12/Bank
-Bank(*)
-Shaft.Find cabins()
