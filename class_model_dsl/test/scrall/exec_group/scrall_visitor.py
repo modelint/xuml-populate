@@ -10,7 +10,7 @@ _logger = logging.getLogger(__name__)
 # and return in the visit result.
 Supplied_Parameter_a = namedtuple('Supplied_Parameter_a', 'pname sval')
 """Parameter name and flow name pair for a set of supplied parameters"""
-Op_a = namedtuple('Op_a', 'op_name supplied_params')
+Op_a = namedtuple('Op_a', 'owner op_name supplied_params order')
 Call_a = namedtuple('Call_a', 'subject ops')
 """The subject of a call could be an instance set (method) or an external entity (ee operation)"""
 Attr_Access_a = namedtuple('Attr_Access_a', 'cname attr')
@@ -35,7 +35,10 @@ PATH_a = namedtuple('PATH_a', 'hops')
 INST_a = namedtuple('INST_a', 'components')
 R_a = namedtuple('R_a', 'rnum')
 IN_a = namedtuple('IN_a', 'name')
+Ordered_name_a = namedtuple('Ordered_name_a', 'order name')
 """Input parameter"""
+
+symbol = {'^+': 'ascending', '^-': 'descending'}
 
 class ScrallVisitor(PTNodeVisitor):
     """
@@ -414,6 +417,15 @@ class ScrallVisitor(PTNodeVisitor):
             return MATH_a(children.results['MULT'], children.results['term'])
 
     @classmethod
+    def visit_order_name(cls, node, children):
+        n = children.results['name'][0]
+        o = children.results.get('ORDER')
+        if o:
+            return Ordered_name_a(order=symbol[o[0]], name=n)
+        else:
+            return n
+
+    @classmethod
     def visit_term(cls, node, children):
         """
         NOT? UNARY_MINUS? (scalar / scalar_expr)
@@ -459,9 +471,15 @@ class ScrallVisitor(PTNodeVisitor):
         Children are name, ?supplied_params
         Returns op_name ?supplied_params dest
         """
-        op_name = children[0]
-        params = [] if len(children) == 1 else children[-1]
-        return Op_a(op_name=op_name, supplied_params=params)
+        owner = children.results.get('owner')
+        o = children.results.get('ORDER')
+        p = children.results.get('supplied_params')
+        return Op_a(
+            owner=None if not owner else owner[0],
+            op_name=children.results['name'][0],
+            supplied_params=[] if not p else p[0],
+            order=None if not o else symbol[o[0]]
+        )
 
     @classmethod
     def visit_param(cls, node, children):
