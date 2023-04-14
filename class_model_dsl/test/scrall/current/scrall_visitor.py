@@ -1,4 +1,4 @@
-""" scrall_visitor.py - exec_group test """
+""" scrall_visitor.py - current test """
 from arpeggio import PTNodeVisitor
 from collections import namedtuple
 from class_model_dsl.sp_exceptions import ScrallCallWithoutOperation, ScrallMissingParameterName

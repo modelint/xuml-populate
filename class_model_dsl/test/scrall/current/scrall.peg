@@ -96,7 +96,7 @@ NAME_GLUE = r'[ _]' // delmits words within a name
 rnum = r'O?R[1-9][0-9]*' // Relationship number (name used for relationships)
 first_word = ignore_keywords r'[A-Za-z][A-Za-z0-9]*'
 word = ignore_keywords r'[A-Za-z0-9]+'
-ignore_keywords = !" true" !"true " !" false" !"false " !" and" !"and " !" or" !"or " !" not" !"not " !" its" !"its "
+ignore_keywords = !" in" !"in " !" true" !"true " !" false" !"false " !" and" !"and " !" or" !"or " !" not" !"not " !" its" !"its "
 ! " me" !" me" !" TRUE" !"TRUE " !" FALSE" !"FALSE " !" AND" !"AND " !" OR" !"OR " !" NOT" !"NOT "
 
 // Whitespace and comments
