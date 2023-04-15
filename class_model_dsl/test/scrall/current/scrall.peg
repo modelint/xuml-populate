@@ -46,8 +46,7 @@ supplied_params = '(' SP* (param (',' SP+ param)*)? SP* ')'
 param = (name SP* ':' SP*)? scalar_expr // Comma above keeps scalar_expr from grabbing next param
 
 // Instance set
-instance_set = (operation / order_name / path) (selection / operation / path)*
-//instance_set = (order_name / path) (selection / operation / path)*
+instance_set = (operation / prefix_name / path) (reflexive_selection / selection / operation / path)*
 selection = '(' SP* select_phrase SP* ')'
 select_phrase = (CARD ',' SP* scalar_expr) / CARD / scalar_expr
 CARD = '1' / '*'
@@ -69,8 +68,11 @@ addition = factor (SP* ADD SP* factor)*
 factor = term (SP* MULT SP* term)*
 term = (NOT SP*)? UNARY_MINUS? (scalar / "(" SP* scalar_expr SP* ")")
 
-scalar = TRUE / FALSE / operation / input_param / attr_access / order_name // May yield a scalar value
-order_name = ORDER? name
+scalar = TRUE / FALSE / operation / input_param / attr_access / prefix_name // May yield a scalar value
+prefix_name = (ORDER / ITS)? name
+
+//reflexive_selection = '/~/' SP* scalar_expr
+reflexive_selection = '/~/' SP* scalar_expr (SP* '|' COMPARE '|')?
 
 SCALAR_ASSIGN = '='
 OR = 'or' / 'OR'
@@ -82,7 +84,7 @@ UNARY_MINUS = "-"
 ADD = ("+" / "-")
 MULT = ("*" / "/")
 
-attr_access = name '.' name // Attribute value accessor <class>.<attr>
+attr_access = (ITS / name) '.' name // Attribute value accessor <class>.<attr>
 input_param =  IN '.' name
 
 // Relationship traversal
@@ -96,7 +98,7 @@ NAME_GLUE = r'[ _]' // delmits words within a name
 rnum = r'O?R[1-9][0-9]*' // Relationship number (name used for relationships)
 first_word = ignore_keywords r'[A-Za-z][A-Za-z0-9]*'
 word = ignore_keywords r'[A-Za-z0-9]+'
-ignore_keywords = !" in" !"in " !" true" !"true " !" false" !"false " !" and" !"and " !" or" !"or " !" not" !"not " !" its" !"its "
+ignore_keywords = !" in" !"in " !" true" !"true " !" false" !"false " !" and" !"and " !" or" !"or " !" not" !"not "
 ! " me" !" me" !" TRUE" !"TRUE " !" FALSE" !"FALSE " !" AND" !"AND " !" OR" !"OR " !" NOT" !"NOT "
 
 // Whitespace and comments

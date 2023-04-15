@@ -35,8 +35,10 @@ PATH_a = namedtuple('PATH_a', 'hops')
 INST_a = namedtuple('INST_a', 'components')
 R_a = namedtuple('R_a', 'rnum')
 IN_a = namedtuple('IN_a', 'name')
-Ordered_name_a = namedtuple('Ordered_name_a', 'order name')
+Order_name_a = namedtuple('Order_name_a', 'order name')
+Its_a = namedtuple('Its_a', 'name')
 """Input parameter"""
+Reflexive_select_a = namedtuple('Reflexive_select_a', 'expr op')
 
 symbol = {'^+': 'ascending', '^-': 'descending'}
 
@@ -314,6 +316,17 @@ class ScrallVisitor(PTNodeVisitor):
         return Selection_a(card=children[0][0], criteria=None if len(children[0]) < 2 else children[0][1])
 
     @classmethod
+    def visit_reflexive_selection(cls, node, children):
+        """
+        '/~(' scalar_expr | COMPARE ')'
+        """
+        comp = children.results.get('COMPARE')
+        return Reflexive_select_a(
+            expr=children.results['scalar_expr'],
+            op=None if not comp else comp[0]
+        )
+
+    @classmethod
     def visit_select_phrase(cls, node, children):
         """
         (CARD ',' criteria) / CARD / criteria
@@ -417,11 +430,14 @@ class ScrallVisitor(PTNodeVisitor):
             return MATH_a(children.results['MULT'], children.results['term'])
 
     @classmethod
-    def visit_order_name(cls, node, children):
+    def visit_prefix_name(cls, node, children):
+        i = children.results.get('ITS')
         n = children.results['name'][0]
         o = children.results.get('ORDER')
         if o:
-            return Ordered_name_a(order=symbol[o[0]], name=n)
+            return Order_name_a(order=symbol[o[0]], name=n)
+        if i:
+            return Its_a(name=n)
         else:
             return n
 
