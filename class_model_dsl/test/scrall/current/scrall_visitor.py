@@ -13,7 +13,7 @@ Supplied_Parameter_a = namedtuple('Supplied_Parameter_a', 'pname sval')
 Op_a = namedtuple('Op_a', 'owner op_name supplied_params order')
 Call_a = namedtuple('Call_a', 'subject ops')
 """The subject of a call could be an instance set (method) or an external entity (ee operation)"""
-Attr_Access_a = namedtuple('Attr_Access_a', 'cname attr')
+Attr_Access_a = namedtuple('Attr_Access_a', 'cname its attr')
 Selection_a = namedtuple('Selection_a', 'card criteria')
 Inst_Assignment_a = namedtuple('Inst_Assignment_a', 'lhs card rhs')
 Signal_a = namedtuple('Signal_a', 'event supplied_params dest')
@@ -431,13 +431,10 @@ class ScrallVisitor(PTNodeVisitor):
 
     @classmethod
     def visit_prefix_name(cls, node, children):
-        i = children.results.get('ITS')
         n = children.results['name'][0]
         o = children.results.get('ORDER')
         if o:
             return Order_name_a(order=symbol[o[0]], name=n)
-        if i:
-            return Its_a(name=n)
         else:
             return n
 
@@ -491,7 +488,7 @@ class ScrallVisitor(PTNodeVisitor):
         o = children.results.get('ORDER')
         p = children.results.get('supplied_params')
         return Op_a(
-            owner=None if not owner else owner[0],
+            owner='ME' if not owner else owner[0],
             op_name=children.results['name'][0],
             supplied_params=[] if not p else p[0],
             order=None if not o else symbol[o[0]]
@@ -534,11 +531,13 @@ class ScrallVisitor(PTNodeVisitor):
     @classmethod
     def visit_attr_access(cls, node, children):
         """
-        name '.' name
+        ( ITS / name ) '.' name
 
         Attribute value accessor <class>.<attr>
         """
-        return Attr_Access_a(cname=children[0], attr=children[1])
+        i = 'ITS' in children.results
+        c = None if i else children[0]
+        return Attr_Access_a(cname=c, its=i, attr=children[-1])
 
     # Relationship traversal (paths)
     @classmethod

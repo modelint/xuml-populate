@@ -51,7 +51,7 @@ selection = '(' SP* select_phrase SP* ')'
 select_phrase = (CARD ',' SP* scalar_expr) / CARD / scalar_expr
 CARD = '1' / '*'
 ORDER = '^+' / '^-'
-ITS = 'its.'
+ITS = 'its'
 IN = 'in'
 TRUE = 'true' / 'TRUE'
 FALSE = 'false' / 'FALSE'
@@ -69,10 +69,10 @@ factor = term (SP* MULT SP* term)*
 term = (NOT SP*)? UNARY_MINUS? (scalar / "(" SP* scalar_expr SP* ")")
 
 scalar = TRUE / FALSE / operation / input_param / attr_access / prefix_name // May yield a scalar value
-prefix_name = (ORDER / ITS)? name
+prefix_name = ORDER? name
 
 //reflexive_selection = '/~/' SP* scalar_expr
-reflexive_selection = '/~/' SP* scalar_expr (SP* '|' COMPARE '|')?
+reflexive_selection = '/~/' scalar_expr (SP* '|' COMPARE '|')?
 
 SCALAR_ASSIGN = '='
 OR = 'or' / 'OR'
@@ -96,6 +96,8 @@ hop = '/' (rnum / name) // just a sequence of rels and phrase or class names
 name = first_word (NAME_GLUE word)* // One word or a sequence of delimited words (name used for most model elements)
 NAME_GLUE = r'[ _]' // delmits words within a name
 rnum = r'O?R[1-9][0-9]*' // Relationship number (name used for relationships)
+//first_word = r'[A-Za-z][A-Za-z0-9]*'
+//word = r'[A-Za-z0-9]+'
 first_word = ignore_keywords r'[A-Za-z][A-Za-z0-9]*'
 word = ignore_keywords r'[A-Za-z0-9]+'
 ignore_keywords = !" in" !"in " !" true" !"true " !" false" !"false " !" and" !"and " !" or" !"or " !" not" !"not "
