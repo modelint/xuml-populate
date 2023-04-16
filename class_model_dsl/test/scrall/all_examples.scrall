@@ -1,5 +1,6 @@
+x = .red
 higher follow ac .= /OR3/is following/~/its.Altitude |>|
-hf ac .= /OR3/is following/~/( its.Altitude - Altitude ) > y
+hf ac .= /OR3/is following/~|( its.Altitude - Altitude ) > y
 cabin .= Cabin(1, ^-.Estimated travel delay( To floor : calling floor, Calling dir: Dir ))
 best cabin .= ^-.Estimated travel delay(floor: position)
 x = .compute(x, y)

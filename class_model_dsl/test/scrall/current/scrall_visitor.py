@@ -40,6 +40,7 @@ Order_name_a = namedtuple('Order_name_a', 'order name')
 Its_a = namedtuple('Its_a', 'name')
 """Input parameter"""
 Reflexive_select_a = namedtuple('Reflexive_select_a', 'expr compare position')
+Type_expr_a = namedtuple('Type_expr_a', 'type value op')
 
 symbol = {'^+': 'ascending', '^-': 'descending'}
 
@@ -308,6 +309,14 @@ class ScrallVisitor(PTNodeVisitor):
         any encounter path will be fully consumed
         """
         return INST_a(children)
+
+
+    @classmethod
+    def visit_type_selector(cls, node, children):
+        """
+        name '[' name ']'
+        """
+        return Type_expr_a(type=children[0], value=children[1])
 
     @classmethod
     def visit_selection(cls, node, children):
