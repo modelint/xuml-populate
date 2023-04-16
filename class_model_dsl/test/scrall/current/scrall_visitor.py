@@ -39,7 +39,7 @@ Enum_a = namedtuple('Enum_a', 'value')
 Order_name_a = namedtuple('Order_name_a', 'order name')
 Its_a = namedtuple('Its_a', 'name')
 """Input parameter"""
-Reflexive_select_a = namedtuple('Reflexive_select_a', 'expr op')
+Reflexive_select_a = namedtuple('Reflexive_select_a', 'expr compare position')
 
 symbol = {'^+': 'ascending', '^-': 'descending'}
 
@@ -317,14 +317,34 @@ class ScrallVisitor(PTNodeVisitor):
         return Selection_a(card=children[0][0], criteria=None if len(children[0]) < 2 else children[0][1])
 
     @classmethod
+    def visit_HIPPITY_HOP(cls, node, children):
+        """
+        FAR_HOP / NEAR_HOP
+
+        Select the furthest or nearest qualifying instance
+        """
+        return 'nearest' if 'NEAR_HOP' in children.results else 'furthest'
+
+    @classmethod
     def visit_reflexive_selection(cls, node, children):
         """
-        '/~(' scalar_expr | COMPARE ')'
+        HIPPITY_HOP scalar_expr ('|' COMPARE '|')?
+
+        HIPPITY_HOP is either nearest or furthest occurrence in reflexive search
+        (This operator is also what tells the parser that this is a reflexive search)
+
+        There must be a scalar expression to evaluate to determine whether or not a given instance
+        meets the selection criteria.
+
+        A comparison operator is provided when the scalar expression is simply an its.<attr> reference
+        so that we can say "its.Altitude" (the Altitude of the currently tested instance) is greater than
+        that of the instance at the beginning of the search.
         """
         comp = children.results.get('COMPARE')
         return Reflexive_select_a(
             expr=children.results['scalar_expr'],
-            op=None if not comp else comp[0]
+            compare=None if not comp else comp[0],
+            position=children.results['HIPPITY_HOP'][0]
         )
 
     @classmethod

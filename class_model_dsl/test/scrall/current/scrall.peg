@@ -71,8 +71,10 @@ term = (NOT SP*)? UNARY_MINUS? (scalar / "(" SP* scalar_expr SP* ")")
 scalar = TRUE / FALSE / operation / enum_value / input_param / attr_access / prefix_name // May yield a scalar value
 prefix_name = ORDER? name
 
-//reflexive_selection = '/~/' SP* scalar_expr
-reflexive_selection = '/~/' scalar_expr (SP* '|' COMPARE '|')?
+reflexive_selection = HIPPITY_HOP scalar_expr (SP* '|' COMPARE '|')?
+HIPPITY_HOP = FAR_HOP / NEAR_HOP
+NEAR_HOP = '/~/'
+FAR_HOP = '/~|'
 
 SCALAR_ASSIGN = '='
 OR = 'or' / 'OR'
