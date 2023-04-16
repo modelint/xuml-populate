@@ -68,7 +68,7 @@ addition = factor (SP* ADD SP* factor)*
 factor = term (SP* MULT SP* term)*
 term = (NOT SP*)? UNARY_MINUS? (scalar / "(" SP* scalar_expr SP* ")")
 
-scalar = TRUE / FALSE / operation / input_param / attr_access / prefix_name // May yield a scalar value
+scalar = TRUE / FALSE / operation / enum_value / input_param / attr_access / prefix_name // May yield a scalar value
 prefix_name = ORDER? name
 
 //reflexive_selection = '/~/' SP* scalar_expr

@@ -35,6 +35,7 @@ PATH_a = namedtuple('PATH_a', 'hops')
 INST_a = namedtuple('INST_a', 'components')
 R_a = namedtuple('R_a', 'rnum')
 IN_a = namedtuple('IN_a', 'name')
+Enum_a = namedtuple('Enum_a', 'value')
 Order_name_a = namedtuple('Order_name_a', 'order name')
 Its_a = namedtuple('Its_a', 'name')
 """Input parameter"""
@@ -249,7 +250,7 @@ class ScrallVisitor(PTNodeVisitor):
         """
         '.' name
         """
-        return children.results['name'][0]
+        return Enum_a(children[0])
 
     # Signal action
     @classmethod
