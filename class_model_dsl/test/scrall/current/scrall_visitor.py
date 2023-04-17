@@ -11,6 +11,7 @@ _logger = logging.getLogger(__name__)
 Supplied_Parameter_a = namedtuple('Supplied_Parameter_a', 'pname sval')
 """Parameter name and flow name pair for a set of supplied parameters"""
 Op_a = namedtuple('Op_a', 'owner op_name supplied_params order')
+Scalar_op_a = namedtuple('Scalar_op_a', 'owner supplied_params')
 Call_a = namedtuple('Call_a', 'subject ops')
 """The subject of a call could be an instance set (method) or an external entity (ee operation)"""
 Attr_Access_a = namedtuple('Attr_Access_a', 'cname its attr')
@@ -379,6 +380,18 @@ class ScrallVisitor(PTNodeVisitor):
         return Scalar_Assignment_a(*children)
 
     @classmethod
+    def visit_scalar(cls, node, children):
+        return children
+
+    @classmethod
+    def visit_op_chain(cls, node, children):
+        return children
+
+    @classmethod
+    def visit_value(cls, node, children):
+        return children
+
+    @classmethod
     def visit_scalar_expr(cls, node, children):
         """
         Returns a fully parsed scalar expression
@@ -525,6 +538,19 @@ class ScrallVisitor(PTNodeVisitor):
         )
 
     @classmethod
+    def visit_scalar_op(cls, node, children):
+        """
+        Children are name, ?supplied_params
+        Returns op_name ?supplied_params dest
+        """
+        o = children.results['name'][0]
+        p = children.results['supplied_params'][0]
+        return Scalar_op_a(
+            owner=o,
+            supplied_params=p
+        )
+
+    @classmethod
     def visit_param(cls, node, children):
         """
         (name ':')? scalar_expr
@@ -534,6 +560,8 @@ class ScrallVisitor(PTNodeVisitor):
         is a convenience that elminates the need for name doubling in a supplied parameter set
         """
         s = children.results['scalar_expr'][0]
+        if len(s) == 1 and isinstance(s[0],INST_a) and len(s[0].components) == 1 and isinstance(s[0].components[0],str):
+            s = s[0].components[0]
         p = children.results.get('name')
         if not p and not isinstance(s,str):
             _logger.error(f"Paramenter name not supplied with expression value: [{children.results}]")

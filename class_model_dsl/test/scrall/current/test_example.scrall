@@ -1,4 +1,1 @@
-t = Temperature[freezing h2o]:DegF
-pi = Real[pi]
-Tank.current temp:DegF
-a = .compute():DegF
+a = cabin/R4/Door.Temperature.adjust(np: nval).degF

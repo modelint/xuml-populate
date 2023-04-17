@@ -68,8 +68,12 @@ addition = factor (SP* ADD SP* factor)*
 factor = term (SP* MULT SP* term)*
 term = (NOT SP*)? UNARY_MINUS? (scalar / "(" SP* scalar_expr SP* ")")
 
-scalar = TRUE / FALSE / type_selector / operation / enum_value / input_param / attr_access / prefix_name // May yield a scalar value
+scalar = value / (instance_set? op_chain)
+op_chain = ('.' (scalar_op / name))*
+value = TRUE / FALSE / enum_value / type_selector / input_param
+//scalar = TRUE / FALSE / type_selector / operation / enum_value / input_param / attr_access / prefix_name // May yield a scalar value
 prefix_name = ORDER? name
+scalar_op = name supplied_params
 
 // name of type and name of value selected
 type_selector = name '[' SP* name SP* ']' ('.' name)?
@@ -101,10 +105,10 @@ hop = '/' (rnum / name) // just a sequence of rels and phrase or class names
 name = first_word (NAME_GLUE word)* // One word or a sequence of delimited words (name used for most model elements)
 NAME_GLUE = r'[ _]' // delmits words within a name
 rnum = r'O?R[1-9][0-9]*' // Relationship number (name used for relationships)
-//first_word = r'[A-Za-z][A-Za-z0-9]*'
-//word = r'[A-Za-z0-9]+'
-first_word = ignore_keywords r'[A-Za-z][A-Za-z0-9]*'
-word = ignore_keywords r'[A-Za-z0-9]+'
+first_word = r'[A-Za-z][A-Za-z0-9]*'
+word = r'[A-Za-z0-9]+'
+//first_word = ignore_keywords r'[A-Za-z][A-Za-z0-9]*'
+//word = ignore_keywords r'[A-Za-z0-9]+'
 ignore_keywords = !" in" !"in " !" true" !"true " !" false" !"false " !" and" !"and " !" or" !"or " !" not" !"not "
 ! " me" !" me" !" TRUE" !"TRUE " !" FALSE" !"FALSE " !" AND" !"AND " !" OR" !"OR " !" NOT" !"NOT "
 
