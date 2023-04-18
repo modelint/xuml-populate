@@ -1,7 +1,8 @@
 """ scrall_visitor.py - current test """
 from arpeggio import PTNodeVisitor
 from collections import namedtuple
-from class_model_dsl.sp_exceptions import ScrallCallWithoutOperation, ScrallMissingParameterName
+from class_model_dsl.sp_exceptions import ScrallCallWithoutOperation, ScrallMissingParameterName,\
+    ScrallItsRequiresOpchain
 import logging
 
 _logger = logging.getLogger(__name__)
@@ -38,7 +39,6 @@ R_a = namedtuple('R_a', 'rnum')
 IN_a = namedtuple('IN_a', 'name')
 Enum_a = namedtuple('Enum_a', 'value')
 Order_name_a = namedtuple('Order_name_a', 'order name')
-Its_a = namedtuple('Its_a', 'name')
 N_a = namedtuple('N_a', 'name')
 Op_chain_a = namedtuple('Op_chain', 'components')
 """Input parameter"""
@@ -387,19 +387,28 @@ class ScrallVisitor(PTNodeVisitor):
     @classmethod
     def visit_scalar(cls, node, children):
         """
-        scalar = value / (instance_set? op_chain)
+        value / ( ( ITS / instance_set )? op_chain )
 
         A scalar is either a simple value such as an enum or a variable name, TRUE/FALSE, etc OR
         it is a chain of operations like a.b(x,y).c.d with a preceding instance set such as a path, selection, etc.
         """
+        its = children.results.get('ITS')
         v = children.results.get('value')
         v = None if not v else v[0]
         if v:
             return v
-        i = children.results.get('instance_set')
-        if i and len(i) == 1 and isinstance(i[0], N_a):
-            i = i[0]
+        if its:
+            i = None
+        else:
+            i = children.results.get('instance_set')
+            if i and len(i) == 1 and isinstance(i[0], N_a):
+                i = i[0]
         o = children.results.get('op_chain')
+        if its and not o:
+            _logger.error(f"'its' keyword must precede an op chain: [{children.results}]")
+            raise ScrallItsRequiresOpchain(children.results)
+        if its and o:
+            return 'ITS',o
         if i and not o:
             return i
         return i,o
@@ -593,10 +602,6 @@ class ScrallVisitor(PTNodeVisitor):
         is a convenience that elminates the need for name doubling in a supplied parameter set
         """
         s = children.results['scalar_expr'][0]
-        # If the scalar expression is simply a name (scalar flow), then extract it from the
-        # instance set parse as a simple string
-        # if len(s) == 1 and isinstance(s[0],INST_a) and len(s[0].components) == 1 and isinstance(s[0].components[0],str):
-        #     s = s[0].components[0]
         p = children.results.get('name')
         if not p and not isinstance(s,N_a):
             _logger.error(f"Paramenter name not supplied with expression value: [{children.results}]")
@@ -609,7 +614,6 @@ class ScrallVisitor(PTNodeVisitor):
         '(' (param (',' param)*)? ')'
 
         Could be () or a list of multiple parameters
-
         """
         return children if children else None
 
@@ -618,6 +622,7 @@ class ScrallVisitor(PTNodeVisitor):
         """
         IN '.' name
 
+        An input parameter is signified by the 'in' keyword
         """
         return IN_a(children[0])
 

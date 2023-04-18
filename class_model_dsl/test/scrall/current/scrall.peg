@@ -51,10 +51,10 @@ selection = '(' SP* select_phrase SP* ')'
 select_phrase = (CARD ',' SP* scalar_expr) / CARD / scalar_expr
 CARD = '1' / '*'
 ORDER = '^+' / '^-'
-ITS = 'its'
 IN = 'in'
 TRUE = 'true' / 'TRUE'
 FALSE = 'false' / 'FALSE'
+ITS = 'its'
 
 // math and boolean operator precedence
 scalar_assignment = name SP* SCALAR_ASSIGN SP* scalar_expr
@@ -68,10 +68,9 @@ addition = factor (SP* ADD SP* factor)*
 factor = term (SP* MULT SP* term)*
 term = (NOT SP*)? UNARY_MINUS? (scalar / "(" SP* scalar_expr SP* ")")
 
-scalar = value / (instance_set? op_chain)
+scalar = value / ( ( ITS / instance_set )? op_chain )
 op_chain = ('.' (scalar_op / name))*
 value = TRUE / FALSE / enum_value / type_selector / input_param
-//scalar = TRUE / FALSE / type_selector / operation / enum_value / input_param / attr_access / prefix_name // May yield a scalar value
 prefix_name = ORDER? name
 scalar_op = name supplied_params
 
@@ -93,7 +92,6 @@ UNARY_MINUS = "-"
 ADD = ("+" / "-")
 MULT = ("*" / "/")
 
-attr_access = (ITS / name) '.' name // Attribute value accessor <class>.<attr>
 input_param =  IN '.' name
 
 // Relationship traversal

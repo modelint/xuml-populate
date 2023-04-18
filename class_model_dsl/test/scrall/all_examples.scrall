@@ -1,4 +1,5 @@
 x = _red
+a = in.b + in.c
 b = Motor.Compute(x: c or d, y: e / f)
 x = /R1/Aircraft(1).Speed.mph
 higher follow ac .= /OR3/is following/~/its.Altitude |>|
