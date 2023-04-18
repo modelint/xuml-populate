@@ -1,4 +1,6 @@
-x = .red
+x = _red
+b = Motor.Compute(x: c or d, y: e / f)
+x = /R1/Aircraft(1).Speed.mph
 higher follow ac .= /OR3/is following/~/its.Altitude |>|
 hf ac .= /OR3/is following/~|( its.Altitude - Altitude ) > y
 cabin .= Cabin(1, ^-.Estimated travel delay( To floor : calling floor, Calling dir: Dir ))
@@ -24,8 +26,8 @@ Cabin at destination() -> /R53/Transfer @ x.compute_delay()
 }
 // Scalar switch with signals
 valve position? {
-    .open .stuck : close -> my valve
-    .closed : open -> my valve
+    _open _stuck : close -> my valve
+    _closed : open -> my valve
 }
 // Scalar assignments
 speed 2 = myaircraft.groundspeed + area.checkwind() - airspeed

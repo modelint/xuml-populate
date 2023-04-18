@@ -21,7 +21,7 @@ FALSE_RESULT_OP = ':'
 scalar_switch = scalar_expr DECISION_OP SP* case_block // Boolean expr triggers case_block
 case_block = '{' LINEWRAP* case+ '}'
 case = (SP* enum_value)+ SP* ':' (LINEWRAP* / SP*) execution_unit
-enum_value = '.' name // Scalar switch has enum value cases
+enum_value = '_' name // Scalar switch has enum value cases
 DECISION_OP = '?'
 
 // Delete action
@@ -105,10 +105,10 @@ hop = '/' (rnum / name) // just a sequence of rels and phrase or class names
 name = first_word (NAME_GLUE word)* // One word or a sequence of delimited words (name used for most model elements)
 NAME_GLUE = r'[ _]' // delmits words within a name
 rnum = r'O?R[1-9][0-9]*' // Relationship number (name used for relationships)
-first_word = r'[A-Za-z][A-Za-z0-9]*'
-word = r'[A-Za-z0-9]+'
-//first_word = ignore_keywords r'[A-Za-z][A-Za-z0-9]*'
-//word = ignore_keywords r'[A-Za-z0-9]+'
+//first_word = r'[A-Za-z][A-Za-z0-9]*'
+//word = r'[A-Za-z0-9]+'
+first_word = ignore_keywords r'[A-Za-z][A-Za-z0-9]*'
+word = ignore_keywords r'[A-Za-z0-9]+'
 ignore_keywords = !" in" !"in " !" true" !"true " !" false" !"false " !" and" !"and " !" or" !"or " !" not" !"not "
 ! " me" !" me" !" TRUE" !"TRUE " !" FALSE" !"FALSE " !" AND" !"AND " !" OR" !"OR " !" NOT" !"NOT "
 
