@@ -68,14 +68,15 @@ addition = factor (SP* ADD SP* factor)*
 factor = term (SP* MULT SP* term)*
 term = (NOT SP*)? UNARY_MINUS? (scalar / "(" SP* scalar_expr SP* ")")
 
-scalar = value / ( ( ITS / instance_set )? op_chain )
+scalar = value / ( ( scalar_source / instance_set ) op_chain? )
+scalar_source = ( type_selector / input_param / ITS )
 op_chain = ('.' (scalar_op / name))*
-value = TRUE / FALSE / enum_value / type_selector / input_param
+value = TRUE / FALSE / enum_value
 prefix_name = ORDER? name
 scalar_op = name supplied_params
 
 // name of type and name of value selected
-type_selector = name '[' SP* name SP* ']' ('.' name)?
+type_selector = name '[' SP* (name SP*)? ']'
 
 reflexive_selection = HIPPITY_HOP scalar_expr (SP* '|' COMPARE '|')?
 HIPPITY_HOP = FAR_HOP / NEAR_HOP

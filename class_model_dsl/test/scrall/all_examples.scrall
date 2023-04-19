@@ -1,3 +1,5 @@
+// Opchain
+x = Temperature[].DegC
 x = _red
 a = in.b + in.c
 b = Motor.Compute(x: c or d, y: e / f)

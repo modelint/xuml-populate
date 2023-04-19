@@ -43,7 +43,7 @@ N_a = namedtuple('N_a', 'name')
 Op_chain_a = namedtuple('Op_chain', 'components')
 """Input parameter"""
 Reflexive_select_a = namedtuple('Reflexive_select_a', 'expr compare position')
-Type_expr_a = namedtuple('Type_expr_a', 'type value op')
+Type_expr_a = namedtuple('Type_expr_a', 'type selector')
 
 symbol = {'^+': 'ascending', '^-': 'descending'}
 
@@ -320,9 +320,10 @@ class ScrallVisitor(PTNodeVisitor):
     @classmethod
     def visit_type_selector(cls, node, children):
         """
-        name '[' name ']'
+        name '[' name? ']'
         """
-        return Type_expr_a(type=children[0], value=children[1])
+        s = '<default>' if len(children) == 1 else children[1]
+        return Type_expr_a(type=children[0], selector=s)
 
     @classmethod
     def visit_selection(cls, node, children):
@@ -385,33 +386,51 @@ class ScrallVisitor(PTNodeVisitor):
         return Scalar_Assignment_a(*children)
 
     @classmethod
+    def visit_scalar_source(cls, node, children):
+        """
+        ( scalar_op / type_selector / input_param / ITS )
+        """
+        its = children.results.get('ITS')
+        if its:
+            return 'ITS'
+        else:
+            return children[0]
+
+    @classmethod
     def visit_scalar(cls, node, children):
         """
-        value / ( ( ITS / instance_set )? op_chain )
+        value / ( ( scalar_source / instance_set )? op_chain )
 
         A scalar is either a simple value such as an enum or a variable name, TRUE/FALSE, etc OR
         it is a chain of operations like a.b(x,y).c.d with a preceding instance set such as a path, selection, etc.
         """
-        its = children.results.get('ITS')
+        # Return value if provided
         v = children.results.get('value')
         v = None if not v else v[0]
         if v:
             return v
-        if its:
-            i = None
-        else:
-            i = children.results.get('instance_set')
-            if i and len(i) == 1 and isinstance(i[0], N_a):
-                i = i[0]
+
+        # Either a scalar source or an instance set may be provided if no value
+        s = children.results.get('scalar_source')
+        s = 'ITS' if s and s[0] == 'ITS' else s
+        i = children.results.get('instance_set')
+        if i and len(i) == 1 and isinstance(i[0], N_a):
+            i = i[0]
+
+        # An op_chain is provided if no value
         o = children.results.get('op_chain')
-        if its and not o:
+
+        if s and s[0] == 'ITS' and not o:
             _logger.error(f"'its' keyword must precede an op chain: [{children.results}]")
             raise ScrallItsRequiresOpchain(children.results)
-        if its and o:
-            return 'ITS',o
-        if i and not o:
+        if s and o:
+            return s,o
+        if i and o:
+            return i,o
+        if i:
             return i
-        return i,o
+        if s:
+            return s
 
     @classmethod
     def visit_op_chain(cls, node, children):
@@ -566,14 +585,17 @@ class ScrallVisitor(PTNodeVisitor):
         ORDER? owner? '.' name supplied_params
 
         The results of an operation can be ordered ascending, descending
-        The operation is invoked on the owner which is me/self if not specified
+        The operation is invoked on the owner which may or may not be explicitly named
+        If the owner is implicit, it could be 'me' (the local instance) or an operation on a type
+        as determined from its parameters
+
         Name is the name of the operation
         """
         owner = children.results.get('owner')
         o = children.results.get('ORDER')
         p = children.results.get('supplied_params')
         return Op_a(
-            owner='ME' if not owner else owner[0],
+            owner='implicit' if not owner else owner[0],
             op_name=children.results['name'][0],
             supplied_params=[] if not p else p[0],
             order=None if not o else symbol[o[0]]
@@ -626,16 +648,16 @@ class ScrallVisitor(PTNodeVisitor):
         """
         return IN_a(children[0])
 
-    @classmethod
-    def visit_attr_access(cls, node, children):
-        """
-        ( ITS / name ) '.' name
-
-        Attribute value accessor <class>.<attr>
-        """
-        i = 'ITS' in children.results
-        c = None if i else children[0]
-        return Attr_Access_a(cname=c, its=i, attr=children[-1])
+    # @classmethod
+    # def visit_attr_access(cls, node, children):
+    #     """
+    #     ( ITS / name ) '.' name
+    #
+    #     Attribute value accessor <class>.<attr>
+    #     """
+    #     i = 'ITS' in children.results
+    #     c = None if i else children[0]
+    #     return Attr_Access_a(cname=c, its=i, attr=children[-1])
 
     # Relationship traversal (paths)
     @classmethod
