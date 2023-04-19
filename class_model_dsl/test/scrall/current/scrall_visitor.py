@@ -13,7 +13,7 @@ Supplied_Parameter_a = namedtuple('Supplied_Parameter_a', 'pname sval')
 """Parameter name and flow name pair for a set of supplied parameters"""
 Op_a = namedtuple('Op_a', 'owner op_name supplied_params order')
 Scalar_op_a = namedtuple('Scalar_op_a', 'name supplied_params')
-Call_a = namedtuple('Call_a', 'subject ops')
+Call_a = namedtuple('Call_a', 'call op_chain')
 """The subject of a call could be an instance set (method) or an external entity (ee operation)"""
 Attr_Access_a = namedtuple('Attr_Access_a', 'cname its attr')
 Selection_a = namedtuple('Selection_a', 'card criteria')
@@ -570,14 +570,19 @@ class ScrallVisitor(PTNodeVisitor):
     @classmethod
     def visit_call(cls, node, children):
         """
-        instance_set
+        instance_set op_chain?
         Post-parse verify that last element is an operation, otherwise invalid call
         """
-        if not isinstance(children[-1], Op_a):
+        iset = children.results['instance_set'][0]
+        if not isinstance(iset.components[-1], Op_a):
             # There's no terminating operation in the action, so this isn't a complete call
             _logger.error(f"Call action without operation: [{children.results}]")
             raise ScrallCallWithoutOperation(children.results)
-        return Call_a(subject=children[0], ops=children[1:])
+        opc = children.results.get('op_chain')
+        return Call_a(
+            call=iset,
+            op_chain=None if not opc else opc[0]
+        )
 
     @classmethod
     def visit_operation(cls, node, children):
