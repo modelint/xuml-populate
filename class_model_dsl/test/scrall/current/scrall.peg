@@ -46,7 +46,7 @@ supplied_params = '(' SP* (param (',' SP+ param)*)? SP* ')'
 param = (name SP* ':' SP*)? scalar_expr // Comma above keeps scalar_expr from grabbing next param
 
 // Instance set
-instance_set = (operation / prefix_name / path) (reflexive_selection / selection / operation / path)*
+instance_set = new_instance / ((operation / prefix_name / path) (reflexive_selection / selection / operation / path)*)
 selection = '(' SP* select_phrase SP* ')'
 select_phrase = (CARD ',' SP* scalar_expr) / CARD / scalar_expr
 CARD = '1' / '*'
@@ -55,6 +55,14 @@ IN = 'in'
 TRUE = 'true' / 'TRUE'
 FALSE = 'false' / 'FALSE'
 ITS = 'its'
+
+// Creation
+new_instance = '*' name inst_init? ref_init?
+inst_init = '(' SP* (attr_value_init (',' SP+ attr_value_init)* SP*)? ')'
+attr_value_init = (name SP? ':' SP+ scalar_expr )*
+ref_init =  SP+ ref (',' SP+ ref)*
+ref = '&' rnum (SP+ instance_set)?
+
 
 // math and boolean operator precedence
 scalar_assignment = name SP* SCALAR_ASSIGN SP* scalar_expr

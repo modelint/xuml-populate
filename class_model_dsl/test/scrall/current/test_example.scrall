@@ -1,3 +1,4 @@
+a .= *Taxiing Aircraft(ID: in.id, Heading: in.initial heading) &R1 assigned runway
 // Opchain
 x = Temperature[].DegC
 x = _red

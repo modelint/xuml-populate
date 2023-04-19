@@ -44,6 +44,9 @@ Op_chain_a = namedtuple('Op_chain', 'components')
 """Input parameter"""
 Reflexive_select_a = namedtuple('Reflexive_select_a', 'expr compare position')
 Type_expr_a = namedtuple('Type_expr_a', 'type selector')
+Attr_value_init_a = namedtuple('Attr_value_init_a', 'attr scalar_expr')
+Ref_a = namedtuple('Ref_a', 'rnum iset')
+New_inst_a = namedtuple('New_inst_a', 'cname attrs rels')
 
 symbol = {'^+': 'ascending', '^-': 'descending'}
 
@@ -305,7 +308,7 @@ class ScrallVisitor(PTNodeVisitor):
     @classmethod
     def visit_instance_set(cls, node, children):
         """
-        (name / path) (selection / operation / path)*
+        new_instance / ((operation / prefix_name / path) (reflexive_selection / selection / operation / path)*)
 
         An instance set begins with a required name (instance flow) or a path. The path can then be followed
         by any sequence of selection, operation, and paths. The parser won't find two paths in sequence since
@@ -315,6 +318,43 @@ class ScrallVisitor(PTNodeVisitor):
             return children[0]
         else:
             return INST_a(children)
+
+    @classmethod
+    def visit_new_instance(cls, node, children):
+        """
+        '*' name inst_init? SP+ ref_init?
+        """
+        a = children.results.get('inst_init')
+        r = children.results.get('ref_init')
+        return New_inst_a(cname=children[0], attrs=None if not a else a[0], rels=None if not r else r[0])
+
+    @classmethod
+    def visit_inst_init(cls, node, children):
+        """
+        '(' attr_value_init (',' attr_value_init)* ')'
+        """
+        return children
+
+    @classmethod
+    def visit_attr_value_init(cls, node, children):
+        """
+        (name ':' scalar_expr )*
+        """
+        return Attr_value_init_a(attr=children[0], scalar_expr=children[1])
+
+    @classmethod
+    def visit_ref_init(cls, node, children):
+        """
+        ref (',' ref)
+        """
+        return children
+
+    @classmethod
+    def visit_ref(cls, node, children):
+        """
+        '&' rnum (SP+ instance_set)?
+        """
+        return Ref_a(rnum=children[0], iset=None if len(children)<2 else children[1])
 
 
     @classmethod
