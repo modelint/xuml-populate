@@ -57,11 +57,16 @@ FALSE = 'false' / 'FALSE'
 ITS = 'its'
 
 // Creation
-new_instance = '*' name inst_init? ref_init?
-inst_init = '(' SP* (attr_value_init (',' SP+ attr_value_init)* SP*)? ')'
-attr_value_init = (name SP? ':' SP+ scalar_expr )*
-ref_init =  SP+ ref (',' SP+ ref)*
-ref = '&' rnum (SP+ instance_set)?
+new_instance = '*' new_inst_init // create an instance of a class as an action
+new_lineage = '*[' new_inst_init (',' SP+ new_inst_init)+ SP* ']' // create all instances of a lineage
+new_inst_init = name attr_init? to_ref* // specify class, attr inits, and any required references
+attr_init = '(' SP* (attr_value_init (',' SP+ attr_value_init)* SP*)? ')' // all attrs to init for a new instance
+to_ref = '&' rnum SP+ instance_set (',' SP+ instance_set)? // non-associative or associative reference
+
+create_action = new_instance / new_lineage // create an instance of a class or a set of instances in a lineage
+ref_action = instance_set? to_ref // relate to me or explicit instance_set
+
+// both new_instance and new_lineage are instance sets. They can be the RHS of an instance assignment
 
 
 // math and boolean operator precedence
