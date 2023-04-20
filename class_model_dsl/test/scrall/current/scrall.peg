@@ -56,15 +56,18 @@ TRUE = 'true' / 'TRUE'
 FALSE = 'false' / 'FALSE'
 ITS = 'its'
 
-// Creation
+// Creation, deletion and references
 new_instance = '*' new_inst_init // create an instance of a class as an action
 new_lineage = '*[' new_inst_init (',' SP+ new_inst_init)+ SP* ']' // create all instances of a lineage
 new_inst_init = name attr_init? to_ref* // specify class, attr inits, and any required references
 attr_init = '(' SP* (attr_value_init (',' SP+ attr_value_init)* SP*)? ')' // all attrs to init for a new instance
 to_ref = '&' rnum SP+ instance_set (',' SP+ instance_set)? // non-associative or associative reference
+un_ref = '!' to_ref // delete reference
 
 create_action = new_instance / new_lineage // create an instance of a class or a set of instances in a lineage
-ref_action = instance_set? to_ref // relate to me or explicit instance_set
+ref_action = instance_set? (to_ref / un_ref) // relate or unrelated to me or explicit instance_set
+delete = '!*' SP* instance_set
+
 
 // both new_instance and new_lineage are instance sets. They can be the RHS of an instance assignment
 
