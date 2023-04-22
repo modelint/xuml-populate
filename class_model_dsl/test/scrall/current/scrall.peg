@@ -76,9 +76,10 @@ delete = '!*' SP* instance_set
 
 
 // math and boolean operator precedence
-scalar_assignment = scalar_output_set SP* SCALAR_ASSIGN SP* scalar_expr
+scalar_assignment = scalar_output_set SP* SCALAR_ASSIGN SP* scalar_expr projection
 scalar_output_set = scalar_output (',' SP* scalar_output)*
 scalar_output = name (TYPE_ASSIGN name)?
+projection = '.' ( name / ('(' name (',' SP+ name) ')') )
 
 scalar_expr = SP* scalar_logical_or SP*
 scalar_logical_or = scalar_logical_and (SP* OR SP* scalar_logical_and)*

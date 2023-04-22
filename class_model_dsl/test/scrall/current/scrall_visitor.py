@@ -33,6 +33,7 @@ UNARY_a = namedtuple('UNARY_a', 'op operand')
 BOOL_a = namedtuple('BOOL_a', 'op operands')
 """Boolean operation returns true or false"""
 Scalar_Assignment_a = namedtuple('Scalar_Assignment_a', 'lhs rhs')
+Scalar_RHS_a = namedtuple('Scalar_RHS_a', 'expr attrs')
 Scalar_Output_a = namedtuple('Scalar_Output_a', 'name exp_type')
 PATH_a = namedtuple('PATH_a', 'hops')
 INST_a = namedtuple('INST_a', 'components')
@@ -51,6 +52,7 @@ Update_ref_a = namedtuple('Update_ref_a', 'rnum iset1 iset2')
 New_inst_a = namedtuple('New_inst_a', 'cname attrs rels')
 New_lineage_a = namedtuple('New_lineage_a', 'inits')
 Output_Flow_a = namedtuple('Output_Flow_a', 'output')
+Projection_a = namedtuple('Projection_a', 'attrs')
 
 symbol = {'^+': 'ascending', '^-': 'descending'}
 
@@ -464,7 +466,9 @@ class ScrallVisitor(PTNodeVisitor):
         """
         sout_set = children.results['scalar_output_set'][0]
         expr = children.results['scalar_expr'][0]
-        return Scalar_Assignment_a(lhs=sout_set, rhs=expr)
+        proj = children.results.get('projection')
+        proj = None if not proj else proj[0]
+        return Scalar_Assignment_a(lhs=sout_set, rhs=Scalar_RHS_a(expr,proj))
 
     @classmethod
     def visit_scalar_output_set(cls, node, children):
@@ -480,6 +484,13 @@ class ScrallVisitor(PTNodeVisitor):
         """
         etyp = None if len(children) < 2 else children[1]
         return Scalar_Output_a(name=children[0], exp_type=etyp)
+
+    @classmethod
+    def visit_projection(cls, node, children):
+        """
+        '.' ( name / ('(' name (',' name) )
+        """
+        return Projection_a(children)
 
     @classmethod
     def visit_scalar_source(cls, node, children):
