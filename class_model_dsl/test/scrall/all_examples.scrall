@@ -1,3 +1,6 @@
+// Explicit types and tuple scalar output
+i::Integer = ival
+x,y = .compute()
 // Create and relate
 *[ A() &R3 a, b; B() ]
 &R1 that one

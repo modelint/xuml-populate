@@ -32,7 +32,8 @@ MATH_a = namedtuple('MATH_a', 'op operands')
 UNARY_a = namedtuple('UNARY_a', 'op operand')
 BOOL_a = namedtuple('BOOL_a', 'op operands')
 """Boolean operation returns true or false"""
-Scalar_Assignment_a = namedtuple('Scalar_Assignment_a', 'lhs exp_type rhs')
+Scalar_Assignment_a = namedtuple('Scalar_Assignment_a', 'lhs rhs')
+Scalar_Output_a = namedtuple('Scalar_Output_a', 'name exp_type')
 PATH_a = namedtuple('PATH_a', 'hops')
 INST_a = namedtuple('INST_a', 'components')
 R_a = namedtuple('R_a', 'rnum')
@@ -450,12 +451,26 @@ class ScrallVisitor(PTNodeVisitor):
     @classmethod
     def visit_scalar_assignment(cls, node, children):
         """
-        name SCALAR_ASSIGN scalar_expr
+        scalar_output_set SCALAR_ASSIGN scalar_expr
         """
-        lhs_name = children.results['name'][0]
-        etyp = children.results.get('type')
+        sout_set = children.results['scalar_output_set'][0]
         expr = children.results['scalar_expr'][0]
-        return Scalar_Assignment_a(lhs=lhs_name, exp_type=None if not etyp else etyp[0], rhs=expr)
+        return Scalar_Assignment_a(lhs=sout_set, rhs=expr)
+
+    @classmethod
+    def visit_scalar_output_set(cls, node, children):
+        """
+        scalar_output (',' scalar_output)
+        """
+        return children
+
+    @classmethod
+    def visit_scalar_output(cls, node, children):
+        """
+        name (TYPE_ASSIGN name)?
+        """
+        etyp = None if len(children) < 2 else children[1]
+        return Scalar_Output_a(name=children[0], exp_type=etyp)
 
     @classmethod
     def visit_scalar_source(cls, node, children):
