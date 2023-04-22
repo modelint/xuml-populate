@@ -27,7 +27,7 @@ Execution_Unit_a = namedtuple('Execution_Unit_a', 'input_tokens output_tokens ac
 Decision_a = namedtuple('Decision_a', 'input true_result false_result')
 Delete_Action_a = namedtuple('Delete_Action_a', 'instance_set')
 Case_a = namedtuple('Case_a', 'enums execution_unit')
-Scalar_Switch_a = namedtuple('Scalar_Switch_a', 'scalar_input_flow cases')
+Switch_a = namedtuple('Switch_a', 'input_flow cases')
 MATH_a = namedtuple('MATH_a', 'op operands')
 UNARY_a = namedtuple('UNARY_a', 'op operand')
 BOOL_a = namedtuple('BOOL_a', 'op operands')
@@ -217,14 +217,19 @@ class ScrallVisitor(PTNodeVisitor):
         return children[0]
 
     @classmethod
-    def visit_scalar_switch(cls, node, children):
+    def visit_switch(cls, node, children):
         """
-        scalar_expr DECISION_OP case_block
+        (rnum / scalar_expr) DECISION_OP case_block
 
-        Boolean expr triggers case_block
+        Rnum or boolean expr triggers case_block
+        If rnum, the enums must be subclass names (verified outside parser)
         """
-        return Scalar_Switch_a(
-            scalar_input_flow=children.results['scalar_expr'],
+        input_flow = children.results.get('rnum')
+        input_flow = None if not input_flow else input_flow[0]
+        input_flow = input_flow if input_flow else children.results['scalar_expr'][0]
+
+        return Switch_a(
+            input_flow=input_flow,
             cases=children.results['case_block'][0]
         )
 
