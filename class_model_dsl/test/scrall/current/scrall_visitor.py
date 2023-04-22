@@ -45,8 +45,10 @@ Op_chain_a = namedtuple('Op_chain', 'components')
 Reflexive_select_a = namedtuple('Reflexive_select_a', 'expr compare position')
 Type_expr_a = namedtuple('Type_expr_a', 'type selector')
 Attr_value_init_a = namedtuple('Attr_value_init_a', 'attr scalar_expr')
-Ref_a = namedtuple('Ref_a', 'rnum iset')
+To_ref_a = namedtuple('To_ref_a', 'rnum iset1 iset2')
+Update_ref_a = namedtuple('Update_ref_a', 'rnum iset1 iset2')
 New_inst_a = namedtuple('New_inst_a', 'cname attrs rels')
+New_lineage_a = namedtuple('New_lineage_a', 'inits')
 
 symbol = {'^+': 'ascending', '^-': 'descending'}
 
@@ -181,16 +183,6 @@ class ScrallVisitor(PTNodeVisitor):
         """
         return node.value
 
-    # Created and delete actions
-    @classmethod
-    def visit_delete(cls, node, children):
-        """
-        '!*' instance_set
-
-        """
-        iset = children.results.get('instance_set')
-        return Delete_Action_a(instance_set=iset)
-
     # Decision and switch actions
     @classmethod
     def visit_decision(cls, node, children):
@@ -320,18 +312,47 @@ class ScrallVisitor(PTNodeVisitor):
             return INST_a(children)
 
     @classmethod
+    def visit_delete(cls, node, children):
+        """
+        '!*' instance_set
+        """
+        iset = children.results.get('instance_set')
+        return Delete_Action_a(instance_set=iset)
+
+    @classmethod
+    def visit_new_lineage(cls, node, children):
+        """
+        '*[' new_inst_init (',' new_inst_init)+ ']'
+
+        create all instances of a lineage
+        """
+        return New_lineage_a(children)
+
+    @classmethod
     def visit_new_instance(cls, node, children):
         """
-        '*' name inst_init? SP+ ref_init?
+        '*' new_inst_init
+        create an instance of a class as an action
         """
-        a = children.results.get('inst_init')
-        r = children.results.get('ref_init')
+        return children[0]
+
+    @classmethod
+    def visit_new_inst_init(cls, node, children):
+        """
+        name attr_init? to_ref*
+
+        specify class, attr inits, and any required references
+        """
+        a = children.results.get('attr_init')
+        r = children.results.get('to_ref')
         return New_inst_a(cname=children[0], attrs=None if not a else a[0], rels=None if not r else r[0])
 
     @classmethod
-    def visit_inst_init(cls, node, children):
+    def visit_attr_init(cls, node, children):
         """
-        '(' attr_value_init (',' attr_value_init)* ')'
+        '(' (attr_value_init (',' attr_value_init)* ')'
+
+        all attrs to init for a new instance
         """
         return children
 
@@ -343,18 +364,26 @@ class ScrallVisitor(PTNodeVisitor):
         return Attr_value_init_a(attr=children[0], scalar_expr=children[1])
 
     @classmethod
-    def visit_ref_init(cls, node, children):
+    def visit_update_ref(cls, node, children):
         """
-        ref (',' ref)
+        to_ref
+
+        A standalone reference
         """
-        return children
+        ref1 = None if len(children) < 2 else children[1]
+        ref2 = None if len(children) < 3 else children[2]
+        return Update_ref_a(rnum=children[0], iset1=ref1, iset2=ref2)
 
     @classmethod
-    def visit_ref(cls, node, children):
+    def visit_to_ref(cls, node, children):
         """
-        '&' rnum (SP+ instance_set)?
+        '&' rnum instance_set (',' instance_set)?
+
+        non-associative or associative reference
         """
-        return Ref_a(rnum=children[0], iset=None if len(children)<2 else children[1])
+        ref1 = None if len(children) < 2 else children[1]
+        ref2 = None if len(children) < 3 else children[2]
+        return To_ref_a(rnum=children[0], iset1=ref1, iset2=ref2)
 
 
     @classmethod

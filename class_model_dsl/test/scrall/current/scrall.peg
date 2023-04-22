@@ -2,7 +2,7 @@ activity = execution_unit* EOF // exec_group test
 execution_unit = LINEWRAP* input_tokens? action_group output_tokens? EOL+
 action_group = SP* (block / action) // Set of actions with a common control flow in/out
 block = '{' LINEWRAP* execution_unit* '}'
-action = scalar_assignment / delete / scalar_switch / decision / inst_assignment / signal_action / call
+action = new_lineage / new_instance / update_ref / delete / scalar_assignment / scalar_switch / decision / inst_assignment / signal_action / call
 
 // Explicit sequence using control flow inputs and outputs
 input_tokens = sequence_token+ // Control flow input
@@ -58,11 +58,12 @@ ITS = 'its'
 
 // Creation, deletion and references
 new_instance = '*' new_inst_init // create an instance of a class as an action
-new_lineage = '*[' new_inst_init (',' SP+ new_inst_init)+ SP* ']' // create all instances of a lineage
-new_inst_init = name attr_init? to_ref* // specify class, attr inits, and any required references
+new_lineage = '*[' SP* new_inst_init (';' SP+ new_inst_init)+ SP* ']' // create all instances of a lineage
+new_inst_init = name attr_init? (SP+ to_ref)* // specify class, attr inits, and any required references
 attr_init = '(' SP* (attr_value_init (',' SP+ attr_value_init)* SP*)? ')' // all attrs to init for a new instance
+attr_value_init = (name SP? ':' SP+ scalar_expr )*
+update_ref = to_ref
 to_ref = '&' rnum SP+ instance_set (',' SP+ instance_set)? // non-associative or associative reference
-un_ref = '!' to_ref // delete reference
 
 create_action = new_instance / new_lineage // create an instance of a class or a set of instances in a lineage
 ref_action = instance_set? (to_ref / un_ref) // relate or unrelated to me or explicit instance_set
@@ -121,7 +122,7 @@ name = first_word (NAME_GLUE word)* // One word or a sequence of delimited words
 NAME_GLUE = r'[ _]' // delmits words within a name
 rnum = r'O?R[1-9][0-9]*' // Relationship number (name used for relationships)
 //first_word = r'[A-Za-z][A-Za-z0-9]*'
-//word = r'[A-Za-z0-9]+'
+//word = SP* r'[A-Za-z0-9]+'
 first_word = ignore_keywords r'[A-Za-z][A-Za-z0-9]*'
 word = ignore_keywords r'[A-Za-z0-9]+'
 ignore_keywords = !" in" !"in " !" true" !"true " !" false" !"false " !" and" !"and " !" or" !"or " !" not" !"not "

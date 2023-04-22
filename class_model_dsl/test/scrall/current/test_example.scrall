@@ -1,4 +1,8 @@
-a .= *Taxiing Aircraft(ID: in.id, Heading: in.initial heading) &R1 assigned runway
+// Create and relate
+*[ A() &R3 a, b; B() ]
+&R1 that one
+*Taxiing Aircraft(ID: in.id, Heading: in.initial heading) &R1 assigned runway, trun
+*A()
 // Opchain
 x = Temperature[].DegC
 x = _red
