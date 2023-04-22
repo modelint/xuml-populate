@@ -32,7 +32,7 @@ MATH_a = namedtuple('MATH_a', 'op operands')
 UNARY_a = namedtuple('UNARY_a', 'op operand')
 BOOL_a = namedtuple('BOOL_a', 'op operands')
 """Boolean operation returns true or false"""
-Scalar_Assignment_a = namedtuple('Scalar_Assignment_a', 'lhs rhs')
+Scalar_Assignment_a = namedtuple('Scalar_Assignment_a', 'lhs exp_type rhs')
 PATH_a = namedtuple('PATH_a', 'hops')
 INST_a = namedtuple('INST_a', 'components')
 R_a = namedtuple('R_a', 'rnum')
@@ -452,7 +452,10 @@ class ScrallVisitor(PTNodeVisitor):
         """
         name SCALAR_ASSIGN scalar_expr
         """
-        return Scalar_Assignment_a(*children)
+        lhs_name = children.results['name'][0]
+        etyp = children.results.get('type')
+        expr = children.results['scalar_expr'][0]
+        return Scalar_Assignment_a(lhs=lhs_name, exp_type=None if not etyp else etyp[0], rhs=expr)
 
     @classmethod
     def visit_scalar_source(cls, node, children):
