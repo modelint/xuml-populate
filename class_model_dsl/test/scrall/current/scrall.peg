@@ -1,5 +1,5 @@
 activity = execution_unit* EOF // exec_group test
-execution_unit = LINEWRAP* input_tokens? action_group output_tokens? EOL+
+execution_unit = LINEWRAP* ( output_flow / (input_tokens? action_group output_tokens?) ) EOL+
 action_group = SP* (block / action) // Set of actions with a common control flow in/out
 block = '{' LINEWRAP* execution_unit* '}'
 action = new_lineage / new_instance / update_ref / delete / scalar_assignment / scalar_switch / decision / inst_assignment / signal_action / call
@@ -23,6 +23,9 @@ case_block = '{' LINEWRAP* case+ '}'
 case = (SP* enum_value)+ SP* ':' (LINEWRAP* / SP*) execution_unit
 enum_value = '_' name // Scalar switch has enum value cases
 DECISION_OP = '?'
+
+// Output flow
+output_flow = OUTPUT SP+ scalar_expr
 
 // Delete action
 delete = '!*' SP* instance_set
@@ -112,6 +115,7 @@ UNARY_MINUS = "-"
 ADD = ("+" / "-")
 MULT = ("*" / "/")
 TYPE_ASSIGN = '::'
+OUTPUT = '=>>'
 
 input_param =  IN '.' name
 

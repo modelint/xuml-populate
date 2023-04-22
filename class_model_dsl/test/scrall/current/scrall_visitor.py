@@ -50,6 +50,7 @@ To_ref_a = namedtuple('To_ref_a', 'rnum iset1 iset2')
 Update_ref_a = namedtuple('Update_ref_a', 'rnum iset1 iset2')
 New_inst_a = namedtuple('New_inst_a', 'cname attrs rels')
 New_lineage_a = namedtuple('New_lineage_a', 'inits')
+Output_Flow_a = namedtuple('Output_Flow_a', 'output')
 
 symbol = {'^+': 'ascending', '^-': 'descending'}
 
@@ -114,6 +115,9 @@ class ScrallVisitor(PTNodeVisitor):
 
         Every execution unit is terminated by a new line.
         """
+        oflow = children.results.get('output_flow')
+        if oflow:
+            return Output_Flow_a(oflow[0])
         itok = children.results.get('input_tokens')
         otok = children.results.get('output_tokens')
         ag = children.results.get('action_group')[0]
