@@ -31,8 +31,9 @@ delete = '!*' SP* instance_set
 
 // Signal action
 signal_action = signal delay?
-signal = name supplied_params? SP+ SIGNAL_OP (LINEWRAP / SP+) instance_set
+signal = name supplied_params? SP+ SIGNAL_OP (LINEWRAP / SP+) instance_set assigner_partition?
 delay = SP+ DELAY_OP SP+ scalar_expr
+assigner_partition = '|' instance_set
 DELAY_OP = '@'
 SIGNAL_OP = '->'
 
@@ -76,7 +77,7 @@ delete = '!*' SP* instance_set
 
 
 // math and boolean operator precedence
-scalar_assignment = scalar_output_set SP* SCALAR_ASSIGN SP* scalar_expr projection
+scalar_assignment = scalar_output_set SP* SCALAR_ASSIGN SP* scalar_expr projection?
 scalar_output_set = scalar_output (',' SP* scalar_output)*
 scalar_output = name (TYPE_ASSIGN name)?
 projection = '.' ( name / ('(' name (',' SP+ name) ')') )

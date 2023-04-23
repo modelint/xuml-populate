@@ -18,9 +18,9 @@ Call_a = namedtuple('Call_a', 'call op_chain')
 Attr_Access_a = namedtuple('Attr_Access_a', 'cname its attr')
 Selection_a = namedtuple('Selection_a', 'card criteria')
 Inst_Assignment_a = namedtuple('Inst_Assignment_a', 'lhs card rhs')
-Signal_a = namedtuple('Signal_a', 'event supplied_params dest')
+Signal_a = namedtuple('Signal_a', 'event supplied_params dest assigner_partition')
 """Signal sent to trigger event at destination with optional supplied parameters"""
-Signal_Action_a = namedtuple('Signal_Action_a', 'event supplied_params dest delay')
+Signal_Action_a = namedtuple('Signal_Action_a', 'event supplied_params dest delay assigner_partition')
 Block_a = namedtuple('Block_a', 'actions')
 Sequence_Token_a = namedtuple('Sequence_Token_a', 'name')
 Execution_Unit_a = namedtuple('Execution_Unit_a', 'input_tokens output_tokens action_group')
@@ -271,7 +271,13 @@ class ScrallVisitor(PTNodeVisitor):
         """
         s = children.results['signal'][0]
         delay = children.results.get('delay')
-        return Signal_Action_a(event=s.event, supplied_params=s.supplied_params, dest=s.dest, delay=delay)
+        return Signal_Action_a(
+            event=s.event,
+            supplied_params=s.supplied_params,
+            dest=s.dest,
+            delay=delay,
+            assigner_partition=s.assigner_partition
+        )
 
     @classmethod
     def visit_signal(cls, node, children):
@@ -281,12 +287,24 @@ class ScrallVisitor(PTNodeVisitor):
         An event name, any supplied parameters, the '->' signal symbol and a target
         instance set
         """
+        ap = children.results.get('assigner_partition')
+        ap = None if not ap else ap[0]
         params = children.results.get('supplied_params', [])
         return Signal_a(
             event=children.results['name'],
             supplied_params=params,
-            dest=children.results.get('instance_set')
+            dest=children.results.get('instance_set'),
+            assigner_partition=N_a(ap)
         )
+
+    @classmethod
+    def visit_assigner_partition(cls, node, children):
+        """
+        '(' instance_set ')'
+
+        An instance set that partitions an assigner
+        """
+        return children[0]
 
     @classmethod
     def visit_delay(cls, node, children):
@@ -305,7 +323,7 @@ class ScrallVisitor(PTNodeVisitor):
         """
         return Inst_Assignment_a(
             lhs=children.results['name'][0],
-            card='1' if children.results['INST_ASSIGN'] == '.=' else 'Mc',
+            card='1' if children.results['INST_ASSIGN'][0] == '.=' else 'Mc',
             rhs=children.results['instance_set']
         )
 

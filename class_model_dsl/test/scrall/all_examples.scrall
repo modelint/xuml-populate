@@ -1,6 +1,9 @@
+my department .= /R3/Department
+Waiting for clerk -> /R1|my department<1>
 // Explicit types and tuple scalar output
 i::Integer = ival
 x,y = .compute()
+calling fname, calling height = Floor( Name: in.calling floor ).(Name, Height)
 // Create and relate
 *[ A() &R3 a, b; B() ]
 &R1 that one
