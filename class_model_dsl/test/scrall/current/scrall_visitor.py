@@ -33,6 +33,7 @@ UNARY_a = namedtuple('UNARY_a', 'op operand')
 BOOL_a = namedtuple('BOOL_a', 'op operands')
 """Boolean operation returns true or false"""
 Scalar_Assignment_a = namedtuple('Scalar_Assignment_a', 'lhs rhs')
+Table_Assignment_a = namedtuple('Table_Assignment_a', 'lhs rhs')
 Scalar_RHS_a = namedtuple('Scalar_RHS_a', 'expr attrs')
 Scalar_Output_a = namedtuple('Scalar_Output_a', 'name exp_type')
 PATH_a = namedtuple('PATH_a', 'hops')
@@ -52,7 +53,7 @@ Update_ref_a = namedtuple('Update_ref_a', 'rnum iset1 iset2')
 New_inst_a = namedtuple('New_inst_a', 'cname attrs rels')
 New_lineage_a = namedtuple('New_lineage_a', 'inits')
 Output_Flow_a = namedtuple('Output_Flow_a', 'output')
-Projection_a = namedtuple('Projection_a', 'attrs')
+Projection_a = namedtuple('Projection_a', 'expand attrs')
 
 symbol = {'^+': 'ascending', '^-': 'descending'}
 
@@ -504,11 +505,32 @@ class ScrallVisitor(PTNodeVisitor):
         return Scalar_Output_a(name=children[0], exp_type=etyp)
 
     @classmethod
+    def visit_table_assignment(cls, node, children):
+        """
+        name TABLE_ASSIGN table_expr
+        """
+        return Table_Assignment_a(*children)
+
+    @classmethod
+    def visit_table_expr(cls, node, children):
+        """
+        instance_set projection?
+        """
+        return children
+
+    @classmethod
     def visit_projection(cls, node, children):
         """
-        '.' ( name / ('(' name (',' name) )
+        '.' '(' ( (ALL / (name (',' name)*) )? ')')
         """
-        return Projection_a(children)
+        all = children.results.get('ALL')
+        n = children.results.get('name')
+        exp = 'ALL' if all else 'EMPTY' if not all and not n else None
+        return Projection_a(expand=exp, attrs=n)
+
+    @classmethod
+    def visit_ALL(cls, node, children):
+        return 'ALL'
 
     @classmethod
     def visit_scalar_source(cls, node, children):

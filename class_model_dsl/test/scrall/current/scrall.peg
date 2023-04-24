@@ -2,7 +2,7 @@ activity = execution_unit* EOF // exec_group test
 execution_unit = LINEWRAP* ( output_flow / (input_tokens? action_group output_tokens?) ) EOL+
 action_group = SP* (block / action) // Set of actions with a common control flow in/out
 block = SP* '{' LINEWRAP* execution_unit* SP* '}'
-action = new_lineage / new_instance / update_ref / delete / scalar_assignment / switch / decision / inst_assignment / signal_action / call
+action = table_assignment / new_lineage / new_instance / update_ref / delete / scalar_assignment / switch / decision / inst_assignment / signal_action / call
 
 // Explicit sequence using control flow inputs and outputs
 input_tokens = sequence_token+ // Control flow input
@@ -11,9 +11,9 @@ sequence_token = SP* '<' token_name '>' SP* // Named control flow
 token_name = r'[A-Za-z0-9_]+' // No spaces in token names, often single digit: <1>
 
 // Table expressions
-//table_assignment = name SP+ TABLE_ASSIGN SP+ table_expr
-//TABLE_ASSIGN = '#='
-//table_expr = instance_set projection?
+table_assignment = name SP+ TABLE_ASSIGN SP+ table_expr
+TABLE_ASSIGN = '#='
+table_expr = instance_set projection?
 
 //table_term = (
 //table = instance_set projection?
@@ -88,7 +88,8 @@ delete = '!*' SP* instance_set
 scalar_assignment = scalar_output_set SP* SCALAR_ASSIGN SP* scalar_expr projection?
 scalar_output_set = scalar_output (',' SP* scalar_output)*
 scalar_output = name (TYPE_ASSIGN name)?
-projection = '.' ( name / ('(' name (',' SP+ name) ')') )
+projection = '.' '(' ( (ALL / (name (',' SP+ name)*) )? ')')
+ALL = '*'
 
 scalar_expr = SP* scalar_logical_or SP*
 scalar_logical_or = scalar_logical_and (SP* OR SP* scalar_logical_and)*
@@ -99,7 +100,6 @@ addition = factor (SP* ADD SP* factor)*
 factor = term (SP* MULT SP* term)*
 term = (NOT SP*)? UNARY_MINUS? (scalar / "(" SP* scalar_expr SP* ")")
 
-// scalar = value / ( ( scalar_source / instance_set ) op_chain? )
 scalar = value / QTY? scalar_chain
 QTY = '??'
 scalar_chain = (ITS op_chain) / ((scalar_source / instance_set) op_chain?)

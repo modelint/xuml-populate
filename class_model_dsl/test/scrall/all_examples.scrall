@@ -1,3 +1,6 @@
+// Table assignments
+t #= Aircraft(*).(*)
+// Misc
 my department .= /R3/Department
 Waiting for clerk -> /R1|my department<1>
 // Explicit types and tuple scalar output
