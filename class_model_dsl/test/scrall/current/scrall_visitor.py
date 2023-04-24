@@ -522,36 +522,61 @@ class ScrallVisitor(PTNodeVisitor):
             return children[0]
 
     @classmethod
+    def visit_QTY(cls, node, children):
+        return 'QTY'
+
+    @classmethod
+    def visit_ITS(cls, node, children):
+        return 'ITS'
+
+    @classmethod
     def visit_scalar(cls, node, children):
         """
-        value / ( ( scalar_source / instance_set )? op_chain )
+        value / QTY? scalar_chain
 
         A scalar is either a simple value such as an enum or a variable name, TRUE/FALSE, etc OR
         it is a chain of operations like a.b(x,y).c.d with a preceding instance set such as a path, selection, etc.
         """
-        # Return value if provided
+        # Return value
         v = children.results.get('value')
         v = None if not v else v[0]
         if v:
             return v
 
-        # Either a scalar source or an instance set may be provided if no value
+        # Cardinality
+        qty = children.results.get('QTY')
+        schain = children.results['scalar_chain'][0]
+        if qty:
+            return qty[0],schain
+        else:
+            return schain
+
+    @classmethod
+    def visit_scalar_chain(cls, node, children):
+        """
+        (ITS op_chain) / ((scalar_source / instance_set) op_chain?)
+
+        """
+        # ITS op_chain
+        its = children.results.get('ITS')
+        if its:
+            op_chain = children.results['op_chain'][0]
+            return its, op_chain
+
+        # Scalar source or an instance set
         s = children.results.get('scalar_source')
-        s = 'ITS' if s and s[0] == 'ITS' else s
         i = children.results.get('instance_set')
+        # If i is just a name we don't need a list of components, just the name
         if i and len(i) == 1 and isinstance(i[0], N_a):
             i = i[0]
 
         # An op_chain is provided if no value
-        o = children.results.get('op_chain')
+        op_chain = children.results.get('op_chain')
 
-        if s and s[0] == 'ITS' and not o:
-            _logger.error(f"'its' keyword must precede an op chain: [{children.results}]")
-            raise ScrallItsRequiresOpchain(children.results)
-        if s and o:
-            return s,o
-        if i and o:
-            return i,o
+        if s and op_chain:
+            return s,op_chain
+        if i and op_chain:
+            return i,op_chain
         if i:
             return i
         if s:

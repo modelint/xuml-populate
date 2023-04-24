@@ -1,3 +1,5 @@
+a = ??rows
+qac = ??tower.nearest plane().Land( Runway: north)
 my department .= /R3/Department
 Waiting for clerk -> /R1|my department<1>
 // Explicit types and tuple scalar output
@@ -19,7 +21,7 @@ higher follow ac .= /OR3/is following/~/its.Altitude |>|
 hf ac .= /OR3/is following/~|( its.Altitude - Altitude ) > y
 cabin .= Cabin(1, ^-.Estimated travel delay( To floor : calling floor, Calling dir: Dir ))
 best cabin .= ^-.Estimated travel delay(floor: position)
-x = .compute(x, y)
+p = .compute(x, y)
 // Tokens
 <1>{
     Aircraft(1).Land( Runway: north)
