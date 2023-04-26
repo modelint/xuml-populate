@@ -4,6 +4,8 @@ t1 #= []
 low aircraft #= Aircraft(Altitude < floor altitude).()
 t #= FALSE
 t #= Aircraft(*).(*)
+// Rename
+low aircraft #= Aircraft(Altitude < floor altitude).(ID>>Tail number, Altitude)
 // Misc
 my department .= /R3/Department
 Waiting for clerk -> /R1|my department<1>

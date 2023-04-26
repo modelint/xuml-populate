@@ -58,6 +58,7 @@ Projection_a = namedtuple('Projection_a', 'expand attrs')
 Attr_Type_a = namedtuple('Attr_Type_a', 'attr_name type_name')
 Class_to_Table_a = namedtuple('Class_to_Table_a', 'cname selection projection')
 Table_Header_a= namedtuple('Table_Header_a', 'hdef')
+Rename_a = namedtuple('Rename_a', 'from_name to_name')
 
 
 symbol = {'^+': 'ascending', '^-': 'descending'}
@@ -529,7 +530,7 @@ class ScrallVisitor(PTNodeVisitor):
         '.' '(' ( (ALL / (name (',' name)*) )? ')')
         """
         all = children.results.get('ALL')
-        n = children.results.get('name')
+        n = children.results.get('attr_name')
         exp = 'ALL' if all else 'EMPTY' if not all and not n else None
         return Projection_a(expand=exp, attrs=n)
 
@@ -899,6 +900,16 @@ class ScrallVisitor(PTNodeVisitor):
         name '::' name
         """
         return Attr_Type_a(*children)
+
+    @classmethod
+    def visit_attr_name(cls, node, children):
+        """
+        name rename_attr / name
+        """
+        if len(children) == 2:
+            return Rename_a(*children)
+        else:
+            return children
 
     @classmethod
     def visit_rename_attr(cls, node, children):
