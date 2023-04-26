@@ -1,4 +1,8 @@
 // Table assignments
+t2 #= [ ID::Tail Number, Altitude::Height ] // Header def
+t1 #= []
+low aircraft #= Aircraft(Altitude < floor altitude).()
+t #= FALSE
 t #= Aircraft(*).(*)
 // Misc
 my department .= /R3/Department

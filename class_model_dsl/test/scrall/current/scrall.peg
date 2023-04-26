@@ -13,7 +13,21 @@ token_name = r'[A-Za-z0-9_]+' // No spaces in token names, often single digit: <
 // Table expressions
 table_assignment = name SP+ TABLE_ASSIGN SP+ table_expr
 TABLE_ASSIGN = '#='
-table_expr = instance_set projection?
+table_expr = TRUE / FALSE / new_table / (instance_set projection?)
+
+new_table = header_def / table_def
+class_def =  name selection '.' projection
+header_def = '[' SP* attr_type_def (',' SP+ attr_type_def)* SP* ']'
+table_def = '[' ( single_row / row_set )? ']'
+row_set = bracketed_row (SP+ bracketed_row)*
+bracketed_row = '{' SP* single_row SP* '}'
+single_row = attr_val (',' SP+ attr_val)*
+attr_val = attr_name SP* ':' SP* attr_val
+attr_name = name rename_attr / name
+attr_type_def = name '::' name
+TABLE = '#'
+rename_attr = RENAME name
+RENAME = '>>'
 
 //table_term = (
 //table = instance_set projection?

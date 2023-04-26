@@ -54,6 +54,11 @@ New_inst_a = namedtuple('New_inst_a', 'cname attrs rels')
 New_lineage_a = namedtuple('New_lineage_a', 'inits')
 Output_Flow_a = namedtuple('Output_Flow_a', 'output')
 Projection_a = namedtuple('Projection_a', 'expand attrs')
+# Tables
+Attr_Type_a = namedtuple('Attr_Type_a', 'attr_name type_name')
+Class_to_Table_a = namedtuple('Class_to_Table_a', 'cname selection projection')
+Table_Header_a= namedtuple('Table_Header_a', 'hdef')
+
 
 symbol = {'^+': 'ascending', '^-': 'descending'}
 
@@ -825,18 +830,84 @@ class ScrallVisitor(PTNodeVisitor):
         """
         return IN_a(children[0])
 
-    # @classmethod
-    # def visit_attr_access(cls, node, children):
-    #     """
-    #     ( ITS / name ) '.' name
-    #
-    #     Attribute value accessor <class>.<attr>
-    #     """
-    #     i = 'ITS' in children.results
-    #     c = None if i else children[0]
-    #     return Attr_Access_a(cname=c, its=i, attr=children[-1])
+    # Table expressions
+    @classmethod
+    def visit_new_table(cls, node, children):
+        """
+        class_def / header_def / table_def
+        """
+        return Table_Header_a(hdef=[] if not children else children[0])
 
-    # Relationship traversal (paths)
+    @classmethod
+    def visit_class_def(cls, node, children):
+        """
+        TABLE name selection '.' projection
+        """
+        return children
+
+    @classmethod
+    def visit_header_def(cls, node, children):
+        """
+        TABLE '[' attr_type_def (',' attr_type_def)*']'
+        """
+        return children
+
+    @classmethod
+    def visit_table_def(cls, node, children):
+        """
+        TABLE '[' ( single_row / row_set )? ']'
+        """
+        if not children:
+            return None
+        r = children.results.get('single_row')
+        if r:
+            return r
+        rset = children.results['single_row']
+        return rset
+
+    @classmethod
+    def visit_row_set(cls, node, children):
+        """
+        bracketed_row bracketed_row*
+        """
+        return children
+
+    @classmethod
+    def visit_bracketed_row(cls, node, children):
+        """
+        '{' single_row '}'
+        """
+        return children
+
+    @classmethod
+    def visit_single_row(cls, node, children):
+        """
+        attr_val (',' SP+ attr_val)*
+        """
+        return children
+
+    @classmethod
+    def visit_attr_val(cls, node, children):
+        """
+        attr_name ':' attr_val
+        """
+        return Attr_Type_a(*children)
+
+    @classmethod
+    def visit_attr_type_def(cls, node, children):
+        """
+        name '::' name
+        """
+        return Attr_Type_a(*children)
+
+    @classmethod
+    def visit_rename_attr(cls, node, children):
+        """
+        rename_attr = RENAME
+        """
+        return children
+
+
     @classmethod
     def visit_path(cls, node, children):
         """ hop+  A sequence of hops """
