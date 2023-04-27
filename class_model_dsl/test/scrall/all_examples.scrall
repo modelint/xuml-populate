@@ -10,6 +10,7 @@ low aircraft #= Aircraft(Altitude < floor altitude).(ID>>Tail number, Altitude)
 my department .= /R3/Department
 Waiting for clerk -> /R1|my department<1>
 // Explicit types and tuple scalar output
+low filying aircraft::Aircraft ..= tids
 i::Integer = ival
 x,y = .compute()
 calling fname, calling height = Floor( Name: in.calling floor ).(Name, Height)
@@ -36,6 +37,8 @@ x = .compute(x, y)
     <X>Arrived() -> there
 }<2><3>
 // Signals
+too hot -> me
+hot? cool down : heat up(amount: bump) -> me @wait
 Cabin at destination() -> /R53/Transfer
 Cabin at destination() -> /R53/Transfer @ x.compute_delay()
 // Decision

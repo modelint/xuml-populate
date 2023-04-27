@@ -18,9 +18,11 @@ Call_a = namedtuple('Call_a', 'call op_chain')
 Attr_Access_a = namedtuple('Attr_Access_a', 'cname its attr')
 Selection_a = namedtuple('Selection_a', 'card criteria')
 Inst_Assignment_a = namedtuple('Inst_Assignment_a', 'lhs card rhs')
-Signal_a = namedtuple('Signal_a', 'event supplied_params dest assigner_partition')
+Signal_a = namedtuple('Signal_a', 'event supplied_params dest')
 """Signal sent to trigger event at destination with optional supplied parameters"""
 Signal_Action_a = namedtuple('Signal_Action_a', 'event supplied_params dest delay assigner_partition')
+Signal_Dest_a = namedtuple('Signal_Dest_a', 'target_iset assigner_partition delay')
+Signal_Choice_a = namedtuple('Signal_Choice_a', 'decision true_signal false_signal')
 Block_a = namedtuple('Block_a', 'actions')
 Sequence_Token_a = namedtuple('Sequence_Token_a', 'name')
 Execution_Unit_a = namedtuple('Execution_Unit_a', 'input_tokens output_tokens action_group')
@@ -35,7 +37,7 @@ BOOL_a = namedtuple('BOOL_a', 'op operands')
 Scalar_Assignment_a = namedtuple('Scalar_Assignment_a', 'lhs rhs')
 Table_Assignment_a = namedtuple('Table_Assignment_a', 'lhs rhs')
 Scalar_RHS_a = namedtuple('Scalar_RHS_a', 'expr attrs')
-Scalar_Output_a = namedtuple('Scalar_Output_a', 'name exp_type')
+Flow_Output_a = namedtuple('Flow_Output_a', 'name exp_type')
 PATH_a = namedtuple('PATH_a', 'hops')
 INST_a = namedtuple('INST_a', 'components')
 R_a = namedtuple('R_a', 'rnum')
@@ -274,35 +276,64 @@ class ScrallVisitor(PTNodeVisitor):
     @classmethod
     def visit_signal_action(cls, node, children):
         """
-        Returns event_name ?supplied_params instance_set
+        signal_choice / signal
         """
-        s = children.results['signal'][0]
-        delay = children.results.get('delay')
-        return Signal_Action_a(
-            event=s.event,
-            supplied_params=s.supplied_params,
-            dest=s.dest,
-            delay=delay,
-            assigner_partition=s.assigner_partition
-        )
+        return children[0]
 
     @classmethod
     def visit_signal(cls, node, children):
         """
-        name supplied_params? SIGNAL_OP instance_set
-
-        An event name, any supplied parameters, the '->' signal symbol and a target
-        instance set
+        signal_spec signal_dest
         """
+        return Signal_a(
+            event=children[0]['name'],
+            supplied_params=children[0]['params'],
+            dest=children[1]
+        )
+
+    @classmethod
+    def visit_signal_choice(cls, node, children):
+        """
+        scalar_expr DECISION_OP signal_spec ':' signal_spec signal_dest
+        """
+        expr = children[0]
+        # Both signals in a choice always have the same destination and delay
+        true_signal = Signal_a(
+            event=children[1]['name'],
+            supplied_params=children[1]['params'],
+            dest=children[3]
+        )
+        false_signal = Signal_a(
+            event=children[2]['name'],
+            supplied_params=children[2]['params'],
+            dest=children[3]
+        )
+        return Signal_Choice_a(
+            decision=expr,
+            true_signal=true_signal,
+            false_signal=false_signal,
+        )
+
+    @classmethod
+    def visit_signal_spec(cls, node, children):
+        """
+        name supplied_params?
+        """
+
+        params = children.results.get('supplied_params', [])
+        return {'name': children[0].name, 'params': params}
+
+    @classmethod
+    def visit_signal_dest(cls, node, children):
+        """
+        SIGNAL_OP instance_set assigner_partition? delay?
+        """
+        iset = children[0]
         ap = children.results.get('assigner_partition')
         ap = None if not ap else ap[0]
-        params = children.results.get('supplied_params', [])
-        return Signal_a(
-            event=children.results['name'],
-            supplied_params=params,
-            dest=children.results.get('instance_set'),
-            assigner_partition=N_a(ap)
-        )
+        delay = children.results.get('delay')
+        delay = 0 if not delay else delay[0]
+        return Signal_Dest_a(target_iset = iset, assigner_partition=N_a(ap), delay=delay)
 
     @classmethod
     def visit_assigner_partition(cls, node, children):
@@ -329,7 +360,7 @@ class ScrallVisitor(PTNodeVisitor):
         name INST_ASSIGN instance_set
         """
         return Inst_Assignment_a(
-            lhs=children.results['name'][0],
+            lhs=children.results['flow_output'][0],
             card='1' if children.results['INST_ASSIGN'][0] == '.=' else 'Mc',
             rhs=children.results['instance_set']
         )
@@ -503,12 +534,12 @@ class ScrallVisitor(PTNodeVisitor):
         return children
 
     @classmethod
-    def visit_scalar_output(cls, node, children):
+    def visit_flow_output(cls, node, children):
         """
         name (TYPE_ASSIGN name)?
         """
         etyp = None if len(children) < 2 else children[1]
-        return Scalar_Output_a(name=children[0], exp_type=etyp)
+        return Flow_Output_a(name=children[0], exp_type=etyp)
 
     @classmethod
     def visit_table_assignment(cls, node, children):

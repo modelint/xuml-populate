@@ -2,7 +2,7 @@ activity = execution_unit* EOF // exec_group test
 execution_unit = LINEWRAP* ( output_flow / (input_tokens? action_group output_tokens?) ) EOL+
 action_group = SP* (block / action) // Set of actions with a common control flow in/out
 block = SP* '{' LINEWRAP* execution_unit* SP* '}'
-action = table_assignment / new_lineage / new_instance / update_ref / delete / scalar_assignment / switch / decision / inst_assignment / signal_action / call
+action = table_assignment / new_lineage / new_instance / update_ref / delete / scalar_assignment / signal_action / switch / decision / inst_assignment / call
 
 // Explicit sequence using control flow inputs and outputs
 input_tokens = sequence_token+ // Control flow input
@@ -52,15 +52,18 @@ output_flow = OUTPUT SP+ scalar_expr
 delete = '!*' SP* instance_set
 
 // Signal action
-signal_action = signal delay?
-signal = name supplied_params? SP+ SIGNAL_OP (LINEWRAP / SP+) instance_set assigner_partition?
-delay = SP+ DELAY_OP SP+ scalar_expr
+signal_action = signal_choice / signal
+signal = signal_spec SP+ signal_dest
+signal_choice = scalar_expr DECISION_OP SP+ signal_spec SP+ ':' SP+ signal_spec SP+ signal_dest
+signal_spec = name supplied_params?
+signal_dest = SIGNAL_OP (LINEWRAP / SP+) instance_set assigner_partition? (SP+ delay)?
+delay = DELAY_OP SP* scalar_expr
 assigner_partition = '|' instance_set
 DELAY_OP = '@'
 SIGNAL_OP = '->'
 
 // Instance assignment action
-inst_assignment = name SP+ INST_ASSIGN SP+ instance_set
+inst_assignment = flow_output SP+ INST_ASSIGN SP+ instance_set
 INST_ASSIGN = '.=' / '..='
 
 // Synchronous call action (method or ee operation)
@@ -100,8 +103,8 @@ delete = '!*' SP* instance_set
 
 // math and boolean operator precedence
 scalar_assignment = scalar_output_set SP* SCALAR_ASSIGN SP* scalar_expr projection?
-scalar_output_set = scalar_output (',' SP* scalar_output)*
-scalar_output = name (TYPE_ASSIGN name)?
+scalar_output_set = flow_output (',' SP* flow_output)*
+flow_output = name (TYPE_ASSIGN name)?
 projection = '.' '(' ( (ALL / (attr_name (',' SP+ attr_name)*) )? ')')
 ALL = '*'
 
