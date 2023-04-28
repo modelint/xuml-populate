@@ -29,10 +29,10 @@ row_set = bracketed_row (SP+ bracketed_row)*
 bracketed_row = '{' SP* single_row SP* '}'
 single_row = attr_val (',' SP+ attr_val)*
 attr_val = attr_name SP* ':' SP* attr_val
-attr_name = name rename_attr / name
+attr_name = name SP* rename_attr / name
 attr_type_def = name '::' name
 TABLE = '#'
-rename_attr = RENAME name
+rename_attr = RENAME SP* name
 RENAME = '>>'
 
 //table_term = (

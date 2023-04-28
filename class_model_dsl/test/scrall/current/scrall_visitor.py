@@ -559,6 +559,16 @@ class ScrallVisitor(PTNodeVisitor):
         return Table_Assignment_a(*children)
 
     @classmethod
+    def visit_table(cls, node, children):
+        """
+        TRUE / FALSE / new_table / (instance_set projection?)
+        """
+        if len(children) == 1:
+            return children[0]
+        else:
+            return children
+
+    @classmethod
     def visit_table_operation(cls, node, children):
         """
         table_term (TOP table_term)*
@@ -585,7 +595,7 @@ class ScrallVisitor(PTNodeVisitor):
     @classmethod
     def visit_table_expr(cls, node, children):
         """
-        instance_set projection?
+        table_operation
         """
         return children
 

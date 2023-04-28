@@ -1,4 +1,7 @@
 // Table assignments
+t1 #= t2
+non_arriving_ids #= t2.(a>>b)
+non_arriving_ids #= Aircraft(*).(a, b) - t2.(a>>b)
 t #= t1 * (t2 ## t3)
 t2 #= [ ID::Tail Number, Altitude::Height ] // Header def
 t1 #= []
@@ -6,6 +9,8 @@ low aircraft #= Aircraft(Altitude < floor altitude).()
 t #= FALSE
 t #= Aircraft(*).(*)
 // Rename
+non_arriving_ids #= a(*).(Tnum) - b.(c>>d)
+non_arriving_ids #= Aircraft.(Tail number) - Arrival.(Aircraft >> Tail number)
 low aircraft #= Aircraft(Altitude < floor altitude).(ID>>Tail number, Altitude)
 // Misc
 my department .= /R3/Department

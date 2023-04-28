@@ -52,5 +52,5 @@ class Activity:
         test_file_path = test_file_dir / "test_example.scrall"
         test_text = open(test_file_path, 'r').read() + "\n"
         print(test_text)
-        result = ScrallParser.parse(scrall_text=test_text, debug=True)
+        result = ScrallParser.parse(scrall_text=test_text, debug=False)
         pass
