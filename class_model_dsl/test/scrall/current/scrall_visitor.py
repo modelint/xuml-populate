@@ -590,14 +590,14 @@ class ScrallVisitor(PTNodeVisitor):
         """
         table / "(" table_expr ")"
         """
-        return children
+        return children[0]
 
     @classmethod
     def visit_table_expr(cls, node, children):
         """
         table_operation
         """
-        return children
+        return children[0]
 
     @classmethod
     def visit_projection(cls, node, children):
@@ -657,7 +657,7 @@ class ScrallVisitor(PTNodeVisitor):
     @classmethod
     def visit_scalar_chain(cls, node, children):
         """
-        (ITS op_chain) / ((scalar_source / instance_set) op_chain?)
+        (ITS op_chain) / ((scalar_source / instance_set projection?) op_chain?)
 
         """
         # ITS op_chain
@@ -666,24 +666,8 @@ class ScrallVisitor(PTNodeVisitor):
             op_chain = children.results['op_chain'][0]
             return its, op_chain
 
-        # Scalar source or an instance set
-        s = children.results.get('scalar_source')
-        i = children.results.get('instance_set')
-        # If i is just a name we don't need a list of components, just the name
-        if i and len(i) == 1 and isinstance(i[0], N_a):
-            i = i[0]
+        return children
 
-        # An op_chain is provided if no value
-        op_chain = children.results.get('op_chain')
-
-        if s and op_chain:
-            return s,op_chain
-        if i and op_chain:
-            return i,op_chain
-        if i:
-            return i
-        if s:
-            return s
 
     @classmethod
     def visit_op_chain(cls, node, children):
@@ -882,6 +866,7 @@ class ScrallVisitor(PTNodeVisitor):
         is a convenience that elminates the need for name doubling in a supplied parameter set
         """
         s = children.results['scalar_expr'][0]
+        s = s if len(s) > 1 else s[0]
         p = children.results.get('name')
         if not p and not isinstance(s,N_a):
             _logger.error(f"Paramenter name not supplied with expression value: [{children.results}]")
