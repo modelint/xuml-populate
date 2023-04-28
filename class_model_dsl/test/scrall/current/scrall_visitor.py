@@ -31,6 +31,7 @@ Delete_Action_a = namedtuple('Delete_Action_a', 'instance_set')
 Case_a = namedtuple('Case_a', 'enums execution_unit')
 Switch_a = namedtuple('Switch_a', 'input_flow cases')
 MATH_a = namedtuple('MATH_a', 'op operands')
+TOP_a = namedtuple('TABLE_a', 'op operands')
 UNARY_a = namedtuple('UNARY_a', 'op operand')
 BOOL_a = namedtuple('BOOL_a', 'op operands')
 """Boolean operation returns true or false"""
@@ -64,6 +65,15 @@ Rename_a = namedtuple('Rename_a', 'from_name to_name')
 
 
 symbol = {'^+': 'ascending', '^-': 'descending'}
+
+table_op = {
+    '%': 'SYMDIFF',
+    '^': 'INTERSECT',
+    '+': 'UNION',
+    '-': 'SUB',
+    '*': 'MULT',
+    '##': 'JOIN',
+}
 
 class ScrallVisitor(PTNodeVisitor):
     """
@@ -549,6 +559,30 @@ class ScrallVisitor(PTNodeVisitor):
         return Table_Assignment_a(*children)
 
     @classmethod
+    def visit_table_operation(cls, node, children):
+        """
+        table_term (TOP table_term)*
+        """
+        if len(children) == 1:
+            return children[0]
+        else:
+            return TOP_a(children.results['TOP'][0], children.results['table_term'])
+
+    @classmethod
+    def visit_TOP(cls, node, children):
+        """
+        '^' / '+' / '-' / '*' / '%' / '##'
+        """
+        return table_op[children[0]]
+
+    @classmethod
+    def visit_table_term(cls, node, children):
+        """
+        table / "(" table_expr ")"
+        """
+        return children
+
+    @classmethod
     def visit_table_expr(cls, node, children):
         """
         instance_set projection?
@@ -699,7 +733,7 @@ class ScrallVisitor(PTNodeVisitor):
         if len(children) == 1:
             return children[0]
         else:
-            return BOOL_a(children.results['COMPARE'], children.results['addition'])
+            return BOOL_a(children.results['COMPARE'][0], children.results['addition'])
 
     @classmethod
     def visit_addition(cls, node, children):
@@ -711,7 +745,7 @@ class ScrallVisitor(PTNodeVisitor):
         if len(children) == 1:
             return children[0]
         else:
-            return MATH_a(children.results['ADD'], children.results['factor'])
+            return MATH_a(children.results['ADD'][0], children.results['factor'])
 
     @classmethod
     def visit_equality(cls, node, children) -> BOOL_a:
@@ -737,7 +771,7 @@ class ScrallVisitor(PTNodeVisitor):
         if len(children) == 1:
             return children[0]
         else:
-            return MATH_a(children.results['MULT'], children.results['term'])
+            return MATH_a(children.results['MULT'][0], children.results['term'])
 
     @classmethod
     def visit_prefix_name(cls, node, children):

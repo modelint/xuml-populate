@@ -1,4 +1,5 @@
 // Table assignments
+t #= t1 * (t2 ## t3)
 t2 #= [ ID::Tail Number, Altitude::Height ] // Header def
 t1 #= []
 low aircraft #= Aircraft(Altitude < floor altitude).()

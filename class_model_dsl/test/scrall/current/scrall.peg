@@ -13,7 +13,13 @@ token_name = r'[A-Za-z0-9_]+' // No spaces in token names, often single digit: <
 // Table expressions
 table_assignment = name SP+ TABLE_ASSIGN SP+ table_expr
 TABLE_ASSIGN = '#='
-table_expr = TRUE / FALSE / new_table / (instance_set projection?)
+
+table_expr = SP* table_operation SP*
+table_operation = table_term (SP* TOP SP* table_term)*
+table_term = table / "(" SP* table_expr SP* ")"
+TOP = '^' / '+' / '-' / '*' / '%' / '##'
+
+table = TRUE / FALSE / new_table / (instance_set projection?)
 
 new_table = header_def / table_def
 class_def =  name selection '.' projection
