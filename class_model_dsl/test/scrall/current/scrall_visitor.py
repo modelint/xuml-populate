@@ -61,7 +61,7 @@ Projection_a = namedtuple('Projection_a', 'expand attrs')
 Attr_Type_a = namedtuple('Attr_Type_a', 'attr_name type_name')
 Attr_Val_a = namedtuple('Attr_Val_a', 'attr_name attr_value')
 Class_to_Table_a = namedtuple('Class_to_Table_a', 'cname selection projection')
-Table_Header_a= namedtuple('Table_Header_a', 'hdef')
+Table_Def_a= namedtuple('Table_Def_a', 'name header')
 Rename_a = namedtuple('Rename_a', 'from_name to_name')
 
 
@@ -229,7 +229,14 @@ class ScrallVisitor(PTNodeVisitor):
     @classmethod
     def visit_table_def(cls, node, children):
         """
-        name '[' attr_type_def (',' attr_type_def)* ']'
+        name '[' attr_type_set? ']'
+        """
+        return Table_Def_a(name=children[0].name, header=[] if len(children) < 2 else children[1])
+
+    @classmethod
+    def visit_attr_type_set(cls, node, children):
+        """
+        attr_type_def (',' attr_type_def)*
         """
         return children
 
@@ -252,7 +259,7 @@ class ScrallVisitor(PTNodeVisitor):
         """
         '{' attr_value_set? '}'
         """
-        return children
+        return [] if not children else children[0]
 
     @classmethod
     def visit_attr_value_set(cls, node, children):
@@ -316,7 +323,7 @@ class ScrallVisitor(PTNodeVisitor):
         """
         '[' column_op (',' column_op)* ']'
         """
-        return Table_Header_a(hdef=children)
+        return children
 
     @classmethod
     def visit_column_op(cls, node, children):

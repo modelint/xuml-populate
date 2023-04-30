@@ -16,7 +16,8 @@ table_assignment = explicit_table_assignment / implicit_table_assignment
 // Explicit table assignment
 explicit_table_assignment = table_def SP+ TABLE_ASSIGN SP+ table_value
 TABLE_ASSIGN = '#='
-table_def = name '[' SP* attr_type_def (',' SP* attr_type_def)* SP* ']'
+table_def = name '[' SP* (attr_type_set SP*)? ']'
+attr_type_set = attr_type_def (',' SP* attr_type_def)*
 attr_type_def = name '::' name
 table_value = '{' SP* (row SP*)* SP* '}'
 row = '{' SP* attr_value_set? SP* '}'
