@@ -2,7 +2,7 @@ activity = execution_unit* EOF // exec_group test
 execution_unit = LINEWRAP* ( output_flow / (input_tokens? action_group output_tokens?) ) EOL+
 action_group = SP* (block / action) // Set of actions with a common control flow in/out
 block = SP* '{' LINEWRAP* execution_unit* SP* '}'
-action = table_assignment / new_lineage / new_instance / update_ref / delete / scalar_assignment / signal_action / switch / decision / inst_assignment / call
+action = table_assignment / new_lineage / new_instance / update_ref / delete / scalar_assignment / signal_action / switch / decision / inst_assignment / call / iteration
 
 // Explicit sequence using control flow inputs and outputs
 input_tokens = sequence_token+ // Control flow input
@@ -80,6 +80,9 @@ operation = ORDER? owner? '.' name supplied_params
 owner = name
 supplied_params = '(' SP* (param (',' SP+ param)*)? SP* ')'
 param = (name SP* ':' SP*)? scalar_expr // Comma above keeps scalar_expr from grabbing next param
+
+// Iteration
+iteration = '<<' SP* instance_set SP* '>>' SP* action_group
 
 // Instance set
 instance_set = new_instance / ((operation / prefix_name / path) (reflexive_selection / selection / operation / path)*)

@@ -63,6 +63,7 @@ Attr_Val_a = namedtuple('Attr_Val_a', 'attr_name attr_value')
 Class_to_Table_a = namedtuple('Class_to_Table_a', 'cname selection projection')
 Table_Def_a= namedtuple('Table_Def_a', 'name header')
 Rename_a = namedtuple('Rename_a', 'from_name to_name')
+Iteration_a = namedtuple('Iteration_a','order action_group')
 
 
 symbol = {'^+': 'ascending', '^-': 'descending'}
@@ -512,6 +513,15 @@ class ScrallVisitor(PTNodeVisitor):
             rhs=children.results['instance_set']
         )
 
+    # Iteration
+    @classmethod
+    def visit_iteration(cls, node, children):
+        """
+        '<<' instance_set '>>' action_group
+        """
+        return Iteration_a(*children)
+
+    # Instance set
     @classmethod
     def visit_instance_set(cls, node, children):
         """
@@ -949,7 +959,7 @@ class ScrallVisitor(PTNodeVisitor):
         p = children.results.get('supplied_params')
         return Op_a(
             owner='implicit' if not owner else owner[0],
-            op_name=children.results['name'][0],
+            op_name=children.results['name'][0].name,
             supplied_params=[] if not p else p[0],
             order=None if not o else symbol[o[0]]
         )
