@@ -11,32 +11,34 @@ sequence_token = SP* '<' token_name '>' SP* // Named control flow
 token_name = r'[A-Za-z0-9_]+' // No spaces in token names, often single digit: <1>
 
 // Table expressions
-table_assignment = name SP+ TABLE_ASSIGN SP+ table_expr
+table_assignment = explicit_table_assignment / implicit_table_assignment
+explicit_table_assignment = table_def SP+ TABLE_ASSIGN SP+ table_value
+implicit_table_assignment = name SP+ TABLE_ASSIGN SP+ table_expr
 TABLE_ASSIGN = '#='
 
+// Explicit table assignment
+explicit_table_assignment = table_def SP+ TABLE_ASSIGN SP+ table_value
+table_def = name '[' SP* attr_type_def (',' SP* attr_type_def)* SP* ']'
+attr_type_def = name '::' name
+table_value = '{' SP* (row SP*)* SP* '}'
+row = '{' SP* attr_value_set? SP* '}'
+attr_value_set = scalar_expr (',' SP* scalar_expr)*
+
+// Implicit table assignment
 table_expr = SP* table_operation SP*
 table_operation = table_term (SP* TOP SP* table_term)*
 table_term = table / "(" SP* table_expr SP* ")"
 TOP = '^' / '+' / '-' / '*' / '%' / '##'
+table = instance_set header_expr? selection? projection?
 
-table = TRUE / FALSE / new_table / (instance_set projection?)
-
-new_table = header_def / table_def
-class_def =  name selection '.' projection
-header_def = '[' SP* attr_type_def (',' SP+ attr_type_def)* SP* ']'
-table_def = '[' ( single_row / row_set )? ']'
-row_set = bracketed_row (SP+ bracketed_row)*
-bracketed_row = '{' SP* single_row SP* '}'
-single_row = attr_val (',' SP+ attr_val)*
-attr_val = attr_name SP* ':' SP* attr_val
-attr_name = name SP* rename_attr / name
-attr_type_def = name '::' name
-TABLE = '#'
+// Table header operations
+header_expr = '[' SP* column_op (',' SP+ column_op)* SP*']'
+column_op = extend / rename_op
+rename_op = name SP* rename_attr
+extend = rename_attr '(' SP* op_chain SP* ')'
 rename_attr = RENAME SP* name
 RENAME = '>>'
 
-//table_term = (
-//table = instance_set projection?
 
 // Decision action
 decision = scalar_expr true_result false_result? // Control flow version of an if-then
@@ -111,7 +113,7 @@ delete = '!*' SP* instance_set
 scalar_assignment = scalar_output_set SP* SCALAR_ASSIGN SP* scalar_expr projection?
 scalar_output_set = flow_output (',' SP* flow_output)*
 flow_output = name (TYPE_ASSIGN name)?
-projection = '.' '(' ( (ALL / (attr_name (',' SP+ attr_name)*) )? ')')
+projection = '.' '(' ( (ALL / (name (',' SP+ name)*) )? ')')
 ALL = '*'
 
 scalar_expr = SP* scalar_logical_or SP*

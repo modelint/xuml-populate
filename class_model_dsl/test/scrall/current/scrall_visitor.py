@@ -59,6 +59,7 @@ Output_Flow_a = namedtuple('Output_Flow_a', 'output')
 Projection_a = namedtuple('Projection_a', 'expand attrs')
 # Tables
 Attr_Type_a = namedtuple('Attr_Type_a', 'attr_name type_name')
+Attr_Val_a = namedtuple('Attr_Val_a', 'attr_name attr_value')
 Class_to_Table_a = namedtuple('Class_to_Table_a', 'cname selection projection')
 Table_Header_a= namedtuple('Table_Header_a', 'hdef')
 Rename_a = namedtuple('Rename_a', 'from_name to_name')
@@ -561,7 +562,7 @@ class ScrallVisitor(PTNodeVisitor):
     @classmethod
     def visit_table(cls, node, children):
         """
-        TRUE / FALSE / new_table / (instance_set projection?)
+        new_table / (instance_set header_expr? projection?)
         """
         if len(children) == 1:
             return children[0]
@@ -577,6 +578,27 @@ class ScrallVisitor(PTNodeVisitor):
             return children[0]
         else:
             return TOP_a(children.results['TOP'][0], children.results['table_term'])
+
+    @classmethod
+    def visit_header_expr(cls, node, children):
+        """
+        '[' column_op (',' column_op)* ']'
+        """
+        return children
+
+    @classmethod
+    def visit_column_op(cls, node, children):
+        """
+        extend / rename
+        """
+        return children[0]
+
+    @classmethod
+    def visit_extend(cls, node, children):
+        """
+        rename_attr '(' op_chain ')'
+        """
+        return children
 
     @classmethod
     def visit_TOP(cls, node, children):
@@ -605,7 +627,7 @@ class ScrallVisitor(PTNodeVisitor):
         '.' '(' ( (ALL / (name (',' name)*) )? ')')
         """
         all = children.results.get('ALL')
-        n = children.results.get('attr_name')
+        n = children.results.get('name')
         exp = 'ALL' if all else 'EMPTY' if not all and not n else None
         return Projection_a(expand=exp, attrs=n)
 
@@ -895,23 +917,16 @@ class ScrallVisitor(PTNodeVisitor):
     @classmethod
     def visit_new_table(cls, node, children):
         """
-        class_def / header_def / table_def
+        header_def / table_def
         """
         return Table_Header_a(hdef=[] if not children else children[0])
-
-    @classmethod
-    def visit_class_def(cls, node, children):
-        """
-        TABLE name selection '.' projection
-        """
-        return children
 
     @classmethod
     def visit_header_def(cls, node, children):
         """
         TABLE '[' attr_type_def (',' attr_type_def)*']'
         """
-        return children
+        return Table_Header_a(hdef=children)
 
     @classmethod
     def visit_table_def(cls, node, children):
@@ -950,33 +965,30 @@ class ScrallVisitor(PTNodeVisitor):
     @classmethod
     def visit_attr_val(cls, node, children):
         """
-        attr_name ':' attr_val
+        name ':' attr_val
         """
-        return Attr_Type_a(*children)
+        return Attr_Val_a(attr_name=children[0].name, attr_value=children[1])
 
     @classmethod
     def visit_attr_type_def(cls, node, children):
         """
         name '::' name
         """
-        return Attr_Type_a(*children)
+        return Attr_Type_a(attr_name=children[0].name, type_name=children[1].name)
 
     @classmethod
-    def visit_attr_name(cls, node, children):
+    def visit_rename_op(cls, node, children):
         """
-        name rename_attr / name
+        name rename_attr
         """
-        if len(children) == 2:
-            return Rename_a(*children)
-        else:
-            return children
+        return Rename_a(from_name=children[0].name, to_name=children[1].name)
 
     @classmethod
     def visit_rename_attr(cls, node, children):
         """
-        rename_attr = RENAME
+        RENAME name
         """
-        return children
+        return children[0]
 
 
     @classmethod
