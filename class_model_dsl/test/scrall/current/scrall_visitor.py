@@ -36,7 +36,7 @@ UNARY_a = namedtuple('UNARY_a', 'op operand')
 BOOL_a = namedtuple('BOOL_a', 'op operands')
 """Boolean operation returns true or false"""
 Scalar_Assignment_a = namedtuple('Scalar_Assignment_a', 'lhs rhs')
-Table_Assignment_a = namedtuple('Table_Assignment_a', 'lhs rhs')
+Table_Assignment_a = namedtuple('Table_Assignment_a', 'type lhs rhs')
 Scalar_RHS_a = namedtuple('Scalar_RHS_a', 'expr attrs')
 Flow_Output_a = namedtuple('Flow_Output_a', 'name exp_type')
 PATH_a = namedtuple('PATH_a', 'hops')
@@ -101,6 +101,7 @@ class ScrallVisitor(PTNodeVisitor):
     visiting.
     """
 
+    # Activity structure
     @classmethod
     def visit_activity(cls, node, children):
         """
@@ -124,7 +125,7 @@ class ScrallVisitor(PTNodeVisitor):
     @classmethod
     def visit_execution_unit(cls, node, children):
         """
-        input_tokens? action_group output_tokens? EOL+
+        ( output_flow / (input_tokens? action_group output_tokens?) ) EOL+
 
         An execution unit is a set of action groups.
 
@@ -148,7 +149,6 @@ class ScrallVisitor(PTNodeVisitor):
             output_tokens=None if not otok else otok[0],
             action_group=ag
         )
-
 
     @classmethod
     def visit_block(cls, node, children):
@@ -176,7 +176,7 @@ class ScrallVisitor(PTNodeVisitor):
         """
         return children[0]
 
-    # Control flow tokens
+    # Explicit sequence using control flow input and output tokens
     @classmethod
     def visit_input_tokens(cls, node, children):
         """
@@ -209,6 +209,135 @@ class ScrallVisitor(PTNodeVisitor):
         Since this is a terminal, we need to grab the name from the node.value
         """
         return node.value
+
+    # Table expressions
+    @classmethod
+    def visit_table_assignment(cls, node, children):
+        """
+        explicit_table_assignment / implicit_table_assignment
+        """
+        return children[0]
+
+    # Explicit table assignment
+    @classmethod
+    def visit_explicit_table_assignment(cls, node, children):
+        """
+        table_def TABLE_ASSIGN table_value
+        """
+        return Table_Assignment_a(type='explicit', lhs=children[0], rhs=children[1])
+
+    @classmethod
+    def visit_table_def(cls, node, children):
+        """
+        name '[' attr_type_def (',' attr_type_def)* ']'
+        """
+        return children
+
+    @classmethod
+    def visit_attr_type_def(cls, node, children):
+        """
+        name '::' name
+        """
+        return Attr_Type_a(attr_name=children[0].name, type_name=children[1].name)
+
+    @classmethod
+    def visit_table_value(cls, node, children):
+        """
+        '{' row* '}'
+        """
+        return children
+
+    @classmethod
+    def visit_row(cls, node, children):
+        """
+        '{' attr_value_set? '}'
+        """
+        return children
+
+    @classmethod
+    def visit_attr_value_set(cls, node, children):
+        """
+        scalar_expr (',' scalar_expr)*
+        """
+        return children
+
+    # Implicit table assignment
+    @classmethod
+    def visit_implicit_table_assignment(cls, node, children):
+        """
+        name TABLE_ASSIGN table_expr
+        """
+        return Table_Assignment_a(type='implicit', lhs=children[0].name, rhs=children[1])
+
+    @classmethod
+    def visit_table_expr(cls, node, children):
+        """
+        table_operation
+        """
+        return children[0]
+
+    @classmethod
+    def visit_table_operation(cls, node, children):
+        """
+        table_term (TOP table_term)*
+        """
+        if len(children) == 1:
+            return children[0]
+        else:
+            return TOP_a(children.results['TOP'][0], children.results['table_term'])
+
+    @classmethod
+    def visit_table_term(cls, node, children):
+        """
+        table / "(" table_expr ")"
+        """
+        return children[0]
+
+    @classmethod
+    def visit_TOP(cls, node, children):
+        """
+        '^' / '+' / '-' / '*' / '%' / '##'
+        """
+        return table_op[children[0]]
+
+    @classmethod
+    def visit_table(cls, node, children):
+        """
+        instance_set header_expr? selection? projection?
+        """
+        if len(children) == 1:
+            return children[0]
+        else:
+            return children
+
+    # Table header operations
+    @classmethod
+    def visit_header_expr(cls, node, children):
+        """
+        '[' column_op (',' column_op)* ']'
+        """
+        return Table_Header_a(hdef=children)
+
+    @classmethod
+    def visit_column_op(cls, node, children):
+        """
+        extend / rename_op
+        """
+        return children[0]
+
+    @classmethod
+    def visit_rename_op(cls, node, children):
+        """
+        name rename_attr
+        """
+        return Rename_a(from_name=children[0].name, to_name=children[1].name)
+
+    @classmethod
+    def visit_rename_attr(cls, node, children):
+        """
+        RENAME name
+        """
+        return children[0]
 
     # Decision and switch actions
     @classmethod
@@ -553,32 +682,20 @@ class ScrallVisitor(PTNodeVisitor):
         return Flow_Output_a(name=children[0], exp_type=etyp)
 
     @classmethod
-    def visit_table_assignment(cls, node, children):
+    def visit_projection(cls, node, children):
         """
-        name TABLE_ASSIGN table_expr
+        '.' '(' ( (ALL / (name (',' name)*) )? ')')
         """
-        return Table_Assignment_a(*children)
+        all = children.results.get('ALL')
+        n = children.results.get('name')
+        exp = 'ALL' if all else 'EMPTY' if not all and not n else None
+        return Projection_a(expand=exp, attrs=n)
 
     @classmethod
-    def visit_table(cls, node, children):
-        """
-        new_table / (instance_set header_expr? projection?)
-        """
-        if len(children) == 1:
-            return children[0]
-        else:
-            return children
+    def visit_ALL(cls, node, children):
+        return 'ALL'
 
-    @classmethod
-    def visit_table_operation(cls, node, children):
-        """
-        table_term (TOP table_term)*
-        """
-        if len(children) == 1:
-            return children[0]
-        else:
-            return TOP_a(children.results['TOP'][0], children.results['table_term'])
-
+    # Table header operations
     @classmethod
     def visit_header_expr(cls, node, children):
         """
@@ -599,41 +716,6 @@ class ScrallVisitor(PTNodeVisitor):
         rename_attr '(' op_chain ')'
         """
         return children
-
-    @classmethod
-    def visit_TOP(cls, node, children):
-        """
-        '^' / '+' / '-' / '*' / '%' / '##'
-        """
-        return table_op[children[0]]
-
-    @classmethod
-    def visit_table_term(cls, node, children):
-        """
-        table / "(" table_expr ")"
-        """
-        return children[0]
-
-    @classmethod
-    def visit_table_expr(cls, node, children):
-        """
-        table_operation
-        """
-        return children[0]
-
-    @classmethod
-    def visit_projection(cls, node, children):
-        """
-        '.' '(' ( (ALL / (name (',' name)*) )? ')')
-        """
-        all = children.results.get('ALL')
-        n = children.results.get('name')
-        exp = 'ALL' if all else 'EMPTY' if not all and not n else None
-        return Projection_a(expand=exp, attrs=n)
-
-    @classmethod
-    def visit_ALL(cls, node, children):
-        return 'ALL'
 
     @classmethod
     def visit_scalar_source(cls, node, children):
@@ -912,83 +994,6 @@ class ScrallVisitor(PTNodeVisitor):
         An input parameter is signified by the 'in' keyword
         """
         return IN_a(children[0])
-
-    # Table expressions
-    @classmethod
-    def visit_new_table(cls, node, children):
-        """
-        header_def / table_def
-        """
-        return Table_Header_a(hdef=[] if not children else children[0])
-
-    @classmethod
-    def visit_header_def(cls, node, children):
-        """
-        TABLE '[' attr_type_def (',' attr_type_def)*']'
-        """
-        return Table_Header_a(hdef=children)
-
-    @classmethod
-    def visit_table_def(cls, node, children):
-        """
-        TABLE '[' ( single_row / row_set )? ']'
-        """
-        if not children:
-            return None
-        r = children.results.get('single_row')
-        if r:
-            return r
-        rset = children.results['single_row']
-        return rset
-
-    @classmethod
-    def visit_row_set(cls, node, children):
-        """
-        bracketed_row bracketed_row*
-        """
-        return children
-
-    @classmethod
-    def visit_bracketed_row(cls, node, children):
-        """
-        '{' single_row '}'
-        """
-        return children
-
-    @classmethod
-    def visit_single_row(cls, node, children):
-        """
-        attr_val (',' SP+ attr_val)*
-        """
-        return children
-
-    @classmethod
-    def visit_attr_val(cls, node, children):
-        """
-        name ':' attr_val
-        """
-        return Attr_Val_a(attr_name=children[0].name, attr_value=children[1])
-
-    @classmethod
-    def visit_attr_type_def(cls, node, children):
-        """
-        name '::' name
-        """
-        return Attr_Type_a(attr_name=children[0].name, type_name=children[1].name)
-
-    @classmethod
-    def visit_rename_op(cls, node, children):
-        """
-        name rename_attr
-        """
-        return Rename_a(from_name=children[0].name, to_name=children[1].name)
-
-    @classmethod
-    def visit_rename_attr(cls, node, children):
-        """
-        RENAME name
-        """
-        return children[0]
 
 
     @classmethod
