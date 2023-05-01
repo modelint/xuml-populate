@@ -64,6 +64,7 @@ Class_to_Table_a = namedtuple('Class_to_Table_a', 'cname selection projection')
 Table_Def_a= namedtuple('Table_Def_a', 'name header')
 Rename_a = namedtuple('Rename_a', 'from_name to_name')
 Iteration_a = namedtuple('Iteration_a','order action_group')
+Migration_a = namedtuple('Migration_a','from_inst to_subclass')
 
 
 symbol = {'^+': 'ascending', '^-': 'descending'}
@@ -512,6 +513,17 @@ class ScrallVisitor(PTNodeVisitor):
             card='1' if children.results['INST_ASSIGN'][0] == '.=' else 'Mc',
             rhs=children.results['instance_set']
         )
+
+    # Subclass migration
+    @classmethod
+    def visit_migration(cls, node, children):
+        """
+        instance_set? SP* '>>' SP* new_inst_int
+        """
+        iset = children.results.get('instance_set')
+        iset = 'me' if not iset else iset[0]
+        dest_iset = children.results['new_inst_init'][0]
+        return Migration_a(from_inst=iset, to_subclass=dest_iset)
 
     # Iteration
     @classmethod

@@ -2,7 +2,7 @@ activity = execution_unit* EOF // exec_group test
 execution_unit = LINEWRAP* ( output_flow / (input_tokens? action_group output_tokens?) ) EOL+
 action_group = SP* (block / action) // Set of actions with a common control flow in/out
 block = SP* '{' LINEWRAP* execution_unit* SP* '}'
-action = table_assignment / new_lineage / new_instance / update_ref / delete / scalar_assignment / signal_action / switch / decision / inst_assignment / call / iteration
+action = table_assignment / new_lineage / new_instance / update_ref / delete / migration / scalar_assignment / signal_action / switch / decision / inst_assignment / call / iteration
 
 // Explicit sequence using control flow inputs and outputs
 input_tokens = sequence_token+ // Control flow input
@@ -81,11 +81,14 @@ owner = name
 supplied_params = '(' SP* (param (',' SP+ param)*)? SP* ')'
 param = (name SP* ':' SP*)? scalar_expr // Comma above keeps scalar_expr from grabbing next param
 
+// Subclass migration
+migration = instance_set? SP* '>>' SP* new_inst_init
+
 // Iteration
 iteration = '<<' SP* instance_set SP* '>>' SP* action_group
 
 // Instance set
-instance_set = new_instance / ((operation / prefix_name / path) (reflexive_selection / selection / operation / path)*)
+instance_set =  new_instance / ((operation / prefix_name / path) (reflexive_selection / selection / operation / path)*)
 selection = '(' SP* select_phrase SP* ')'
 select_phrase = (CARD ',' SP* scalar_expr) / CARD / scalar_expr
 CARD = '1' / '*'
@@ -107,10 +110,6 @@ to_ref = '&' rnum SP+ instance_set (',' SP+ instance_set)? // non-associative or
 create_action = new_instance / new_lineage // create an instance of a class or a set of instances in a lineage
 ref_action = instance_set? (to_ref / un_ref) // relate or unrelated to me or explicit instance_set
 delete = '!*' SP* instance_set
-
-
-// both new_instance and new_lineage are instance sets. They can be the RHS of an instance assignment
-
 
 // math and boolean operator precedence
 scalar_assignment = scalar_output_set SP* SCALAR_ASSIGN SP* scalar_expr projection?

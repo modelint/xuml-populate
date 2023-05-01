@@ -1,3 +1,6 @@
+// Migration
+atcOn >>On Duty Controller(Time logged in: Date.Now hms) &R3 my station
+>>Open()
 // Iteration
 << /OR1/next >> {
     LOG.LogData( Item1: Altitude, Item2: Airspeed )

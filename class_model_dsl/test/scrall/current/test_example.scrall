@@ -1,3 +1,6 @@
+// Migration
+atcOn >>On Duty Controller(Time logged in: Date.Now hms) &R3 my station
+>>Open()
 // Iteration
 << /OR1/next >> {
     LOG.LogData( Item1: Altitude, Item2: Airspeed )
@@ -5,7 +8,6 @@
 << Aircraft(^+Altitude; ^-Airspeed) >> {
     LOG.LogData( Item1: Altitude, Item2: Airspeed )
 }
-// Tables
 // Implicit
 t4[ Altitude::Height, Heading::Compass ] #= { { a1, h1 } { a2, h2 } } // Two rows
 t5[ Altitude::Height, Heading::Compass ] #= {} // No rows
@@ -117,9 +119,3 @@ tower.nearest plane().distance().km.feet
 Aircraft(1).Land( Runway: north)
 // return value
 =>> *Aircraft(id: in.tail_number)
-<< /OR1/next >> {
-    LOG.LogData( Item1: Altitude, Item2: Airspeed )
-}
-<< Aircraft(^+Altitude; ^-Airspeed) >> {
-    LOG.LogData( Item1: Altitude, Item2: Airspeed )
-}
