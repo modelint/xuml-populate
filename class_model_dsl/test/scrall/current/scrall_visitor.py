@@ -52,7 +52,7 @@ Reflexive_select_a = namedtuple('Reflexive_select_a', 'expr compare position')
 Type_expr_a = namedtuple('Type_expr_a', 'type selector')
 Attr_value_init_a = namedtuple('Attr_value_init_a', 'attr scalar_expr')
 To_ref_a = namedtuple('To_ref_a', 'rnum iset1 iset2')
-Update_ref_a = namedtuple('Update_ref_a', 'rnum iset1 iset2')
+Update_ref_a = namedtuple('Update_ref_a', 'iset to_ref')
 New_inst_a = namedtuple('New_inst_a', 'cname attrs rels')
 New_lineage_a = namedtuple('New_lineage_a', 'inits')
 Output_Flow_a = namedtuple('Output_Flow_a', 'output')
@@ -353,10 +353,12 @@ class ScrallVisitor(PTNodeVisitor):
     def visit_decision(cls, node, children):
         """
         scalar_expr true_result false_result?
-
-        Control flow version of an if-then
         """
-        return Decision_a(input=children[0], true_result=children[1], false_result=None if len(children) < 3 else children[2])
+        return Decision_a(
+            input=children[0],
+            true_result=children[1],
+            false_result=None if len(children) < 3 else children[2]
+        )
 
     @classmethod
     def visit_true_result(cls, node, children):
@@ -376,6 +378,7 @@ class ScrallVisitor(PTNodeVisitor):
         """
         return children[0]
 
+    # Switch action
     @classmethod
     def visit_switch(cls, node, children):
         """
@@ -514,215 +517,6 @@ class ScrallVisitor(PTNodeVisitor):
             rhs=children.results['instance_set']
         )
 
-    # Subclass migration
-    @classmethod
-    def visit_migration(cls, node, children):
-        """
-        instance_set? SP* '>>' SP* new_inst_int
-        """
-        iset = children.results.get('instance_set')
-        iset = 'me' if not iset else iset[0]
-        dest_iset = children.results['new_inst_init'][0]
-        return Migration_a(from_inst=iset, to_subclass=dest_iset)
-
-    # Iteration
-    @classmethod
-    def visit_iteration(cls, node, children):
-        """
-        '<<' instance_set '>>' action_group
-        """
-        return Iteration_a(*children)
-
-    # Instance set
-    @classmethod
-    def visit_instance_set(cls, node, children):
-        """
-        new_instance / ((operation / prefix_name / path) (reflexive_selection / selection / operation / path)*)
-
-        An instance set begins with a required name (instance flow) or a path. The path can then be followed
-        by any sequence of selection, operation, and paths. The parser won't find two paths in sequence since
-        any encounter path will be fully consumed
-        """
-        if len(children) == 1 and isinstance(children[0],N_a):
-            return children[0]
-        else:
-            return INST_a(children)
-
-    @classmethod
-    def visit_delete(cls, node, children):
-        """
-        '!*' instance_set
-        """
-        iset = children.results.get('instance_set')
-        return Delete_Action_a(instance_set=iset)
-
-    @classmethod
-    def visit_new_lineage(cls, node, children):
-        """
-        '*[' new_inst_init (',' new_inst_init)+ ']'
-
-        create all instances of a lineage
-        """
-        return New_lineage_a(children)
-
-    @classmethod
-    def visit_new_instance(cls, node, children):
-        """
-        '*' new_inst_init
-        create an instance of a class as an action
-        """
-        return children[0]
-
-    @classmethod
-    def visit_new_inst_init(cls, node, children):
-        """
-        name attr_init? to_ref*
-
-        specify class, attr inits, and any required references
-        """
-        a = children.results.get('attr_init')
-        r = children.results.get('to_ref')
-        return New_inst_a(cname=children[0], attrs=None if not a else a[0], rels=None if not r else r[0])
-
-    @classmethod
-    def visit_attr_init(cls, node, children):
-        """
-        '(' (attr_value_init (',' attr_value_init)* ')'
-
-        all attrs to init for a new instance
-        """
-        return children
-
-    @classmethod
-    def visit_attr_value_init(cls, node, children):
-        """
-        (name ':' scalar_expr )*
-        """
-        return Attr_value_init_a(attr=children[0], scalar_expr=children[1])
-
-    @classmethod
-    def visit_update_ref(cls, node, children):
-        """
-        to_ref
-
-        A standalone reference
-        """
-        ref1 = None if len(children) < 2 else children[1]
-        ref2 = None if len(children) < 3 else children[2]
-        return Update_ref_a(rnum=children[0], iset1=ref1, iset2=ref2)
-
-    @classmethod
-    def visit_to_ref(cls, node, children):
-        """
-        '&' rnum instance_set (',' instance_set)?
-
-        non-associative or associative reference
-        """
-        ref1 = None if len(children) < 2 else children[1]
-        ref2 = None if len(children) < 3 else children[2]
-        return To_ref_a(rnum=children[0], iset1=ref1, iset2=ref2)
-
-
-    @classmethod
-    def visit_type_selector(cls, node, children):
-        """
-        name '[' name? ']'
-        """
-        s = '<default>' if len(children) == 1 else children[1]
-        return Type_expr_a(type=children[0], selector=s)
-
-    @classmethod
-    def visit_selection(cls, node, children):
-        """
-        '(' select_phrase ')'
-        """
-        return Selection_a(card=children[0][0], criteria=None if len(children[0]) < 2 else children[0][1])
-
-    @classmethod
-    def visit_HIPPITY_HOP(cls, node, children):
-        """
-        FAR_HOP / NEAR_HOP
-
-        Select the furthest or nearest qualifying instance
-        """
-        return 'nearest' if 'NEAR_HOP' in children.results else 'furthest'
-
-    @classmethod
-    def visit_reflexive_selection(cls, node, children):
-        """
-        HIPPITY_HOP scalar_expr ('|' COMPARE '|')?
-
-        HIPPITY_HOP is either nearest or furthest occurrence in reflexive search
-        (This operator is also what tells the parser that this is a reflexive search)
-
-        There must be a scalar expression to evaluate to determine whether or not a given instance
-        meets the selection criteria.
-
-        A comparison operator is provided when the scalar expression is simply an its.<attr> reference
-        so that we can say "its.Altitude" (the Altitude of the currently tested instance) is greater than
-        that of the instance at the beginning of the search.
-        """
-        comp = children.results.get('COMPARE')
-        return Reflexive_select_a(
-            expr=children.results['scalar_expr'],
-            compare=None if not comp else comp[0],
-            position=children.results['HIPPITY_HOP'][0]
-        )
-
-    @classmethod
-    def visit_select_phrase(cls, node, children):
-        """
-        (CARD ',' criteria) / CARD / criteria
-
-        """
-        explicit_card = children.results.get('CARD')
-        card = '*' if not explicit_card else explicit_card[0]
-        criteria = children.results.get('scalar_expr')
-        if criteria:
-            return [card, criteria[0]]
-        else:
-            return [card]
-
-    # Scalar assignment and operations
-    @classmethod
-    def visit_scalar_assignment(cls, node, children):
-        """
-        scalar_output_set SCALAR_ASSIGN scalar_expr
-        """
-        sout_set = children.results['scalar_output_set'][0]
-        expr = children.results['scalar_expr'][0]
-        proj = children.results.get('projection')
-        proj = None if not proj else proj[0]
-        return Scalar_Assignment_a(lhs=sout_set, rhs=Scalar_RHS_a(expr,proj))
-
-    @classmethod
-    def visit_scalar_output_set(cls, node, children):
-        """
-        scalar_output (',' scalar_output)
-        """
-        return children
-
-    @classmethod
-    def visit_flow_output(cls, node, children):
-        """
-        name (TYPE_ASSIGN name)?
-        """
-        etyp = None if len(children) < 2 else children[1]
-        return Flow_Output_a(name=children[0], exp_type=etyp)
-
-    @classmethod
-    def visit_projection(cls, node, children):
-        """
-        '.' '(' ( (ALL / (name (',' name)*) )? ')')
-        """
-        all = children.results.get('ALL')
-        n = children.results.get('name')
-        exp = 'ALL' if all else 'EMPTY' if not all and not n else None
-        return Projection_a(expand=exp, attrs=n)
-
-    @classmethod
-    def visit_ALL(cls, node, children):
-        return 'ALL'
 
     # Table header operations
     @classmethod
@@ -747,196 +541,13 @@ class ScrallVisitor(PTNodeVisitor):
         return children
 
     @classmethod
-    def visit_scalar_source(cls, node, children):
-        """
-        ( scalar_op / type_selector / input_param / ITS )
-        """
-        its = children.results.get('ITS')
-        if its:
-            return 'ITS'
-        else:
-            return children[0]
-
-    @classmethod
-    def visit_QTY(cls, node, children):
-        return 'QTY'
-
-    @classmethod
     def visit_ITS(cls, node, children):
         return 'ITS'
 
-    @classmethod
-    def visit_scalar(cls, node, children):
-        """
-        value / QTY? scalar_chain
 
-        A scalar is either a simple value such as an enum or a variable name, TRUE/FALSE, etc OR
-        it is a chain of operations like a.b(x,y).c.d with a preceding instance set such as a path, selection, etc.
-        """
-        # Return value
-        v = children.results.get('value')
-        v = None if not v else v[0]
-        if v:
-            return v
-
-        # Cardinality
-        qty = children.results.get('QTY')
-        schain = children.results['scalar_chain'][0]
-        if qty:
-            return qty[0],schain
-        else:
-            return schain
-
-    @classmethod
-    def visit_scalar_chain(cls, node, children):
-        """
-        (ITS op_chain) / ((scalar_source / instance_set projection?) op_chain?)
-
-        """
-        # ITS op_chain
-        its = children.results.get('ITS')
-        if its:
-            op_chain = children.results['op_chain'][0]
-            return its, op_chain
-
-        return children
-
-
-    @classmethod
-    def visit_op_chain(cls, node, children):
-        """
-        (scalar_op / name)*
-
-        Here we have a chain of alternating operations and names in the form: a.b(x,y).c(a).d
-        These correspond to type specific operations
-        """
-        return Op_chain_a(children)
-
-    @classmethod
-    def visit_value(cls, node, children):
-        """
-        TRUE / FALSE / enum_value / type_selector / input_param
-        """
-        return children[0]
-
-    @classmethod
-    def visit_scalar_expr(cls, node, children):
-        """
-        Returns a fully parsed scalar expression
-        """
-        return children[0]
-
-    @classmethod
-    def visit_scalar_logical_or(cls, node, children):
-        """
-        scalar_logical_and (OR scalar_logical_and)*
-
-        Returns a higher precedence operation or one or more OR'ed conjunctions
-        """
-        if len(children) == 1: # No OR operation
-            return children[0]
-        else:
-            return BOOL_a('OR', children.results['scalar_logical_and'])
-
-    @classmethod
-    def visit_scalar_logical_and(cls, node, children):
-        """
-        equality (AND equality)*
-
-        Returns a higher precedence operation or one or more AND'ed equalities
-        """
-        if len(children) == 1: # No AND operation
-            return children[0]
-        else:
-            return BOOL_a('AND', children.results['equality'])
-
-    @classmethod
-    def visit_comparison(cls, node, children):
-        """
-        comparison = addition (COMPARE addition)*
-
-        Returns a higher precedence operation or one or more compared additions (>, <=, etc)
-        """
-        if len(children) == 1:
-            return children[0]
-        else:
-            return BOOL_a(children.results['COMPARE'][0], children.results['addition'])
-
-    @classmethod
-    def visit_addition(cls, node, children):
-        """
-        factor (ADD factor)*
-
-        Returns a higher precedence operation or one or more added/subtracted factors
-        """
-        if len(children) == 1:
-            return children[0]
-        else:
-            return MATH_a(children.results['ADD'][0], children.results['factor'])
-
-    @classmethod
-    def visit_equality(cls, node, children) -> BOOL_a:
-        """
-        comparison (EQUAL comparison)*
-
-        Returns a higher precedence operation or one or more equalities (==, !=)
-        """
-        if len(children) == 1:
-            return children[0]
-        else:
-            # Convert ':' to '==' if found
-            eq_map = ['==' if e in ('==',':') else '!=' for e in children.results['EQUAL']]
-            return BOOL_a(eq_map, children.results['comparison'])
-
-    @classmethod
-    def visit_factor(cls, node, children):
-        """
-        term (MULT term)*
-
-        Returns a higher precedence operation or one or more multipled/divided terms
-        """
-        if len(children) == 1:
-            return children[0]
-        else:
-            return MATH_a(children.results['MULT'][0], children.results['term'])
-
-    @classmethod
-    def visit_prefix_name(cls, node, children):
-        n = children.results['name'][0]
-        o = children.results.get('ORDER')
-        if o:
-            return Order_name_a(order=symbol[o[0]], name=n)
-        else:
-            return n
-
-    @classmethod
-    def visit_term(cls, node, children):
-        """
-        NOT? UNARY_MINUS? (scalar / scalar_expr)
-        ---
-        If the not or unary minus operations are not specified, returns whatever was parsed out earlier,
-        either a simple scalar (attribute, attribute access, etc) or any scalar expression
-
-        Otherwise, a unary minus expression nested inside a boolean not operation, or just the boolean not,
-        or just the unary minus expressions individually are returned.
-        """
-        s = children.results.get('scalar')
-        s = s if s else children.results['scalar_expr']
-        scalar = s[0]
-        if len(children) == 1:
-            return scalar
-        not_op = children.results.get('NOT')
-        unary_minus = children.results.get('UNARY_MINUS')
-        if unary_minus and not not_op:
-            return UNARY_a('-', scalar)
-        if not_op and not unary_minus:
-            return BOOL_a('NOT', scalar)
-        if unary_minus and not_op:
-            return BOOL_a('NOT', UNARY_a('-', scalar))
 
 
     # Synchronous method or operation
-
     @classmethod
     def visit_call(cls, node, children):
         """
@@ -977,17 +588,13 @@ class ScrallVisitor(PTNodeVisitor):
         )
 
     @classmethod
-    def visit_scalar_op(cls, node, children):
+    def visit_supplied_params(cls, node, children):
         """
-        Children are name, ?supplied_params
-        Returns op_name ?supplied_params dest
+        '(' (param (',' param)*)? ')'
+
+        Could be () or a list of multiple parameters
         """
-        n = children.results['name'][0]
-        p = children.results['supplied_params'][0]
-        return Scalar_op_a(
-            name=n,
-            supplied_params=p
-        )
+        return children if children else None
 
     @classmethod
     def visit_param(cls, node, children):
@@ -1006,14 +613,408 @@ class ScrallVisitor(PTNodeVisitor):
             raise ScrallMissingParameterName(children.results)
         return Supplied_Parameter_a(pname=s if not p else p[0], sval=s)
 
+    # Subclass migration
     @classmethod
-    def visit_supplied_params(cls, node, children):
+    def visit_migration(cls, node, children):
         """
-        '(' (param (',' param)*)? ')'
+        instance_set? SP* '>>' SP* new_inst_int
+        """
+        iset = children.results.get('instance_set')
+        iset = 'me' if not iset else iset[0]
+        dest_iset = children.results['new_inst_init'][0]
+        return Migration_a(from_inst=iset, to_subclass=dest_iset)
 
-        Could be () or a list of multiple parameters
+    # Iteration
+    @classmethod
+    def visit_iteration(cls, node, children):
         """
-        return children if children else None
+        '<<' instance_set '>>' action_group
+        """
+        return Iteration_a(*children)
+
+    # Instance set
+    @classmethod
+    def visit_instance_set(cls, node, children):
+        """
+        new_instance / ((operation / prefix_name / path) (reflexive_selection / selection / operation / path)*)
+
+        An instance set begins with a required name (instance flow) or a path. The path can then be followed
+        by any sequence of selection, operation, and paths. The parser won't find two paths in sequence since
+        any encounter path will be fully consumed
+        """
+        if len(children) == 1 and isinstance(children[0],N_a):
+            return children[0]
+        else:
+            return INST_a(children)
+
+    @classmethod
+    def visit_selection(cls, node, children):
+        """
+        '(' select_phrase ')'
+        """
+        return Selection_a(card=children[0][0], criteria=None if len(children[0]) < 2 else children[0][1])
+
+    @classmethod
+    def visit_select_phrase(cls, node, children):
+        """
+        (CARD ',' criteria) / CARD / criteria
+        """
+        explicit_card = children.results.get('CARD')
+        card = '*' if not explicit_card else explicit_card[0]
+        criteria = children.results.get('scalar_expr')
+        if criteria:
+            return [card, criteria[0]]
+        else:
+            return [card]
+
+    # Creation, deletion, and references
+    @classmethod
+    def visit_new_instance(cls, node, children):
+        """
+        '*' new_inst_init
+        create an instance of a class as an action
+        """
+        return children[0]
+
+    @classmethod
+    def visit_new_lineage(cls, node, children):
+        """
+        '*[' new_inst_init (',' new_inst_init)+ ']'
+
+        create all instances of a lineage
+        """
+        return New_lineage_a(children)
+
+    @classmethod
+    def visit_new_inst_init(cls, node, children):
+        """
+        name attr_init? to_ref*
+
+        specify class, attr inits, and any required references
+        """
+        a = children.results.get('attr_init')
+        r = children.results.get('to_ref')
+        return New_inst_a(cname=children[0], attrs=None if not a else a[0], rels=None if not r else r[0])
+
+    @classmethod
+    def visit_attr_init(cls, node, children):
+        """
+        '(' (attr_value_init (',' attr_value_init)* ')'
+
+        all attrs to init for a new instance
+        """
+        return children
+
+    @classmethod
+    def visit_attr_value_init(cls, node, children):
+        """
+        (name ':' scalar_expr )*
+        """
+        return Attr_value_init_a(attr=children[0], scalar_expr=children[1])
+
+    @classmethod
+    def visit_update_ref(cls, node, children):
+        """
+        instance_set? to_ref
+
+        A standalone reference
+        """
+        iset = children.results.get('instance_set')
+        iset = 'me' if not iset else iset[0]
+        return Update_ref_a(iset=iset, to_ref=children[-1])
+
+    @classmethod
+    def visit_to_ref(cls, node, children):
+        """
+        '&' rnum instance_set (',' instance_set)?
+
+        non-associative or associative reference
+        """
+        ref1 = None if len(children) < 2 else children[1]
+        ref2 = None if len(children) < 3 else children[2]
+        return To_ref_a(rnum=children[0], iset1=ref1, iset2=ref2)
+
+    @classmethod
+    def visit_delete(cls, node, children):
+        """
+        '!*' instance_set
+        """
+        iset = children.results.get('instance_set')
+        return Delete_Action_a(instance_set=iset)
+
+    # Math and boolean operator precedence
+    @classmethod
+    def visit_scalar_assignment(cls, node, children):
+        """
+        scalar_output_set SP* SCALAR_ASSIGN SP* scalar_expr projection?
+        """
+        sout_set = children.results['scalar_output_set'][0]
+        expr = children.results['scalar_expr'][0]
+        proj = children.results.get('projection')
+        proj = None if not proj else proj[0]
+        return Scalar_Assignment_a(lhs=sout_set, rhs=Scalar_RHS_a(expr,proj))
+
+    @classmethod
+    def visit_scalar_output_set(cls, node, children):
+        """
+        flow_output (',' flow_output)*
+        """
+        return children
+
+    @classmethod
+    def visit_flow_output(cls, node, children):
+        """
+        name (TYPE_ASSIGN name)?
+        """
+        etyp = None if len(children) < 2 else children[1]
+        return Flow_Output_a(name=children[0], exp_type=etyp)
+
+    @classmethod
+    def visit_projection(cls, node, children):
+        """
+        '.' '(' ( (ALL / (name (',' name)*) )? ')')
+        """
+        all = children.results.get('ALL')
+        n = children.results.get('name')
+        exp = 'ALL' if all else 'EMPTY' if not all and not n else None
+        return Projection_a(expand=exp, attrs=n)
+
+    @classmethod
+    def visit_ALL(cls, node, children):
+        """
+        '*'
+        """
+        return 'ALL'
+
+    @classmethod
+    def visit_scalar_expr(cls, node, children):
+        """
+        scalar_logical_or
+        """
+        return children[0]
+
+    @classmethod
+    def visit_scalar_logical_or(cls, node, children):
+        """
+        scalar_logical_and (OR scalar_logical_and)*
+        """
+        if len(children) == 1: # No OR operation
+            return children[0]
+        else:
+            return BOOL_a('OR', children.results['scalar_logical_and'])
+
+    @classmethod
+    def visit_scalar_logical_and(cls, node, children):
+        """
+        equality (AND equality)*
+        """
+        if len(children) == 1: # No AND operation
+            return children[0]
+        else:
+            return BOOL_a('AND', children.results['equality'])
+
+    @classmethod
+    def visit_equality(cls, node, children) -> BOOL_a:
+        """
+        comparison (EQUAL comparison)*
+        """
+        if len(children) == 1:
+            return children[0]
+        else:
+            # Convert ':' to '==' if found
+            eq_map = ['==' if e in ('==',':') else '!=' for e in children.results['EQUAL']]
+            return BOOL_a(eq_map, children.results['comparison'])
+
+    @classmethod
+    def visit_comparison(cls, node, children):
+        """
+        comparison = addition (COMPARE addition)*
+        """
+        if len(children) == 1:
+            return children[0]
+        else:
+            return BOOL_a(children.results['COMPARE'][0], children.results['addition'])
+
+    @classmethod
+    def visit_addition(cls, node, children):
+        """
+        factor (ADD factor)*
+        """
+        if len(children) == 1:
+            return children[0]
+        else:
+            return MATH_a(children.results['ADD'][0], children.results['factor'])
+
+    @classmethod
+    def visit_factor(cls, node, children):
+        """
+        term (MULT term)*
+        """
+        if len(children) == 1:
+            return children[0]
+        else:
+            return MATH_a(children.results['MULT'][0], children.results['term'])
+
+    @classmethod
+    def visit_term(cls, node, children):
+        """
+        NOT? UNARY_MINUS? (scalar / scalar_expr)
+        ---
+        If the not or unary minus operations are not specified, returns whatever was parsed out earlier,
+        either a simple scalar (attribute, attribute access, etc) or any scalar expression
+
+        Otherwise, a unary minus expression nested inside a boolean not operation, or just the boolean not,
+        or just the unary minus expressions individually are returned.
+        """
+        s = children.results.get('scalar')
+        s = s if s else children.results['scalar_expr']
+        scalar = s[0]
+        if len(children) == 1:
+            return scalar
+        not_op = children.results.get('NOT')
+        unary_minus = children.results.get('UNARY_MINUS')
+        if unary_minus and not not_op:
+            return UNARY_a('-', scalar)
+        if not_op and not unary_minus:
+            return BOOL_a('NOT', scalar)
+        if unary_minus and not_op:
+            return BOOL_a('NOT', UNARY_a('-', scalar))
+
+
+    @classmethod
+    def visit_scalar(cls, node, children):
+        """
+        value / QTY? scalar_chain
+
+        A scalar is either a simple value such as an enum or a variable name, TRUE/FALSE, etc OR
+        it is a chain of operations like a.b(x,y).c.d with a preceding instance set such as a path, selection, etc.
+        """
+        # Return value
+        v = children.results.get('value')
+        v = None if not v else v[0]
+        if v:
+            return v
+
+        # Cardinality
+        qty = children.results.get('QTY')
+        schain = children.results['scalar_chain'][0]
+        if qty:
+            return qty[0],schain
+        else:
+            return schain
+
+    @classmethod
+    def visit_QTY(cls, node, children):
+        """
+        '??'
+        """
+        return 'QTY'
+
+    @classmethod
+    def visit_scalar_chain(cls, node, children):
+        """
+        (ITS op_chain) / ((scalar_source / instance_set projection?) op_chain?)
+        """
+        # ITS op_chain
+        its = children.results.get('ITS')
+        if its:
+            op_chain = children.results['op_chain'][0]
+            return its, op_chain
+
+        return children
+
+    @classmethod
+    def visit_scalar_source(cls, node, children):
+        """
+        type_selector / input_param
+        """
+        its = children.results.get('ITS')
+        if its:
+            return 'ITS'
+        else:
+            return children[0]
+
+    @classmethod
+    def visit_op_chain(cls, node, children):
+        """
+        (scalar_op / name)*
+
+        Here we have a chain of alternating operations and names in the form: a.b(x,y).c(a).d
+        These correspond to type specific operations
+        """
+        return Op_chain_a(children)
+
+    @classmethod
+    def visit_value(cls, node, children):
+        """
+        TRUE / FALSE / enum_value / type_selector / input_param
+        """
+        return children[0]
+
+    @classmethod
+    def visit_prefix_name(cls, node, children):
+        """
+        ORDER? name
+        """
+        n = children.results['name'][0]
+        o = children.results.get('ORDER')
+        if o:
+            return Order_name_a(order=symbol[o[0]], name=n)
+        else:
+            return n
+
+    @classmethod
+    def visit_scalar_op(cls, node, children):
+        """
+        name supplied_params
+        """
+        n = children.results['name'][0]
+        p = children.results['supplied_params'][0]
+        return Scalar_op_a(
+            name=n,
+            supplied_params=p
+        )
+
+    # Name of type and name of value selected
+    @classmethod
+    def visit_type_selector(cls, node, children):
+        """
+        name '[' name? ']'
+        """
+        s = '<default>' if len(children) == 1 else children[1]
+        return Type_expr_a(type=children[0], selector=s)
+
+    # Reflexive selection
+    @classmethod
+    def visit_reflexive_selection(cls, node, children):
+        """
+        HIPPITY_HOP scalar_expr ('|' COMPARE '|')?
+
+        HIPPITY_HOP is either nearest or furthest occurrence in reflexive search
+        (This operator is also what tells the parser that this is a reflexive search)
+
+        There must be a scalar expression to evaluate to determine whether or not a given instance
+        meets the selection criteria.
+
+        A comparison operator is provided when the scalar expression is simply an its.<attr> reference
+        so that we can say "its.Altitude" (the Altitude of the currently tested instance) is greater than
+        that of the instance at the beginning of the search.
+        """
+        comp = children.results.get('COMPARE')
+        return Reflexive_select_a(
+            expr=children.results['scalar_expr'],
+            compare=None if not comp else comp[0],
+            position=children.results['HIPPITY_HOP'][0]
+        )
+
+    @classmethod
+    def visit_HIPPITY_HOP(cls, node, children):
+        """
+        FAR_HOP / NEAR_HOP
+
+        Select the furthest or nearest qualifying instance
+        """
+        return 'nearest' if 'NEAR_HOP' in children.results else 'furthest'
 
     @classmethod
     def visit_input_param(cls, node, children):
@@ -1024,18 +1025,27 @@ class ScrallVisitor(PTNodeVisitor):
         """
         return IN_a(children[0])
 
-
+    # Relationship traversal
     @classmethod
     def visit_path(cls, node, children):
-        """ hop+  A sequence of hops """
+        """
+        hop+
+        """
         return PATH_a(children)
 
     @classmethod
     def visit_hop(cls, node, children):
-        """ '/' (rnum / name)  An rnum, phrase, or class name """
+        """
+        '/' (rnum / name)
+        """
         return children[0]
 
     # Names
+    @classmethod
+    def visit_name(cls, node, children):
+        """ Join words and delimiters """
+        return N_a(''.join(children))
+
     @classmethod
     def visit_rnum(cls, node, children):
         """
@@ -1045,11 +1055,6 @@ class ScrallVisitor(PTNodeVisitor):
         This is how relationships are named
         """
         return R_a(node.value)
-
-    @classmethod
-    def visit_name(cls, node, children):
-        """ Join words and delimiters """
-        return N_a(''.join(children))
 
     # Discarded whitespace and comments
     @classmethod

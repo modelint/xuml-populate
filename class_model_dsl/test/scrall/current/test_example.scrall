@@ -37,6 +37,9 @@ calling fname, calling height = Floor( Name: in.calling floor ).(Name, Height)
 // Create and relate
 *[ A() &R3 a, b; B() ]
 &R1 that one
+&R15 folder
+aircraft &R1 pilot
+license &R3 dog, owner
 *Taxiing Aircraft(ID: in.id, Heading: in.initial heading) &R1 assigned runway, trun
 *A()
 // Opchain

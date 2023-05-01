@@ -1,5 +1,7 @@
 activity = execution_unit* EOF // exec_group test
 execution_unit = LINEWRAP* ( output_flow / (input_tokens? action_group output_tokens?) ) EOL+
+output_flow = OUTPUT SP+ scalar_expr
+OUTPUT = '=>>'
 action_group = SP* (block / action) // Set of actions with a common control flow in/out
 block = SP* '{' LINEWRAP* execution_unit* SP* '}'
 action = table_assignment / new_lineage / new_instance / update_ref / delete / migration / scalar_assignment / signal_action / switch / decision / inst_assignment / call / iteration
@@ -39,7 +41,6 @@ extend = rename_attr '(' SP* op_chain SP* ')'
 rename_attr = RENAME SP* name
 RENAME = '>>'
 
-
 // Decision action
 decision = scalar_expr true_result false_result? // Control flow version of an if-then
 true_result = DECISION_OP SP* action_group // If
@@ -52,12 +53,6 @@ case_block = '{' LINEWRAP* case+ '}'
 case = (SP* enum_value)+ SP* ':' SP* execution_unit
 enum_value = '_' name // Scalar switch has enum value cases
 DECISION_OP = '?'
-
-// Output flow
-output_flow = OUTPUT SP+ scalar_expr
-
-// Delete action
-delete = '!*' SP* instance_set
 
 // Signal action
 signal_action = signal_choice / signal
@@ -104,11 +99,8 @@ new_lineage = '*[' SP* new_inst_init (';' SP+ new_inst_init)+ SP* ']' // create 
 new_inst_init = name attr_init? (SP+ to_ref)* // specify class, attr inits, and any required references
 attr_init = '(' SP* (attr_value_init (',' SP+ attr_value_init)* SP*)? ')' // all attrs to init for a new instance
 attr_value_init = (name SP? ':' SP+ scalar_expr )*
-update_ref = to_ref
+update_ref = (instance_set SP+)? to_ref // relate or unrelated to me or explicit instance_set
 to_ref = '&' rnum SP+ instance_set (',' SP+ instance_set)? // non-associative or associative reference
-
-create_action = new_instance / new_lineage // create an instance of a class or a set of instances in a lineage
-ref_action = instance_set? (to_ref / un_ref) // relate or unrelated to me or explicit instance_set
 delete = '!*' SP* instance_set
 
 // math and boolean operator precedence
@@ -130,7 +122,7 @@ term = (NOT SP*)? UNARY_MINUS? (scalar / "(" SP* scalar_expr SP* ")")
 scalar = value / QTY? scalar_chain
 QTY = '??'
 scalar_chain = (ITS op_chain) / ((scalar_source / instance_set projection?) op_chain?)
-scalar_source = ( type_selector / input_param )
+scalar_source = type_selector / input_param
 op_chain = ('.' (scalar_op / name))*
 value = TRUE / FALSE / enum_value
 prefix_name = ORDER? name
@@ -154,7 +146,6 @@ UNARY_MINUS = "-"
 ADD = ("+" / "-")
 MULT = ("*" / "/")
 TYPE_ASSIGN = '::'
-OUTPUT = '=>>'
 
 input_param =  IN '.' name
 
