@@ -2,6 +2,7 @@
 
 from class_model_dsl.sp_exceptions import ScrallGrammarFileOpen, ScrallParseError
 from class_model_dsl.parse.scrall_visitor import ScrallVisitor
+# from class_model_dsl.test.scrall.current.scrall_visitor import ScrallVisitor
 from arpeggio import visit_parse_tree, NoMatch
 from arpeggio.cleanpeg import ParserPEG
 import os # For issuing system commands to generate diagnostic files
@@ -22,20 +23,20 @@ class ScrallParser:
     root_rule_name = 'activity' # The required name of the highest level parse element
 
     # Useful paths within the project
-    project = Path(__file__).parent.parent # Top level package in this project
-    root = project.parent # Root level
-    grammar_path = project / "grammar" # The grammar files are all here
-    diagnostics_path = project / "diagnostics" # All parser diagnostic output goes here
+    test_dir = Path(__file__).parent # Top level package in this project
+    project_path = Path(__file__).parent.parent.parent.parent.parent
+    grammar_path = test_dir # The grammar files are all here
+    diagnostics_path = test_dir # All parser diagnostic output goes here
 
     # Files
     grammar_file = grammar_path / "scrall.peg" # We parse using this peg grammar
     grammar_model_pdf = diagnostics_path / "scrall_model.pdf"
     parse_tree_pdf = diagnostics_path / "scrall_parse_tree.pdf"
-    parse_tree_dot = root / f"{root_rule_name}_parse_tree.dot"
-    parser_model_dot = root / f"{root_rule_name}_peg_parser_model.dot"
+    parse_tree_dot = project_path / f"{root_rule_name}_parse_tree.dot"
+    parser_model_dot = project_path / f"{root_rule_name}_peg_parser_model.dot"
 
-    pg_tree_dot = root / "peggrammar_parse_tree.dot"
-    pg_model_dot = root / "peggrammar_parser_model.dot"
+    pg_tree_dot = project_path / "peggrammar_parse_tree.dot"
+    pg_model_dot = project_path / "peggrammar_parser_model.dot"
     pg_tree_pdf = diagnostics_path / "peggrammar_parse_tree.pdf"
     pg_model_pdf = diagnostics_path / "peggrammar_parser_model.pdf"
 
@@ -59,7 +60,7 @@ class ScrallParser:
 
         # Create an arpeggio parser for our model grammar that does not eliminate whitespace
         # We interpret newlines and indents in our grammar, so whitespace must be preserved
-        parser = ParserPEG(cls.scrall_grammar, cls.root_rule_name, comment_rule_name='COMMENT', ignore_case=True, skipws=False, debug=debug)
+        parser = ParserPEG(cls.scrall_grammar, cls.root_rule_name, ignore_case=True, skipws=False, debug=debug)
         if debug:
             # Transform dot files into pdfs
             # os.system(f'dot -Tpdf {cls.pg_tree_dot} -o {cls.pg_tree_pdf}')

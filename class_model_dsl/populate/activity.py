@@ -47,10 +47,11 @@ class Activity:
     @classmethod
     def parse(cls, actions, debug=False):
         # Read the test file
-        actions = "Bypassing for test" # Remove after diagnostics
-        test_file_dir = Path(__file__).parent.parent / "test" / "scrall" / "current"
-        test_file_path = test_file_dir / "test_example.scrall"
-        test_text = open(test_file_path, 'r').read() + "\n"
-        print(test_text)
-        result = ScrallParser.parse(scrall_text=test_text, debug=True)
+        # actions = "Bypassing for test" # Remove after diagnostics
+        # test_file_dir = Path(__file__).parent.parent / "test" / "scrall" / "current"
+        # test_file_path = test_file_dir / "test_example.scrall"
+        # test_text = open(test_file_path, 'r').read() + "\n"
+        # print(test_text)
+        atext = '\n'.join(actions)+'\n'
+        result = ScrallParser.parse(scrall_text=atext, debug=True)
         pass

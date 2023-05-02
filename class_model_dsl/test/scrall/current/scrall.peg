@@ -2,7 +2,7 @@ activity = execution_unit* EOF // exec_group test
 execution_unit = LINEWRAP* ( output_flow / (input_tokens? action_group output_tokens?) ) EOL+
 output_flow = OUTPUT SP+ scalar_expr
 OUTPUT = '=>>'
-action_group = SP* (block / action) // Set of actions with a common control flow in/out
+action_group = SP* (block / LINEWRAP* action) // Set of actions with a common control flow in/out
 block = SP* '{' LINEWRAP* execution_unit* SP* '}'
 action = table_assignment / new_lineage / new_instance / update_ref / delete / migration / scalar_assignment / signal_action / switch / decision / inst_assignment / call / iteration
 
