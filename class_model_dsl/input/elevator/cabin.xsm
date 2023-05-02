@@ -40,7 +40,7 @@ transitions
 --
 state SECURING DOORS
 activity
-    /R4/Door.Lock requested.set
+    /R4/Door.Lock requested.set()
     Lock -> /R4/Door
 transitions
     Doors secure > READY TO GO

@@ -21,18 +21,23 @@ class Activity:
     """
     _logger = logging.getLogger(__name__)
 
+    sm = {} # For debugging purposes, delete once we get action semantics populated
+
     @classmethod
     def populate_state(cls, mmdb: 'Tk', state: str, state_model: str, actions: str,
                        subsys_name: str, domain_name: str) -> str:
         """Constructor"""
 
-        cls.parse(actions)
+
+        action_text = '\n'.join(actions)+'\n'
+        if state_model not in cls.sm:
+            cls.sm[state_model] = {}
+        cls.sm[state_model][state] = cls.parse(action_text) # To record parsed actions for debugging
 
         # Create the Susbystem Element and obtain a unique Anum
         Anum = Element.populate_unlabeled_subsys_element(mmdb,
                                                          prefix='A',
                                                          subsystem_name=subsys_name, domain_name=domain_name)
-        action_text = '\n'.join(actions) # Activity is parsed as a list of strings, convert to a single string
         Relvar.insert(relvar='Activity', tuples=[
             Activity_i(Anum=Anum, Domain=domain_name, Actions=action_text)
         ]) # TODO: Action text must be passed to an Action Language parser to obtain Action semantics
@@ -52,6 +57,6 @@ class Activity:
         # test_file_path = test_file_dir / "test_example.scrall"
         # test_text = open(test_file_path, 'r').read() + "\n"
         # print(test_text)
-        atext = '\n'.join(actions)+'\n'
-        result = ScrallParser.parse(scrall_text=atext, debug=True)
-        pass
+        # atext = '\n'.join(actions)+'\n'
+        result = ScrallParser.parse(scrall_text=actions, debug=True)
+        return result
