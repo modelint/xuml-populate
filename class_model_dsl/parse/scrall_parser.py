@@ -2,7 +2,6 @@
 
 from class_model_dsl.sp_exceptions import ScrallGrammarFileOpen, ScrallParseError
 from class_model_dsl.parse.scrall_visitor import ScrallVisitor
-# from class_model_dsl.test.scrall.current.scrall_visitor import ScrallVisitor
 from arpeggio import visit_parse_tree, NoMatch
 from arpeggio.cleanpeg import ParserPEG
 import os # For issuing system commands to generate diagnostic files
@@ -23,10 +22,10 @@ class ScrallParser:
     root_rule_name = 'activity' # The required name of the highest level parse element
 
     # Useful paths within the project
-    test_dir = Path(__file__).parent # Top level package in this project
-    project_path = Path(__file__).parent.parent.parent.parent.parent
-    grammar_path = test_dir # The grammar files are all here
-    diagnostics_path = test_dir # All parser diagnostic output goes here
+    project_path = Path(__file__).parent.parent.parent
+    module_path = project_path / 'class_model_dsl'
+    grammar_path = module_path / 'grammar' # The grammar files are all here
+    diagnostics_path = module_path / 'diagnostics' # All parser diagnostic output goes here
 
     # Files
     grammar_file = grammar_path / "scrall.peg" # We parse using this peg grammar

@@ -1,3 +1,6 @@
+// Scalar calls
+/R4/Door.Lock requested.set()
+door.Lock requested.set()
 // Migration
 atcOn >>On Duty Controller(Time logged in: Date.Now hms) &R3 my station
 >>Open()

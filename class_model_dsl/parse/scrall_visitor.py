@@ -13,6 +13,7 @@ Supplied_Parameter_a = namedtuple('Supplied_Parameter_a', 'pname sval')
 Op_a = namedtuple('Op_a', 'owner op_name supplied_params order')
 Scalar_op_a = namedtuple('Scalar_op_a', 'name supplied_params')
 Call_a = namedtuple('Call_a', 'call op_chain')
+Scalar_Call_a = namedtuple('Scalar_Call_a', 'call')
 """The subject of a call could be an instance set (method) or an external entity (ee operation)"""
 Attr_Access_a = namedtuple('Attr_Access_a', 'cname its attr')
 Selection_a = namedtuple('Selection_a', 'card criteria')
@@ -554,10 +555,6 @@ class ScrallVisitor(PTNodeVisitor):
         Post-parse verify that last element is an operation, otherwise invalid call
         """
         iset = children.results['instance_set'][0]
-        if not isinstance(iset.components[-1], Op_a):
-            # There's no terminating operation in the action, so this isn't a complete call
-            _logger.error(f"Call action without operation: [{children.results}]")
-            raise ScrallCallWithoutOperation(children.results)
         opc = children.results.get('op_chain')
         return Call_a(
             call=iset,
@@ -593,7 +590,7 @@ class ScrallVisitor(PTNodeVisitor):
 
         Could be () or a list of multiple parameters
         """
-        return children if children else None
+        return children if children else []
 
     @classmethod
     def visit_param(cls, node, children):
@@ -740,6 +737,14 @@ class ScrallVisitor(PTNodeVisitor):
         """
         iset = children.results.get('instance_set')
         return Delete_Action_a(instance_set=iset)
+
+    # Scalar call
+    @classmethod
+    def visit_scalar_call(cls, node, children):
+        """
+        scalar_expr
+        """
+        return Scalar_Call_a(children)
 
     # Math and boolean operator precedence
     @classmethod

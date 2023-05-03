@@ -103,6 +103,9 @@ update_ref = (instance_set SP+)? to_ref // relate or unrelated to me or explicit
 to_ref = '&' rnum SP+ instance_set (',' SP+ instance_set)? // non-associative or associative reference
 delete = '!*' SP* instance_set
 
+// Scalar call
+//scalar_call = scalar_expr
+
 // math and boolean operator precedence
 scalar_assignment = scalar_output_set SP* SCALAR_ASSIGN SP* scalar_expr projection?
 scalar_output_set = flow_output (',' SP* flow_output)*
