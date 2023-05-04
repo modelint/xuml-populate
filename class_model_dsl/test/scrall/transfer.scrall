@@ -1,14 +1,14 @@
 UI.Set destination( Shaft, floor: Destination floor )
 New transfer -> /R53/Cabin
 Wait for cabin -> me
-Destination floor = in.new dest
+Destination floor = ^new dest
 Stationary update -> me
 Go -> /R53/Cabin
 Cabin dispatched -> me
-Try redirect( in.new dest ) -> /R53/Cabin
+Try redirect( ^new dest ) -> /R53/Cabin
 Redirect requested -> me
-Destination floor = in.updated dest
-Update in_motion -> me
+Destination floor = ^updated dest
+Update in motion -> me
 call behind .= /R53/R49/Floor Service( Direction: /R53/Cabin.Travel direction.opposite )
 call fwd .= /R53/R49/Floor Service( Direction: /R53/Cabin.Travel direction )
 switch dir = (call behind and !call fwd and !/R53/Accessible Shaft Level.Stop requested)
@@ -17,7 +17,7 @@ Reversal checked -> me
 UI.Cabin arrived( Shaft, direction: /R53/Cabin.Travel direction )
 pending floor service .= /R53/R49/Floor Service( Direction: /R53/Cabin.Travel direction )
 pending floor service? {
-    Call in_progress -> meCabin
+    Call in progress -> meCabin
     Cabin arrived -> pending floor service
 } : {
     Serviced stop -> /R53/Accessible Shaft Level

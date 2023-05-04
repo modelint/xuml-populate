@@ -1,5 +1,5 @@
-TRAN.Go to floor( Dest floor: in.new dest, Shaft ) ?
-     Cabin redirected( Updated dest: in.new dest ) -> /R53/Transfer
+TRAN.Go to floor( Dest floor: ^new dest, Shaft ) ?
+     Cabin redirected( Updated dest: ^new dest ) -> /R53/Transfer
 Change requested -> me
 Ready to go -> /R53/Transfer
 Also do this -> Nowhere // for test only
@@ -9,7 +9,7 @@ Lock -> /R4/Door
     Already there -> | Prepare to move -> me
 Cabin at destination -> /R53/Transfer
 Unlock -> /R4/Door
-!(/R2/Shaft.In_service) ? Take out of service -> me
+!(/R2/Shaft.In service) ? Take out of service -> me
 /R4/Door.Emergency hold.set
 Passenger open -> /R4/Door
 TRAN.Goto floor( Dest floor: /R53/Transfer.Destination floor, Shaft ) ?

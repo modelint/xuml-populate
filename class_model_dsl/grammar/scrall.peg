@@ -94,7 +94,7 @@ selection = '(' SP* select_phrase SP* ')'
 select_phrase = (CARD ',' SP* scalar_expr) / CARD / scalar_expr
 CARD = '1' / '*'
 ORDER = '^+' / '^-'
-IN = 'in'
+IN = '^'
 TRUE = 'true' / 'TRUE'
 FALSE = 'false' / 'FALSE'
 ITS = 'its'
@@ -156,7 +156,7 @@ ADD = ("+" / "-")
 MULT = ("*" / "/")
 TYPE_ASSIGN = '::'
 
-input_param =  IN '.' name
+input_param =  IN name
 
 // Relationship traversal
 // We keep path components simple, always beginning with the '/' symbol
@@ -171,7 +171,7 @@ rnum = r'O?R[1-9][0-9]*' // Relationship number (name used for relationships)
 //word = SP* r'[A-Za-z0-9]+'
 first_word = ignore_keywords r'[A-Za-z][A-Za-z0-9]*'
 word = ignore_keywords r'[A-Za-z0-9]+'
-ignore_keywords = !" in" !"in " !" true" !"true " !" false" !"false " !" and" !"and " !" or" !"or " !" not" !"not "
+ignore_keywords = !" true" !"true " !" false" !"false " !" and" !"and " !" or" !"or " !" not" !"not "
 ! " me" !" me" !" TRUE" !"TRUE " !" FALSE" !"FALSE " !" AND" !"AND " !" OR" !"OR " !" NOT" !"NOT "
 
 // Whitespace and comments
