@@ -18,6 +18,7 @@ Scalar_Call_a = namedtuple('Scalar_Call_a', 'call')
 Attr_Access_a = namedtuple('Attr_Access_a', 'cname its attr')
 Selection_a = namedtuple('Selection_a', 'card criteria')
 Inst_Assignment_a = namedtuple('Inst_Assignment_a', 'lhs card rhs')
+EE_Signal_a = namedtuple('EE_Signal_a', 'event supplied_params ee')
 Signal_a = namedtuple('Signal_a', 'event supplied_params dest')
 """Signal sent to trigger event at destination with optional supplied parameters"""
 Signal_Action_a = namedtuple('Signal_Action_a', 'event supplied_params dest delay assigner_partition')
@@ -424,6 +425,14 @@ class ScrallVisitor(PTNodeVisitor):
         """
         return Enum_a(children[0])
 
+    # # Asynch service
+    # @classmethod
+    # def visit_asynch_service(cls, node, children):
+    #     """
+    #     name '.' signal_spec ASYNCH ee
+    #     """
+    #     return Asynch_a(*children)
+
     # Signal action
     @classmethod
     def visit_signal_action(cls, node, children):
@@ -435,13 +444,21 @@ class ScrallVisitor(PTNodeVisitor):
     @classmethod
     def visit_signal(cls, node, children):
         """
-        signal_spec signal_dest
+        signal_spec (signal_dest / ee_dest)
         """
-        return Signal_a(
-            event=children[0]['name'],
-            supplied_params=children[0]['params'],
-            dest=children[1]
-        )
+        sdest = children.results.get('signal_dest')
+        if sdest:
+            return Signal_a(
+                event=children[0]['name'],
+                supplied_params=children[0]['params'],
+                dest=children[1]
+            )
+        else:
+            return EE_Signal_a(
+                event=children[0]['name'],
+                supplied_params=children[0]['params'],
+                ee=children[1]
+            )
 
     @classmethod
     def visit_signal_choice(cls, node, children):
@@ -474,6 +491,13 @@ class ScrallVisitor(PTNodeVisitor):
 
         params = children.results.get('supplied_params', [])
         return {'name': children[0].name, 'params': params}
+
+    @classmethod
+    def visit_ee_dest(cls, node, children):
+        """
+        ASYNCH name
+        """
+        return children[0]
 
     @classmethod
     def visit_signal_dest(cls, node, children):
