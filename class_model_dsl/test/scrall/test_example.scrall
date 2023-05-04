@@ -1,1 +1,3 @@
-a ? Stop at nearest floor => TRAN
+Try redirect( a: x*y ) -> /R53/Cabin
+Try redirect( apple ) -> /R53/Cabin
+Try redirect( in.new dest ) -> /R53/Cabin

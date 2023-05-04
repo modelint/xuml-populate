@@ -52,8 +52,9 @@ class Activity:
     def parse(cls, actions, debug=False):
         # Read the test file
         test_file_dir = Path(__file__).parent.parent / "test" / "scrall"
+        test_file_path = test_file_dir / "all_examples.scrall"
         # test_file_path = test_file_dir / "test_example.scrall"
-        test_file_path = test_file_dir / "cabin.scrall"
+        # test_file_path = test_file_dir / "cabin.scrall"
         test_text = open(test_file_path, 'r').read() + "\n"
         result = ScrallParser.parse(scrall_text=test_text, debug=True)
         # result = ScrallParser.parse(scrall_text=actions, debug=False)

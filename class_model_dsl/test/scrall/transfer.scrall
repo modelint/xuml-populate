@@ -8,7 +8,7 @@ Cabin dispatched -> me
 Try redirect( in.new dest ) -> /R53/Cabin
 Redirect requested -> me
 Destination floor = in.updated dest
-Update in motion -> me
+Update in_motion -> me
 call behind .= /R53/R49/Floor Service( Direction: /R53/Cabin.Travel direction.opposite )
 call fwd .= /R53/R49/Floor Service( Direction: /R53/Cabin.Travel direction )
 switch dir = (call behind and !call fwd and !/R53/Accessible Shaft Level.Stop requested)
@@ -16,12 +16,14 @@ switch dir? /R53/Cabin.Travel direction.toggle
 Reversal checked -> me
 UI.Cabin arrived( Shaft, direction: /R53/Cabin.Travel direction )
 pending floor service .= /R53/R49/Floor Service( Direction: /R53/Cabin.Travel direction )
-pending floor service?
-    Call in progress -> meCabin ; Cabin arrived -> pending floor service : {
+pending floor service? {
+    Call in_progress -> meCabin
+    Cabin arrived -> pending floor service
+} : {
     Serviced stop -> /R53/Accessible Shaft Level
     Wait to clear -> me
 }
 Cancel -> /R53/R49/Floor Service( Direction: /R53/Cabin.Travel direction )
 Wait to clear -> me
-Requests cleared > Delete
+Requests cleared -> Delete
 Transfer completed -> R53( Shaft )

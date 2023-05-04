@@ -628,10 +628,10 @@ class ScrallVisitor(PTNodeVisitor):
         s = children.results['scalar_expr'][0]
         s = s if len(s) > 1 else s[0]
         p = children.results.get('name')
-        if not p and not isinstance(s,N_a):
+        if not p and not (isinstance(s,N_a) or isinstance(s,IN_a)):
             _logger.error(f"Paramenter name not supplied with expression value: [{children.results}]")
             raise ScrallMissingParameterName(children.results)
-        return Supplied_Parameter_a(pname=s if not p else p[0], sval=s)
+        return Supplied_Parameter_a(pname=s.name if not p else p[0].name, sval=s)
 
     # Subclass migration
     @classmethod
@@ -1051,7 +1051,7 @@ class ScrallVisitor(PTNodeVisitor):
 
         An input parameter is signified by the 'in' keyword
         """
-        return IN_a(children[0])
+        return IN_a(children[0].name)
 
     # Relationship traversal
     @classmethod
