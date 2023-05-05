@@ -1,3 +1,1 @@
-Try redirect( ^new dest ) -> /R53/Cabin
-Try redirect( a: x*y ) -> /R53/Cabin
-Try redirect( apple ) -> /R53/Cabin
+// Cabin in motion

@@ -25,5 +25,4 @@ pending floor service? {
 }
 Cancel -> /R53/R49/Floor Service( Direction: /R53/Cabin.Travel direction )
 Wait to clear -> me
-Requests cleared -> Delete
 Transfer completed -> R53( Shaft )

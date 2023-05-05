@@ -1,4 +1,4 @@
-activity = execution_unit* EOF // exec_group test
+activity = (LINEWRAP* EOF) / (execution_unit* EOF) // exec_group test
 execution_unit = LINEWRAP* ( output_flow / (input_tokens? action_group output_tokens?) ) EOL+
 output_flow = OUTPUT SP+ scalar_expr
 OUTPUT = '=>>'
@@ -167,9 +167,9 @@ hop = '/' (rnum / name) // just a sequence of rels and phrase or class names
 name = first_word (NAME_GLUE word)* // One word or a sequence of delimited words (name used for most model elements)
 NAME_GLUE = r'[ _]' // delmits words within a name
 rnum = r'O?R[1-9][0-9]*' // Relationship number (name used for relationships)
-//first_word = r'[A-Za-z][A-Za-z0-9]*'
+first_word = r'[A-Za-z][A-Za-z0-9]*'
 //word = SP* r'[A-Za-z0-9]+'
-first_word = ignore_keywords r'[A-Za-z][A-Za-z0-9]*'
+//first_word = ignore_keywords r'[A-Za-z][A-Za-z0-9]*'
 word = ignore_keywords r'[A-Za-z0-9]+'
 ignore_keywords = !" true" !"true " !" false" !"false " !" and" !"and " !" or" !"or " !" not" !"not "
 ! " me" !" me" !" TRUE" !"TRUE " !" FALSE" !"FALSE " !" AND" !"AND " !" OR" !"OR " !" NOT" !"NOT "

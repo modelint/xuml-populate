@@ -55,7 +55,7 @@ state Changing destination before cabin moves( new dest: Level Name )
 activity
     // The cabin isn’t moving, so we can safely
     // relink to the new destination
-    Destination floor = in.new dest
+    Destination floor = ^new dest
     Stationary update -> me
 transitions
     Stationary update > WAITING FOR CABIN
@@ -77,14 +77,14 @@ transitions
 --
 state Request redirect( new dest: Level Name )
 activity
-    Try redirect( in.new dest ) -> /R53/Cabin
+    Try redirect( ^new dest ) -> /R53/Cabin
     Redirect requested -> me
 transitions
     Redirect requested > CABIN IN MOTION
 --
 state Match new destination of cabin( updated dest: Level Name )
 activity
-    Destination floor = in.updated dest
+    Destination floor = ^updated dest
     Update in motion -> me
 transitions
     Update in motion > CABIN IN MOTION
@@ -109,9 +109,13 @@ activity
     UI.Cabin arrived( Shaft, direction: /R53/Cabin.Travel direction )
     pending floor service .= /R53/R49/Floor Service( Direction: /R53/Cabin.Travel direction )
 
-    pending floor service?
-        Call in progress -> meCabin ; Cabin arrived -> pending floor service :
-        Serviced stop -> /R53/Accessible Shaft Level; Wait to clear -> me
+    pending floor service? {
+        Call in progress -> meCabin
+        Cabin arrived -> pending floor service
+    } : {
+        Serviced stop -> /R53/Accessible Shaft Level
+        Wait to clear -> me
+    }
 transitions
     Call in progress > CALL IN PROGRESS
     Wait to clear > WAITING FOR REQUESTS TO CLEAR

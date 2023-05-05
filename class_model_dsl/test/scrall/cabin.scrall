@@ -12,5 +12,6 @@ Unlock -> /R4/Door
 !(/R2/Shaft.In service) ? Take out of service -> me
 /R4/Door.Emergency hold.set
 Passenger open -> /R4/Door
+Stop at nearest floor( Shaft ) => TRAN
 TRAN.Goto floor( Dest floor: /R53/Transfer.Destination floor, Shaft ) ?
-    Stop at nearest floor( Shaft ) => TRAN
+    Transport in progress -> | Transport unavailable -> me
