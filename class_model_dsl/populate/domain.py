@@ -4,6 +4,8 @@ domain.py – Convert parsed domain to a relation
 
 import logging
 from typing import TYPE_CHECKING
+import yaml
+from pathlib import Path
 from class_model_dsl.populate.attribute import Attribute
 from class_model_dsl.populate.mm_class import MMclass
 from class_model_dsl.populate.relationship import Relationship
@@ -12,8 +14,7 @@ from class_model_dsl.populate.subsystem import Subsystem
 from class_model_dsl.populate.state_model import StateModel
 from PyRAL.transaction import Transaction
 from PyRAL.relvar import Relvar
-from class_model_dsl.populate.pop_types import\
-    Domain_i, Modeled_Domain_i, Domain_Partition_i, Subsystem_i
+from class_model_dsl.populate.pop_types import Domain_i, Modeled_Domain_i, Domain_Partition_i, Subsystem_i
 
 if TYPE_CHECKING:
     from tkinter import Tk
@@ -24,9 +25,10 @@ class Domain:
     """
     _logger = logging.getLogger(__name__)
     subsystem_counter = {}
+    types = None
 
     @classmethod
-    def populate(cls, mmdb: 'Tk', domain:Domain_i, subsystems, statemodels):
+    def populate(cls, mmdb: 'Tk', package_path:Path, domain:Domain_i, subsystems, statemodels):
         """
         Insert all user model elements in this Domain into the corresponding Metamodel classes.
 
@@ -38,6 +40,11 @@ class Domain:
         cls._logger.info(f"Populating modeled domain [{domain.Name}]")
 
         Transaction.open(tclral=mmdb)
+
+        # Load domain specific types
+        with open(package_path / "types.yaml", 'r') as file:
+            cls.types = yaml.safe_load(file)
+
         Relvar.insert(relvar='Domain', tuples=[ domain,])
         # # TODO: For now assume this is always a modeled domain, but need a way to specify a realized domain
         Relvar.insert(relvar='Modeled_Domain', tuples=[
