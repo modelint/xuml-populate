@@ -43,18 +43,18 @@ class Database:
         Transaction.open(tclral=cls.tclRAL)
 
     @classmethod
-    def save(cls, dbname):
+    def save(cls, fname):
         """
-        Invoke whatever method does this. Not sure yet how to specify
+        Save the db in the supplied file
         """
-        pass
+        cls.tclRAL.eval(f"serializeToFile {fname}")
 
     @classmethod
-    def load(cls, dbname):
+    def load(cls, fname):
         """
-        Invoke whatever method does this. Not sure yet how to specify
+        Load the db from the supplied file
         """
-        pass
+        cls.tclRAL.eval(f"deserializeFromFile {fname}")
 
     @classmethod
     def names(cls, pattern: str = ""):

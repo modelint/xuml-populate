@@ -79,7 +79,7 @@ class UserModel:
         """
         Parse the class model
         """
-        sname = cm_path.stem
+        sname = cm_path.stem # Subsystem name obtained from file name
         try:
             cls.model = ModelParser(model_file_path=cm_path, debug=False)
         except MPIOException as e:

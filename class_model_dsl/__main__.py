@@ -49,6 +49,8 @@ def main():
     # If requested, rebuild the metamodel tclral
     if args.rebuild:
         Metamodel.create_db()
+    else:
+        Metamodel.load_db()
 
     # User model package specified?
     if args.model:

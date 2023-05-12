@@ -38,9 +38,13 @@ class Metamodel:
 
     db = None
 
+    # Metamodel Home
+    mm_home = Path(__file__).parent.parent / "metamodel"
+    mm_file = "mmdb.txt"
+
     # The user does not suppy the metamodel, so we can assume it is located within
     # our module as indicated.
-    metamodel_pkg = Path("class_model_dsl/metamodel")
+    metamodel_pkg = mm_home
 
     # Subsystem class model files
     subsys_cm_files = list(metamodel_pkg.glob('*.xcm'))
@@ -63,6 +67,14 @@ class Metamodel:
         'Mc': DBMult.ZERO_ONE_OR_MANY,
         '1c': DBMult.ZERO_OR_ONE
     }
+
+    @classmethod
+    def load_db(cls):
+        """
+        Load existing metamodel db
+        """
+        cls.db = Database.init()
+        Database.load(fname=cls.mm_home / cls.mm_file)
 
     @classmethod
     def create_db(cls):
@@ -91,6 +103,7 @@ class Metamodel:
                 cls.add_rel(r)
         Database.names()  # Log all created relvar names
         Database.constraint_names()  # Log all created constraints
+        Database.save(fname=cls.mm_home / cls.mm_file)
 
     @classmethod
     def parse(cls, cm_path):
