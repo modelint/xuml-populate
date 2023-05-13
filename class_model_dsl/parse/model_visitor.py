@@ -67,8 +67,11 @@ class SubsystemVisitor(PTNodeVisitor):
         """All of the classes"""
         return children
 
-    def visit_class_block(self, node, children):
-        """A complete class with attributes, methods, state model"""
+    @classmethod
+    def visit_class_block(cls, node, children):
+        """
+        class_header attr_block method_block? ee_block?
+        """
         class_attrs = children[0] | children[1]
         block = class_attrs if len(children) == 2 else class_attrs | children[2]
         return block
@@ -90,6 +93,78 @@ class SubsystemVisitor(PTNodeVisitor):
         """Beginning of class section, includes name, optional class_alias and optional import marker"""
         items = {k: v for d in children for k, v in d.items()}
         return items
+
+    @classmethod
+    def visit_method_block(cls, node, children):
+        """
+        method_header method*
+        """
+        return {'methods': children }
+
+    @classmethod
+    def visit_method(cls, node, children):
+        """
+        signature
+        """
+        return {'signature': children[0]}
+
+    @classmethod
+    def visit_signature(cls, node, children):
+        """
+        icaps_name input_parameters output_types?
+        """
+        name, iparams = children[:2]
+        otypes = None if len(children) < 3 else children[2]
+        return {'op_name': name, 'input': iparams, 'output': otypes}
+
+    @classmethod
+    def visit_input_parameters(cls, node, children):
+        """
+        parameters?
+        """
+        return [] if not children else children[0]
+
+    @classmethod
+    def visit_output_types(cls, node, children):
+        """
+        ' : ' icaps_all_name (', ' icaps_all_name)*
+        """
+        return children
+
+    @classmethod
+    def visit_parameters(cls, node, children):
+        """
+        parameter (', ' parameter)*
+        """
+        return children
+
+    @classmethod
+    def visit_parameter(cls, node, children):
+        """
+        name sp? ':' sp? name
+        """
+        return {'name': children[0], 'type': children[1]}
+
+    @classmethod
+    def visit_ee_block(cls, node, children):
+        """
+        ee_header ee_op*
+        """
+        return {'ee': children[0], 'ops': [] if len(children) < 2 else children[1:]}
+
+    @classmethod
+    def visit_ee_header(cls, node, children):
+        """
+        "ee" name
+        """
+        return children[0]
+
+    @classmethod
+    def visit_ee_op(cls, node, children):
+        """
+        direction signature
+        """
+        return {'direction': children[0], 'signature': children[1]}
 
     # Attributes
     def visit_attr_block(self, node, children):
@@ -305,9 +380,28 @@ class SubsystemVisitor(PTNodeVisitor):
     #---
 
     # Text and delimiters
+
+    @classmethod
+    def visit_direction(cls, node, children):
+        """
+        '<' | '>'
+        """
+        direction = 'egress' if children[0] == '>' else 'ingress'
+        return direction
+
     def visit_acword(self, node, children):
         """All caps word"""
         return node.value  # No children since this is a literal
+
+    def visit_acaps_name(self, node, children):
+        """Model element name"""
+        name = ''.join(children)
+        return name
+
+    def visit_icaps_all_name(self, node, children):
+        """Model element name"""
+        name = ''.join(children)
+        return name
 
     def visit_icaps_name(self, node, children):
         """Model element name"""
