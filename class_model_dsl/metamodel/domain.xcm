@@ -40,7 +40,7 @@ attributes
     Label : Element Label {I}
     Domain : Domain Name {I, R15}
 --
-class External Entity <import:External Entity>
+class External Entity <import:Class And Attribute>
 attributes
     EEnum {I, R14}
     Domain {I, R14}
@@ -123,7 +123,7 @@ relationships
     Class.(Cnum, Domain) -> Subsystem Element.(Label, Domain)
     Signature.(SIGnum, Domain) -> Subsystem Element.(Label, Domain)
     External Entity.(EEnum, Domain) -> Subsystem Element.(Label, Domain)
-    Activity Entity.(Anum, Domain) -> Subsystem Element.(Label, Domain)
+    Activity.(Anum, Domain) -> Subsystem Element.(Label, Domain)
 --
     R15
     defines, Mc Element

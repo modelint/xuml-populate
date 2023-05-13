@@ -17,6 +17,7 @@ Enumeration Value : string
 Event Name : string
 Flow ID : string
 ID Number : int
+Ingress_Egress : string
 Input Name : string
 Lineage Number : string
 Method Name : string
