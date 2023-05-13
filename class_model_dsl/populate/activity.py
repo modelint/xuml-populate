@@ -23,15 +23,22 @@ class Activity:
     sm = {} # For debugging purposes, delete once we get action semantics populated
 
     @classmethod
+    def populate_activity(cls, text, pa):
+        pass
+
+    @classmethod
     def populate_state(cls, mmdb: 'Tk', state: str, state_model: str, actions: str,
                        subsys_name: str, domain_name: str) -> str:
         """Constructor"""
 
 
+        # Parse scrall in this state and add it to temporary sm dictionary
         action_text = '\n'.join(actions)+'\n'
         if state_model not in cls.sm:
             cls.sm[state_model] = {}
-        cls.sm[state_model][state] = cls.parse(action_text) # To record parsed actions for debugging
+        parsed_activity = cls.parse(action_text)
+        cls.sm[state_model][state] = parsed_activity # To record parsed actions for debugging
+        cls.populate_activity(text=action_text, pa=parsed_activity)
 
         # Create the Susbystem Element and obtain a unique Anum
         Anum = Element.populate_unlabeled_subsys_element(mmdb,
