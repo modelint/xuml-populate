@@ -50,7 +50,7 @@ class Metamodel:
     subsys_cm_files = list(metamodel_pkg.glob('*.xcm'))
 
     metamodel = None  # The current parsed metamodel subsystem
-    types = None  # These are defined for all subsystems in the domain (not loaded yet)
+    types = None  # These are defined for all subsystems in the domain_name (not loaded yet)
 
     # An entry is added for each subsystem as it is parsed. Once all classes in the Modeled Domain
     # are added to the DB, this dictionary is consulted to create all relationship constraints.

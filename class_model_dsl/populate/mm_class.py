@@ -7,6 +7,7 @@ from PyRAL.transaction import Transaction
 from PyRAL.relvar import Relvar
 from class_model_dsl.populate.element import Element
 from class_model_dsl.populate.attribute import Attribute
+from class_model_dsl.populate.method import Method
 from class_model_dsl.populate.pop_types import Class_i, Alias_i
 
 from typing import TYPE_CHECKING
@@ -26,6 +27,10 @@ class MMclass:
     alias = None
     cnum = None
     identifiers = None
+    attributes = None
+    methods = None
+    ee = None
+    ee_ops = None
 
     @classmethod
     def populate(cls, mmdb: 'Tk', domain: str, subsystem, record):
@@ -35,6 +40,9 @@ class MMclass:
         cls.name = record['name']
         cls.attributes = record['attributes']
         cls.alias = record.get('alias')  # Optional
+        cls.methods = record.get('methods')
+        cls.ee = record.get('ee')
+        cls.ee_ops = record.get('ee_ops')
 
         # Get the next cnum
         cls.cnum = subsystem.next_cnum()
@@ -57,3 +65,8 @@ class MMclass:
                                class_identifiers=cls.identifiers, record=a)
 
         Transaction.execute()
+
+        # Add methods
+        for m in cls.methods:
+            Method.populate(mmdb=mmdb, domain_name=domain, subsys_name=subsystem.name,
+                            class_name=cls.name, record=m['signature'])

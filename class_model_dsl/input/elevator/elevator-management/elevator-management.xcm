@@ -10,21 +10,6 @@ metadata
     Organization logo > mint
 domain Elevator Management, EVMAN
 subsystem Elevator, ELEV 1-99
-class Cabin
-attributes
-    Shaft {I, R2, R43}
-    Travel direction : Direction
-    Current floor {R43}
-methods
-    Estimate delay( calling floor : Level Name, service dir : Direction ) : Duration
-    Count stops oneway( aslevs : Accessible Shaft Level, search dir : Direction ) : Count
-    Count stops roundtrip( aslevs : Accessible Shaft Level ) : Count
-    Ping( dir: Direction ) : Accessible Shaft Level
-    Ping both ways() : Accessible Shaft Level
-    Update location( floor : Level Name )
-ee CABIN
-    > Go to floor( dest floor : Level Name, shaft : Shaft ID ) : Boolean
---
 class Accessible Shaft Level
 attributes
     Floor {I, R3}
@@ -56,6 +41,21 @@ class Building
 attributes
     Name : Building Name {I}
     Average floor gap : Distance
+--
+class Cabin
+attributes
+    Shaft {I, R2, R43}
+    Travel direction : Direction
+    Current floor {R43}
+methods
+    Estimate delay( calling floor : Level Name, service dir : Direction ) : Duration
+    Count stops oneway( aslevs : Accessible Shaft Level, search dir : Direction ) : Count
+    Count stops roundtrip( aslevs : Accessible Shaft Level ) : Count
+    Ping( dir: Direction ) : Accessible Shaft Level
+    Ping both ways() : Accessible Shaft Level
+    Update location( floor : Level Name )
+ee CABIN
+    > Go to floor( dest floor : Level Name, shaft : Shaft ID ) : Boolean
 --
 class Door
 attributes

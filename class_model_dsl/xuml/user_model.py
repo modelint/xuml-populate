@@ -5,7 +5,7 @@ What we call the 'user model' is what the Object Management Group refers to as a
 to distinguish it from an M2 level model (metamododel) or an M0 level model which we just call a
 user model or M1 population
 
-For our purposes we will use the Elevator Management domain as one of our user / M1 test cases
+For our purposes we will use the Elevator Management domain_name as one of our user / M1 test cases
 """
 
 import sys
@@ -97,9 +97,9 @@ class UserModel:
         cls._logger.info("Populating the model")
         from PyRAL.database import Database # Metamodel load or creates has already initialized the DB session
 
-        # Verify that only one domain has been specified
-        # For now we are processing only a single domain.
-        # Therefore each subsystem should specify the same domain. If not, we exit with an error.
+        # Verify that only one domain_name has been specified
+        # For now we are processing only a single domain_name.
+        # Therefore each subsystem should specify the same domain_name. If not, we exit with an error.
         for sname, subsys in cls.model_subsystem.items():
             if not cls.domain:
                 cls.domain = subsys.domain
@@ -107,7 +107,7 @@ class UserModel:
                 cls._logger.error(f"Multiple domains: {cls.domain}, {subsys.domain}]")
                 raise MultipleDomainsException
 
-        # Populate the domain
+        # Populate the domain_name
         Domain.populate(mmdb=Database.tclRAL, package_path=cls.user_model_pkg,
                         domain=Domain_i(Name=cls.domain['name'], Alias=cls.domain['alias']),
                         subsystems=cls.model_subsystem, statemodels=cls.statemodels)

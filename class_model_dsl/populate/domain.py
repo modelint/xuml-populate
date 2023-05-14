@@ -1,5 +1,5 @@
 """
-domain.py – Convert parsed domain to a relation
+domain_name.py – Convert parsed domain_name to a relation
 """
 
 import logging
@@ -21,7 +21,7 @@ if TYPE_CHECKING:
 
 class Domain:
     """
-    Create a domain relation
+    Create a domain_name relation
     """
     _logger = logging.getLogger(__name__)
     subsystem_counter = {}
@@ -32,21 +32,21 @@ class Domain:
         """
         Insert all user model elements in this Domain into the corresponding Metamodel classes.
 
-        :param domain: Name of the domain
+        :param domain: Name of the domain_name
         :param mmdb:  Metamodel database
-        :param name:  Name of the domain
-        :param subsystems:  All parsed subsystems for the domain
+        :param name:  Name of the domain_name
+        :param subsystems:  All parsed subsystems for the domain_name
         """
-        cls._logger.info(f"Populating modeled domain [{domain.Name}]")
+        cls._logger.info(f"Populating modeled domain_name [{domain.Name}]")
 
         Transaction.open(tclral=mmdb)
 
-        # Load domain specific types
+        # Load domain_name specific types
         with open(package_path / "types.yaml", 'r') as file:
             cls.types = yaml.safe_load(file)
 
         Relvar.insert(relvar='Domain', tuples=[ domain,])
-        # # TODO: For now assume this is always a modeled domain, but need a way to specify a realized domain
+        # # TODO: For now assume this is always a modeled domain_name, but need a way to specify a realized domain_name
         Relvar.insert(relvar='Modeled_Domain', tuples=[
             Modeled_Domain_i(Name=domain.Name),
             ])

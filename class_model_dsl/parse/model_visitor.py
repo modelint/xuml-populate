@@ -41,7 +41,7 @@ class SubsystemVisitor(PTNodeVisitor):
         return {'name': name }
 
     def visit_domain_alias(self, node, children):
-        """Alias of domain"""
+        """Alias of domain_name"""
         return { 'alias': children[0] }
 
     # Subsystem
@@ -55,7 +55,7 @@ class SubsystemVisitor(PTNodeVisitor):
         return {'name': name }
 
     def visit_subsystem_alias(self, node, children):
-        """Alias of domain"""
+        """Alias of domain_name"""
         return { 'alias': children[0] }
 
     def visit_num_range(self, node, children):
@@ -72,9 +72,13 @@ class SubsystemVisitor(PTNodeVisitor):
         """
         class_header attr_block method_block? ee_block?
         """
-        class_attrs = children[0] | children[1]
-        block = class_attrs if len(children) == 2 else class_attrs | children[2]
-        return block
+        ch = children.results['class_header'][0]
+        ablock = children.results['attr_block'][0]
+        mblock = children.results.get('method_block')
+        mblock = {'methods':[]} if not mblock else mblock[0]
+        eeblock = children.results.get('ee_block')
+        eeblock = {'ee': None, 'ops': []} if not eeblock else eeblock[0]
+        return ch | ablock | mblock | eeblock
 
     def visit_class_name(self, node, children):
         name = ''.join(children)

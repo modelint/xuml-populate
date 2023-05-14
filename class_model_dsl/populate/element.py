@@ -11,21 +11,21 @@ from class_model_dsl.populate.pop_types import Element_i, Spanning_Element_i, Su
 if TYPE_CHECKING:
     from tkinter import Tk
 
-_signum_counters = {} # A separate counter per domain
+_signum_counters = {} # A separate counter per domain_name
 
 class Element:
     """
     Create a State Model relation
     """
     _logger = logging.getLogger(__name__)
-    _num_counters = {}  # A separate number counter per domain
+    _num_counters = {}  # A separate number counter per domain_name
 
     @classmethod
     def init_counter(cls, key: str) -> int:
         """
         Create a new counter using the supplied key if it does not already exist in the num counter dict
 
-        :param key: Usually the domain name but could be subsystem_name:domain_name or something else
+        :param key: Usually the domain_name name but could be subsys_name:domain_name or something else
         :return: The next available number
         """
         # Should refactor this into an Element population numbering method
@@ -43,7 +43,7 @@ class Element:
         :param mmdb: The Metamodel DB
         :param prefix: Prefixed to counter to create unique string label
         :param subsystem_name: The name of the subsystem since these are Subsystem Elements
-        :param domain_name: The element belongs to this domain
+        :param domain_name: The element belongs to this domain_name
         :return: generated label such as SIG12, A47, etc
         """
 
@@ -69,7 +69,7 @@ class Element:
         :param mmdb: The Metamodel DB
         :param label: The user or generated label such as R812 for rnums or C7 for cnums
         :param subsystem_name: The name of the subsystem since these are Subsystem Elements
-        :param domain_name: The element belongs to this domain
+        :param domain_name: The element belongs to this domain_name
         """
 
         # We don't need to use our counter since the label has already been specified

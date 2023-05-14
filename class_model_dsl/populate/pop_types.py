@@ -108,6 +108,10 @@ Asynchronous_Activity_i = namedtuple('Asynchronous_Activity_i', 'Anum Domain')
 State_Activity_i = namedtuple('State_Activity_i', 'Anum State State_model Domain')
 Signature_i = namedtuple('Signature_i', 'SIGnum Domain')
 Parameter_i = namedtuple('Parameter_i', 'Name Signature Domain Input_flow Activity')
+Method_Signature_i = namedtuple('Method_Signature_i', 'SIGnum Method Class Domain')
+Method_i = namedtuple('Method_i', 'Anum Name Class Domain')
+Synchronous_Activity_i = namedtuple('Synchronous_Activity_i', 'Anum Domain')
+Synchronous_Output_i = namedtuple('Synchronous_Output_i', 'Activity Output_flow Domain')
 
 # Flow
 Data_Flow_i = namedtuple('Data_Flow_i', 'ID Activity Domain Type')

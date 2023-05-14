@@ -16,14 +16,26 @@ if TYPE_CHECKING:
 
 class Activity:
     """
-    Create a State Model relation
+    Create an Activity relation
     """
     _logger = logging.getLogger(__name__)
 
     sm = {} # For debugging purposes, delete once we get action semantics populated
 
     @classmethod
-    def populate_activity(cls, text, pa):
+    def populate(cls, ):
+
+    @classmethod
+    def populate_method(cls, ):
+        Anum = Element.populate_unlabeled_subsys_element(mmdb,
+                                                         prefix='A',
+                                                         subsystem_name=subsys_name, domain_name=domain_name)
+        Relvar.insert(relvar='Activity', tuples=[
+            Activity_i(Anum=Anum, Domain=domain_name, Actions=action_text)
+        ]) # TODO: Action text must be passed to an Action Language parser to obtain Action semantics
+        Relvar.insert(relvar='Asynchronous_Activity', tuples=[
+            Asynchronous_Activity_i(Anum=Anum, Domain=domain_name)
+        ])
         pass
 
     @classmethod
@@ -38,7 +50,7 @@ class Activity:
             cls.sm[state_model] = {}
         parsed_activity = cls.parse(action_text)
         cls.sm[state_model][state] = parsed_activity # To record parsed actions for debugging
-        cls.populate_activity(text=action_text, pa=parsed_activity)
+        # cls.populate_activity(text=action_text, pa=parsed_activity)
 
         # Create the Susbystem Element and obtain a unique Anum
         Anum = Element.populate_unlabeled_subsys_element(mmdb,
