@@ -23,7 +23,28 @@ class Activity:
     sm = {} # For debugging purposes, delete once we get action semantics populated
 
     @classmethod
-    def populate(cls, ):
+    def populate_synchronous(cls, text:str, domain_name:str) -> int:
+        """
+        Populate Synchronous Activity
+        :param text: Unparsed scrall text
+        :param domain_name:
+        :return: Anum
+        """
+        pass
+
+    @classmethod
+    def populate_asynchronous(cls, text:str, domain_name:str, output:str = None) -> int:
+        """
+        Populate Synchronous Activity
+        :param text: Unparsed scrall text
+        :param domain_name:
+        :param output:
+        :return: Anum
+        """
+        pass
+
+
+
 
     @classmethod
     def populate_method(cls, ):
