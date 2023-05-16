@@ -2,9 +2,9 @@ metadata
     Title : Activity Subsystem / Shlaer-Mellor Metamodel
     Author : Leon Starr
     Document ID : mint.sm-meta.action.td.12
-    Version : 0.7.3
+    Version : 0.8.0
     /// Creation date : August 13, 2022
-    Modification date : May 13, 2023
+    Modification date : May 15, 2023
     Organization : Model Integration, LLC / www.modelint.com
     Copyright notice > MIT
     Organization logo > mint
@@ -21,41 +21,16 @@ attributes
     Anum : Activity Number {I, R825}
     Domain : Domain Name {I, R825}
 --
-class Asynchronous External Entity Operation
+class Asynchronous Ingress Operation <import:External Entity>
 attributes
-    Anum : Activity Number {I, R830}
-    Name : Operation Name {I2, R832}
-    EE : EE Name {I2, R832}
-    Domain : Domain Name {I, I2, R830, R832}
---
-class Class <import:Class>
-attributes
-    Name {I}
-    Domain {I}
+    Anum {I, R830}
+    Domain {I, R830}
 --
 class Data Flow <import:Flow>
 attributes
     ID {I}
     Activity {I}
     Domain {I}
---
-class External Entity Operation
-attributes
-    Name : Operation Name {I}
-    EE : EE Name {I, R833}
-    Domain : Domain Name {I, R833}
---
-class External Entity <import:External Entity>
-attributes
-    Name {I}
-    Domain {I}
---
-class External Entity Operation Signature
-attributes
-    SIGnum : Signature Number {I, R837}
-    EE : EE Name {I2, R836}
-    Operation : Operation Name {I2, R836}
-    Domain : Domain Name {I, I2, R837, R836}
 --
 class Method
 attributes
@@ -70,6 +45,19 @@ attributes
     Method : Method Name {I2, R835}
     Class : Class Name {I2, R835}
     Domain : Domain Name {I, I2, R837, R835}
+--
+class Operation <import:External Entity>
+attributes
+    Name {I}
+    EE {I}
+    Domain {I}
+--
+class Operation Signature
+attributes
+    SIGnum : Signature Number {I, R837}
+    EE : EE Name {I2, R836}
+    Operation : Operation Name {I2, R836}
+    Domain : Domain Name {I, I2, R837, R836}
 --
 class Parameter
 attributes
@@ -101,13 +89,10 @@ attributes
     Anum : Activity Number {I, R825}
     Domain : Domain Name {I, R825}
 --
-class Synchronous External Entity Operation
+class Synchronous Ingress Operation <import:External Entity>
 attributes
-    Anum : Activity Number {I, R826}
-    Name : Operation Name {I2, R832}
-    EE : EE Name {I2, R832}
-    Domain : Domain Name {I, I2, R826, R832}
-    Direction : Ingress_Egress
+    Anum {I, R826}
+    Domain {I, R826}
 --
 class Synchronous Output
 attributes
@@ -125,13 +110,8 @@ relationships
     R826
     Synchronous Activity +
         Method
-        Synchronous External Entity Operation
+        Synchronous Ingress Operation
     <subclass>.(Anum, Domain) -> Activity.(Anum, Domain)
---
-    R827
-    defines, Mc Method
-    is defined by, 1 Class
-    Method.(Class, Domain) -> Class.(Name, Domain)
 --
     R828
     input is defined by, 1 Signature
@@ -154,17 +134,6 @@ relationships
     feeds, 1 Data Flow
     Synchronous Output.(Output flow, Activity, Domain) -> Data Flow.(ID, Activity, Domain)
 --
-    R832
-    External Entity Operation +
-        Asynchronous External Entity Operation
-        Synchronous External Entity Operation
-    <subclass>.(Name, EE, Domain) -> External Entity Operation.(Name, EE, Domain)
---
-    R833
-    defines, M External Entity Operation
-    is defined on, 1 External Entity
-    External Entity Operation.(EE, Domain) -> External Entity.(Name, Domain)
---
     R834
     provides value for, Mc Parameter
     gets value from, 1 Data Flow
@@ -177,13 +146,13 @@ relationships
 --
     R836
     defines input into, 1 External Entity Operation
-    specifies required input with, 1 External Entity Operation Signature
-    External Entity Operation Signature.(Operation, EE, Domain) -> External Entity Operation.(Name, EE, Domain)
+    specifies required input with, 1 Operation Signature
+    Operation Signature.(Operation, EE, Domain) -> External Entity Operation.(Name, EE, Domain)
 --
     R837
     Signature +
         State Signature
         Method Signature
-        External Entity Operation Signature
+        Operation Signature
     <subclass>.(SIGnum, Domain) -> Signature.(SIGnum, Domain)
 --

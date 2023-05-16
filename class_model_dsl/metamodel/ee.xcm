@@ -28,7 +28,8 @@ attributes
 --
 class External Entity, EE
 attributes
-    Name : EE Name {I}
+    EEnum : EE Number {I}
+    Name : EE Name {I2}
     Class : Class Name {I2, R50}
     Domain : Domain Name {I, I2, R50}
 --
