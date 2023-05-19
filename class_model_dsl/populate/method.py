@@ -6,8 +6,8 @@ import logging
 from PyRAL.transaction import Transaction
 from PyRAL.relvar import Relvar
 from class_model_dsl.populate.signature import Signature
-from class_model_dsl.populate.pop_types import Method_Signature_i, Method_i,\
-    Synchronous_Output_i, Synchronous_Activity_i, Activity_i
+from class_model_dsl.populate.activity import Activity
+from class_model_dsl.populate.pop_types import Method_Signature_i, Method_i
 
 from typing import TYPE_CHECKING
 
@@ -33,12 +33,14 @@ class Method:
         Relvar.insert(relvar='Method Signature', tuples=[
             Method_Signature_i(SIGnum=signum, Method=record['op_name'], Class=class_name, Domain=domain_name)
         ])
+
+        # Create the method
+        # TODO: get text from record and supply below
+        anum = Activity.populate_method(mmdb, action_text='', class_name=class_name, subsys_name=subsys_name, domain_name=domain_name)
+
         Relvar.insert(relvar='Method', tuples=[
             Method_i(Anum=None, Name=record['op_name'], Class=class_name, Domain=domain_name)
         ])
-
-        # Create the method and method signature
-
 
         Transaction.execute()
 
