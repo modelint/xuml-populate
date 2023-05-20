@@ -40,7 +40,7 @@ attributes
     Label : Element Label {I}
     Domain : Domain Name {I, R15}
 --
-class External Entity <import:Class And Attribute>
+class External Entity <import:External Entity>
 attributes
     EEnum {I, R14}
     Domain {I, R14}

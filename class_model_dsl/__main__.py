@@ -1,5 +1,5 @@
 """
-xUML class model parser
+xUML domain parser
 
 """
 import logging
@@ -23,11 +23,13 @@ def get_logger():
 
 # Configure the expected parameters and actions for the argparse module
 def parse(cl_input):
-    parser = argparse.ArgumentParser(description='xUML class model parser')
-    parser.add_argument('-m', '--model', action='store',
-                        help='class model file name')
+    parser = argparse.ArgumentParser(description='xUML model parser')
+    parser.add_argument('-d', '--domain', action='store',
+                        help='Name of the domain package')
     parser.add_argument('-R', '--rebuild', action='store_true',
                         help='Rebuild the metamodel database.'),
+    parser.add_argument('-D', '--debug', action='store_true',
+                        help='Debug mode'),
     parser.add_argument('-V', '--version', action='store_true',
                         help='Print the current version of parser')
     return parser.parse_args(cl_input)
@@ -36,14 +38,14 @@ def parse(cl_input):
 def main():
     # Start logging
     logger = get_logger()
-    logger.info(f'Model parser version: {version}')
+    logger.info(f'xUML domain parser version: {version}')
 
     # Parse the command line args
     args = parse(sys.argv[1:])
 
     if args.version:
         # Just print the version and quit
-        print(f'xUML class model parser version: {version}')
+        print(f'xUML domain parser version: {version}')
         sys.exit(0)
 
     # If requested, rebuild the metamodel tclral
@@ -52,12 +54,10 @@ def main():
     else:
         Metamodel.load_db()
 
-    # User model package specified?
-    if args.model:
-        user_model_path = Path(args.model)
-
-        # Process the user's model
-        UserModel.load(user_model_pkg=user_model_path)
+    # User model domain package specified?
+    if args.domain:
+        domain_pkg_path = Path(args.domain)
+        UserModel.load(domain_pkg_path)
 
     logger.info("No problemo")  # We didn't die on an exception, basically
     print("\nNo problemo")

@@ -1,3 +1,4 @@
+metadata
     Title : External Entity Subsystem / Shlaer-Mellor Metamodel
     Author : Leon Starr
     Document ID : mint.sm-meta.class.ee.td.7
@@ -13,7 +14,8 @@ class Asynchronous Ingress Operation
 attributes
     Name : Operation Name {I, R52}
     EE : EE Name {I, R52}
-    Domain : Domain Name {I, R52}
+    Domain : Domain Name {I, I2, R52, R830}
+    Anum : Activity Number {I2, R830}
 --
 class Class <import:Class Attribute>
 attributes
@@ -42,14 +44,15 @@ attributes
 class Operation, OP
 attributes
     Name : Operation Name {I}
-    EE : EE Name {R51}
-    Domain : Domain Name {R51}
+    EE : EE Name {I, R51}
+    Domain : Domain Name {I, R51}
 --
 class Synchronous Ingress Operation
 attributes
     Name : Operation Name {I, R52}
     EE : EE Name {I, R52}
-    Domain : Domain Name {I, R52}
+    Domain : Domain Name {I, I2, R52, R826}
+    Anum : Activity Number {I2, R826}
 --
 relationships
     R50

@@ -68,13 +68,6 @@ attributes
     Class : Class Name {I, R25}
     Domain : Domain Name {I, R25}
 --
-class External Entity
-attributes
-    Name : EE Name {I2}
-    EEnum : EE Number {I, R14}
-    Class : Class Name {I3, R24}
-    Domain : Domain Name {I, I2, I3, R14, R24}
---
 class Identifier
 attributes
     Number : ID Number {I}

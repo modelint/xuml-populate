@@ -28,8 +28,7 @@ class UserModel:
     """
     _logger = logging.getLogger(__name__)
 
-    user_model_pkg = None
-    user_model_path = None
+    domain_path = None
     model_subsystem = {}  # Parsed subsystems, keyed by subsystem file name
     subsystem = None
     statemodels = {} # Parsed state models, keyed by name (class or rnum)
@@ -38,22 +37,36 @@ class UserModel:
     domain = None
 
     @classmethod
-    def load(cls, user_model_pkg: Path):
+    def load(cls, domain_pkg_path: Path):
         """
+        A user model is defined, for now, as a single domain within a system.
+        The domain defines a set of types (data types) and a subsystems folder
+        containing one or more subsystems.
 
-        :param user_model_pkg:
+        Each subsystem consists of classes, state machines, operations, and
+        methods.
+
+        Here we load the entire contents of the specified domain package.
+
+        :param domain_pkg_path:  The path to the user domain model
         """
-        cls._logger.info(f"Processing user class models in : [{user_model_pkg}]")
-        cls.user_model_pkg = user_model_pkg
+        cls._logger.info(f"Processing user class models in : [{domain_pkg_path}]")
+        cls.domain_path = domain_pkg_path
 
         # Load the class model subsystems
-        for subsys_cm_file in cls.user_model_pkg.glob("*.xcm"):
+        # TODO: Process multiple user model doamins, for now we assume only one
+        subsystems = cls.domain_path / "subsystems"
+        for s in subsystems.iterdir():
+            cm_file_name = s.stem + ".xcm"
+            subsys_cm_file = s / cm_file_name
             cls._logger.info(f"Processing user subsystem class model file: [{subsys_cm_file}]")
             cls.parse_cm(cm_path=subsys_cm_file)
-        # Load and parse the state models
-        for sm_file in cls.user_model_pkg.glob("*.xsm"):
-            cls._logger.info(f"Processing user subsystem state model file: [{sm_file}]")
-            cls.parse_sm(sm_path=sm_file)
+
+            # Load and parse the subsystem state machines
+            sm_path = s / "state-machines"
+            for sm_file in sm_path.glob("*.xsm"):
+                cls._logger.info(f"Processing user subsystem state model file: [{sm_file}]")
+                cls.parse_sm(sm_path=sm_file)
         cls.populate()
 
     @classmethod
