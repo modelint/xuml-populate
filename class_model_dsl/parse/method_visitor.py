@@ -70,13 +70,15 @@ class SubsystemVisitor(PTNodeVisitor):
     @classmethod
     def visit_class_block(cls, node, children):
         """
-        class_header ee_header? attr_block block_end
+        class_header attr_block method_block? ee_block?
         """
         ch = children.results['class_header'][0]
         ablock = children.results['attr_block'][0]
-        eeheader = children.results.get('ee_header')
-        eeheader = {} if not eeheader else { 'ee' : eeheader[0] }
-        return ch | ablock | eeheader
+        mblock = children.results.get('method_block')
+        mblock = {'methods':[]} if not mblock else mblock[0]
+        eeblock = children.results.get('ee_block')
+        eeblock = {'ee': None, 'ops': []} if not eeblock else eeblock[0]
+        return ch | ablock | mblock | eeblock
 
     def visit_class_name(self, node, children):
         name = ''.join(children)
@@ -97,11 +99,76 @@ class SubsystemVisitor(PTNodeVisitor):
         return items
 
     @classmethod
+    def visit_method_block(cls, node, children):
+        """
+        method_header method*
+        """
+        return {'methods': children }
+
+    @classmethod
+    def visit_method(cls, node, children):
+        """
+        signature
+        """
+        return {'signature': children[0]}
+
+    @classmethod
+    def visit_signature(cls, node, children):
+        """
+        icaps_name input_parameters output_types?
+        """
+        name, iparams = children[:2]
+        otypes = None if len(children) < 3 else children[2]
+        return {'op_name': name, 'input': iparams, 'output': otypes}
+
+    @classmethod
+    def visit_input_parameters(cls, node, children):
+        """
+        parameters?
+        """
+        return [] if not children else children[0]
+
+    @classmethod
+    def visit_output_types(cls, node, children):
+        """
+        ' : ' icaps_all_name (', ' icaps_all_name)*
+        """
+        return children
+
+    @classmethod
+    def visit_parameters(cls, node, children):
+        """
+        parameter (', ' parameter)*
+        """
+        return children
+
+    @classmethod
+    def visit_parameter(cls, node, children):
+        """
+        name sp? ':' sp? name
+        """
+        return {'name': children[0], 'type': children[1]}
+
+    @classmethod
+    def visit_ee_block(cls, node, children):
+        """
+        ee_header ee_op*
+        """
+        return {'ee': children[0], 'ops': [] if len(children) < 2 else children[1:]}
+
+    @classmethod
     def visit_ee_header(cls, node, children):
         """
         "ee" name
         """
         return children[0]
+
+    @classmethod
+    def visit_ee_op(cls, node, children):
+        """
+        direction signature
+        """
+        return {'direction': children[0], 'signature': children[1]}
 
     # Attributes
     def visit_attr_block(self, node, children):

@@ -30,15 +30,28 @@ text_item = ':' sp* r'.*' // Field content can be any text
 
 // Classes
 class_set = class_block*  // All classes in the subsystem
-class_block = class_header ee_header? attr_block block_end
+class_block = class_header attr_block method_block? ee_block? block_end
 class_header = "class" sp class_name class_alias? import? nl
 class_name = icaps_name
 class_alias = ',' sp+ acword
 import = sp+ '<import:' icaps_name '>' // Import marker and name of origin subsystem
 class_name = icaps_name
 
+// Methods
+method_block = method_header method*
+method_header = 'methods' nl
+method = indent signature nl
+signature = icaps_name input_parameters output_types?
+input_parameters = '(' sp? (parameters? sp?) ')'
+output_types = ' : ' icaps_all_name (', ' icaps_all_name)*
+parameters = parameter (', ' parameter)*
+parameter = phrase sp? ':' sp? icaps_all_name
+
 // EE
+ee_block = ee_header ee_op*
 ee_header = "ee" sp acaps_name nl
+ee_op = indent direction sp signature nl
+direction = '<' / '>'
 
 // Attributes
 attr_block = attr_header attribute+ // A set of attributes
