@@ -9,6 +9,7 @@ from class_model_dsl.populate.element import Element
 from class_model_dsl.populate.attribute import Attribute
 from class_model_dsl.populate.method import Method
 from class_model_dsl.populate.pop_types import Class_i, Alias_i
+from pathlib import Path
 
 from typing import TYPE_CHECKING
 
@@ -33,7 +34,7 @@ class MMclass:
     ee_ops = None
 
     @classmethod
-    def populate(cls, mmdb: 'Tk', domain: str, subsystem, record):
+    def populate(cls, mmdb: 'Tk', domain_path:Path, domain: str, subsystem, record):
         """Constructor"""
 
         cls.record = record
@@ -67,6 +68,7 @@ class MMclass:
         Transaction.execute()
 
         # Add methods
-        for m in cls.methods:
+        method_path = domain_path / "subsystems" / subsystem.name / "methods" / cls.name
+        for m in method_path.glob("*.scrall"):
             Method.populate(mmdb=mmdb, domain_name=domain, subsys_name=subsystem.name,
                             class_name=cls.name, record=m['signature'])

@@ -28,13 +28,14 @@ class Domain:
     types = None
 
     @classmethod
-    def populate(cls, mmdb: 'Tk', package_path:Path, domain:Domain_i, subsystems, statemodels):
+    def populate(cls, mmdb: 'Tk', domain_path:Path, domain:Domain_i, subsystems, statemodels):
         """
         Insert all user model elements in this Domain into the corresponding Metamodel classes.
 
         :param domain: Name of the domain_name
         :param mmdb:  Metamodel database
         :param name:  Name of the domain_name
+        :param domain_path:
         :param subsystems:  All parsed subsystems for the domain_name
         """
         cls._logger.info(f"Populating modeled domain_name [{domain.Name}]")
@@ -42,7 +43,7 @@ class Domain:
         Transaction.open(tclral=mmdb)
 
         # Load domain_name specific types
-        with open(package_path / "types.yaml", 'r') as file:
+        with open(domain_path / "types.yaml", 'r') as file:
             cls.types = yaml.safe_load(file)
 
         Relvar.insert(relvar='Domain', tuples=[ domain,])
@@ -65,7 +66,7 @@ class Domain:
             subsys = Subsystem(record=s)
             cls._logger.info("Populating classes")
             for c in s.classes:
-                MMclass.populate(mmdb=mmdb, domain=domain.Name, subsystem=subsys, record=c)
+                MMclass.populate(mmdb=mmdb, domain_path=domain_path, domain=domain.Name, subsystem=subsys, record=c)
             cls._logger.info("Populating relationships")
             for r in s.rels:
                 Relationship.populate(mmdb=mmdb, domain=domain.Name, subsystem=subsys, record=r)

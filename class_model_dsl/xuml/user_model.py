@@ -31,6 +31,7 @@ class UserModel:
     domain_path = None
     model_subsystem = {}  # Parsed subsystems, keyed by subsystem file name
     subsystem = None
+    methods = {} # Parsed methods, keyed by class
     statemodels = {} # Parsed state models, keyed by name (class or rnum)
     statemodel = None
     model = None
@@ -62,14 +63,40 @@ class UserModel:
             cls._logger.info(f"Processing user subsystem class model file: [{subsys_cm_file}]")
             cls.parse_cm(cm_path=subsys_cm_file)
 
+            # Load and parse all the methods
+            method_path = subsystems / s.name / "methods"
+            for class_dir in method_path.iterdir():
+                for method_file in class_dir.glob("*.scrall"):
+                    cls.parse_method(method_file)
+
             # Load and parse the subsystem state machines
             sm_path = s / "state-machines"
             for sm_file in sm_path.glob("*.xsm"):
                 cls._logger.info(f"Processing user subsystem state model file: [{sm_file}]")
                 cls.parse_sm(sm_path=sm_file)
+
         cls.populate()
 
     @classmethod
+    def parse_method(cls, method_path: Path):
+        """
+        Parse the state model
+
+        :param sm_path:
+        """
+        method = method_path.stem
+        pass
+        try:
+            cls.statemodel = StateModelParser(model_file_path=sm_path, debug=False)
+        except MPIOException as e:
+            sys.exit(e)
+        try:
+            cls.statemodels[sname] = cls.statemodel.parse()
+        except ModelParseError as e:
+            sys.exit(e)
+        return cls.statemodels[sname]
+    @classmethod
+
     def parse_sm(cls, sm_path: Path):
         """
         Parse the state model
@@ -121,6 +148,6 @@ class UserModel:
                 raise MultipleDomainsException
 
         # Populate the domain_name
-        Domain.populate(mmdb=Database.tclRAL, package_path=cls.user_model_pkg,
+        Domain.populate(mmdb=Database.tclRAL, domain_path=cls.domain_path,
                         domain=Domain_i(Name=cls.domain['name'], Alias=cls.domain['alias']),
                         subsystems=cls.model_subsystem, statemodels=cls.statemodels)

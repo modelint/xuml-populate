@@ -1,127 +1,24 @@
-// Model Markdown Arpeggio Clean Peg Grammar
+// This grammar describes the content of an xUML Method file
 
-// For now we concentrate on drawing a class diagram, so only class and relationship
-// content is here for now
+method = BLOCK_END class_prefix signature BLOCK_END activity EOF
 
-// Attribute and method structure is not parsed since it is simply rendered without
-// further interpretation on a class diagram
-
-//ig_line = r'\s*(///.*)?'
-
-
-// Subsystem
-// The only thing required is a subsystem name and a set of possibly empty classes
-subsystem = metadata? domain_header subsystem_header class_set rel_section? EOF
-domain_header = "domain" sp domain_name domain_alias nl  // Declares the name of the domain
-domain_name = icaps_name
-domain_alias = ',' sp acword
-subsystem_header = "subsystem" sp subsystem_name subsystem_alias sp num_range nl  // Declares the name of the subsystem
-subsystem_name = icaps_name
-subsystem_alias = ',' sp acword
-num_range = ordinal '-' ordinal
-
-// Metadata
-metadata = metadata_header data_item*
-metadata_header = "metadata" nl // Metadata header
-data_item = indent item_name sp* (resource_item / text_item) nl // Metadata item
-item_name = iword delim word* // Meta data item starts with initial cap
-resource_item = '>' sp* word (delim word)* // Resource is a name
-text_item = ':' sp* r'.*' // Field content can be any text
-
-// Classes
-class_set = class_block*  // All classes in the subsystem
-class_block = class_header attr_block method_block? ee_block? block_end
-class_header = "class" sp class_name class_alias? import? nl
-class_name = icaps_name
-class_alias = ',' sp+ acword
-import = sp+ '<import:' icaps_name '>' // Import marker and name of origin subsystem
-class_name = icaps_name
-
-// Methods
-method_block = method_header method*
-method_header = 'methods' nl
-method = indent signature nl
+class_prefix = icaps_name '.'
 signature = icaps_name input_parameters output_types?
-input_parameters = '(' sp? (parameters? sp?) ')'
+input_parameters = '(' SP? (parameters? SP?) ')'
 output_types = ' : ' icaps_all_name (', ' icaps_all_name)*
 parameters = parameter (', ' parameter)*
-parameter = phrase sp? ':' sp? icaps_all_name
+parameter = phrase SP? ':' SP? icaps_all_name
 
-// EE
-ee_block = ee_header ee_op*
-ee_header = "ee" sp acaps_name nl
-ee_op = indent direction sp signature nl
-direction = '<' / '>'
+activity = body_line*
+body_line = indent r'.*' NL // An unstructured line of text
 
-// Attributes
-attr_block = attr_header attribute+ // A set of attributes
-attr_header = "attributes" nl
-attribute = indent attr_name (' : ' type_name)? (sp attr_tags)? nl
-attr_name = icaps_name
-type_name = icaps_name
-attr_tags = '{' attr_tag (',' sp attr_tag )* '}' // {I, I2, R29c} for example
-attr_tag = itag / rtag
-itag = '*'? 'I' ordinal? // Identifier number, both I and I1 mean the same thing, optional super identifier * symbol
-rtag = 'O'? 'R' ordinal 'c'? // Relationship number and optional c constraint signifier
-
-// Relationships
-// ---
-rel_section = relationship_header rel*  // All relationships in the subsystem
-relationship_header = "relationships" nl
-rel = rname (ordinal_rel / binary_rel / gen_rel) block_end  // A rel is an ordinal, association or a generalization
-rname = indent rnum nl  // Name of a rel is its rnum
-
-// Ordinal
-ordinal_rel = ascend oform
-ascend = indent highval sp '/' sp lowval ',' sp class_name nl
-highval = phrase
-lowval = phrase
-oform = indent rank_attr sp ':' sp itag nl
-rank_attr = attr_name
-
-// Binary association
-binary_rel = t_side p_side assoc_class? ref1 ref2? // Both sides
-t_side = rel_side
-p_side = rel_side
-rel_side = indent phrase "," sp mult sp+ icaps_name nl  // One side of a binary association
-assoc_class = indent ('1' / 'M') sp+ icaps_name nl   // Association class
-ref1 = binref
-ref2 = binref
-
-// Generalization
-gen_rel = superclass subclasses genref // A generalization relationship
-superclass = indent icaps_name sp? "+" nl // A superclass class name
-subclasses = subclass+
-subclass = indent indent icaps_name nl  // A subclass class name
-
-// Genref
-genref = single_line_genref / binref+ // Either abbreviated <subclass> source or explicit source for each subclass
-single_line_genref = indent allsubs_attrs sp '->' sp target_attrs (',' sp itag)? nl // Abbreviated in a single line
-
-// Reference
-binref = indent source_attrs sp '->' sp target_attrs (',' sp itag)? nl // Single class to single class ref
-source_attrs = single_class_attrs // So parse visitor can define distinct source target dict keys
-target_attrs = single_class_attrs
-allsubs_attrs = '<subclass>' attr_set  // Abbreviation for same attrs from all subclasses in a generalization
-single_class_attrs = class_name attr_set // A subset of attrs from a single class
-attr_set = '.' ('(' attr_name (',' sp attr_name)+ ')' / attr_name)  // The subset attr names or name
-// ---
-
-// Words and delimiters
+phrase = lword (DELIM lword)*  // Relationship phrase
+icaps_all_name = iword (DELIM iword)*
+icaps_name = iword (DELIM word)*  // A name using initial caps only
 word = iword / lword
-icaps_all_name = iword (delim iword)*
-acaps_name = acword (delim acword)*
-icaps_name = iword (delim word)*  // A name using initial caps only
-class_alias = ',' sp+ acword
-acword = r'[A-Z][A-Z0-9_]*' // All caps words for class abbreviations
 iword = r'[A-Z][A-Za-z0-9]*' // Initial cap word (used in Class and Subsystem names)
 lword = r'[a-z][a-z]*' // Lower case only word (used in relationship phrase)
-ordinal = r'[1-9][0-9]*' // A counting number starting at 1
-phrase = lword (delim lword)*  // Relationship phrase
-mult = r'[1M]c?' // Binary relationship multiplicity, Shlaer-Mellor notation
-rnum = r'O?R[1-9][0-9]*' // Relationship number
-delim = r'[ _]' // Delimiter used inside of names
-indent = "    "  // Need indent for clarity and to signal unstructured lines of text
-block_end = "--" nl?  // Signifies end of a block (within section)
-nl = "\n" // New line
-sp = " "
+DELIM = r'[ _]' // Delimiter used inside of names
+SP = " " // Single space
+NL = "\n" // New line
+BLOCK_END = "--" NL?  // Signifies end of a block (within section)
