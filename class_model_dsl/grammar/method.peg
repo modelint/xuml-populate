@@ -3,14 +3,14 @@
 method = BLOCK_END class_prefix signature BLOCK_END activity EOF
 
 class_prefix = icaps_name '.'
-signature = icaps_name input_parameters output_types?
+signature = icaps_name input_parameters output_types? NL
 input_parameters = '(' SP? (parameters? SP?) ')'
 output_types = ' : ' icaps_all_name (', ' icaps_all_name)*
 parameters = parameter (', ' parameter)*
 parameter = phrase SP? ':' SP? icaps_all_name
 
 activity = body_line*
-body_line = indent r'.*' NL // An unstructured line of text
+body_line = r'.*' NL // An unstructured line of text
 
 phrase = lword (DELIM lword)*  // Relationship phrase
 icaps_all_name = iword (DELIM iword)*
@@ -21,4 +21,4 @@ lword = r'[a-z][a-z]*' // Lower case only word (used in relationship phrase)
 DELIM = r'[ _]' // Delimiter used inside of names
 SP = " " // Single space
 NL = "\n" // New line
-BLOCK_END = "--" NL?  // Signifies end of a block (within section)
+BLOCK_END = "--" NL?

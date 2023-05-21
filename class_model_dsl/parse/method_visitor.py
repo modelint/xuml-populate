@@ -14,7 +14,7 @@ class MethodVisitor(PTNodeVisitor):
         BLOCK_END class_prefix signature BLOCK_END activity EOF
         """
         class_name = children[0]
-        method_name, flows_in, flows_out = children[1]
+        method_name, flows_in, flows_out = children[1].values()
         activity = children[2]
         return Method_a(class_name, method_name, flows_in, flows_out, activity)
 
@@ -32,7 +32,7 @@ class MethodVisitor(PTNodeVisitor):
         """
         name, iparams = children[:2]
         otypes = None if len(children) < 3 else children[2]
-        return {'method_name': name, 'flows_in': iparams, 'flows_out': otypes}
+        return {'method_name': name, 'flows_in': iparams[0], 'flows_out': otypes}
 
     @classmethod
     def visit_input_parameters(cls, node, children):
@@ -80,9 +80,9 @@ class MethodVisitor(PTNodeVisitor):
     @classmethod
     def visit_body_line(cls, node, children):
         """
-        indent r'.*' NL
+        r'.*' NL
         """
-        body_text_line = children[0]
+        body_text_line = "" if not children else children[0]
         return body_text_line
 
     # Text and delimiters

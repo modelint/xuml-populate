@@ -73,7 +73,7 @@ class MethodParser:
             cls.pg_tree_dot.unlink(True)
             cls.pg_model_dot.unlink(True)
 
-        # Now create an abstract syntax tree from our Scrall activity text
+        # Now create an abstract syntax tree from our Method text
         try:
             parse_tree = parser.parse(cls.method_text)
         except NoMatch as e:

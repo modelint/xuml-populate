@@ -1,5 +1,5 @@
 --
-Class.Ping( dir: Direction ) : Accessible Shaft Level
+Cabin.Ping( dir: Direction ) : Accessible Shaft Level
 --
 
 //

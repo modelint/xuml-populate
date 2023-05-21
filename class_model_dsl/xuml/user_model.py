@@ -13,6 +13,7 @@ import logging
 from pathlib import Path
 from class_model_dsl.parse.model_parser import ModelParser
 from class_model_dsl.parse.statemodel_parser import StateModelParser
+from class_model_dsl.parse.method_parser import MethodParser
 from class_model_dsl.mp_exceptions import ModelParseError, MPIOException, MultipleDomainsException
 from class_model_dsl.populate.domain import Domain
 from class_model_dsl.populate.pop_types import Domain_i
@@ -31,6 +32,7 @@ class UserModel:
     domain_path = None
     model_subsystem = {}  # Parsed subsystems, keyed by subsystem file name
     subsystem = None
+    method = None
     methods = {} # Parsed methods, keyed by class
     statemodels = {} # Parsed state models, keyed by name (class or rnum)
     statemodel = None
@@ -66,8 +68,9 @@ class UserModel:
             # Load and parse all the methods
             method_path = subsystems / s.name / "methods"
             for class_dir in method_path.iterdir():
-                for method_file in class_dir.glob("*.scrall"):
-                    cls.parse_method(method_file)
+                for method_file in class_dir.glob("*.mtd"):
+                    method_name = method_file.stem
+                    cls.methods[method_name] = MethodParser.parse(method_file, debug=True)
 
             # Load and parse the subsystem state machines
             sm_path = s / "state-machines"
@@ -78,25 +81,6 @@ class UserModel:
         cls.populate()
 
     @classmethod
-    def parse_method(cls, method_path: Path):
-        """
-        Parse the state model
-
-        :param sm_path:
-        """
-        method = method_path.stem
-        pass
-        try:
-            cls.statemodel = StateModelParser(model_file_path=sm_path, debug=False)
-        except MPIOException as e:
-            sys.exit(e)
-        try:
-            cls.statemodels[sname] = cls.statemodel.parse()
-        except ModelParseError as e:
-            sys.exit(e)
-        return cls.statemodels[sname]
-    @classmethod
-
     def parse_sm(cls, sm_path: Path):
         """
         Parse the state model
