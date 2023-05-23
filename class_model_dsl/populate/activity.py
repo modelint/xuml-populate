@@ -3,7 +3,6 @@ activity.py – Populate an activity instance in PyRAL
 """
 
 import logging
-from pathlib import Path
 from PyRAL.relvar import Relvar
 from class_model_dsl.populate.element import Element
 from class_model_dsl.parse.scrall_parser import ScrallParser
@@ -42,6 +41,8 @@ class Activity:
             cls.methods[class_name] = {method_name: action_text}
         else:
             cls.methods[class_name][method_name] = action_text
+        # Parse the scrall and save for later population
+        cls.parse(actions=action_text, debug=True)
         return Anum
 
     @classmethod
@@ -116,6 +117,7 @@ class Activity:
 
     @classmethod
     def parse(cls, actions, debug=False):
-        action_text = '\n'.join(actions)+'\n'
-        result = ScrallParser.parse(scrall_text=action_text, debug=False)
+        # action_text = '\n'.join(actions)+'\n'
+        result = ScrallParser.parse(scrall_text=actions, debug=False)
+        pass
         return result
