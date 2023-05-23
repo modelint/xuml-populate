@@ -26,9 +26,10 @@ class Activity:
     operations = {}
 
     @classmethod
-    def populate_method(cls, mmdb: 'Tk', action_text:str, class_name: str, subsys_name: str, domain_name: str) -> str:
+    def populate_method(cls, mmdb: 'Tk', action_text:str, class_name: str, method_name: str, subsys_name: str, domain_name: str) -> str:
         """
         Populate Synchronous Activity for Method
+        :param method_name:
         :param mmdb:
         :param action_text: Unparsed scrall text
         :param class_name:
@@ -37,7 +38,10 @@ class Activity:
         :return: Anum
         """
         Anum = cls.populate_synchronous(mmdb, action_text, subsys_name, domain_name)
-        cls.methods[class_name] = cls.parse(action_text)
+        if class_name not in cls.methods:
+            cls.methods[class_name] = {method_name: action_text}
+        else:
+            cls.methods[class_name][method_name] = action_text
         return Anum
 
     @classmethod
@@ -73,7 +77,7 @@ class Activity:
                                                          prefix='A',
                                                          subsystem_name=subsys_name, domain_name=domain_name)
         Relvar.insert(relvar='Activity', tuples=[
-            Activity_i(Anum=Anum, Domain=domain_name, Actions=action_text)
+            Activity_i(Anum=Anum, Domain=domain_name)
         ])
         Relvar.insert(relvar='Synchronous_Activity', tuples=[
             Synchronous_Activity_i(Anum=Anum, Domain=domain_name)
@@ -100,7 +104,7 @@ class Activity:
                                                          prefix='A',
                                                          subsystem_name=subsys_name, domain_name=domain_name)
         Relvar.insert(relvar='Activity', tuples=[
-            Activity_i(Anum=Anum, Domain=domain_name, Actions=action_text)
+            Activity_i(Anum=Anum, Domain=domain_name)
         ]) # TODO: Action text must be passed to an Action Language parser to obtain Action semantics
         Relvar.insert(relvar='Asynchronous_Activity', tuples=[
             Asynchronous_Activity_i(Anum=Anum, Domain=domain_name)
@@ -113,13 +117,5 @@ class Activity:
     @classmethod
     def parse(cls, actions, debug=False):
         action_text = '\n'.join(actions)+'\n'
-        # Read the test file
-        test_file_dir = Path(__file__).parent.parent / "test" / "scrall"
-        # test_file_path = test_file_dir / "all_examples.scrall"
-        # test_file_path = test_file_dir / "test_example.scrall"
-        # test_file_path = test_file_dir / "cabin.scrall"
-        # test_file_path = test_file_dir / "transfer.scrall"
-        # test_text = open(test_file_path, 'r').read() + "\n"
-        # result = ScrallParser.parse(scrall_text=test_text, debug=True)
         result = ScrallParser.parse(scrall_text=action_text, debug=False)
         return result

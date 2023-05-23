@@ -68,7 +68,4 @@ class MMclass:
         Transaction.execute()
 
         # Add methods
-        method_path = domain_path / "subsystems" / subsystem.name / "methods" / cls.name
-        for m in method_path.glob("*.scrall"):
-            Method.populate(mmdb=mmdb, domain_name=domain, subsys_name=subsystem.name,
-                            class_name=cls.name, record=m['signature'])
+        Method.populate(mmdb, domain_name=domain, subsys_name=subsystem.name, class_name=cls.name)

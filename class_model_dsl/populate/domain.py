@@ -9,6 +9,7 @@ from pathlib import Path
 from class_model_dsl.populate.attribute import Attribute
 from class_model_dsl.populate.mm_class import MMclass
 from class_model_dsl.populate.relationship import Relationship
+from class_model_dsl.populate.method import Method
 from class_model_dsl.populate.lineage import Lineage
 from class_model_dsl.populate.subsystem import Subsystem
 from class_model_dsl.populate.state_model import StateModel
@@ -64,6 +65,8 @@ class Domain:
         # Insert classes
         for s in subsystems.values():
             subsys = Subsystem(record=s)
+            # Set methods path for this subsystem
+            Method.subsys_method_path = domain_path / "subsystems" / subsys.name / "methods"
             cls._logger.info("Populating classes")
             for c in s.classes:
                 MMclass.populate(mmdb=mmdb, domain_path=domain_path, domain=domain.Name, subsystem=subsys, record=c)

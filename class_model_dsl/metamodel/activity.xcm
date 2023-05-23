@@ -14,7 +14,6 @@ class Activity
 attributes
     Anum : Activity Number {I}
     Domain : Domain Name {I}
-    Actions : Description
 --
 class Asynchronous Activity
 attributes

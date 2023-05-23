@@ -70,7 +70,7 @@ class UserModel:
             for class_dir in method_path.iterdir():
                 for method_file in class_dir.glob("*.mtd"):
                     method_name = method_file.stem
-                    cls.methods[method_name] = MethodParser.parse(method_file, debug=True)
+                    cls.methods[method_name] = MethodParser.parse(method_file, debug=False)
 
             # Load and parse the subsystem state machines
             sm_path = s / "state-machines"

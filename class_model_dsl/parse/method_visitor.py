@@ -75,7 +75,7 @@ class MethodVisitor(PTNodeVisitor):
         """
         body_line*
         """
-        return children
+        return  '\n'.join(children)+'\n'
 
     @classmethod
     def visit_body_line(cls, node, children):
