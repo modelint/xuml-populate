@@ -38,11 +38,11 @@ class Activity:
         """
         Anum = cls.populate_synchronous(mmdb, action_text, subsys_name, domain_name)
         if class_name not in cls.methods:
-            cls.methods[class_name] = {method_name: action_text}
+            cls.methods[class_name] = {method_name: {'text': action_text, 'parse': None}}
         else:
-            cls.methods[class_name][method_name] = action_text
+            cls.methods[class_name][method_name]['text'] = action_text
         # Parse the scrall and save for later population
-        cls.parse(actions=action_text, debug=True)
+        cls.methods[class_name][method_name]['parse'] = ScrallParser.parse(scrall_text=action_text, debug=False)
         return Anum
 
     @classmethod
@@ -96,7 +96,7 @@ class Activity:
         action_text = '\n'.join(actions)+'\n'
         if state_model not in cls.sm:
             cls.sm[state_model] = {}
-        parsed_activity = cls.parse(action_text)
+        parsed_activity = ScrallParser.parse(scrall_text=action_text, debug=False)
         cls.sm[state_model][state] = parsed_activity # To record parsed actions for debugging
         # cls.populate_activity(text=action_text, pa=parsed_activity)
 
@@ -114,10 +114,3 @@ class Activity:
             State_Activity_i(Anum=Anum, State=state, State_model=state_model, Domain=domain_name)
         ])
         return Anum
-
-    @classmethod
-    def parse(cls, actions, debug=False):
-        # action_text = '\n'.join(actions)+'\n'
-        result = ScrallParser.parse(scrall_text=actions, debug=debug)
-        pass
-        return result
