@@ -29,7 +29,7 @@ attr_value_set = scalar_expr (',' SP* scalar_expr)*
 implicit_table_assignment = name SP+ TABLE_ASSIGN SP+ table_expr
 table_expr = SP* table_operation SP*
 table_operation = table_term (SP* TOP SP* table_term)*
-table_term = table / "(" SP* table_expr SP* ")"
+table_term = table / "(" SP* table_expr SP* ")" header_expr? selection? projection?
 TOP = '^' / '+' / '-' / '*' / '%' / '##'
 table = instance_set header_expr? selection? projection?
 
@@ -168,11 +168,11 @@ name = first_word (NAME_GLUE word)* // One word or a sequence of delimited words
 NAME_GLUE = r'[ _]' // delmits words within a name
 rnum = r'O?R[1-9][0-9]*' // Relationship number (name used for relationships)
 first_word = r'[A-Za-z][A-Za-z0-9]*'
-//word = SP* r'[A-Za-z0-9]+'
+word = SP* r'[A-Za-z0-9]+'
 //first_word = ignore_keywords r'[A-Za-z][A-Za-z0-9]*'
-word = ignore_keywords r'[A-Za-z0-9]+'
-ignore_keywords = !" true" !"true " !" false" !"false " !" and" !"and " !" or" !"or " !" not" !"not "
-! " me" !" me" !" TRUE" !"TRUE " !" FALSE" !"FALSE " !" AND" !"AND " !" OR" !"OR " !" NOT" !"NOT "
+//word = ignore_keywords r'[A-Za-z0-9]+'
+//ignore_keywords = !" true" !"true " !" false" !"false " !" and" !"and " !" or" !"or " !" not" !"not "
+//! " me" !" me" !" TRUE" !"TRUE " !" FALSE" !"FALSE " !" AND" !"AND " !" OR" !"OR " !" NOT" !"NOT "
 
 // Whitespace and comments
 LINEWRAP = EOL SP* // end of line followed by optional indent on next line

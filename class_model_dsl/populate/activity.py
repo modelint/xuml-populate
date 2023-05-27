@@ -118,6 +118,6 @@ class Activity:
     @classmethod
     def parse(cls, actions, debug=False):
         # action_text = '\n'.join(actions)+'\n'
-        result = ScrallParser.parse(scrall_text=actions, debug=False)
+        result = ScrallParser.parse(scrall_text=actions, debug=debug)
         pass
         return result

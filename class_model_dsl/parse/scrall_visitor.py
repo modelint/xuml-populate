@@ -299,9 +299,9 @@ class ScrallVisitor(PTNodeVisitor):
     @classmethod
     def visit_table_term(cls, node, children):
         """
-        table / "(" table_expr ")"
+        table / "(" table_expr ")" header_expr? selection? projection?
         """
-        return children[0]
+        return children
 
     @classmethod
     def visit_TOP(cls, node, children):

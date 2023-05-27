@@ -1,3 +1,7 @@
+// Method with tables
+t3 #= (t4.(x, y) + t5.(w, z))[x>>q](q > nmax).(q, z) - t7
+destination heights #= ((requested stops.(Floor, Shaft) + requested floors) ## Floor[Name >> Floor]).(Floor, Height)
+=>> Accessible Shaft Level( Floor: nearest dest.Floor; Shaft )
 // Scalar calls
 /R4/Door.Lock requested.set()
 door.Lock requested.set()
