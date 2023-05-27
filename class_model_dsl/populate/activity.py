@@ -106,7 +106,7 @@ class Activity:
                                                          subsystem_name=subsys_name, domain_name=domain_name)
         Relvar.insert(relvar='Activity', tuples=[
             Activity_i(Anum=Anum, Domain=domain_name)
-        ]) # TODO: Action text must be passed to an Action Language parser to obtain Action semantics
+        ])
         Relvar.insert(relvar='Asynchronous_Activity', tuples=[
             Asynchronous_Activity_i(Anum=Anum, Domain=domain_name)
         ])
