@@ -8,6 +8,7 @@ from PyRAL.relvar import Relvar
 from class_model_dsl.populate.element import Element
 from class_model_dsl.populate.attribute import Attribute
 from class_model_dsl.populate.method import Method
+from class_model_dsl.populate.ee import EE
 from class_model_dsl.populate.pop_types import Class_i, Alias_i
 from pathlib import Path
 
@@ -34,7 +35,7 @@ class MMclass:
     ee_ops = None
 
     @classmethod
-    def populate(cls, mmdb: 'Tk', domain_path:Path, domain: str, subsystem, record):
+    def populate(cls, mmdb: 'Tk', domain: str, subsystem, record):
         """Constructor"""
 
         cls.record = record
@@ -69,3 +70,8 @@ class MMclass:
 
         # Add methods
         Method.populate(mmdb, domain_name=domain, subsys_name=subsystem.name, class_name=cls.name)
+
+        # Add EE and ops
+        ee_name = record.get('ee')
+        if ee_name:
+            EE.populate(mmdb, ee_name=ee_name, subsys_name=subsystem.name, domain_name=domain)

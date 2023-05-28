@@ -48,7 +48,7 @@ class Activity:
     @classmethod
     def populate_operation(cls, mmdb: 'Tk', action_text:str, ee_name: str, subsys_name: str, domain_name: str) -> str:
         """
-        Populate Synchronous Activity for Operation
+        Populate Operation Activity
 
         :param mmdb:
         :param action_text:

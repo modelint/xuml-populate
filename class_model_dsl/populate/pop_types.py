@@ -109,12 +109,19 @@ State_Activity_i = namedtuple('State_Activity_i', 'Anum State State_model Domain
 Signature_i = namedtuple('Signature_i', 'SIGnum Domain')
 Parameter_i = namedtuple('Parameter_i', 'Name Signature Domain Input_flow Activity')
 Method_Signature_i = namedtuple('Method_Signature_i', 'SIGnum Method Class Domain')
-Op_Signature_i = namedtuple('Op_Signature_i', 'SIGnum Op EE Domain')
 Method_i = namedtuple('Method_i', 'Anum Name Class Domain')
-Op_i = namedtuple('Op_i', 'Name EE Domain')
 Synchronous_Activity_i = namedtuple('Synchronous_Activity_i', 'Anum Domain')
 Synchronous_Output_i = namedtuple('Synchronous_Output_i', 'Activity Output_flow Domain')
 
 # Flow
 Data_Flow_i = namedtuple('Data_Flow_i', 'ID Activity Domain Type')
 Flow_i = namedtuple('Flow_i', 'ID Activity Domain')
+
+# External Entity
+EE_i = namedtuple('EE_i', 'EEnum Name Class Domain')
+Op_i = namedtuple('Op_i', 'Name EE Domain')
+Op_Signature_i = namedtuple('Op_Signature_i', 'SIGnum Op EE Domain')
+Egress_Operation_i = namedtuple('Egress_Operation_i', 'Name EE Domain')
+Ingress_Operation_i = namedtuple('Ingress_Operation_i', 'Name EE Domain')
+Asynchronous_Ingress_Operation_i = namedtuple('Asynchronous_Ingress_Operation_i', 'Name EE Domain Anum')
+Synchronous_Ingress_Operation_i = namedtuple('Synchronous_Ingress_Operation_i', 'Name EE Domain Anum')

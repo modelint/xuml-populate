@@ -1,22 +1,22 @@
-""" model_visitor.py """
+""" operation_visitor.py """
 
 from arpeggio import PTNodeVisitor
 from collections import namedtuple
 
-Method_a = namedtuple('Method_a', 'class_name method flows_in flows_out activity')
+Op_a = namedtuple('Op_a', 'op_type ee op flows_in flows_out activity')
 
-class MethodVisitor(PTNodeVisitor):
+class OpVisitor(PTNodeVisitor):
 
     # Root
     @classmethod
-    def visit_method(cls, node, children):
+    def visit_op(cls, node, children):
         """
-        BLOCK_END class_prefix signature BLOCK_END activity EOF
+        BLOCK_END ee_prefix signature BLOCK_END activity EOF
         """
         class_name = children[0]
         method_name, flows_in, flows_out = children[1].values()
         activity = children[2]
-        return Method_a(class_name, method_name, flows_in, flows_out, activity)
+        return Op_a(class_name, method_name, flows_in, flows_out, activity)
 
     @classmethod
     def visit_class_prefix(cls, node, children):
