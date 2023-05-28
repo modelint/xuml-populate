@@ -7,7 +7,8 @@ from PyRAL.transaction import Transaction
 from PyRAL.relvar import Relvar
 from class_model_dsl.populate.signature import Signature
 from class_model_dsl.populate.activity import Activity
-from class_model_dsl.populate.pop_types import Method_Signature_i, Method_i
+from class_model_dsl.populate.flow import Flow
+from class_model_dsl.populate.pop_types import Method_Signature_i, Method_i, Parameter_i, Flow_i
 from class_model_dsl.parse.method_parser import MethodParser
 from pathlib import Path
 
@@ -68,4 +69,13 @@ class Method:
 
 
             # Add parameters
+            for p in parsed_method.flows_in:
+                Transaction.open(tclral=mmdb)
+                flowid = Flow.populate(mmdb, anum=anum, domain_name=domain_name, flow_type=p['type'])
+                Relvar.insert(relvar='Parameter', tuples=[
+                    Parameter_i(Name=p['name'], Signature=signum, Domain=domain_name,
+                                Input_flow=flowid, Activity=anum)
+                ])
+                Transaction.execute()
+            pass
 

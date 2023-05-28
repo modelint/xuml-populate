@@ -32,7 +32,7 @@ class MethodVisitor(PTNodeVisitor):
         """
         name, iparams = children[:2]
         otypes = None if len(children) < 3 else children[2]
-        return {'method_name': name, 'flows_in': iparams[0], 'flows_out': otypes}
+        return {'method_name': name, 'flows_in': iparams, 'flows_out': otypes}
 
     @classmethod
     def visit_input_parameters(cls, node, children):
