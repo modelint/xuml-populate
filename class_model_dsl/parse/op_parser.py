@@ -52,12 +52,12 @@ class OpParser:
 
         # Read the method file
         try:
-            cls.method_text = open(op_path, 'r').read()
+            cls.op_text = open(op_path, 'r').read()
         except OSError as e:
             raise OpInputFileOpen(op_path)
 
         if not cls.op_text:
-            raise OPInputFileEmpty(op_path)
+            raise OpInputFileEmpty(op_path)
 
 
 

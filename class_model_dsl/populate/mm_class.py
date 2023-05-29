@@ -74,4 +74,5 @@ class MMclass:
         # Add EE and ops
         ee_name = record.get('ee')
         if ee_name:
-            EE.populate(mmdb, ee_name=ee_name, subsys_name=subsystem.name, domain_name=domain)
+            EE.populate(mmdb, ee_name=ee_name,
+                        class_name=cls.name, subsys_name=subsystem.name, domain_name=domain)

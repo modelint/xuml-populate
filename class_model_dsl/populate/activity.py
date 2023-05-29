@@ -46,7 +46,7 @@ class Activity:
         return Anum
 
     @classmethod
-    def populate_operation(cls, mmdb: 'Tk', action_text:str, ee_name: str, subsys_name: str, domain_name: str) -> str:
+    def populate_operation(cls, mmdb: 'Tk', action_text:str, ee_name: str, subsys_name: str, domain_name: str, synchronous: bool) -> str:
         """
         Populate Operation Activity
 
@@ -58,7 +58,7 @@ class Activity:
         :return:
         """
         Anum = cls.populate_synchronous(mmdb, action_text, subsys_name, domain_name)
-        cls.operations[ee_name] = cls.parse(action_text)
+        cls.operations[ee_name] = ScrallParser.parse(scrall_text=action_text, debug=False)
         return Anum
 
     @classmethod
