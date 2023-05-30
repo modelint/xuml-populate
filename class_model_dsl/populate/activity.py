@@ -36,7 +36,7 @@ class Activity:
         :param domain_name:
         :return: Anum
         """
-        Anum = cls.populate_synchronous(mmdb, action_text, subsys_name, domain_name)
+        Anum = cls.populate(mmdb, action_text, subsys_name, domain_name, synchronous=True)
         if class_name not in cls.methods:
             cls.methods[class_name] = {method_name: {'text': action_text, 'parse': None}}
         else:
@@ -46,51 +46,64 @@ class Activity:
         return Anum
 
     @classmethod
-    def populate_operation(cls, mmdb: 'Tk', action_text:str, ee_name: str, subsys_name: str, domain_name: str, synchronous: bool) -> str:
+    def populate_operation(cls, mmdb: 'Tk', action_text:str, ee_name: str, subsys_name: str, domain_name: str,
+                           synchronous: bool) -> str:
         """
         Populate Operation Activity
 
-        :param mmdb:
         :param action_text:
         :param ee_name:
         :param subsys_name:
         :param domain_name:
+        :param synchronous:
+        :param mmdb:
         :return:
         """
-        Anum = cls.populate_synchronous(mmdb, action_text, subsys_name, domain_name)
+        Anum = cls.populate(mmdb, action_text, subsys_name, domain_name, synchronous)
         cls.operations[ee_name] = ScrallParser.parse(scrall_text=action_text, debug=False)
         return Anum
 
     @classmethod
-    def populate_synchronous(cls, mmdb: 'Tk', action_text:str, subsys_name: str, domain_name: str) -> str:
+    def populate(cls, mmdb: 'Tk', action_text:str, subsys_name: str, domain_name: str,
+                 synchronous: bool) -> str:
         """
-        Populate a Synchronous Activity (Method or Operation)
+        Populate an Activity Operation
 
         :param mmdb:
         :param action_text:
         :param subsys_name:
         :param domain_name:
+        :param synchronous:
         :return:
         """
-        # Rather than combine synch and asynch into one population method we keep these separate because
-        # at soem point we may add the creation of an optional synchronous output in this method
         Anum = Element.populate_unlabeled_subsys_element(mmdb,
                                                          prefix='A',
                                                          subsystem_name=subsys_name, domain_name=domain_name)
         Relvar.insert(relvar='Activity', tuples=[
             Activity_i(Anum=Anum, Domain=domain_name)
         ])
-        Relvar.insert(relvar='Synchronous_Activity', tuples=[
-            Synchronous_Activity_i(Anum=Anum, Domain=domain_name)
-        ])
+        if synchronous:
+            Relvar.insert(relvar='Synchronous_Activity', tuples=[
+                Synchronous_Activity_i(Anum=Anum, Domain=domain_name)
+            ])
+        else:
+            Relvar.insert(relvar='Asynchronous_Activity', tuples=[
+                Asynchronous_Activity_i(Anum=Anum, Domain=domain_name)
+            ])
         return Anum
-
 
     @classmethod
     def populate_state(cls, mmdb: 'Tk', state: str, state_model: str, actions: str,
                        subsys_name: str, domain_name: str) -> str:
-        """Constructor"""
-
+        """
+        :param mmdb:
+        :param state:
+        :param state_model:
+        :param actions:
+        :param subsys_name:
+        :param domain_name:
+        :return:
+        """
 
         # Parse scrall in this state and add it to temporary sm dictionary
         action_text = '\n'.join(actions)+'\n'
@@ -101,15 +114,7 @@ class Activity:
         # cls.populate_activity(text=action_text, pa=parsed_activity)
 
         # Create the Susbystem Element and obtain a unique Anum
-        Anum = Element.populate_unlabeled_subsys_element(mmdb,
-                                                         prefix='A',
-                                                         subsystem_name=subsys_name, domain_name=domain_name)
-        Relvar.insert(relvar='Activity', tuples=[
-            Activity_i(Anum=Anum, Domain=domain_name)
-        ])
-        Relvar.insert(relvar='Asynchronous_Activity', tuples=[
-            Asynchronous_Activity_i(Anum=Anum, Domain=domain_name)
-        ])
+        Anum = cls.populate(mmdb, action_text, subsys_name, domain_name, synchronous=False)
         Relvar.insert(relvar='State_Activity', tuples=[
             State_Activity_i(Anum=Anum, State=state, State_model=state_model, Domain=domain_name)
         ])

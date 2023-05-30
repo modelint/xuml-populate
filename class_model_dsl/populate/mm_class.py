@@ -10,7 +10,6 @@ from class_model_dsl.populate.attribute import Attribute
 from class_model_dsl.populate.method import Method
 from class_model_dsl.populate.ee import EE
 from class_model_dsl.populate.pop_types import Class_i, Alias_i
-from pathlib import Path
 
 from typing import TYPE_CHECKING
 
@@ -52,6 +51,7 @@ class MMclass:
         # Populate class
         cls._logger.info(f"Populating class [{cls.name}]")
         Transaction.open(tclral=mmdb)
+        cls._logger.info("Transaction open: Populate class")
         Element.populate_labeled_subys_element(mmdb, label=cls.cnum, subsystem_name=subsystem.name, domain_name=domain)
         Relvar.insert(relvar='Class', tuples=[
             Class_i(Name=cls.name, Cnum=cls.cnum, Domain=domain)
@@ -67,6 +67,7 @@ class MMclass:
                                class_identifiers=cls.identifiers, record=a)
 
         Transaction.execute()
+        cls._logger.info("Transaction closed: Populate class")
 
         # Add methods
         Method.populate(mmdb, domain_name=domain, subsys_name=subsystem.name, class_name=cls.name)

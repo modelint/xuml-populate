@@ -8,7 +8,6 @@ from PyRAL.relvar import Relvar
 from class_model_dsl.populate.element import Element
 from class_model_dsl.populate.operation import Operation
 from class_model_dsl.populate.pop_types import EE_i
-from pathlib import Path
 
 from typing import TYPE_CHECKING
 
@@ -37,6 +36,7 @@ class EE:
         """
         # Populate ee
         cls._logger.info(f"Populating ee [{ee_name}]")
+        cls._logger.info(f"Transaction open: Populate EE")
         Transaction.open(tclral=mmdb) # Create an EE with at least one Operation
         EEnum = Element.populate_unlabeled_subsys_element(mmdb,
                                                          prefix='EE',
@@ -48,12 +48,7 @@ class EE:
         # Add operations
         first_op = True
         for opfile in (cls.subsys_ee_path / ee_name).glob("*.op"):
-            Operation.populate(mmdb=mmdb, ee_name=ee_name, domain_name=domain_name,
+            Operation.populate(mmdb=mmdb, domain_name=domain_name,
                                subsys_name=subsys_name, opfile=opfile, first_op=first_op)
-            # EE requires at least one operation
-            # So we execute the EE create transaction after the first op populates
             if first_op:
-                Transaction.execute()
                 first_op = False
-                # After the EE/first op transaction executes, each additional
-                # Operation will execute in its own transaction, so we pass this status along

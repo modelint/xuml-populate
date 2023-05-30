@@ -119,9 +119,7 @@ Flow_i = namedtuple('Flow_i', 'ID Activity Domain')
 
 # External Entity
 EE_i = namedtuple('EE_i', 'EEnum Name Class Domain')
-Op_i = namedtuple('Op_i', 'Name EE Domain')
-Op_Signature_i = namedtuple('Op_Signature_i', 'SIGnum Op EE Domain')
-Egress_Operation_i = namedtuple('Egress_Operation_i', 'Name EE Domain')
-Ingress_Operation_i = namedtuple('Ingress_Operation_i', 'Name EE Domain')
-Asynchronous_Ingress_Operation_i = namedtuple('Asynchronous_Ingress_Operation_i', 'Name EE Domain Anum')
-Synchronous_Ingress_Operation_i = namedtuple('Synchronous_Ingress_Operation_i', 'Name EE Domain Anum')
+Op_i = namedtuple('Op_i', 'Name EE Domain Direction')
+Op_Signature_i = namedtuple('Op_Signature_i', 'SIGnum Operation EE Domain')
+Asynchronous_Operation_i = namedtuple('Asynchronous_Operation_i', 'Name EE Domain Anum')
+Synchronous_Operation_i = namedtuple('Synchronous_Operation_i', 'Name EE Domain Anum')

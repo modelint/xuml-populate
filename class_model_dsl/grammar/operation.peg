@@ -1,6 +1,6 @@
 // This grammar describes the content of an xUML Operation (op) file
 
-operation = BLOCK_END ee_prefix signature BLOCK_END activity EOF
+operation = BLOCK_END ee_prefix signature BLOCK_END activity? EOF
 
 ee_prefix = op_type SP* icaps_name '.'
 op_type = '>>' / '<<'

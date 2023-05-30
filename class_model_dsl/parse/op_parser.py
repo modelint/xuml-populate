@@ -52,7 +52,7 @@ class OpParser:
 
         # Read the method file
         try:
-            cls.op_text = open(op_path, 'r').read()
+            cls.op_text = open(op_path, 'r').read() + '\n' # Ensure there is at least one newline at the end
         except OSError as e:
             raise OpInputFileOpen(op_path)
 

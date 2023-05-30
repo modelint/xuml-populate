@@ -46,6 +46,7 @@ class Method:
             parsed_method = cls.parse(method_file)
 
             Transaction.open(tclral=mmdb)
+            cls._logger.info("Transaction open: Populating method")
 
             # Create the signature
             signum = Signature.populate(mmdb, subsys_name=subsys_name, domain_name=domain_name)
@@ -65,11 +66,12 @@ class Method:
             ])
 
             Transaction.execute()
-            pass
+            cls._logger.info("Transaction closed: Populating method")
 
 
             # Add parameters
             for p in parsed_method.flows_in:
+                cls._logger.info("Transaction open: Populating parameter")
                 Transaction.open(tclral=mmdb)
                 flowid = Flow.populate(mmdb, anum=anum, domain_name=domain_name, flow_type=p['type'])
                 Relvar.insert(relvar='Parameter', tuples=[
@@ -77,5 +79,4 @@ class Method:
                                 Input_flow=flowid, Activity=anum)
                 ])
                 Transaction.execute()
-            pass
-
+                cls._logger.info("Transaction closed: Populating parameter")

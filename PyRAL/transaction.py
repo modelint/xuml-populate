@@ -25,6 +25,7 @@ class Transaction:
         # TODO: As it stands, only one Transaction is open for all potential tclral instances.
         # TODO: We should make the class methods instance based and tie each instance of Transaction to a single
         # TODO: TclRAL session. (For now it works since we aren't yet opening multiple TclRAL sessions simultaneously.
+        cls._logger.info(f"PYRAL TR OPEN")
         cls._tclral = tclral
         if cls._statements:
             cls._logger.error(f"New transaction opened before closing previous.")
@@ -55,4 +56,5 @@ class Transaction:
         cls._result = cls._tclral.eval(cls._cmd)
         cls._statements = None  # The statements have been executed
         cls._logger.info(f"With result: [{cls._result}]")
+        cls._logger.info(f"PYRAL TR CLOSED")
 

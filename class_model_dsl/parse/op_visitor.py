@@ -9,21 +9,25 @@ class OpVisitor(PTNodeVisitor):
 
     # Root
     @classmethod
-    def visit_op(cls, node, children):
+    def visit_operation(cls, node, children):
         """
-        BLOCK_END ee_prefix signature BLOCK_END activity EOF
+        BLOCK_END ee_prefix signature BLOCK_END activity? EOF
         """
-        class_name = children[0]
-        method_name, flows_in, flows_out = children[1].values()
-        activity = children[2]
-        return Op_a(class_name, method_name, flows_in, flows_out, activity)
+        a = children.results.get('activity')
+        a = None if not a else a[0]
+        return Op_a(
+            op_type=children[0]['op_type'], ee=children[0]['ee'], op=children[1]['op_name'],
+            flows_in=children[1]['flows_in'], flows_out=children[1]['flows_out'],
+            activity=a
+        )
 
     @classmethod
-    def visit_class_prefix(cls, node, children):
+    def visit_ee_prefix(cls, node, children):
         """
-        icaps_name '.'
+        op_type icaps_name '.'
         """
-        return children[0]
+        op_type = 'ingress' if children[0] == '<<' else 'egress'
+        return { 'op_type': op_type, 'ee': children[1] }
 
     @classmethod
     def visit_signature(cls, node, children):
@@ -32,7 +36,7 @@ class OpVisitor(PTNodeVisitor):
         """
         name, iparams = children[:2]
         otypes = None if len(children) < 3 else children[2]
-        return {'method_name': name, 'flows_in': iparams, 'flows_out': otypes}
+        return {'op_name': name, 'flows_in': iparams, 'flows_out': otypes}
 
     @classmethod
     def visit_input_parameters(cls, node, children):
