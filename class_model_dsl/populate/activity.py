@@ -6,6 +6,7 @@ import logging
 from PyRAL.relvar import Relvar
 from class_model_dsl.populate.element import Element
 from class_model_dsl.parse.scrall_parser import ScrallParser
+from class_model_dsl.populate.action import Action
 from typing import TYPE_CHECKING
 from class_model_dsl.populate.pop_types import Activity_i, Asynchronous_Activity_i,\
     State_Activity_i, Synchronous_Activity_i
@@ -119,3 +120,19 @@ class Activity:
             State_Activity_i(Anum=Anum, State=state, State_model=state_model, Domain=domain_name)
         ])
         return Anum
+
+    @classmethod
+    def populate_actions(cls, mmdb: 'Tk'):
+        """
+
+        """
+        # Populate all method activities
+        for class_name, method_data in cls.methods.items():
+            for method_name, activity_data in method_data.items():
+                aparse = activity_data['parse']
+                for a in aparse:
+                    Action.populate(mmdb, a)
+
+        pass
+        # Populate all state activities
+        # Populate all operation activities

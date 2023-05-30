@@ -14,6 +14,7 @@ from class_model_dsl.populate.method import Method
 from class_model_dsl.populate.lineage import Lineage
 from class_model_dsl.populate.subsystem import Subsystem
 from class_model_dsl.populate.state_model import StateModel
+from class_model_dsl.populate.activity import Activity
 from PyRAL.transaction import Transaction
 from PyRAL.relvar import Relvar
 from class_model_dsl.populate.pop_types import Domain_i, Modeled_Domain_i, Domain_Partition_i, Subsystem_i
@@ -87,5 +88,8 @@ class Domain:
 
         # Print out the populated metamodel
         Relvar.printall(mmdb)
+
+        # Populate actions for all Activities
+        Activity.populate_actions(mmdb)
         pass
 
