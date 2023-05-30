@@ -9,7 +9,7 @@ from class_model_dsl.populate.signature import Signature
 from class_model_dsl.populate.activity import Activity
 from class_model_dsl.populate.flow import Flow
 from class_model_dsl.populate.pop_types import Op_Signature_i, Op_i, Parameter_i,\
-    Asynchronous_Ingress_Operation_i, Synchronous_Ingress_Operation_i, Ingress_Operation_i, Egress_Operation_i
+    Asynchronous_Operation_i, Synchronous_Operation_i
 from class_model_dsl.parse.op_parser import OpParser
 from pathlib import Path
 
@@ -30,7 +30,6 @@ class Operation:
         Populate one operation for an EE
 
         :param mmdb:
-        :param ee_name:
         :param subsys_name:
         :param domain_name:
         :param opfile:
@@ -52,30 +51,20 @@ class Operation:
         ])
 
         Relvar.insert(relvar='Operation', tuples=[
-            Op_i(Name=parsed_op.op, EE=parsed_op.ee, Domain=domain_name)
+            Op_i(Name=parsed_op.op, EE=parsed_op.ee, Domain=domain_name, Direction=parsed_op.op_type)
         ])
-        if parsed_op.op_type == 'egress':
-            # There is no activity associated with an Egresss Operation
-            Relvar.insert(relvar='Egress_Operation', tuples=[
-                Egress_Operation_i(Name=parsed_op.op, EE=parsed_op.ee, Domain=domain_name)
+        anum = Activity.populate_operation(mmdb=mmdb, action_text=parsed_op.activity,
+                                           ee_name=parsed_op.ee, subsys_name=subsys_name, domain_name=domain_name,
+                                           synchronous=True if parsed_op.flows_out else False)
+
+        if parsed_op.flows_out:
+            Relvar.insert(relvar='Synchronous_Operation', tuples=[
+                Synchronous_Operation_i(Name=parsed_op.op, EE=parsed_op.ee, Domain=domain_name, Anum=anum)
             ])
         else:
-            # Create the Ingress Operation and its Activity
-            anum = Activity.populate_operation(mmdb=mmdb, action_text=parsed_op.activity,
-                                               ee_name=parsed_op.ee, subsys_name=subsys_name, domain_name=domain_name,
-                                               synchronous=True if parsed_op.flows_out else False)
-
-            Relvar.insert(relvar='Ingress_Operation', tuples=[
-                Ingress_Operation_i(Name=parsed_op.op, EE=parsed_op.ee, Domain=domain_name)
+            Relvar.insert(relvar='Asynchronous_Operation', tuples=[
+                Asynchronous_Operation_i(Name=parsed_op.op, EE=parsed_op.ee, Domain=domain_name, Anum=anum)
             ])
-            if parsed_op.flows_out:
-                Relvar.insert(relvar='Synchronous_Ingress_Operation', tuples=[
-                    Synchronous_Ingress_Operation_i(Name=parsed_op.op, EE=parsed_op.ee, Domain=domain_name, Anum=anum)
-                ])
-            else:
-                Relvar.insert(relvar='Asynchronous_Ingress_Operation', tuples=[
-                    Asynchronous_Ingress_Operation_i(Name=parsed_op.op, EE=parsed_op.ee, Domain=domain_name, Anum=anum)
-                ])
 
         Transaction.execute()
         logging.info("Transaction closed: Operation")
