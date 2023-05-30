@@ -39,8 +39,10 @@ class Activity:
         """
         Anum = cls.populate(mmdb, action_text, subsys_name, domain_name, synchronous=True)
         if class_name not in cls.methods:
-            cls.methods[class_name] = {method_name: {'text': action_text, 'parse': None}}
+            cls.methods[class_name] = {method_name: {'anum': Anum, 'domain': domain_name, 'text': action_text, 'parse': None}}
         else:
+            cls.methods[class_name][method_name]['anum'] = Anum
+            cls.methods[class_name][method_name]['domain'] = domain_name
             cls.methods[class_name][method_name]['text'] = action_text
         # Parse the scrall and save for later population
         cls.methods[class_name][method_name]['parse'] = ScrallParser.parse(scrall_text=action_text, debug=False)
@@ -129,9 +131,10 @@ class Activity:
         # Populate all method activities
         for class_name, method_data in cls.methods.items():
             for method_name, activity_data in method_data.items():
+                cls._logger.info(f"Populating activity for method: {class_name}.{method_name}")
                 aparse = activity_data['parse']
                 for a in aparse:
-                    Action.populate(mmdb, a)
+                    Action.populate(mmdb=mmdb, anum=activity_data['anum'], domain_name=activity_data['domain'], aparse=a)
 
         pass
         # Populate all state activities
