@@ -34,7 +34,7 @@ class Relation:
 
         For now we only support an and'ed list of direct string matches in the format:
 
-           attr1:str1, attr2:str2, ...
+           attr1:str1; attr2:str2, ...
 
         With the assumption that we would like to select each tuple where
 
@@ -53,7 +53,7 @@ class Relation:
         :return: The Tcl expression
         """
         # Parse out matches on comma delimiter as a list of strings
-        match_strings = selection.split(',')
+        match_strings = selection.split(';')
         # Break each match on the ':' into attr and value as a dictionary
         attr_vals = {a[0].strip(): a[1].strip() for a in [m.split(':') for m in match_strings]}
         # Now build the selection expression from each dictionary item
