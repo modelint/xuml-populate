@@ -134,7 +134,7 @@ class Activity:
                 cls._logger.info(f"Populating activity for method: {class_name}.{method_name}")
                 aparse = activity_data['parse']
                 for a in aparse:
-                    Action.populate(mmdb=mmdb, anum=activity_data['anum'], domain_name=activity_data['domain'], aparse=a)
+                    Action.populate(mmdb=mmdb, cname=class_name, anum=activity_data['anum'], domain_name=activity_data['domain'], aparse=a)
 
         pass
         # Populate all state activities

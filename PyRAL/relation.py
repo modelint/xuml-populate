@@ -378,3 +378,64 @@ class Relation:
         attr_names = list(rval.header.keys())
         brows = [list(row.values()) for row in rval.body]
         print(tabulate(tabular_data=brows, headers=attr_names, tablefmt="outline"))  # That last parameter chooses our table style
+
+    @classmethod
+    def restrict2(cls, tclral: Tk, restriction: str, relation: str = _relation,
+                  svar_name: Optional[str] = None) -> RelationValue:
+        """
+        Here we select zero or more tuples that match the supplied criteria.
+
+        In relational theory this is known as a restriction operation.
+
+        TclRAL syntax:
+            relation restrict <relationValue> <tupleVariable> <expression>
+
+        TclRAL command example:
+            relation restrict ${Attribute} t {[string match {<unresolved>} [tuple extract $t Type]] &&
+                [string match {Elevator Management} [tuple extract $t Domain]]}
+
+        Generated from this PyRAL input:
+            relation: Attribute
+            restriction: 'Type:<unresolved>, Domain:Elevator Management'
+
+
+        :param tclral: The TclRAL session
+        :param relation: Name of a relation variable where the operation is applied
+        :param restriction: A string in Scrall notation that specifies the restriction criteria
+        :param svar_name: An optional session variable that holds the result
+        :return: The TclRAL string result representing the restricted tuple set
+        """
+        # Replace square brackets and logic ops with tcl equivalents
+        restrict_tcl = restriction.replace('[', '{').replace(']', '}').\
+            replace(' OR ', ' || ').replace(', ', ' && ').replace(' AND ', ' && ').replace('NOT ', '!')
+        # Now process ':' attr:value match pairs with tcl string match expressions and wrap with tcl braces
+        rexpr = '{' + re.sub(r'([\w_]*):({[\w ]*})', r'[string match \2 [tuple extract $t \1]]', restrict_tcl) + '}'
+
+        # Insert it in the tlcral relation restrict command and execute
+        cmd = f"set {_relation} [relation restrict ${{{relation}}} t {rexpr}]"
+        result = Command.execute(tclral, cmd)
+        if svar_name:  # Save the result using the supplied session variable name
+            cls.set_var(tclral, svar_name)
+        return cls.make_pyrel(result)
+
+    @classmethod
+    def project2(cls, tclral: Tk, attributes: List[str], relation: str=_relation,
+                 svar_name: Optional[str]=None) -> RelationValue:
+        """
+        Returns a relation whose heading consists of only a set of selected attributes.
+        The body of the result consists of the corresponding tuples from the specified relation,
+        removing any duplicates created by considering only a subset of the attributes.
+
+        :param tclral: The TclRAL session
+        :param attributes: Attributes to be projected
+        :param relation: The relation to be projected
+        :param svar_name: Relation result is stored in this optional TclRAL variable for subsequent operations to use
+        :return Resulting relation as a PyRAL relation value
+        """
+        projection = ' '.join(attributes)
+        cmd = f'set {_relation} [relation project ${{{relation}}} {projection.strip()}]'
+        result = Command.execute(tclral, cmd)
+        if svar_name:  # Save the result using the supplied session variable name
+            cls.set_var(tclral, svar_name)
+        return cls.make_pyrel(result)
+

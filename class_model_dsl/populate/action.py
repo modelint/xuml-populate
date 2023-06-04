@@ -18,10 +18,11 @@ class Action:
     id_ctr = 1
 
     @classmethod
-    def populate(cls, mmdb: 'Tk', anum: str, domain_name: str, aparse):
+    def populate(cls, mmdb: 'Tk', cname: str, anum: str, domain_name: str, aparse):
         """
         Populate the entire Action
 
+        :param cname:
         :param anum:
         :param mmdb:
         :param aparse:
@@ -47,7 +48,7 @@ class Action:
                 # if type(c).__name__ == 'N_a':
                 # Prefix name as input source
                 if type(c).__name__ == 'PATH_a':
-                    TraverseAction.build_path(mmdb, domain_name=domain_name, path=c)
+                    TraverseAction.build_path(mmdb, source_class=cname, domain=domain_name, path=c)
                     # We need to create a traverse action that takes an input instance flow and produces an output instance flow
                     # Create instance of Path
                     first_hop = True
