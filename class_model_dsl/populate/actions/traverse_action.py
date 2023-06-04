@@ -54,9 +54,11 @@ class TraverseAction:
 
         # Verify that the relationship is attached to the from_class
         # Association or generalization? Check for a reference from or to the from_class
-        rhop = f"(From_class:[{from_classes}] OR To_class:[{from_classes}]), Rnum:[{rnum}], Domain:[{domain}]"
+        # from_classes = {'Cabin', 'Shaft', 'Floor'}
+        from_classes = {'Cabin'}
+        rhop = f"(From_class:<{from_classes}> OR To_class:<{from_classes}>), Rnum:<{rnum}>, Domain:<{domain}>"
         reachable_classes = set()
-        if Relation.restrict2(tclral=mmdb, restriction=rhop, relation="Reference").body:
+        if Relation.restrict3(tclral=mmdb, restriction=rhop, relation="Reference").body:
             from_tos = Relation.project2(mmdb, attributes=['From_class', 'To_class']).body
 
             for t in from_tos:

@@ -405,6 +405,7 @@ class Relation:
         :param svar_name: An optional session variable that holds the result
         :return: The TclRAL string result representing the restricted tuple set
         """
+        # setr = re.sub(r'', r'', restriction)
         # Replace square brackets and logic ops with tcl equivalents
         restrict_tcl = restriction.replace('[', '{').replace(']', '}').\
             replace(' OR ', ' || ').replace(', ', ' && ').replace(' AND ', ' && ').replace('NOT ', '!')
@@ -439,3 +440,61 @@ class Relation:
             cls.set_var(tclral, svar_name)
         return cls.make_pyrel(result)
 
+    @classmethod
+    def make_comparison(cls, attr_name:str, values: set | str) -> str:
+        if isinstance(values, set):
+            vmatch = [f"[string match {{{v}}} [tuple extract $t {attr_name}]]" for v in values]
+            return '(' + ' || '.join(vmatch) + ')'
+
+        # There's only one value
+        return f"[string match {{{values}}} [tuple extract $t {attr_name}]]"
+    @classmethod
+    def restrict3(cls, tclral: Tk, restriction: str, relation: str = _relation,
+                  svar_name: Optional[str] = None) -> RelationValue:
+        """
+        Here we select zero or more tuples that match the supplied criteria.
+
+        In relational theory this is known as a restriction operation.
+
+        TclRAL syntax:
+            relation restrict <relationValue> <tupleVariable> <expression>
+
+        TclRAL command example:
+            relation restrict ${Attribute} t {[string match {<unresolved>} [tuple extract $t Type]] &&
+                [string match {Elevator Management} [tuple extract $t Domain]]}
+
+        Generated from this PyRAL input:
+            relation: Attribute
+            restriction: 'Type:<unresolved>, Domain:Elevator Management'
+
+
+        :param tclral: The TclRAL session
+        :param relation: Name of a relation variable where the operation is applied
+        :param restriction: A string in Scrall notation that specifies the restriction criteria
+        :param svar_name: An optional session variable that holds the result
+        :return: The TclRAL string result representing the restricted tuple set
+        """
+        setr = re.sub(r"([\w_]*):<({[\w ',]*})>", cls.set_comparison, restriction)
+        # Replace square brackets and logic ops with tcl equivalents
+        restrict_tcl = setr.replace('<', '{').replace('>', '}'). \
+            replace(' OR ', ' || ').replace(', ', ' && ').replace(' AND ', ' && ').replace('NOT ', '!')
+        # Now process ':' attr:value match pairs with tcl string match expressions and wrap with tcl braces
+        rexpr = '{' + re.sub(r'([\w_]*):({[\w ]*})', r'[string match \2 [tuple extract $t \1]]', restrict_tcl) + '}'
+
+        # Insert it in the tlcral relation restrict command and execute
+        cmd = f"set {_relation} [relation restrict ${{{relation}}} t {rexpr}]"
+        result = Command.execute(tclral, cmd)
+        if svar_name:  # Save the result using the supplied session variable name
+            cls.set_var(tclral, svar_name)
+        return cls.make_pyrel(result)
+
+    @classmethod
+    def set_comparison(cls, match_obj) -> str:
+        attr_name = match_obj.group(1)
+        values = eval(match_obj.group(2))
+        if isinstance(values, set):
+            vmatch = [f"[string match {{{v}}} [tuple extract $t {attr_name}]]" for v in values]
+            return '(' + ' || '.join(vmatch) + ')'
+
+        # There's only one value
+        return f"[string match {{{values}}} [tuple extract $t {attr_name}]]"
