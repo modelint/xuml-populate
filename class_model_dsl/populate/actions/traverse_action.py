@@ -8,6 +8,9 @@ from class_model_dsl.exceptions.action_exceptions import UndefinedRelationship, 
     NoDestinationInPath, UndefinedClass, RelationshipUnreachableFromClass
 from class_model_dsl.parse.scrall_visitor import PATH_a
 from PyRAL.relation import Relation
+from collections import namedtuple
+
+Hop = namedtuple('Hop', 'cname rnum')
 
 if TYPE_CHECKING:
     from tkinter import Tk
@@ -20,26 +23,27 @@ class TraverseAction:
 
     source_flow = None
     dest_flow = None
-    path = None
+    resolved_path = []
     id = None
     dest_class = None # End of path
+    cursor_rel = None
     cursor_classes = None # Current set of from_classes
     source_class = None # Beginning of path
     hnum = 1 # Current hop number
     path_name = "" # Text representation of path as name
     from_class = None # Current hop
     mmdb = None
-    domain_name = None
+    domain = None
 
     @classmethod
-    def validate_rel(cls, mmdb: 'Tk', rnum: str, domain: str):
-        rel = f"Rnum:[{rnum}], Domain:[{domain}]"
-        if not Relation.restrict2(tclral=mmdb, restriction=rel, relation="Relationship").body:
-            cls._logger.error(f"Undefined Rnum {rnum} in Domain {domain}")
-            raise UndefinedRelationship(rnum, domain)
+    def validate_rel(cls, rnum: str):
+        rel = f"Rnum:[{rnum}], Domain:[{cls.domain}]"
+        if not Relation.restrict2(tclral=cls.mmdb, restriction=rel, relation="Relationship").body:
+            cls._logger.error(f"Undefined Rnum {rnum} in Domain {cls.domain}")
+            raise UndefinedRelationship(rnum, cls.domain)
 
     @classmethod
-    def validate_rel_hop(cls, mmdb: 'Tk', from_classes: Set[str], rnum: str, domain: str) -> Set[str]:
+    def validate_rel_hop(cls, from_classes: Set[str], rnum: str) -> Set[str]:
         """
         Is the specified relationship associated/attached to the from_class?
 
@@ -50,38 +54,60 @@ class TraverseAction:
         :return: False if the relationship is not associated with the from_class
         """
         # Verify that the relationship is defined on the class model
-        cls.validate_rel(mmdb, rnum, domain)
+        cls.validate_rel(rnum)
 
         # Verify that the relationship is attached to the from_class
         # Association or generalization? Check for a reference from or to the from_class
-        # from_classes = {'Cabin', 'Shaft', 'Floor'}
-        from_classes = {'Cabin'}
-        rhop = f"(From_class:<{from_classes}> OR To_class:<{from_classes}>), Rnum:<{rnum}>, Domain:<{domain}>"
+        rhop = f"(From_class:<{from_classes}> OR To_class:<{from_classes}>), Rnum:<{rnum}>, Domain:<{cls.domain}>"
         reachable_classes = set()
-        if Relation.restrict3(tclral=mmdb, restriction=rhop, relation="Reference").body:
-            from_tos = Relation.project2(mmdb, attributes=['From_class', 'To_class']).body
+        if Relation.restrict3(tclral=cls.mmdb, restriction=rhop, relation="Reference").body:
+            from_tos = Relation.project2(cls.mmdb, attributes=['From_class', 'To_class']).body
+            pass
 
-            for t in from_tos:
-                cnames = [n for n in t.values()]
-                if from_class == cnames[0] == cnames[1]:
-                    # Reflexive association, from_class is both to and from, valid
-                    reachable_classes.add(from_class)
-                    return reachable_classes
-                if from_class == cnames[0]:
-                    reachable_classes.add(cnames[1])
-                else:
-                    reachable_classes.add(cnames[0])
-            return reachable_classes
+        #     for t in from_tos:
+        #         cnames = [n for n in t.values()]
+        #         if from_class == cnames[0] == cnames[1]:
+        #             # Reflexive association, from_class is both to and from, valid
+        #             reachable_classes.add(from_class)
+        #             return reachable_classes
+        #         if from_class == cnames[0]:
+        #             reachable_classes.add(cnames[1])
+        #         else:
+        #             reachable_classes.add(cnames[0])
+        #     return reachable_classes
+        # else:
+        #     # Possibly an Ordinal which does not involve any Reference
+        #     orhop = f"Ranked_class:[{from_class}], Rnum:[{rnum}, Domain:[{domain}]"
+        #     if Relation.restrict2(tclral=mmdb, restriction=orhop, relation="Ordinal").body:
+        #         reachable_classes.add(from_class)
+        #         return reachable_classes
+        #
+        # # The relationship is not associated with the from_class
+        # raise RelationshipUnreachableFromClass(rnum, from_class, domain)
+
+    @classmethod
+    def rel_hop(cls, rnum:str):
+        """
+        Process an rnum found in a path
+        :param rnum:
+        :return:
+        """
+        # Ensure rel exists and is attached to one of the cursor classes
+        reachable_classes = cls.validate_rel_hop(from_classes=cls.cursor_classes, rnum=rnum)
+        # Move cursor to this validated rel
+        cls.cursor_rel = rnum
+        #
+        if len(cls.cursor_classes) == 1:
+            cls.resolved_path.append(Hop(cname=cls.cursor_classes.pop(), rnum=rnum))
         else:
-            # Possibly an Ordinal which does not involve any Reference
-            orhop = f"Ranked_class:[{from_class}], Rnum:[{rnum}, Domain:[{domain}]"
-            if Relation.restrict2(tclral=mmdb, restriction=orhop, relation="Ordinal").body:
-                reachable_classes.add(from_class)
-                return reachable_classes
-
-        # The relationship is not associated with the from_class
-        raise RelationshipUnreachableFromClass(rnum, from_class, domain)
-
+            # for the current cursor rel, which of the cursor classes is reachable?
+            c = reachable_classes.intersection(cls.cursor_classes)
+            if c and c not in cls.cursor_classes:
+                # If none, path is invalid
+                raise
+            # Otherwise, the one that is reachable becomes the new hop, append it
+            cls.resolved_path.append(Hop(cname=c, rnum=rnum))
+        cls.cursor_classes = reachable_classes
 
     @classmethod
     def build_path(cls, mmdb: 'Tk', source_class: str, domain: str, path: PATH_a):
@@ -97,7 +123,7 @@ class TraverseAction:
         cls.mmdb = mmdb
         cls.source_class = source_class # Source of first hop
         cls.cursor_classes = {source_class,} # Validation cursor is on this class now
-        cls.domain_name = domain
+        cls.domain = domain
 
         # Verify adequate path length
         if len(path.hops) < 2:
@@ -152,8 +178,8 @@ class TraverseAction:
 
 
             if type(hop).__name__ == 'R_a':
-                cls.cursor_classes = cls.validate_rel_hop(mmdb, from_classes=cls.cursor_classes,
-                                                          rnum=hop.rnum, domain=domain)
+                cls.rel_hop(rnum=hop.rnum)
+                pass
 
                 # Create Hop
                 cls.path_name += f"/{hop.rnum}"
