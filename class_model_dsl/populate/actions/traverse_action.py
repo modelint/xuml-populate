@@ -46,6 +46,9 @@ class TraverseAction:
     def validate_rel_hop(cls, from_classes: Set[str], rnum: str) -> Set[str]:
         """
         Is the specified relationship associated/attached to the from_class?
+        If so, return the set of classes that can be reached by that relationship.
+        If the relationship is reflexive or ordinal, a from_class class may be included
+        in the set of reachable classes.
 
         :param mmdb:
         :param rnum:
@@ -62,28 +65,31 @@ class TraverseAction:
         reachable_classes = set()
         if Relation.restrict3(tclral=cls.mmdb, restriction=rhop, relation="Reference").body:
             from_tos = Relation.project2(cls.mmdb, attributes=['From_class', 'To_class']).body
-            pass
+            # Reflexive association, from_class is both to and from, valid
+            if len(from_tos) == 1 and set(from_tos[0].values() == {from_classes}):
+                # the set of from_tos matches the fro
+                return from_classes
 
-        #     for t in from_tos:
-        #         cnames = [n for n in t.values()]
-        #         if from_class == cnames[0] == cnames[1]:
-        #             # Reflexive association, from_class is both to and from, valid
-        #             reachable_classes.add(from_class)
-        #             return reachable_classes
-        #         if from_class == cnames[0]:
-        #             reachable_classes.add(cnames[1])
-        #         else:
-        #             reachable_classes.add(cnames[0])
-        #     return reachable_classes
-        # else:
-        #     # Possibly an Ordinal which does not involve any Reference
-        #     orhop = f"Ranked_class:[{from_class}], Rnum:[{rnum}, Domain:[{domain}]"
-        #     if Relation.restrict2(tclral=mmdb, restriction=orhop, relation="Ordinal").body:
-        #         reachable_classes.add(from_class)
-        #         return reachable_classes
-        #
-        # # The relationship is not associated with the from_class
-        # raise RelationshipUnreachableFromClass(rnum, from_class, domain)
+            for t in from_tos:
+                cnames = [n for n in t.values()]
+                if from_class == cnames[0] == cnames[1]:
+                    # Reflexive association, from_class is both to and from, valid
+                    reachable_classes.add(from_class)
+                    return reachable_classes
+                if from_class == cnames[0]:
+                    reachable_classes.add(cnames[1])
+                else:
+                    reachable_classes.add(cnames[0])
+            return reachable_classes
+        else:
+            # Possibly an Ordinal which does not involve any Reference
+            orhop = f"Ranked_class:[{from_class}], Rnum:[{rnum}, Domain:[{domain}]"
+            if Relation.restrict2(tclral=mmdb, restriction=orhop, relation="Ordinal").body:
+                reachable_classes.add(from_class)
+                return reachable_classes
+
+        # The relationship is not associated with the from_class
+        raise RelationshipUnreachableFromClass(rnum, from_class, domain)
 
     @classmethod
     def rel_hop(cls, rnum:str):
@@ -147,7 +153,9 @@ class TraverseAction:
         # Valdiate path continuity
         # Step through the path validating each relationship, phrase, and class
         # Ensure that each step is reachable on the class model
+        cursor = 0
         for hop in path.hops:
+        # Instead, while cursor < len(path.hops):
 
             if type(hop).__name__ == 'N_a':
                 # This is either a relationship phrase or a class name
@@ -178,6 +186,25 @@ class TraverseAction:
 
 
             if type(hop).__name__ == 'R_a':
+
+                # Is it an association?
+                # Get reference(s)
+                # If one reference and Ref == R
+                #   Create straight hop to other class (or same if reflexive)'
+                #   break
+                # Two refs T and P, associative hop
+                #   Look ahead to next hop
+                #   If Rnum or phrase:
+                #      Get all reached classes of next hop and take intersection of
+                #      reached classes to get destination
+                #      break;
+                #   Else name:
+                #      If class name:
+                #      That is the destination class, create the approriate
+                #      hop subclass based on reference direction
+
+
+
                 cls.rel_hop(rnum=hop.rnum)
                 pass
 
