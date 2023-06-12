@@ -138,10 +138,11 @@ class TraverseAction:
         # Path has at least 2 hop elements
 
         # Validate destination class at the end of the path
-        cls.dest_class = path.hops[-1].name
-        if type(cls.dest_class).__name__ != 'N_a':
+        terminal_hop = path.hops[-1]
+        if type(terminal_hop).__name__ != 'N_a':
             # Destination class must a name
             raise NoDestinationInPath(path)
+        cls.dest_class = terminal_hop.name
 
         # Verify destination class is defined (we should do this in the loop instead)
         # class_id = f'Name:[{cls.dest_class.name}], Domain:[{domain}]'
@@ -208,7 +209,7 @@ class TraverseAction:
                             # The next hop must be either a class name or a perspective phrase on the current rel
                             # Class?
                             # Assoc class always has a T and P ref, get the other one
-                            other_ref = 'P' if ref == 'T' else 'P'
+                            other_ref = 'P' if ref == 'T' else 'T'
                             pref_r = f"Ref:<{other_ref}>, Rnum:<{hop.rnum}>, Domain:<{domain}>"
                             pref = Relation.restrict3(tclral=cls.mmdb, restriction=pref_r, relation="Reference").body
                             if not pref:
@@ -231,7 +232,8 @@ class TraverseAction:
                                 pass
                                 # Create
 
-                    if len(refs) == 2:
+
+                    if len(refs) == 2 and refs[0]['Ref'] in {'T', 'P'}:
                         # Current hop is from an association class
                         # So we have both a T and a P reference
                         path_index += 1
@@ -262,6 +264,9 @@ class TraverseAction:
                             # if perspective:
                             #     pass
                                 #
+                    if len(refs) > 1 and refs[0]['Ref'] == 'G':
+                        # It's a set of generalization references
+                        pass
 
             path_index += 1
 
