@@ -183,7 +183,7 @@ class TraverseAction:
                 rhop = f"(From_class:<{cls.class_cursor}> OR To_class:<{cls.class_cursor}>), Rnum:<{hop.rnum}>, Domain:<{cls.domain}>"
                 # Is it an association?
                 if Relation.restrict3(tclral=cls.mmdb, restriction=rhop, relation="Reference").body:
-                    refs = Relation.project2(cls.mmdb, attributes=['Ref', 'From_class', 'To_class']).body
+                    refs = Relation.project2(cls.mmdb, attributes=['Ref', 'From_class', 'To_class'], svar_name='rhop').body
 
                     if len(refs) == 1:
                         ref, from_class, to_class = map(refs[0].get, ('Ref', 'From_class', 'To_class'))
@@ -266,6 +266,16 @@ class TraverseAction:
                                 #
                     if len(refs) > 1 and refs[0]['Ref'] == 'G':
                         # It's a set of generalization references
+                        super_class = refs[0]['To_class']
+                        if cls.class_cursor == super_class:
+                            # Create a To Subclass Hop
+                            # Determine subclass
+                            subs = Relation.project2(cls.mmdb, attributes=['From_class'], relation="rhop").body
+                            pass
+                        else:
+                            # Create a To Superclass Hop
+                            pass
+
                         pass
 
             path_index += 1
