@@ -59,3 +59,21 @@ class RelationshipUnreachableFromClass(TraversalActionException):
 
     def __str__(self):
         return f'{pre}Unreachable relationship [{self.rnum}] from [{self.cname}] in domain [{self.domain}].{post}'
+
+class HopToUnreachableClass(TraversalActionException):
+    def __init__(self, cname, rnum, domain):
+        self.cname = cname
+        self.rnum = rnum
+        self.domain = domain
+
+    def __str__(self):
+        return f'{pre}Relationship [{self.rnum}] does not reach class [{self.cname}] in domain [{self.domain}].{post}'
+
+class MissingTorPrefInAssociativeRel(TraversalActionException):
+    def __init__(self, rnum, domain):
+        self.rnum = rnum
+        self.domain = domain
+
+    def __str__(self):
+        return f'{pre}P or T ref not found for associative relationship [{self.rnum}] in domain [{self.domain}].{post}'
+
