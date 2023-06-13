@@ -69,6 +69,24 @@ class HopToUnreachableClass(TraversalActionException):
     def __str__(self):
         return f'{pre}Relationship [{self.rnum}] does not reach class [{self.cname}] in domain [{self.domain}].{post}'
 
+class SubclassNotInGeneralization(TraversalActionException):
+    def __init__(self, subclass, rnum, domain):
+        self.subclass = subclass
+        self.rnum = rnum
+        self.domain = domain
+
+    def __str__(self):
+        return f'{pre}Generalization [{self.rnum}] does not include subclass [{self.subclass}] in domain' \
+               f'[{self.domain}].{post}'
+class NoSubclassInHop(TraversalActionException):
+    def __init__(self, superclass, rnum, domain):
+        self.superclass = superclass
+        self.rnum = rnum
+        self.domain = domain
+
+    def __str__(self):
+        return f'{pre}Generalization [{self.rnum}] from [{self.superclass}] does not reach a subclass in domain' \
+               f'[{self.domain}].{post}'
 class MissingTorPrefInAssociativeRel(TraversalActionException):
     def __init__(self, rnum, domain):
         self.rnum = rnum

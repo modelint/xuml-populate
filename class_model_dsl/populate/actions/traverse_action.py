@@ -6,7 +6,7 @@ import logging
 from typing import TYPE_CHECKING, List, Set
 from class_model_dsl.exceptions.action_exceptions import UndefinedRelationship, IncompletePath,\
     NoDestinationInPath, UndefinedClass, RelationshipUnreachableFromClass, HopToUnreachableClass,\
-    MissingTorPrefInAssociativeRel
+    MissingTorPrefInAssociativeRel, NoSubclassInHop, SubclassNotInGeneralization
 from class_model_dsl.parse.scrall_visitor import PATH_a
 from PyRAL.relation import Relation
 from collections import namedtuple
@@ -267,15 +267,22 @@ class TraverseAction:
                     if len(refs) > 1 and refs[0]['Ref'] == 'G':
                         # It's a set of generalization references
                         super_class = refs[0]['To_class']
+                        sub_tuples = Relation.project2(cls.mmdb, attributes=['From_class'], relation="rhop").body
+                        subclasses = {s['From_class'] for s in sub_tuples}
                         if cls.class_cursor == super_class:
-                            # Create a To Subclass Hop
                             # Determine subclass
-                            subs = Relation.project2(cls.mmdb, attributes=['From_class'], relation="rhop").body
-                            pass
+                            path_index += 1
+                            next_hop = path.hops[path_index]
+                            if next_hop not in subclasses:
+                                raise NoSubclassInHop(superclass=super_class, rnum=hop.rnum, domain=domain)
+                            cls.class_cursor = next_hop
+                            # Create a To Subclass Hop
                         else:
-                            # Create a To Superclass Hop
-                            pass
-
+                            # Assume we are jumping to the superclass, but verify that the current class is a subclass
+                            if cls.class_cursor not in subclasses:
+                                raise SubclassNotInGeneralization(subclass=cls.class_cursor, rnum=hop.rnum, domain=domain)
+                            # Create a To Superclass Hop using superclass, rnum, and class_cursor
+                            cls.class_cursor = superclass
                         pass
 
             path_index += 1
