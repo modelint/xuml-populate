@@ -343,7 +343,7 @@ class Relation:
         else:
             # If there is only one match (value), regex returns a string rather than a tuple
             # in the zero element. We need to embed this string in a list
-            b_rows = [[re.findall(tuple_pattern, row)[0].strip('{}') for row in body]]
+            b_rows = [[re.findall(tuple_pattern, row)[0].strip('{}')] for row in body]
         # Either way, b_rows is a list of lists
 
         body = [dict(zip(header.keys(), r)) for r in b_rows]
