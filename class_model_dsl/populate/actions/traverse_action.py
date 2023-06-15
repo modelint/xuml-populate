@@ -6,7 +6,7 @@ import logging
 from typing import TYPE_CHECKING, List, Set
 from class_model_dsl.exceptions.action_exceptions import UndefinedRelationship, IncompletePath,\
     NoDestinationInPath, UndefinedClass, RelationshipUnreachableFromClass, HopToUnreachableClass,\
-    MissingTorPrefInAssociativeRel, NoSubclassInHop, SubclassNotInGeneralization
+    MissingTorPrefInAssociativeRel, NoSubclassInHop, SubclassNotInGeneralization, PerspectiveNotDefined
 from class_model_dsl.parse.scrall_visitor import PATH_a
 from PyRAL.relation import Relation
 from collections import namedtuple
@@ -43,78 +43,75 @@ class TraverseAction:
             cls._logger.error(f"Undefined Rnum {rnum} in Domain {cls.domain}")
             raise UndefinedRelationship(rnum, cls.domain)
 
-    # @classmethod
-    # def validate_rel_hop(cls, from_classes: Set[str], rnum: str) -> Set[str]:
-    #     """
-    #     Is the specified relationship associated/attached to the from_class?
-    #     If so, return the set of classes that can be reached by that relationship.
-    #     If the relationship is reflexive or ordinal, a from_class class may be included
-    #     in the set of reachable classes.
-    #
-    #     :param mmdb:
-    #     :param rnum:
-    #     :param from_classes: The set of classes that could be the start of this hop
-    #     :param domain:
-    #     :return: False if the relationship is not associated with the from_class
-    #     """
-    #     # Verify that the relationship is defined on the class model
-    #     cls.validate_rel(rnum)
-    #
-    #     # Verify that the relationship is attached to the from_class
-    #     # Association or generalization? Check for a reference from or to the from_class
-    #     rhop = f"(From_class:<{from_classes}> OR To_class:<{from_classes}>), Rnum:<{rnum}>, Domain:<{cls.domain}>"
-    #     reachable_classes = set()
-    #     if Relation.restrict3(tclral=cls.mmdb, restriction=rhop, relation="Reference").body:
-    #         from_tos = Relation.project2(cls.mmdb, attributes=['From_class', 'To_class']).body
-    #         # Reflexive association, from_class is both to and from, valid
-    #         if len(from_tos) == 1 and set(from_tos[0].values() == {from_classes}):
-    #             # the set of from_tos matches the fro
-    #             return from_classes
-    #
-    #         for t in from_tos:
-    #             cnames = [n for n in t.values()]
-    #             if from_class == cnames[0] == cnames[1]:
-    #                 # Reflexive association, from_class is both to and from, valid
-    #                 reachable_classes.add(from_class)
-    #                 return reachable_classes
-    #             if from_class == cnames[0]:
-    #                 reachable_classes.add(cnames[1])
-    #             else:
-    #                 reachable_classes.add(cnames[0])
-    #         return reachable_classes
-    #     else:
-    #         # Possibly an Ordinal which does not involve any Reference
-    #         orhop = f"Ranked_class:[{from_class}], Rnum:[{rnum}, Domain:[{domain}]"
-    #         if Relation.restrict2(tclral=mmdb, restriction=orhop, relation="Ordinal").body:
-    #             reachable_classes.add(from_class)
-    #             return reachable_classes
-    #
-    #     # The relationship is not associated with the from_class
-    #     raise RelationshipUnreachableFromClass(rnum, from_class, domain)
 
-    # @classmethod
-    # def rel_hop(cls, rnum:str):
-    #     """
-    #     Process an rnum found in a path
-    #     :param rnum:
-    #     :return:
-    #     """
-    #     # Ensure rel exists and is attached to one of the cursor classes
-    #     reachable_classes = cls.validate_rel_hop(from_classes=cls.cursor_classes, rnum=rnum)
-    #     # Move cursor to this validated rel
-    #     cls.cursor_rel = rnum
-    #     #
-    #     if len(cls.cursor_classes) == 1:
-    #         cls.resolved_path.append(Hop(cname=cls.cursor_classes.pop(), rnum=rnum))
-    #     else:
-    #         # for the current cursor rel, which of the cursor classes is reachable?
-    #         c = reachable_classes.intersection(cls.cursor_classes)
-    #         if c and c not in cls.cursor_classes:
-    #             # If none, path is invalid
-    #             raise
-    #         # Otherwise, the one that is reachable becomes the new hop, append it
-    #         cls.resolved_path.append(Hop(cname=c, rnum=rnum))
-    #     cls.cursor_classes = reachable_classes
+    @classmethod
+    def ordinal_hop(cls, rnum: str, cname:str, perspective:str):
+        pass
+
+    @classmethod
+    def symmetric_hop(cls, rnum: str, cname:str):
+        pass
+
+    @classmethod
+    def assymetric_circular_hop(cls, rnum: str, cname:str, perspective:str):
+        pass
+
+    @classmethod
+    def from_association_class(cls, rnum: str, assoc_class:str, to_class:str, symmetric:bool = False):
+        pass
+
+    @classmethod
+    def to_association_class(cls, rnum: str, from_class:str, assoc_class:str):
+        pass
+
+    @classmethod
+    def straight_hop(cls, rnum: str, from_class:str, to_class:str):
+        pass
+
+    @classmethod
+    def to_superclass_hop(cls, rnum: str, sub_class: str, super_class:str):
+        pass
+
+    @classmethod
+    def to_subclass_hop(cls, rnum: str, sub_class: str, super_class:str):
+        pass
+
+    @classmethod
+    def reachable_classes(cls, rnum:str) -> Set[str]:
+        """
+        Return a set of all classes reachable on the provided relationship
+
+        :param rnum:
+        :return:
+        """
+        reachable_classes = set()
+        r = f"Rnum:<{rnum}>, Domain:<{cls.domain}>"
+        refs = Relation.restrict3(tclral=cls.mmdb, restriction=r, relation="Reference").body
+        for ref in refs:
+            reachable_classes.add(ref['To_class'])
+            reachable_classes.add(ref['From_class'])
+        return reachable_classes
+
+    @classmethod
+    def resolve_perspective(cls, phrase:str) -> str:
+        """
+        Verifies that perspective exists and returns the associated rnum
+
+        :param phrase:  Perspective phrase text such as 'travels along'
+        :return: The rnum
+        """
+        r = f"Phrase:<{phrase}>, Domain:<{cls.domain}>"
+        r_result = Relation.restrict3(cls.mmdb, relation='Perspective', restriction=r)
+        if not r_result.body:
+            raise PerspectiveNotDefined(phrase, cls.domain)
+        p = ('Side', 'Rnum', 'Viewed_class')
+        p_result = Relation.project2(cls.mmdb, attributes=p)
+        side, rnum, viewed_class = map(p_result.body[0].get, p)
+        rel_classes = cls.reachable_classes(rnum)
+        # The rnum must be attached to the cursor class
+        # The perspective must be opposed to the cursor class
+
+        pass
 
     @classmethod
     def build_path(cls, mmdb: 'Tk', source_class: str, domain: str, path: PATH_a):
@@ -159,6 +156,10 @@ class TraverseAction:
             hop = path.hops[path_index]
 
             if type(hop).__name__ == 'N_a':
+                if path_index == 0:
+                    # This is the first hop and it must a perspective
+                    cls.resolve_perspective(phrase=hop.name)
+                    pass
                 # This is either a relationship phrase or a class name
                 # First look for a class name
                 class_id = f"Name:<{hop.name}>, Domain:<{domain}>"
@@ -170,9 +171,13 @@ class TraverseAction:
                         raise HopToUnreachableClass(cname=hop.name, rnum=cls.rel_cursor, domain=domain)
                 else:
                     # Try a phrase name (and get Rnum, Viewed class
-                    r = f"Phrase:{hop.name}, Domain: {domain}"
-                    Relation.restrict(mmdb, relation='Perspective', restriction=r)
-                    result = Relation.project(mmdb, attributes=['Rnum', 'Viewed_class'])
+                    # Reflexive if both T/P references are to the same class OR
+                    # If single R reference has same from/to classes
+                    # If assoc not reflexive, get relationship number and process as rnum
+                    # If reflexive:
+                    #
+                    # Check for Binary or Unary
+                    cls.resolve_perspective(phrase=hop.name)
                     ptuples = Relation.make_pyrel(result).body
                     found = False
                     for t in ptuples:

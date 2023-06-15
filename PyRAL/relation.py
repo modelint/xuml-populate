@@ -5,7 +5,7 @@ relation.py – Operations on relations
 import logging
 import re
 from tabulate import tabulate
-from typing import List, Optional, Dict
+from typing import List, Optional, Dict, Tuple
 from PyRAL.rtypes import RelationValue
 from PyRAL.command import Command
 
@@ -420,7 +420,7 @@ class Relation:
         return cls.make_pyrel(result)
 
     @classmethod
-    def project2(cls, tclral: Tk, attributes: List[str], relation: str=_relation,
+    def project2(cls, tclral: Tk, attributes: Tuple[str, ...], relation: str=_relation,
                  svar_name: Optional[str]=None) -> RelationValue:
         """
         Returns a relation whose heading consists of only a set of selected attributes.

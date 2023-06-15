@@ -61,7 +61,12 @@ attributes
 class Floor
 attributes
     Name : Level Name {I}
-    Height : Distance {I2}
+    Height : Distance {I2, OR7}
+--
+class Floor Order
+attributes
+    Lower floor {I, R55}
+    Higher floor {I2, R55}
 --
 class Floor Service
 attributes
@@ -80,6 +85,7 @@ attributes
 class Shaft
 attributes
     ID : Shaft ID {I}
+    Number : Ordinal {I2, OR57}
     Bank {R1}
     In service : Boolean
 --
@@ -175,4 +181,11 @@ relationships
     1 Transfer
     Transfer.Shaft -> Cabin.Shaft
     Transfer.Destination floor -> Accessible Shaft Level.Floor
+--
+    R55
+    is higher than, 1c Floor
+    is lower than, 1c Floor
+    1 Floor Order
+    Floor Order.Lower floor -> Floor.Name
+    Floor Order.Higher floor -> Floor.Name
 --

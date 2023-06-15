@@ -51,9 +51,17 @@ class UndefinedRelationship(ActionException):
     def __str__(self):
         return f'{pre}Undefined relationship [{self.rnum}] in domain [{self.domain}].{post}'
 
+class PerspectiveNotDefined(TraversalActionException):
+    def __init__(self, phrase,domain):
+        self.phrase = phrase
+        self.domain = domain
+
+    def __str__(self):
+        return f'{pre}Perspective [{self.phrase}] not defined in domain [{self.domain}].{post}'
+
 class RelationshipUnreachableFromClass(TraversalActionException):
     def __init__(self, rnum, cname, domain):
-        self.cname = rnum
+        self.cname = cname
         self.rnum = rnum
         self.domain = domain
 
