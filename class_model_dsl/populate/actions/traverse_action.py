@@ -54,11 +54,20 @@ class TraverseAction:
         pass
 
     @classmethod
-    def assymetric_circular_hop(cls, rnum: str, cname:str, perspective:str):
+    def assymetric_circular_hop(cls, rnum: str, cname:str, side:str):
         pass
 
     @classmethod
-    def from_association_class(cls, rnum: str, assoc_class:str, to_class:str, symmetric:bool = False):
+    def from_symmetric_association_class(cls, rnum: str):
+        pass
+
+    @classmethod
+    def from_asymmetric_association_class(cls, rnum: str, side:str):
+        """
+        :param rnum: Association rnum
+        :param side: Perspective side (T or P)
+        :return:
+        """
         pass
 
     @classmethod
@@ -76,6 +85,17 @@ class TraverseAction:
     @classmethod
     def to_subclass_hop(cls, rnum: str, sub_class: str, super_class:str):
         pass
+
+    @classmethod
+    def is_assoc_class(cls, cname:str, rnum:str) -> bool:
+        """
+        Returns true
+        :param cname: Class to investigate
+        :param rnum: Class participates in this association
+        :return: True of the class is an association class formalizing the specified association
+        """
+        r = f"Class:<{cname}>, Rnum:<{rnum}>, Domain:<{cls.domain}>"
+        return bool(Relation.restrict3(tclral=cls.mmdb, restriction=r, relation="Association_Class").body)
 
     @classmethod
     def is_reflexive(cls, rnum:str) -> int:
@@ -130,22 +150,36 @@ class TraverseAction:
         p_result = Relation.project2(cls.mmdb, attributes=p)
         side, rnum, viewed_class = map(p_result.body[0].get, p)
         # We found the perspective
-        # Now we need to determine if the cursor class can reach that perspective
-        # If the association is reflexive, there is only one viewed class which must be the cursor class
-        # If not, the cursor class must be reachable in the association but not be the viewed class on
-        # the found perspective
-        if cls.is_reflexive(rnum):
+        # Now we decide which kind of hop to populate
+        # We start by asking, "Is this association reflexive?"
+        if symmetry := cls.is_reflexive(rnum):
+            # Symmetry is zero if non-reflexive, otherwise 1:symmetric, 2:asymmetric
+            # So it must be either 1 or 2
             if cls.class_cursor == viewed_class:
-                # Reflexive and on the current class, perspective is reachable
-                cls.rel_cursor = rnum
-                return
-        elif cls.class_cursor != viewed_class and cls.class_cursor in cls.reachable_classes(rnum):
-            cls.rel_cursor = rnum
-            return
-
-        # If we haven't returned, the perspective is unreachable
-        raise RelationshipUnreachableFromClass(rnum, cname=cls.class_cursor, domain=cls.domain)
-
+                # The class_cursor is one of the participating classes, i.e. not the association class
+                # So it is a Circular Hop from-to the same class
+                if symmetry == 1:
+                    # Populate a symmetric hop
+                    cls.symmetric_hop(rnum, viewed_class)
+                else:
+                    # Populate an assymetric hop
+                    cls.assymetric_circular_hop(rnum, viewed_class, side)
+                return # Circular hop populated
+            else:
+                # The class_cursor must be the association class
+                if symmetry == 1:
+                    cls.from_symmetric_association_class(rnum)
+                else:
+                    cls.from_asymmetric_association_class(rnum, side)
+                return # From assoc class hop populated
+        else:  # Non-reflexive association (non-circular hop)
+            # We are either hopping from the association class to a viewed class or
+            # from the other participating class to the viewed class
+            if cls.is_assoc_class(cname=cls.class_cursor, rnum=rnum):
+                cls.from_asymmetric_association_class(rnum, side)
+            else:
+                cls.straight_hop(rnum)
+            return # Non-reflexive hop to a participating class
 
     @classmethod
     def build_path(cls, mmdb: 'Tk', source_class: str, domain: str, path: PATH_a):
@@ -193,7 +227,7 @@ class TraverseAction:
                 if path_index == 0:
                     # This is the first hop and it must a perspective
                     cls.resolve_perspective(phrase=hop.name)
-                    pass
+                else:
                 # This is either a relationship phrase or a class name
                 # First look for a class name
                 class_id = f"Name:<{hop.name}>, Domain:<{domain}>"
