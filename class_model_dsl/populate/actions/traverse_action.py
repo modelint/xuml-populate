@@ -6,7 +6,8 @@ import logging
 from typing import TYPE_CHECKING, List, Set
 from class_model_dsl.exceptions.action_exceptions import UndefinedRelationship, IncompletePath,\
     NoDestinationInPath, UndefinedClass, RelationshipUnreachableFromClass, HopToUnreachableClass,\
-    MissingTorPrefInAssociativeRel, NoSubclassInHop, SubclassNotInGeneralization, PerspectiveNotDefined
+    MissingTorPrefInAssociativeRel, NoSubclassInHop, SubclassNotInGeneralization, PerspectiveNotDefined,\
+    UndefinedAssociation
 from class_model_dsl.parse.scrall_visitor import PATH_a
 from PyRAL.relation import Relation
 from collections import namedtuple
@@ -77,6 +78,27 @@ class TraverseAction:
         pass
 
     @classmethod
+    def is_reflexive(cls, rnum:str) -> int:
+        """
+        Is this a reflexive association and, if so, how many perspectives does it have?
+        An association with both a T and P perspective is an asymmetric association while
+        an association with a single S perspective is a symmetric association
+
+        :param rnum: The association rnum to inspect
+        :return: Zero if non-reflexive, 1 if symmetric and 2 if assymmetric reflexive
+        """
+        # Get all perspectives defined on rnum
+        r = f"Rnum:<{rnum}>, Domain:<{cls.domain}>"
+        perspectives = Relation.restrict3(tclral=cls.mmdb, restriction=r, relation="Perspective")
+        if not perspectives.body:
+            # Every association relationship defines at least one perspective
+            raise UndefinedAssociation(rnum, cls.domain)
+        vclasses = Relation.project2(tclral=cls.mmdb, attributes=('Viewed_class',)).body
+        # Reflexive if there is both viewed classes are the same (only 1)
+        # So, if reflexive, return 1 (S - Symmetric) or 2 (T,P - Assymetric), otherwise 0, non-reflexive
+        return len(perspectives.body) if len(vclasses) == 1 else 0
+
+    @classmethod
     def reachable_classes(cls, rnum:str) -> Set[str]:
         """
         Return a set of all classes reachable on the provided relationship
@@ -93,13 +115,13 @@ class TraverseAction:
         return reachable_classes
 
     @classmethod
-    def resolve_perspective(cls, phrase:str) -> str:
+    def resolve_perspective(cls, phrase:str):
         """
-        Verifies that perspective exists and returns the associated rnum
+        Populate hop across the perspective
 
         :param phrase:  Perspective phrase text such as 'travels along'
-        :return: The rnum
         """
+        # Find phrase and ensure that it is on an association that involves the class cursor
         r = f"Phrase:<{phrase}>, Domain:<{cls.domain}>"
         r_result = Relation.restrict3(cls.mmdb, relation='Perspective', restriction=r)
         if not r_result.body:
@@ -107,11 +129,23 @@ class TraverseAction:
         p = ('Side', 'Rnum', 'Viewed_class')
         p_result = Relation.project2(cls.mmdb, attributes=p)
         side, rnum, viewed_class = map(p_result.body[0].get, p)
-        rel_classes = cls.reachable_classes(rnum)
-        # The rnum must be attached to the cursor class
-        # The perspective must be opposed to the cursor class
+        # We found the perspective
+        # Now we need to determine if the cursor class can reach that perspective
+        # If the association is reflexive, there is only one viewed class which must be the cursor class
+        # If not, the cursor class must be reachable in the association but not be the viewed class on
+        # the found perspective
+        if cls.is_reflexive(rnum):
+            if cls.class_cursor == viewed_class:
+                # Reflexive and on the current class, perspective is reachable
+                cls.rel_cursor = rnum
+                return
+        elif cls.class_cursor != viewed_class and cls.class_cursor in cls.reachable_classes(rnum):
+            cls.rel_cursor = rnum
+            return
 
-        pass
+        # If we haven't returned, the perspective is unreachable
+        raise RelationshipUnreachableFromClass(rnum, cname=cls.class_cursor, domain=cls.domain)
+
 
     @classmethod
     def build_path(cls, mmdb: 'Tk', source_class: str, domain: str, path: PATH_a):
