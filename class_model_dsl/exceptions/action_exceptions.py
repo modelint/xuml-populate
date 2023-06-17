@@ -128,3 +128,11 @@ class MissingTorPrefInAssociativeRel(TraversalActionException):
     def __str__(self):
         return f'{pre}P or T ref not found for associative relationship [{self.rnum}] in domain [{self.domain}].{post}'
 
+class UnexpectedClassOrPerspectiveInPath(TraversalActionException):
+    def __init__(self, name, path):
+        self.name = name
+        self.path = path
+
+    def __str__(self):
+        return f'{pre}Name [{self.name}] not expected in path [{self.path}].{post}'
+

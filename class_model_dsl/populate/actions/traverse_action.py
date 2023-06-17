@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING, List, Set
 from class_model_dsl.exceptions.action_exceptions import UndefinedRelationship, IncompletePath,\
     NoDestinationInPath, UndefinedClass, RelationshipUnreachableFromClass, HopToUnreachableClass,\
     MissingTorPrefInAssociativeRel, NoSubclassInHop, SubclassNotInGeneralization, PerspectiveNotDefined,\
-    UndefinedAssociation, NeedPerspectiveOrClassToHop, NeedPerspectiveToHop
+    UndefinedAssociation, NeedPerspectiveOrClassToHop, NeedPerspectiveToHop, UnexpectedClassOrPerspectiveInPath
 from class_model_dsl.parse.scrall_visitor import PATH_a
 from PyRAL.relation import Relation
 from collections import namedtuple
@@ -137,13 +137,52 @@ class TraverseAction:
         return reachable_classes
 
     @classmethod
-    def hop_rel(cls, rnum:str):
+    def hop_ordinal(cls):
+        pass
+
+    @classmethod
+    def hop_generalization(cls, refs):
         """
-        Populate hop across the relationship
+        Populate a Generalization Hop
 
         :param rnum:
+        :param refs:
+        :return:
         """
-        cls.rel_cursor = rnum
+        # It's a set of generalization references
+        super_class = refs[0]['To_class']
+        P = ("From_class",)
+        sub_tuples = Relation.project2(cls.mmdb, attributes=P, relation="rhop").body
+        subclasses = {s['From_class'] for s in sub_tuples}
+        if cls.class_cursor == super_class:
+            # Superclass to subclass
+            #  must be specified in the next hop
+            cls.path_index += 1
+            next_hop = cls.path.hops[cls.path_index]
+            if next_hop not in subclasses:
+                raise NoSubclassInHop(superclass=super_class, rnum=cls.rel_cursor, domain=cls.domain)
+            cls.class_cursor = next_hop
+            cls.to_subclass_hop(rnum=cls.rel_cursor, sub_class=cls.class_cursor)
+            return
+        else:
+            # Subclass to Superclass
+            # Assume we are jumping to the superclass, but verify that the current class is a subclass
+            if cls.class_cursor not in subclasses:
+                raise SubclassNotInGeneralization(subclass=cls.class_cursor, rnum=cls.rel_cursor,
+                                                  domain=cls.domain)
+            # Create a To Superclass Hop using superclass, rnum, and class_cursor
+            cls.class_cursor = super_class
+            cls.to_superclass_hop(cls.rel_cursor)
+            return
+
+    @classmethod
+    def hop_association(cls, refs):
+        """
+        Populate hop across the association
+
+        :param refs:
+        :param rnum:
+        """
         rhop = f"(From_class:<{cls.class_cursor}> OR To_class:<{cls.class_cursor}>), Rnum:<{rnum}>, Domain:<{cls.domain}>"
         # This is either an association, generalization or ordinal relationship
         # The first two relationship types use references for formalizaiton, so we start by looking for these
@@ -234,31 +273,11 @@ class TraverseAction:
 
             # Generalization
             elif len(refs) > 1 and refs[0]['Ref'] == 'G':
-                # It's a set of generalization references
-                super_class = refs[0]['To_class']
-                P = ("From_class",)
-                sub_tuples = Relation.project2(cls.mmdb, attributes=P, relation="rhop").body
-                subclasses = {s['From_class'] for s in sub_tuples}
-                if cls.class_cursor == super_class:
-                    # Superclass to subclass
-                    # Subclass must be specified in the next hop
-                    cls.path_index += 1
-                    next_hop = cls.path.hops[cls.path_index]
-                    if next_hop not in subclasses:
-                        raise NoSubclassInHop(superclass=super_class, rnum=cls.rel_cursor, domain=cls.domain)
-                    cls.class_cursor = next_hop
-                    cls.to_subclass_hop(rnum=cls.rel_cursor, sub_class=cls.class_cursor)
-                    return
-                else:
-                    # Subclass to Superclass
-                    # Assume we are jumping to the superclass, but verify that the current class is a subclass
-                    if cls.class_cursor not in subclasses:
-                        raise SubclassNotInGeneralization(subclass=cls.class_cursor, rnum=cls.rel_cursor,
-                                                          domain=cls.domain)
-                    # Create a To Superclass Hop using superclass, rnum, and class_cursor
-                    cls.class_cursor = super_class
-                    cls.to_superclass_hop(cls.rel_cursor)
-                    return
+                cls.hop_generalization(refs)
+
+            else:
+                # Must be an ordinal hop
+                pass
 
     @classmethod
     def resolve_perspective(cls, phrase:str):
@@ -356,57 +375,29 @@ class TraverseAction:
                     # This is the first hop and it must a perspective
                     cls.resolve_perspective(phrase=hop.name)
                 else:
-                # This is either a relationship phrase or a class name
-                # First look for a class name
-                class_id = f"Name:<{hop.name}>, Domain:<{domain}>"
-
-                if Relation.restrict3(tclral=cls.mmdb, restriction=class_id, relation="Class").body:
-                    # Class exists
-
-                    if cls.class_cursor != hop.name:
-                        raise HopToUnreachableClass(cname=hop.name, rnum=cls.rel_cursor, domain=domain)
-                else:
-                    # Try a phrase name (and get Rnum, Viewed class
-                    # Reflexive if both T/P references are to the same class OR
-                    # If single R reference has same from/to classes
-                    # If assoc not reflexive, get relationship number and process as rnum
-                    # If reflexive:
-                    #
-                    # Check for Binary or Unary
-                    cls.resolve_perspective(phrase=hop.name)
-                    ptuples = Relation.make_pyrel(result).body
-                    found = False
-                    for t in ptuples:
-                        pass
+                    # All other class/perspective hops should be processed in the rel hop methods
+                    raise UnexpectedClassOrPerspectiveInPath(name=hop.name, path=path)
 
             elif type(hop).__name__ == 'R_a':
-                cls.hop_rel(rnum=hop.rnum)
+                # This is either an Association, Generalization, or Ordinal Relationship
+                # Determine the type and call the corresponding hop populator
+
+                # First we look for any References to or from the class cursor
                 R = f"(From_class:<{cls.class_cursor}> OR To_class:<{cls.class_cursor}>), Rnum:<{hop.rnum}>," \
                        f"Domain:<{cls.domain}>"
-                # Is it an association?
-                P = ('Ref', 'From_class', 'To_class')
                 if Relation.restrict3(tclral=cls.mmdb, restriction=R, relation="Reference").body:
+                    P = ('Ref', 'From_class', 'To_class')
                     refs = Relation.project2(cls.mmdb, attributes=P, svar_name='rhop').body
 
+                    # Generalization
+                    if len(refs) > 1 and refs[0]['Ref'] == 'G':
+                        cls.hop_generalization(refs)
+                    else:
+                        cls.hop_association(refs)
+                else:
+                    cls.hop_ordinal()
 
-            path_index += 1
-
-                #   break
-                # Two refs T and P, associative hop
-                #   Look ahead to next hop
-                #   If Rnum or phrase:
-                #      Get all reached classes of next hop and take intersection of
-                #      reached classes to get destination
-                #      break;
-                #   Else name:
-                #      If class name:
-                #      That is the destination class, create the approriate
-                #      hop subclass based on reference direction
-
-
-
-
-
+            cls.path_index += 1
 
 
         if cls.dest_class != cls.class_cursor:
