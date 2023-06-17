@@ -151,6 +151,7 @@ class TraverseAction:
             a = ('Ref', 'From_class', 'To_class')
             refs = Relation.project2(cls.mmdb, attributes=a, svar_name='rhop').body
 
+            # Single reference, R, T or P
             if len(refs) == 1:
                 ref, from_class, to_class = map(refs[0].get, ('Ref', 'From_class', 'To_class'))
                 if ref == 'R':
@@ -210,37 +211,26 @@ class TraverseAction:
                             cls.resolve_perspective(phrase=next_hop.name)
                             return
 
+            # T and P reference
             elif len(refs) == 2 and refs[0]['Ref'] in {'T', 'P'}:
                 # Current hop is from an association class
-                # So we have both a T and a P reference
                 cls.path_index += 1
                 next_hop = cls.path.hops[cls.path_index]
                 # Does the next hop match either of the participating classes
                 particip_classes = {refs[0]['To_class'], refs[1]['To_class']}
                 if next_hop.name in particip_classes:
-                    # This is the participating class, create from asym assoc hop
+                    # The particpating class is explicitly named
                     cls.class_cursor = next_hop.name
-                    pass
+                    R = f"Class:<{cls.class_cursor}>, Rnum:<{cls.rel_cursor}>, Domain:<{cls.domain}>"
+                    persp = Relation.restrict3(cls.mmdb, relation='Perspective', restriction=R).body
+                    P = ('Side',)
+                    side = Relation.project2(cls.mmdb, attributes=P).body[0]['Side']
+                    cls.from_asymmetric_association_class(rnum=cls.rel_cursor, side=side)
+                    return
                 else:
-                    pass
-                    # pref_r = f"Ref:<{other_ref}>, Rnum:<{hop.rnum}>, Domain:<{domain}>"
-                    # pref = Relation.restrict3(tclral=cls.mmdb, restriction=pref_r, relation="Reference").body
-                    # if not pref:
-                    #     raise MissingTorPrefInAssociativeRel(rnum=hop.rnum, domain=domain)
-                    # pref_dest_class = pref[0]['To_class']
-                    # # This is the destination class
-                    # if next_hop.name == pref_dest_class:
-                    #     # It is the association class (source of the T ref)
-                    #     # Create a To Association Class Hop
-                    #     cls.class_cursor = next_hop.name
-                    #     pass
-                    # next_hop must be a perspective phrase and not a class, but let's check to be sure
-                    # r = f"Phrase:<{next_hop}>, Rnum:<{hop.rnum}>, Domain:<{domain}>"
-                    # perspective = Relation.restrict3(tclral=cls.mmdb, restriction=r,
-                    #                                  relation="Perspective").body
-                    # if perspective:
-                    #     pass
-                    #
+                    # The next hop needs to be a perspective
+                    cls.resolve_perspective(phrase=next_hop.name)
+                    return
 
     @classmethod
     def resolve_perspective(cls, phrase:str):
