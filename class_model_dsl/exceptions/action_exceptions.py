@@ -76,6 +76,23 @@ class RelationshipUnreachableFromClass(TraversalActionException):
     def __str__(self):
         return f'{pre}Unreachable relationship [{self.rnum}] from [{self.cname}] in domain [{self.domain}].{post}'
 
+class NeedPerspectiveToHop(TraversalActionException):
+    def __init__(self, rnum, domain):
+        self.rnum = rnum
+        self.domain = domain
+
+    def __str__(self):
+        return f'{pre}Reflexive association [{self.rnum}] in domain [{self.domain}] cannot be resolved' \
+               f'without perspective.{post}'
+class NeedPerspectiveOrClassToHop(TraversalActionException):
+    def __init__(self, rnum, domain):
+        self.rnum = rnum
+        self.domain = domain
+
+    def __str__(self):
+        return f'{pre}Association [{self.rnum}] in domain [{self.domain}] cannot be resolved' \
+               f'without perspective or class.{post}'
+
 class HopToUnreachableClass(TraversalActionException):
     def __init__(self, cname, rnum, domain):
         self.cname = cname
