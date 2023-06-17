@@ -81,7 +81,7 @@ class TraverseAction:
         pass
 
     @classmethod
-    def to_superclass_hop(cls, rnum: str, sub_class: str, super_class:str):
+    def to_superclass_hop(cls, rnum: str):
         pass
 
     @classmethod
@@ -232,6 +232,34 @@ class TraverseAction:
                     cls.resolve_perspective(phrase=next_hop.name)
                     return
 
+            # Generalization
+            elif len(refs) > 1 and refs[0]['Ref'] == 'G':
+                # It's a set of generalization references
+                super_class = refs[0]['To_class']
+                P = ("From_class",)
+                sub_tuples = Relation.project2(cls.mmdb, attributes=P, relation="rhop").body
+                subclasses = {s['From_class'] for s in sub_tuples}
+                if cls.class_cursor == super_class:
+                    # Superclass to subclass
+                    # Subclass must be specified in the next hop
+                    cls.path_index += 1
+                    next_hop = cls.path.hops[cls.path_index]
+                    if next_hop not in subclasses:
+                        raise NoSubclassInHop(superclass=super_class, rnum=cls.rel_cursor, domain=cls.domain)
+                    cls.class_cursor = next_hop
+                    cls.to_subclass_hop(rnum=cls.rel_cursor, sub_class=cls.class_cursor)
+                    return
+                else:
+                    # Subclass to Superclass
+                    # Assume we are jumping to the superclass, but verify that the current class is a subclass
+                    if cls.class_cursor not in subclasses:
+                        raise SubclassNotInGeneralization(subclass=cls.class_cursor, rnum=cls.rel_cursor,
+                                                          domain=cls.domain)
+                    # Create a To Superclass Hop using superclass, rnum, and class_cursor
+                    cls.class_cursor = super_class
+                    cls.to_superclass_hop(cls.rel_cursor)
+                    return
+
     @classmethod
     def resolve_perspective(cls, phrase:str):
         """
@@ -360,26 +388,6 @@ class TraverseAction:
                 if Relation.restrict3(tclral=cls.mmdb, restriction=R, relation="Reference").body:
                     refs = Relation.project2(cls.mmdb, attributes=P, svar_name='rhop').body
 
-                    if len(refs) > 1 and refs[0]['Ref'] == 'G':
-                        # It's a set of generalization references
-                        super_class = refs[0]['To_class']
-                        sub_tuples = Relation.project2(cls.mmdb, attributes=['From_class'], relation="rhop").body
-                        subclasses = {s['From_class'] for s in sub_tuples}
-                        if cls.class_cursor == super_class:
-                            # Determine subclass
-                            path_index += 1
-                            next_hop = path.hops[path_index]
-                            if next_hop not in subclasses:
-                                raise NoSubclassInHop(superclass=super_class, rnum=hop.rnum, domain=domain)
-                            cls.class_cursor = next_hop
-                            # Create a To Subclass Hop
-                        else:
-                            # Assume we are jumping to the superclass, but verify that the current class is a subclass
-                            if cls.class_cursor not in subclasses:
-                                raise SubclassNotInGeneralization(subclass=cls.class_cursor, rnum=hop.rnum, domain=domain)
-                            # Create a To Superclass Hop using superclass, rnum, and class_cursor
-                            cls.class_cursor = superclass
-                        pass
 
             path_index += 1
 
