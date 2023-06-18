@@ -3,7 +3,7 @@ traverse_action.py – Populate a traverse action instance in PyRAL
 """
 
 import logging
-from typing import TYPE_CHECKING, Set, Dict, List
+from typing import TYPE_CHECKING, Set, Dict, List, Optional
 from class_model_dsl.exceptions.action_exceptions import UndefinedRelationship, IncompletePath,\
     NoDestinationInPath, UndefinedClass, RelationshipUnreachableFromClass, HopToUnreachableClass,\
     MissingTorPrefInAssociativeRel, NoSubclassInHop, SubclassNotInGeneralization, PerspectiveNotDefined,\
@@ -44,17 +44,16 @@ class TraverseAction:
 
 
     @classmethod
-    def ordinal_hop(cls, cname:str, perspective:str):
-        pass
+    def ordinal_hop(cls, cname:str, ascending:bool):
+        _logger.info("ACTION:Traverse - Populating an ordinal hop")
 
     @classmethod
     def symmetric_hop(cls, cname:str):
-        pass
+        _logger.info("ACTION:Traverse - Populating a circular symmetric hop")
 
     @classmethod
     def asymmetric_circular_hop(cls, cname:str, side:str):
-        _logger.info("ACTION:Traverse - Populating a from symmetric assoc class hop")
-        pass
+        _logger.info("ACTION:Traverse - Populating an asymmetric circular hop")
 
     @classmethod
     def from_symmetric_association_class(cls, rnum: str):
@@ -133,8 +132,17 @@ class TraverseAction:
         return reachable_classes
 
     @classmethod
-    def hop_ordinal(cls):
-        pass
+    def resolve_ordinal_perspective(cls, perspective:str) -> bool:
+        # Search for ordinal rel with the supplied perspective
+        # TODO: Update metamodel with two additional identifiers
+        R = f"Ranked_class:<{cls.class_cursor}>, Domain:<{cls.domain}>, " \
+            f"(Ascending_perspective:<{perspective}> OR Descending_perspective:<{perspective}>)"
+        orel = Relation.restrict3(tclral=cls.mmdb, restriction=R, relation="Ordinal_Relationship").body[0]
+        if not orel:
+            return False
+        cls.rel_cursor = orel['Rnum']
+        cls.ordinal_hop(cname=cls.class_cursor, ascending=orel['Ascending_perspective'] == perspective)
+        return True
 
     @classmethod
     def hop_generalization(cls, refs:List[Dict[str,str]]):
@@ -359,13 +367,13 @@ class TraverseAction:
         # Step through the path validating each relationship, phrase, and class
         # Ensure that each step is reachable on the class model
         cls.path_index = 0
-        while cls.path_index < len(path.hops):
+        while cls.path_index < len(path.hops)-1:
             hop = path.hops[cls.path_index]
 
             if type(hop).__name__ == 'N_a':
                 # This should be a perspective since class names get eaten in the relationship hop handlers
                 # and a path cannot begin with a class name
-                if not cls.resolve_perspective(phrase=hop.name):
+                if not cls.resolve_perspective(phrase=hop.name) and not cls.resolve_ordinal_perspective(perspective=hop.name):
                     raise UnexpectedClassOrPerspectiveInPath(name=hop.name, path=path)
 
             elif type(hop).__name__ == 'R_a':
@@ -386,7 +394,9 @@ class TraverseAction:
                     else:
                         cls.hop_association(refs)
                 else:
-                    cls.hop_ordinal()
+                    # The perspective must be specified in the next hop
+                    cls.path_index +=1
+                    cls.resolve_ordinal_perspective(perspective=cls.path.hops[cls.path_index])
 
             cls.path_index += 1
 
