@@ -111,8 +111,8 @@ class TraverseAction:
         :return: Zero if non-reflexive, 1 if symmetric and 2 if assymmetric reflexive
         """
         # Get all perspectives defined on rnum
-        r = f"Rnum:<{rnum}>, Domain:<{cls.domain}>"
-        perspectives = Relation.restrict3(tclral=cls.mmdb, restriction=r, relation="Perspective")
+        R = f"Rnum:<{rnum}>, Domain:<{cls.domain}>"
+        perspectives = Relation.restrict3(tclral=cls.mmdb, restriction=R, relation="Perspective")
         if not perspectives.body:
             # Every association relationship defines at least one perspective
             raise UndefinedAssociation(rnum, cls.domain)
@@ -130,8 +130,8 @@ class TraverseAction:
         :return:
         """
         reachable_classes = set()
-        r = f"Rnum:<{rnum}>, Domain:<{cls.domain}>"
-        refs = Relation.restrict3(tclral=cls.mmdb, restriction=r, relation="Reference").body
+        R = f"Rnum:<{rnum}>, Domain:<{cls.domain}>"
+        refs = Relation.restrict3(tclral=cls.mmdb, restriction=R, relation="Reference").body
         for ref in refs:
             reachable_classes.add(ref['To_class'])
             reachable_classes.add(ref['From_class'])
@@ -272,13 +272,13 @@ class TraverseAction:
         :param phrase:  Perspective phrase text such as 'travels along'
         """
         # Find phrase and ensure that it is on an association that involves the class cursor
-        r = f"Phrase:<{phrase}>, Domain:<{cls.domain}>"
-        r_result = Relation.restrict3(cls.mmdb, relation='Perspective', restriction=r)
+        R = f"Phrase:<{phrase}>, Domain:<{cls.domain}>"
+        r_result = Relation.restrict3(cls.mmdb, relation='Perspective', restriction=R)
         if not r_result.body:
             raise PerspectiveNotDefined(phrase, cls.domain)
-        p = ('Side', 'Rnum', 'Viewed_class')
-        p_result = Relation.project2(cls.mmdb, attributes=p)
-        side, rnum, viewed_class = map(p_result.body[0].get, p)
+        P = ('Side', 'Rnum', 'Viewed_class')
+        p_result = Relation.project2(cls.mmdb, attributes=P)
+        side, rnum, viewed_class = map(p_result.body[0].get, P)
         cls.rel_cursor = rnum
         # We found the perspective
         # Now we decide which kind of hop to populate
@@ -309,6 +309,7 @@ class TraverseAction:
             if cls.is_assoc_class(cname=cls.class_cursor, rnum=rnum):
                 cls.from_asymmetric_association_class(side)
             else:
+                cls.class_cursor = viewed_class
                 cls.straight_hop()
             return # Non-reflexive hop to a participating class
 
@@ -359,7 +360,7 @@ class TraverseAction:
                 if cls.path_index == 0:
                     # This is the first hop and it must a perspective
                     cls.resolve_perspective(phrase=hop.name)
-                else:
+                elif cls.path_index < len(cls.path.hops)-1:
                     # All other class/perspective hops should be processed in the rel hop methods
                     raise UnexpectedClassOrPerspectiveInPath(name=hop.name, path=path)
 
