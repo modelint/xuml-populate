@@ -247,7 +247,7 @@ class TraverseAction:
             if next_hop.name in particip_classes:
                 # The particpating class is explicitly named
                 cls.class_cursor = next_hop.name
-                R = f"Class:<{cls.class_cursor}>, Rnum:<{cls.rel_cursor}>, Domain:<{cls.domain}>"
+                R = f"Viewed_class:<{cls.class_cursor}>, Rnum:<{cls.rel_cursor}>, Domain:<{cls.domain}>"
                 Relation.restrict3(cls.mmdb, relation='Perspective', restriction=R)
                 P = ('Side',)
                 side = Relation.project2(cls.mmdb, attributes=P).body[0]['Side']
@@ -260,7 +260,7 @@ class TraverseAction:
 
 
     @classmethod
-    def resolve_perspective(cls, phrase:str):
+    def resolve_perspective(cls, phrase:str) -> bool:
         """
         Populate hop across the association perspective
 
@@ -270,11 +270,23 @@ class TraverseAction:
         R = f"Phrase:<{phrase}>, Domain:<{cls.domain}>"
         r_result = Relation.restrict3(cls.mmdb, relation='Perspective', restriction=R)
         if not r_result.body:
-            raise PerspectiveNotDefined(phrase, cls.domain)
+            return False
         P = ('Side', 'Rnum', 'Viewed_class')
         p_result = Relation.project2(cls.mmdb, attributes=P)
         side, rnum, viewed_class = map(p_result.body[0].get, P)
         cls.rel_cursor = rnum
+
+        # The next hop may be a class name that matches the viewed class
+        # If so, we can move the path index forward so that we don't process that class as a separate hop
+        try:
+            next_hop = cls.path.hops[cls.path_index+1]
+            if next_hop.name == viewed_class:
+                cls.path_index +=1
+        except (IndexError, AttributeError) as e:
+            # We're already processing the last hop in the path, so don't bother advancing the path index or the
+            # next hop is an rnum and not a name in which case we certainly don't want to advance the path index
+            pass
+
         # We found the perspective
         # Now we decide which kind of hop to populate
         # We start by asking, "Is this association reflexive?"
@@ -288,16 +300,16 @@ class TraverseAction:
                     # Populate a symmetric hop
                     cls.symmetric_hop(viewed_class)
                 else:
-                    # Populate an assymetric hop
+                    # Populate an asymmetric hop
                     cls.asymmetric_circular_hop(viewed_class, side)
-                return # Circular hop populated
+                return True # Circular hop populated
             else:
                 # The class_cursor must be the association class
                 if symmetry == 1:
                     cls.from_symmetric_association_class(rnum)
                 else:
                     cls.from_asymmetric_association_class(side)
-                return # From assoc class hop populated
+                return True # From assoc class hop populated
         else:  # Non-reflexive association (non-circular hop)
             # We are either hopping from the association class to a viewed class or
             # from the other participating class to the viewed class
@@ -306,7 +318,7 @@ class TraverseAction:
             else:
                 cls.class_cursor = viewed_class
                 cls.straight_hop()
-            return # Non-reflexive hop to a participating class
+            return True # Non-reflexive hop to a participating class
 
     @classmethod
     def build_path(cls, mmdb: 'Tk', source_class: str, domain: str, path: PATH_a):
@@ -351,11 +363,9 @@ class TraverseAction:
             hop = path.hops[cls.path_index]
 
             if type(hop).__name__ == 'N_a':
-                if cls.path_index == 0:
-                    # This is the first hop and it must a perspective
-                    cls.resolve_perspective(phrase=hop.name)
-                elif cls.path_index < len(cls.path.hops)-1:
-                    # All other class/perspective hops should be processed in the rel hop methods
+                # This should be a perspective since class names get eaten in the relationship hop handlers
+                # and a path cannot begin with a class name
+                if not cls.resolve_perspective(phrase=hop.name):
                     raise UnexpectedClassOrPerspectiveInPath(name=hop.name, path=path)
 
             elif type(hop).__name__ == 'R_a':
