@@ -396,7 +396,7 @@ class TraverseAction:
                 else:
                     # The perspective must be specified in the next hop
                     cls.path_index +=1
-                    cls.resolve_ordinal_perspective(perspective=cls.path.hops[cls.path_index])
+                    cls.resolve_ordinal_perspective(perspective=cls.path.hops[cls.path_index].name)
 
             cls.path_index += 1
 

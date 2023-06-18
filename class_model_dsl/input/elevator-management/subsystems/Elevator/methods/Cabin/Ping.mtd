@@ -10,7 +10,6 @@ Cabin.Ping( dir: Direction ) : Accessible Shaft Level
 // Get all aslevs that are calling in the search dir or requesting a stop in my shaft
 // and join with the floor class to get distances
 
-o ..= /R43/R28/Floor/higher/Floor
 o ..= /R43/R28/Floor/OR7/higher/Floor
 //d ..= /R43/R28/Floor/is higher than/Floor
 //x ..= /R53/Accessible Shaft Level/R49/Bank Level/R38/Top Bank Level
