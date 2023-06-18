@@ -28,15 +28,10 @@ class TraverseAction:
     path = None
     source_flow = None
     dest_flow = None
-    resolved_path = []
     id = None
     dest_class = None # End of path
-    source_class = None # Beginning of path
     class_cursor = None
     rel_cursor = None
-    hnum = 1 # Current hop number
-    path_name = "" # Text representation of path as name
-    from_class = None # Current hop
     mmdb = None
     domain = None
 
@@ -159,9 +154,9 @@ class TraverseAction:
             #  must be specified in the next hop
             cls.path_index += 1
             next_hop = cls.path.hops[cls.path_index]
-            if next_hop not in subclasses:
+            if next_hop.name not in subclasses:
                 raise NoSubclassInHop(superclass=super_class, rnum=cls.rel_cursor, domain=cls.domain)
-            cls.class_cursor = next_hop
+            cls.class_cursor = next_hop.name
             cls.to_subclass_hop(sub_class=cls.class_cursor)
             return
         else:
@@ -326,7 +321,6 @@ class TraverseAction:
         """
         cls.mmdb = mmdb
         cls.path = path
-        cls.source_class = source_class # Source of first hop
         cls.class_cursor = source_class # Validation cursor is on this class now
         cls.domain = domain
 
