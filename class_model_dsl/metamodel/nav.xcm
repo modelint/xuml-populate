@@ -10,6 +10,12 @@ metadata
     Organization logo > mint
 domain Metamodel, META
 subsystem Navigation, NAV 925-949
+class Action
+attributes
+    ID : Action ID {I}
+    Activity : Activity Number {I, R949}
+    Domain : Domain Name {I, R949}
+--
 class Association Hop
 attributes
     Number : Hop Number {I, R927}
@@ -137,8 +143,8 @@ attributes
 class Traverse Action
 attributes
     ID : Action ID {I, R901}
-    Activity : Activity Number {I, R901, R929, R930}
-    Domain : Domain Name {I, R901, R928, R929, R930}
+    Activity : Activity Number {I, R949, R929, R930}
+    Domain : Domain Name {I, R949, R928, R929, R930}
     Path : Path Name {R928}
     Source flow : Flow ID {R929}
     Destination flow : Flow ID {R930c}
@@ -227,4 +233,14 @@ relationships
     specifies target, 1 Perspective
     is specified as target of, Mc Perspective Hope
     Perspective Hop.(Side, Rnum, Domain) -> Perspective.(Side, Rnum, Domain)
+--
+    R948
+    executes in, 1 Activity
+    executes, Mc Action
+    Action.(Activity, Domain) -> Activity.(Anum, Domain)
+--
+    R949
+    is sub of, 1 Action
+    is super of, 1 Traverse Action
+    Traverse Action.(ID, Activity, Domain) -> Action.(ID, Activity, Domain)
 --
