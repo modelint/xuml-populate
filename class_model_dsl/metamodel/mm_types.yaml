@@ -15,6 +15,7 @@ Element Label : string
 Element Number : int
 Enumeration Value : string
 Event Name : string
+First Last All : tring
 Flow ID : string
 ID Number : int
 Ingress_Egress : string
