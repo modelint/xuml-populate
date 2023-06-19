@@ -152,14 +152,16 @@ class TraverseAction:
         :param refs:
         :return:
         """
-        # It's a set of generalization references
+        # If hopping from a superclass, all subclass references will be provided as refs
+        # otherwise we are hopping from one of the subclasses and only one ref from that subclass is provided
+        # The to class for each ref must be the superclass, so we just grab the first (possibly only) ref
         super_class = refs[0]['To_class']
-        P = ("From_class",)
-        sub_tuples = Relation.project2(cls.mmdb, attributes=P, relation="rhop").body
-        subclasses = {s['From_class'] for s in sub_tuples}
-        if cls.class_cursor == super_class:
-            # Superclass to subclass
-            #  must be specified in the next hop
+        if len(refs) > 1:
+            # We are hopping from the super_class to a subclass
+            P = ("From_class",)
+            sub_tuples = Relation.project2(cls.mmdb, attributes=P, relation="rhop").body
+            subclasses = {s['From_class'] for s in sub_tuples}
+            # The subclass must be specified in the next hop
             cls.path_index += 1
             next_hop = cls.path.hops[cls.path_index]
             if next_hop.name not in subclasses:
@@ -168,12 +170,7 @@ class TraverseAction:
             cls.to_subclass_hop(sub_class=cls.class_cursor)
             return
         else:
-            # Subclass to Superclass
-            # Assume we are jumping to the superclass, but verify that the current class is a subclass
-            if cls.class_cursor not in subclasses:
-                raise SubclassNotInGeneralization(subclass=cls.class_cursor, rnum=cls.rel_cursor,
-                                                  domain=cls.domain)
-            # Create a To Superclass Hop using superclass, rnum, and class_cursor
+            # # Superclass to subclass
             cls.class_cursor = super_class
             cls.to_superclass_hop()
             return
@@ -389,7 +386,7 @@ class TraverseAction:
                     refs = Relation.project2(cls.mmdb, attributes=P, svar_name='rhop').body
 
                     # Generalization
-                    if len(refs) > 1 and refs[0]['Ref'] == 'G':
+                    if refs[0]['Ref'] == 'G':
                         cls.hop_generalization(refs)
                     else:
                         cls.hop_association(refs)
