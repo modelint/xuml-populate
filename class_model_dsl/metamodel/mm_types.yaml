@@ -1,4 +1,5 @@
 ---
+Action ID : string
 Activity Number : string
 Alias Name : string
 Attribute Name : string
@@ -15,8 +16,9 @@ Element Label : string
 Element Number : int
 Enumeration Value : string
 Event Name : string
-First Last All : tring
+First Last All : string
 Flow ID : string
+Hop Number : int
 ID Number : int
 Ingress_Egress : string
 Input Name : string
@@ -26,6 +28,7 @@ NT Response : string
 One Many : string
 Operation Name : string
 Parameter Name : string
+Path Name : string
 Phrase Name : string
 Reference Type : string
 Relationship Number : string

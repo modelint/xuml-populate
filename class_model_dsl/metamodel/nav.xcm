@@ -8,7 +8,8 @@ metadata
     Organization : Model Integration, LLC / www.modelint.com
     Copyright notice > MIT
     Organization logo > mint
-subsystem Navigation
+domain Metamodel, META
+subsystem Navigation, NAV 925-949
 class Association Hop
 attributes
     Number : Hop Number {I, R927}
@@ -92,9 +93,9 @@ attributes
 --
 class Perspective Hop
 attributes
-    Hop : Hop Number {I, UR937}
-    Path : Path Name {I, UR937}
-    Domain : Domain Name {I, UR937, R941}
+    Hop : Hop Number {I}
+    Path : Path Name {I}
+    Domain : Domain Name {I, R941}
     Side : Side {R941}
     Rnum : Relationship Number {R941c}
 --
@@ -135,8 +136,8 @@ attributes
 --
 class Traverse Action
 attributes
-    ID {I, R901}
-    Activity {I, R901, R929, R930}
+    ID : Action ID {I, R901}
+    Activity : Activity Number {I, R901, R929, R930}
     Domain : Domain Name {I, R901, R928, R929, R930}
     Path : Path Name {R928}
     Source flow : Flow ID {R929}
@@ -157,7 +158,7 @@ relationships
     Hop +
         Assocation Hop
         Generalization Hop
-    <subclass>.(Number + Path + Domain) -> Hop.(Number + Path + Domain)
+    <subclass>.(Number, Path, Domain) -> Hop.(Number, Path, Domain)
 --
     R928
     navigates, 1 Path
@@ -179,14 +180,14 @@ relationships
         Association Class Hop
         Straight Hop
         Circular Hop
-    <subclass>.(Path + Number + Domain) -> Association Hop.(Path + Number + Domain)
+    <subclass>.(Path, Number, Domain) -> Association Hop.(Path, Number, Domain)
 --
     R932
     Association Class Hop +
         To Association Class Hop
         From Asymmetric Association Class Hop
         From Symmetric Association Class Hop
-    <subclass>.(Path + Number + Domain) -> Association Hop.(Path + Number + Domain)
+    <subclass>.(Path, Number, Domain) -> Association Hop.(Path, Number, Domain)
 --
     R933
     hops to, 1 Class
@@ -197,21 +198,21 @@ relationships
     Generalization Hop +
         To Superclass Hop
         To Subclass Hop
-    <subclass>.(Path + Number + Domain) -> Generalization Hop.(Path + Number + Domain)
+    <subclass>.(Path, Number, Domain) -> Generalization Hop.(Path, Number, Domain)
 --
     R936
     Circular Hop +
         Symmetric Hop
         Asymmetric Circular Hop
         Ordinal Hop
-    <subclass>.(Path + Number + Domain) -> Circular Hop.(Path + Number + Domain)
+    <subclass>.(Path, Number, Domain) -> Circular Hop.(Path, Number, Domain)
 --
     R937
     Perspective Hop +
         Asymmetric Circular Hop
         Ordinal Hop
         From Asymmetric Association Class Hop
-    <subclass>.(Path + Number + Domain) -> Perspective Hop.(Path + Hop + Domain)
+    <subclass>.(Path, Number, Domain) -> Perspective Hop.(Path, Hop, Domain)
 --
     OR938
     before / after, Hop
