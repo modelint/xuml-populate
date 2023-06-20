@@ -50,7 +50,7 @@ class MMclass:
         #
         # Populate class
         cls._logger.info(f"Populating class [{cls.name}]")
-        Transaction.open(tclral=mmdb)
+        Transaction.open(tclral=mmdb) # Class and attributes
         cls._logger.info("Transaction open: Populate class")
         Element.populate_labeled_subys_element(mmdb, label=cls.cnum, subsystem_name=subsystem.name, domain_name=domain)
         Relvar.insert(relvar='Class', tuples=[
@@ -61,15 +61,16 @@ class MMclass:
                 Alias_i(Name=cls.name, Class=cls.name, Domain=domain)
             ])
 
+        # Populate the attributes
         cls.identifiers = set()  # For each newly created class we clear the id set
         for a in cls.record['attributes']:
             Attribute.populate(mmdb=mmdb, domain=domain, cname=cls.name,
                                class_identifiers=cls.identifiers, record=a)
 
-        Transaction.execute()
+        Transaction.execute() # Class and attributes
         cls._logger.info("Transaction closed: Populate class")
 
-        # Add methods
+        # Populate the methods
         Method.populate(mmdb, domain_name=domain, subsys_name=subsystem.name, class_name=cls.name)
 
         # Add EE and ops

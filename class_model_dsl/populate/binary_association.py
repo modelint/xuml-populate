@@ -83,7 +83,7 @@ class BinaryAssociation:
             Perspective_i(Side='P', Rnum=cls.rnum, Domain=domain,
                           Viewed_class=cls.p_side['cname'], Phrase=cls.p_side['phrase'],
                           Conditional=True if 'c' in cls.p_side['mult'] else False,
-                          Multiplicity= mult_tclral[p_mult]
+                          Multiplicity= p_mult
                           )
         ])
 

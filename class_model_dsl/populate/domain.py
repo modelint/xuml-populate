@@ -43,7 +43,7 @@ class Domain:
         """
         cls._logger.info(f"Populating modeled domain_name [{domain.Name}]")
 
-        Transaction.open(tclral=mmdb)
+        Transaction.open(tclral=mmdb) # Modeled domain
 
         # Load domain_name specific types
         with open(domain_path / "types.yaml", 'r') as file:
@@ -62,7 +62,7 @@ class Domain:
             Relvar.insert(relvar='Domain_Partition', tuples=[
                 Domain_Partition_i(Number=s.subsystem['range'][0], Domain=domain.Name)
             ])
-        Transaction.execute()
+        Transaction.execute() # Modeled domain
 
         # Insert classes
         for s in subsystems.values():
