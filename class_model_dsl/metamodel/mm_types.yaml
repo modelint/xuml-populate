@@ -18,6 +18,7 @@ Enumeration Value : string
 Event Name : string
 First Last All : string
 Flow ID : string
+Flow Name : string
 Hop Number : int
 ID Number : int
 Ingress_Egress : string

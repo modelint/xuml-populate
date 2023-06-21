@@ -30,7 +30,7 @@ class Action:
         :return:
         """
         agroup_name = type(aparse.action_group).__name__
-        # For now we'll just swithc on the action_group name and later wrap all this up
+        # For now we'll just switch on the action_group name and later wrap all this up
         # into a dictionary of functions of some sort
         if agroup_name == 'Inst_Assignment_a':
             # Process lhs

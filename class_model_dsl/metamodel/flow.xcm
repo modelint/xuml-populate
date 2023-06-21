@@ -2,9 +2,9 @@ metadata
     Title : Flow Subsystem / Shlaer-Mellor Metamodel
     Author : Leon Starr
     Document ID : mint.sm-meta.action.td.2
-    Version : 1.4.0 /// Excerpt based on xmm 1.4.0 - just enough to support Activity Subsystem for now
+    Version : 1.5.0 /// Excerpt based on xmm 1.4.0, excludes Table Flow components for now
     /// Creation date : September 10, 2021
-    Modification date : February 4, 2022
+    Modification date : June 20, 2023
     Organization : Model Integration, LLC / www.modelint.com
     Copyright notice > MIT
     Organization logo > mint
@@ -45,10 +45,84 @@ attributes
     Activity : Activity Number {I, R807}
     Domain : Domain Name {I, R807}
 --
+class Instance Flow
+attributes
+    ID : Flow ID {I, R802}
+    Activity : Activity Number {I, R802}
+    Domain : Domain Name {I, R802, R803}
+    Class : Class Name {R803}
+--
+class Label
+attributes
+    Name : Flow Name {I}
+    Flow : Flow ID {I2, R808}
+    Activity : Activity Number {I, I2, R808}
+    Domain : Domain Name {I, I2, R808}
+--
+class Multiple Instance Flow
+attributes
+    ID : Flow ID {I, R805}
+    Activity : Activity Number {I, R805}
+    Domain : Domain Name {I, R805}
+--
+class Non Scalar Flow
+attributes
+    ID : Flow ID {I, R801}
+    Activity : Activity Number {I, R801}
+    Domain : Domain Name {I, R801}
+--
+class Scalar Flow
+attributes
+    ID : Flow ID {I, R801}
+    Activity : Activity Number {I, R801}
+    Domain : Domain Name {I, R801}
+    Type : Type Name
+--
+class Single Instance Flow
+attributes
+    ID : Flow ID {I, R805}
+    Activity : Activity Number {I, R805}
+    Domain : Domain Name {I, R805}
+--
+class Table Flow
+attributes
+    ID : Flow ID {I, R802}
+    Activity : Activity Number {I, R802}
+    Domain : Domain Name {I, R802}
+    Tuple : Boolean
+--
 relationships
     R800
     Flow +
         Data Flow
         Control Flow
     <subclass>.(ID, Activity, Domain) -> Flow.(ID, Activity, Domain)
+--
+    R801
+    Data Flow +
+        Scalar Flow
+        Non Scalar Flow
+    <subclass>.(ID, Activity, Domain) -> Data Flow.(ID, Activity, Domain)
+--
+    R802
+    Non Scalar Flow +
+        Instance Flow
+        Table Flow
+    <subclass>.(ID, Activity, Domain) -> Non Scalar Flow.(ID, Activity, Domain)
+--
+    R803
+    flows instances of, 1 Class
+    types, Mc Instance Flow
+    Instance Flow.(Class, Domain) -> Class.(Name, Domain)
+--
+    R805
+    Instance Flow +
+        Single Instance Flow
+        Multiple Instance Flow
+    <subclass>.(ID, Activity, Domain) -> Non Scalar Flow.(ID, Activity, Domain)
+--
+    R808
+    names, 1 Flow
+    is named by, 1c Label
+    Label.(Flow, Activity, Domain) -> Flow.(ID, Activity, Domain)
 --

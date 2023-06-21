@@ -45,7 +45,7 @@ class Method:
         for method_file in class_method_path.glob("*.mtd"):
             parsed_method = cls.parse(method_file)
 
-            Transaction.open(tclral=mmdb)
+            Transaction.open(tclral=mmdb)  # Populate empty method
             cls._logger.info("Transaction open: Populating method")
 
             # Create the signature
@@ -65,7 +65,7 @@ class Method:
                 Method_i(Anum=anum, Name=parsed_method.method, Class=class_name, Domain=domain_name)
             ])
 
-            Transaction.execute()
+            Transaction.execute() # Populate empty method
             cls._logger.info("Transaction closed: Populating method")
 
 

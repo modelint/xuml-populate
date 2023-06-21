@@ -353,12 +353,8 @@ class TraverseAction:
             raise NoDestinationInPath(path)
         cls.dest_class = terminal_hop.name
 
-        # Verify destination class is defined (we should do this in the loop instead)
-        # class_id = f'Name:[{cls.dest_class.name}], Domain:[{domain}]'
-        # if not Relation.restrict2(mmdb, restriction=class_id, relation='Class').body:
-        #     raise UndefinedClass(cls.dest_class.name)
 
-        # Destination class is valid
+
 
         # Valdiate path continuity
         # Step through the path validating each relationship, phrase, and class

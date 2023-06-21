@@ -2,9 +2,9 @@ metadata
     Title : Domain Subsystem / Shlaer-Mellor Metamodel
     Author : Leon Starr
     Document ID : mint.sm-meta.class.domain.td.2
-    Version : 2.8.1
+    Version : 2.9.0
     /// Creation date : May 9, 2011
-    Modification date : February 5, 2022
+    Modification date : June 20, 2023
     Organization : Model Integration, LLC / www.modelint.com
     Copyright notice > MIT
     Organization logo > mint
@@ -86,6 +86,11 @@ attributes
     Rnum {I, R14}
     Domain {I, R14}
 --
+class Type <import:Type>
+attributes
+    Tnum {I2, R17}
+    Domain {I2, R17}
+--
 relationships
     R1
     begins numbering elements from, 1 Domain Partition
@@ -140,6 +145,8 @@ relationships
     Spanning Element +
         Lineage
         Constrained Loop
+        Type
     Lineage.(Lnum, Domain) -> Spanning Element.(Label, Domain)
     Constrained Loop.(CLnum, Domain) -> Spanning Element.(Label, Domain)
+    Type.(Tnum, Domain) -> Spanning Element.(Label, Domain)
 --
