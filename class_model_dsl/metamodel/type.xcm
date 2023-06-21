@@ -1,0 +1,69 @@
+metadata
+    Title : Type Subsystem / Shlaer-Mellor Metamodel
+    Author : Leon Starr
+    Document ID : mint.sm-meta.action.td.15
+    Version : 0.2.0
+    /// Creation date : June 20, 2023
+    Modification date : June 21, 2023
+    Organization : Model Integration, LLC / www.modelint.com
+    Copyright notice > MIT
+    Organization logo > mint
+domain Metamodel, META
+subsystem Type, TYPE 1125-1149
+class Class Type
+attributes
+    Name : Type Name {I, R1125c} /// TclRAL requires extra attribute
+    Class : Class Name {I2, R1126} /// Name must equal Class
+    Domain : Domain Name {I, I2, R1125, R1126}
+--
+class Class <import:Class Attribute>
+attributes
+    Name {I}
+    Domain {I}
+--
+class Scalar Type
+attributes
+    Name : Type Name {I, R1125}
+    Domain : Domain Name {I, R1125}
+--
+class Table Type
+attributes
+    Name : Type Name {I, R1125, R1127}
+    Domain : Domain Name {I, R1125, R1127}
+--
+class Table Attribute
+attributes
+    Name : Attribute Name {I}
+    Table type : Type Name {I, R1127}
+    Domain : Domain Name {I, R1127, R1128}
+    Attribute type : Type Name {R1128}
+--
+class Type
+attributes
+    Name : Type Name {I}
+    Tnum : Type Number {I2, R17}
+    Domain : Domain Name {I, I2, R17}
+--
+relationships
+    R1125
+    Type +
+        Scalar Type
+        Class Type
+        Table Type
+    <subclass>.(Name, Domain) -> Type.(Name, Domain)
+--
+    R1126
+    defines, 1 Class Type
+    is defined by, 1 Class
+    Class Type.(Class, Domain) -> Class.(Name, Domain)
+--
+    R1127
+    defines header as, Mc Table Attribute
+    is included in header of, 1 Table Type
+    Table Attribute.(Table type, Domain) -> Table Type.(Name, Domain)
+--
+    R1128
+    holds value defined by, 1 Scalar Type
+    specifies values in, Mc Table Attribute
+    Table Attribute.(Attribute type, Domain) -> Scalar Type.(Name, Domain)
+--
