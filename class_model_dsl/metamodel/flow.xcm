@@ -2,9 +2,9 @@ metadata
     Title : Flow Subsystem / Shlaer-Mellor Metamodel
     Author : Leon Starr
     Document ID : mint.sm-meta.action.td.2
-    Version : 1.5.0 /// Excerpt based on xmm 1.4.0, excludes Table Flow components for now
+    Version : 1.5.1 /// Excerpt based on xmm 1.5.0, excludes Table Flow components for now
     /// Creation date : September 10, 2021
-    Modification date : June 20, 2023
+    Modification date : June 22, 2023
     Organization : Model Integration, LLC / www.modelint.com
     Copyright notice > MIT
     Organization logo > mint
@@ -21,7 +21,7 @@ attributes
     Class {I}
     Domain {I}
 --
-class Class <import:Class Attribute>
+class Class Type <import:Type>
 attributes
     Name {I}
     Domain {I}
@@ -37,7 +37,6 @@ attributes
     ID : Flow ID {I, R800}
     Activity : Activity Number {I, R800}
     Domain : Domain Name {I, R800}
-    Type : Type Name /// Here temporarily until complete subsystem added
 --
 class Flow
 attributes
@@ -75,8 +74,8 @@ class Scalar Flow
 attributes
     ID : Flow ID {I, R801}
     Activity : Activity Number {I, R801}
-    Domain : Domain Name {I, R801}
-    Type : Type Name
+    Domain : Domain Name {I, R801, R806}
+    Type : Type Name {R806}
 --
 class Single Instance Flow
 attributes
@@ -88,7 +87,8 @@ class Table Flow
 attributes
     ID : Flow ID {I, R802}
     Activity : Activity Number {I, R802}
-    Domain : Domain Name {I, R802}
+    Domain : Domain Name {I, R802, R804}
+    Type : Type Name {R804}
     Tuple : Boolean
 --
 relationships
@@ -113,13 +113,22 @@ relationships
     R803
     flows instances of, 1 Class
     types, Mc Instance Flow
-    Instance Flow.(Class, Domain) -> Class.(Name, Domain)
+    Instance Flow.(Class, Domain) -> Class Type.(Name, Domain)
+--
+    R804
+    flows values of, 1 Table Type
+    defines values in, 1 Table Flow
+    Table Flow.(Type, Domain) -> Table Type.(Name, Domain)
 --
     R805
     Instance Flow +
         Single Instance Flow
         Multiple Instance Flow
     <subclass>.(ID, Activity, Domain) -> Non Scalar Flow.(ID, Activity, Domain)
+--
+    R806
+    defines values in, Mc Scalar Flow
+    values are defined by, 1 Scalar Type
 --
     R808
     names, 1 Flow

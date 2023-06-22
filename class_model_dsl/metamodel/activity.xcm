@@ -62,9 +62,8 @@ class Parameter
 attributes
     Name : Parameter Name {I}
     Signature : Signature Number {I, R828}
-    Domain : Domain Name {I, R828, R834}
-    Input flow : Flow ID {R834}
-    Activity : Activity Number {R834}
+    Domain : Domain Name {I, R828, R827}
+    Type : Type Name {R827}
 --
 class Signature
 attributes
@@ -95,9 +94,9 @@ attributes
 --
 class Synchronous Output
 attributes
-    Activity : Activity Number {I, R829, R831}
-    Output flow : Flow ID {I2, R831}
-    Domain : Domain Name {I, R829, R831}
+    Anum : Activity Number {I, R829}
+    Domain : Domain Name {I, R829}
+    Type : Type Name {R829}
 --
 relationships
     R825
@@ -112,31 +111,28 @@ relationships
         Synchronous Operation
     <subclass>.(Anum, Domain) -> Activity.(Anum, Domain)
 --
+    R827
+    constrains input to, Mc Parameter
+    input is constrained by, 1 Type
+    Parameter.(Type, Domain) -> Type.(Name, Domain)
+--
     R828
     input is defined by, 1 Signature
     defines input with, Mc Parameter
     Parameter.(Signature, Domain) -> Signature.(SIGnum, Domain)
 --
     R829
-    produces, 1c Synchronous Output
-    is produced by, 1 Synchronous Activity
-    Synchronous Output.(Activity, Domain) -> Synchronous Activity.(Anum, Domain)
+    yields output of, 1c Type
+    constraints output of, Mc Synchronous Activity
+    1 Synchronous Output
+    Synchronous Output.(Anum, Domain) -> Synchronous Activity.(Anum, Domain)
+    Synchronous Output.(Type, Domain) -> Type.(Name, Domain)
 --
     R830
     Asynchronous Activity +
         State Activity
         Asynchronous Operation
     <subclass>.(Anum, Domain) -> Activity.(Anum, Domain)
---
-    R831
-    is fed by, 1c Synchronous Output
-    feeds, 1 Data Flow
-    Synchronous Output.(Output flow, Activity, Domain) -> Data Flow.(ID, Activity, Domain)
---
-    R834
-    provides value for, Mc Parameter
-    gets value from, 1 Data Flow
-    Parameter.(Input flow, Activity, Domain) -> Data Flow.(ID, Activity, Domain)
 --
     R835
     defines input into, 1 Method

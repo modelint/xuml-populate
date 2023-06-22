@@ -73,10 +73,9 @@ class Method:
             for p in parsed_method.flows_in:
                 cls._logger.info("Transaction open: Populating parameter")
                 Transaction.open(tclral=mmdb)
-                flowid = Flow.populate(mmdb, anum=anum, domain_name=domain_name, flow_type=p['type'])
                 Relvar.insert(relvar='Parameter', tuples=[
                     Parameter_i(Name=p['name'], Signature=signum, Domain=domain_name,
-                                Input_flow=flowid, Activity=anum)
+                                Type=None, Activity=anum)
                 ])
                 Transaction.execute()
                 cls._logger.info("Transaction closed: Populating parameter")
