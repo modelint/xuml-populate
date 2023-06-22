@@ -134,7 +134,7 @@ Synchronous_Operation_i = namedtuple('Synchronous_Operation_i', 'Name EE Domain 
 
 # Type
 Type_i = namedtuple('Type_i', 'Name Tnum Domain')
-Class_Type_i = namedtuple('Class_Type_i', 'Name Class Domain')
+Class_Type_i = namedtuple('Class_Type_i', 'Name Domain')
 Scalar_Type_i = namedtuple('Scalar_Type_i', 'Name Domain')
 Table_Type_i = namedtuple('Table_Type_i', 'Name Domain')
 Table_Attribute_i = namedtuple('Table_Attribute_i', 'Name Table_type Domain Attribute_type')

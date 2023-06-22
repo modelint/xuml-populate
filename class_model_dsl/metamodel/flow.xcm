@@ -129,6 +129,7 @@ relationships
     R806
     defines values in, Mc Scalar Flow
     values are defined by, 1 Scalar Type
+    Scalar Flow.(Type, Domain) -> Scalar Type.(Name, Domain)
 --
     R808
     names, 1 Flow
