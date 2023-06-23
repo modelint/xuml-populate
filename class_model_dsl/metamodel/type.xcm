@@ -12,9 +12,8 @@ domain Metamodel, META
 subsystem Type, TYPE 1125-1149
 class Class Type
 attributes
-    Name : Type Name {I, R1125c} /// TclRAL requires extra attribute
-    Class : Class Name {I2, R1126} /// Name must equal Class
-    Domain : Domain Name {I, I2, R1125, R1126}
+    Name : Type Name {I, R1125, R1126}
+    Domain : Domain Name {I, R1125, R1126}
 --
 class Class <import:Class Attribute>
 attributes
@@ -28,8 +27,8 @@ attributes
 --
 class Table Type
 attributes
-    Name : Type Name {I, R1125, R1127}
-    Domain : Domain Name {I, R1125, R1127}
+    Name : Type Name {I, R1125}
+    Domain : Domain Name {I, R1125}
 --
 class Table Attribute
 attributes
@@ -55,7 +54,7 @@ relationships
     R1126
     defines, 1 Class Type
     is defined by, 1 Class
-    Class Type.(Class, Domain) -> Class.(Name, Domain)
+    Class Type.(Name, Domain) -> Class.(Name, Domain)
 --
     R1127
     defines header as, Mc Table Attribute

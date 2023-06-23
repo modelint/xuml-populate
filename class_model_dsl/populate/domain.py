@@ -8,6 +8,7 @@ import yaml
 from pathlib import Path
 from class_model_dsl.populate.attribute import Attribute
 from class_model_dsl.populate.mm_class import MMclass
+from class_model_dsl.populate.method import Method
 from class_model_dsl.populate.relationship import Relationship
 from class_model_dsl.populate.ee import EE
 from class_model_dsl.populate.method import Method
@@ -76,6 +77,15 @@ class Domain:
             cls._logger.info("Populating relationships")
             for r in s.rels:
                 Relationship.populate(mmdb=mmdb, domain=domain.Name, subsystem=subsys, record=r)
+            cls._logger.info("Populating methods and operations")
+            for c in s.classes:
+                # All classes must be populated first, so that parameter types in signatures can be resolved
+                # as class or non-class types
+                Method.populate(mmdb, domain_name=domain.Name, subsys_name=subsys.name, class_name=c['name'])
+                # Add EE and ops
+                if ee_name := c.get('ee'):
+                    EE.populate(mmdb, ee_name=ee_name, class_name=c['name'], subsys_name=subsys.name,
+                                domain_name=domain.Name)
             cls._logger.info("Populating state models")
             for sm in statemodels.values():
                 StateModel.populate(mmdb, subsys=subsys.name, sm=sm)

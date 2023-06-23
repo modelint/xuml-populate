@@ -7,7 +7,7 @@ from PyRAL.transaction import Transaction
 from PyRAL.relvar import Relvar
 from class_model_dsl.populate.signature import Signature
 from class_model_dsl.populate.activity import Activity
-from class_model_dsl.populate.flow import Flow
+from class_model_dsl.populate.mm_type import MMtype
 from class_model_dsl.populate.pop_types import Op_Signature_i, Op_i, Parameter_i,\
     Asynchronous_Operation_i, Synchronous_Operation_i
 from class_model_dsl.parse.op_parser import OpParser
@@ -71,12 +71,13 @@ class Operation:
 
         # Add parameters
         for p in parsed_op.flows_in:
-            Transaction.open(tclral=mmdb)
-            logging.info("Transaction open: Parameter")
-            flowid = Flow.populate(mmdb, anum=anum, domain_name=domain_name, flow_type=p['type'])
+            cls._logger.info("Transaction open: Populating operation parameter")
+            Transaction.open(tclral=mmdb) # Operation parameter
+            # Populate the Parameter's type if it hasn't already been populated
+            MMtype.populate_unknown(mmdb, name=p['type'], domain=domain_name)
             Relvar.insert(relvar='Parameter', tuples=[
                 Parameter_i(Name=p['name'], Signature=signum, Domain=domain_name,
-                            Input_flow=flowid, Activity=anum)
+                            Type=p['type'])
             ])
-            Transaction.execute()
+            Transaction.execute() # Operation parameter
             logging.info("Transaction closed: Parameter")

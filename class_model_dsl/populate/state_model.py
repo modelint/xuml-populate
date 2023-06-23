@@ -8,8 +8,8 @@ from PyRAL.relvar import Relvar
 from PyRAL.transaction import Transaction
 from typing import TYPE_CHECKING
 from class_model_dsl.populate.signature import Signature
-from class_model_dsl.populate.flow import Flow
 from class_model_dsl.populate.activity import Activity
+from class_model_dsl.populate.mm_type import MMtype
 from class_model_dsl.populate.pop_types import State_Model_i, Lifecycle_i,\
     Non_Deletion_State_i, State_i, Real_State_i, Deletion_State_i, Initial_Pseudo_State_i,\
     State_Signature_i, Initial_Transition_i,\
@@ -72,10 +72,11 @@ class StateModel:
                     # Now we need to create Data Flows and Parameters
                     for p in s.state.signature:
                         # Create a Data flow
-                        flowid = Flow.populate(mmdb, anum=anum, domain_name=sm.domain, flow_type=p.type)
+                        # Populate the Parameter's type if it hasn't already been populated
+                        MMtype.populate_unknown(mmdb, name=p.type, domain=sm.domain)
                         Relvar.insert(relvar='Parameter', tuples=[
                             Parameter_i(Name=p.name, Signature=signum, Domain=sm.domain,
-                                        Input_flow=flowid, Activity=anum)
+                                        Type=p.type)
                         ])
                 else:
                     # Otherwise, just get the id of the matching signature

@@ -9,6 +9,7 @@ from class_model_dsl.populate.element import Element
 from class_model_dsl.populate.attribute import Attribute
 from class_model_dsl.populate.method import Method
 from class_model_dsl.populate.ee import EE
+from class_model_dsl.populate.mm_type import MMtype
 from class_model_dsl.populate.pop_types import Class_i, Alias_i
 
 from typing import TYPE_CHECKING
@@ -50,8 +51,12 @@ class MMclass:
         #
         # Populate class
         cls._logger.info(f"Populating class [{cls.name}]")
-        Transaction.open(tclral=mmdb) # Class and attributes
         cls._logger.info("Transaction open: Populate class")
+        Transaction.open(tclral=mmdb) # Class, Class Type and Attributes
+
+        # Populate the required Class Type
+        MMtype.populate_class(mmdb, cname=cls.name, domain=domain)
+
         Element.populate_labeled_subys_element(mmdb, label=cls.cnum, subsystem_name=subsystem.name, domain_name=domain)
         Relvar.insert(relvar='Class', tuples=[
             Class_i(Name=cls.name, Cnum=cls.cnum, Domain=domain)
@@ -67,14 +72,5 @@ class MMclass:
             Attribute.populate(mmdb=mmdb, domain=domain, cname=cls.name,
                                class_identifiers=cls.identifiers, record=a)
 
-        Transaction.execute() # Class and attributes
+        Transaction.execute() # Class, Class Type, and Attributes
         cls._logger.info("Transaction closed: Populate class")
-
-        # Populate the methods
-        Method.populate(mmdb, domain_name=domain, subsys_name=subsystem.name, class_name=cls.name)
-
-        # Add EE and ops
-        ee_name = record.get('ee')
-        if ee_name:
-            EE.populate(mmdb, ee_name=ee_name,
-                        class_name=cls.name, subsys_name=subsystem.name, domain_name=domain)
