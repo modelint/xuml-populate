@@ -7,8 +7,6 @@ from PyRAL.transaction import Transaction
 from PyRAL.relvar import Relvar
 from class_model_dsl.populate.element import Element
 from class_model_dsl.populate.attribute import Attribute
-from class_model_dsl.populate.method import Method
-from class_model_dsl.populate.ee import EE
 from class_model_dsl.populate.mm_type import MMtype
 from class_model_dsl.populate.pop_types import Class_i, Alias_i
 

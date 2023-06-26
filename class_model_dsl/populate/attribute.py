@@ -6,6 +6,7 @@ import logging
 from PyRAL.relvar import Relvar
 from PyRAL.relation import Relation
 from typing import Set
+from class_model_dsl.populate.mm_type import MMtype
 from class_model_dsl.populate.pop_types import \
     Attribute_i, Non_Derived_Attribute_i,\
     Identifier_i, Irreducible_Identifier_i, Super_Identifier_i, Identifier_Attribute_i
@@ -14,6 +15,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from tkinter import Tk
 
+UNRESOLVED = '__unresolved__' # Attribute type is referential and type resolution is deferred
 
 class Attribute:
     """
@@ -29,9 +31,12 @@ class Attribute:
     def populate(cls, mmdb, domain: str, cname: str, class_identifiers: Set[int], record):
         """Constructor"""
 
+
         cls.record = record
-        cls.dtype = record.get('type', "<unresolved>")
+        cls.dtype = record.get('type', UNRESOLVED)
         participating_ids = cls.record.get('I', [])  # This attr might not participate in any identifier
+        # Populate the Attribute's type if it hasn't already been populated
+        MMtype.populate_unknown(mmdb, name=cls.dtype, domain=domain)
         Relvar.insert(relvar='Attribute', tuples=[
             Attribute_i(Name=record['name'], Class=cname, Domain=domain, Type=cls.dtype)
         ])
@@ -69,7 +74,7 @@ class Attribute:
 
         # Get the set of all attributes with unresolved types
         Relation.restrict(tclral=mmdb, relation='Attribute',
-                          restriction=f'Type:<unresolved>, Domain:{domain}')
+                          restriction=f'Type:{UNRESOLVED}, Domain:{domain}')
         result = Relation.project(tclral=mmdb, attributes=['Name', 'Class'])
         uattrs = Relation.make_pyrel(relation=result, name='Unresoved Attrs')
         # Relation.relformat(uattrs)
@@ -84,8 +89,9 @@ class Attribute:
                              relvar_name='Attribute',
                              id={'Name':a['Name'], 'Class':a['Class'], 'Domain':domain},
                              update={'Type': assign_type})
-        # Relation.print(mmdb, 'Attribute')
 
+        # All attr types resolved, so delete the dummy UNRESOLVED type
+        MMtype.depopulate_scalar_type(mmdb, name=UNRESOLVED, domain=domain)
 
     @classmethod
     def ResolveAttr(cls, mmdb: 'Tk', attr_name: str, class_name: str, domain_name: str) -> str:
@@ -130,7 +136,7 @@ class Attribute:
         aref = from_attrs.body[0]
         to_name, to_class, to_type = aref['Name'], aref['Class'], aref['Type']
 
-        if to_type != '<unresolved>':
+        if to_type != UNRESOLVED:
             return to_type  # The To_attribute has a type
         else:
             # The To_attribute is also unresolved. Resolve it!

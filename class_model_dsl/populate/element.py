@@ -80,3 +80,19 @@ class Element:
         Relvar.insert(relvar='Subsystem_Element', tuples=[
             Subsystem_Element_i(Label=label, Domain=domain_name, Subsystem=subsystem_name)
         ])
+
+
+    @classmethod
+    def depopulate_spanning_element(cls, mmdb: 'Tk', label: str, domain: str):
+        """
+        Remove the specified spanning elmenent type from the database.
+
+        Assumes that the spanning element subclass is managing the db transaction
+
+        :param mmdb:
+        :param label:
+        :param domain:
+        :return:
+        """
+        Relvar.deleteone(mmdb, 'Spanning_Element', {'Label': label, 'Domain': domain}, defer=True)
+        Relvar.deleteone(mmdb, 'Element', {'Label': label, 'Domain': domain}, defer=True)

@@ -20,8 +20,8 @@ class Attribute
 attributes
     Name : Attribute Name {I}
     Class : Class Name {I, R20}
-    Domain : Domain Name {I, R20}
-    Type : Type Name
+    Domain : Domain Name {I, R20, R34}
+    Type : Type Name {R34}
 --
 class Attribute Derivation Activity <import:Activity>
 attributes
@@ -107,6 +107,11 @@ attributes
     To class : Class Name {I}
     Rnum : Relationship Number {I}
     Domain : Domain Name {I}
+--
+class Scalar Type <import:Type>
+attributes
+    Name {I}
+    Domain {I}
 --
 class Subclass <import:Relationship>
 attributes
@@ -204,4 +209,9 @@ relationships
     M Subclass Classification Value
     Subclass Classification Value.(Superclass, Generalization, Domain) -> Classifier Attribute.(Superclass, Generalization, Domain)
     Subclass Classification Value.(Subclass, Generalization, Domain) -> Subclass.(Class, Rnum, Domain)
+--
+    R34
+    values are constrained by, 1 Scalar Type
+    constrains values of, Mc Attribute
+    Attribute.(Type, Domain) -> Scalar Type.(Name, Domain)
 --

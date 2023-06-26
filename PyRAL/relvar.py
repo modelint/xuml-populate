@@ -348,3 +348,38 @@ class Relvar:
             update_str += u_attr + " {" + u_val + "}"
         cmd = f'relvar updateone {relvar_name} t {{{id_str}}} {{tuple update $t {update_str}}}'
         return Command.execute(tclral, cmd)
+
+
+    @classmethod
+    def deleteone(cls, tclral: Tk, relvar_name: str, tid: Dict, defer:bool = False) -> str:
+        """
+        Deletes in place at most one tuple of the relvar's value.
+
+        TclRAL syntax:
+            relvar updateone <relvarName> <tupleVarName> <id-name-value-list> <script>
+
+        Here is an example where an instance of Attribute in the SM Metamodel has its Type attribute updated:
+        The TclRAL command (all on one line, but idented for readability here) is:
+            relvar updateone Attribute t
+                {Name {Floor} Class {Accessible Shaft Level} Domain {Elevator Management} }
+                {tuple update $t Type {Level Name}}
+
+        Generated from the PyRAL:
+            relvar_name: 'Attribute'
+            tid: {'Name': 'Floor', 'Class': 'Accessible Shaft Level', 'Domain': 'Elevator Management'}
+
+        :param tclral: The tclRAL session
+        :param relvar_name: The relvar to be deleted
+        :param tid: Identifier value for the tuple to be deleted
+        :return: A relation value with the same heading as the value held in relvarName and whose body contains either
+        the single tuple that was updated or is empty if no matching tuple was found.
+        """
+        id_str = ""
+        for id_attr, id_val in tid.items():
+            id_str += f"{id_attr} {{{id_val}}} "
+        cmd = f'relvar deleteone {relvar_name} {id_str}'
+        if not defer:
+            return Command.execute(tclral, cmd)
+        else:
+            Transaction.append_statement(statement=cmd)
+            return ''
