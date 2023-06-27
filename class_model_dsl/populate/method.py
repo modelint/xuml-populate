@@ -5,6 +5,7 @@ method.py – Convert parsed method to a relation
 import logging
 from PyRAL.transaction import Transaction
 from PyRAL.relvar import Relvar
+from class_model_dsl.populate.flow import Flow
 from class_model_dsl.populate.signature import Signature
 from class_model_dsl.populate.activity import Activity
 from class_model_dsl.populate.mm_type import MMtype
@@ -61,12 +62,16 @@ class Method:
                                             method_name=parsed_method.method,
                                             subsys_name=subsys_name, domain_name=domain_name)
 
+            # Populate the executing instance (xi) flow
+            xi_fid = Flow.populate_instance_flow(mmdb, cname=class_name, activity=anum, domain=domain_name)
             Relvar.insert(relvar='Method', tuples=[
-                Method_i(Anum=anum, Name=parsed_method.method, Class=class_name, Domain=domain_name)
+                Method_i(Anum=anum, Name=parsed_method.method, Class=class_name, Domain=domain_name,
+                         Executing_instance_flow=xi_fid)
             ])
 
             Transaction.execute() # Populate empty method
             cls._logger.info("Transaction closed: Populating method")
+
 
 
             # Add parameters

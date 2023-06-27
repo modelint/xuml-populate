@@ -4,7 +4,7 @@ flow.py – Populate a Flow in PyRAL
 
 import logging
 from PyRAL.relvar import Relvar
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 from class_model_dsl.populate.pop_types import Data_Flow_i, Flow_i
 
 if TYPE_CHECKING:
@@ -18,8 +18,64 @@ class Flow:
     _logger = logging.getLogger(__name__)
     _activity_nums = {}
 
+    flow_id = None
+    domain = None
+    activity = None
+    label = None
+    mmdb = None
+
     @classmethod
-    def populate(cls, mmdb: 'Tk', anum, domain_name, flow_type: str) -> int:
+    def populate_data_flow(cls) -> str:
+        """
+        """
+        pass
+
+
+    @classmethod
+    def populate_instance_flow(cls, mmdb: 'Tk', cname:str, activity:str, domain:str, label:Optional[str]) -> str:
+        """
+        Populate an instance of Scalar flow
+
+        :param mmdb:
+        :param label:
+        :param cname:
+        :param activity:
+        :param domain:
+        :return: The generated flow id
+        """
+        # Set all these values so that the superclass populates can find them
+        cls.label = label
+        cls.domain = domain
+        cls.activity = activity
+        cls.mmdb = mmdb
+
+        return ""
+
+    @classmethod
+    def populate_scalar_flow(cls, mmdb: 'Tk', label:Optional[str], scalar_type:str, activity:str, domain:str) -> str:
+        """
+        Populate an instance of Scalar flow
+
+        :param mmdb:
+        :param label:
+        :param scalar_type:
+        :param activity:
+        :param domain:
+        :return: The generated flow id
+        """
+        # Set all these values so that the superclass populates can find them
+        cls.label = label
+        cls.domain = domain
+        cls.activity = activity
+        cls.mmdb = mmdb
+
+        Transaction.open(mmdb) # Flow
+        Transaction.execute() # Flow
+
+
+
+    @classmethod
+    def populate_flow(cls, mmdb: 'Tk') -> int:
         """Constructor"""
 
         activity_id = f'{domain_name}:{anum}' # combine attributes to get id
