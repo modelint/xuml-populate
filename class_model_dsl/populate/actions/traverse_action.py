@@ -72,7 +72,12 @@ class TraverseAction:
         _logger.info("ACTION:Traverse - Populating a to association class hop")
 
     @classmethod
-    def straight_hop(cls):
+    def straight_hop(cls, to_class:str):
+        """
+        Populate an instance of Straight Hop
+
+        :param to_class: Hop leads to this class
+        """
         _logger.info("ACTION:Traverse - Populating a straight hop")
 
     @classmethod
@@ -198,7 +203,7 @@ class TraverseAction:
                     # Create a straight hop and update the class_cursor to either the to or from class
                     # whichever does not match the class_cursor
                     cls.class_cursor = to_class if to_class != cls.class_cursor else from_class
-                    cls.straight_hop()
+                    cls.straight_hop(to_class)
                 return
 
             if ref == 'T' or ref == 'P':
@@ -352,6 +357,8 @@ class TraverseAction:
             # Destination class must a name
             raise NoDestinationInPath(path)
         cls.dest_class = terminal_hop.name
+
+
 
 
 

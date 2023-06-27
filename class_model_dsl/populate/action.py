@@ -48,14 +48,8 @@ class Action:
                 # if type(c).__name__ == 'N_a':
                 # Prefix name as input source
                 if type(c).__name__ == 'PATH_a':
-                    TraverseAction.build_path(mmdb, source_class=cname, domain=domain_name, path=c)
-                    # We need to create a traverse action that takes an input instance flow and produces an output instance flow
                     # Create instance of Path
-                    first_hop = True
-                    for hop in c.hops:
-                        # if first hop and hop is an rnum
-                        # Create hop, look up the relationship
-                        pass
+                    TraverseAction.build_path(mmdb, source_class=cname, domain=domain_name, path=c)
 
             pass
             # Create an action of the appropriate type
