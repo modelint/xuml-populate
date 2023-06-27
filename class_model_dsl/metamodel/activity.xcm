@@ -2,9 +2,9 @@ metadata
     Title : Activity Subsystem / Shlaer-Mellor Metamodel
     Author : Leon Starr
     Document ID : mint.sm-meta.action.td.12
-    Version : 0.9.0
+    Version : 1.2.0
     /// Creation date : August 13, 2022
-    Modification date : May 29, 2023
+    Modification date : June 27, 2023
     Organization : Model Integration, LLC / www.modelint.com
     Copyright notice > MIT
     Organization logo > mint
@@ -33,10 +33,11 @@ attributes
 --
 class Method
 attributes
-    Anum : Activity Number {I, R826}
+    Anum : Activity Number {I, I3, R826, R832}
     Name : Method Name {I2}
     Class : Class Name {I2, R827}
-    Domain : Domain Name {I, I2, R826, R827}
+    Domain : Domain Name {I, I2, I3, R826, R827, R832}
+    Executing instance flow : Flow ID {I3, R832}
 --
 class Method Signature
 attributes
@@ -62,13 +63,21 @@ class Parameter
 attributes
     Name : Parameter Name {I}
     Signature : Signature Number {I, R828}
-    Domain : Domain Name {I, R828, R827}
+    Domain : Domain Name {I, I2, R828, R827, R833}
+    Input flow : Flow ID {I2, R833}
+    Activity : Activity Number {I2, R833}
     Type : Type Name {R827}
 --
 class Signature
 attributes
     SIGnum : Signature Number {I, R17}
     Domain : Domain Name {I, R17}
+--
+class Single Instance Flow <import:Flow>
+attributes
+    ID {I}
+    Activity {I}
+    Domain {I}
 --
 class State Activity
 attributes
@@ -95,7 +104,9 @@ attributes
 class Synchronous Output
 attributes
     Anum : Activity Number {I, R829}
-    Domain : Domain Name {I, R829}
+    Domain : Domain Name {I, I2, R829, R831}
+    Output flow : Flow ID {I2, R831}
+    Activity : Activity Number {I2, R831}
     Type : Type Name {R829}
 --
 relationships
@@ -133,6 +144,21 @@ relationships
         State Activity
         Asynchronous Operation
     <subclass>.(Anum, Domain) -> Activity.(Anum, Domain)
+--
+    R831
+    yields value in, 1 Data Flow
+    transmits value from, 1c Synchronous Output
+    Synchronous Output.(Output flow, Activity, Domain) -> Data Flow.(ID, Activity, Domain)
+--
+    R832
+    supplies self instance in, 1 Single Instance Flow
+    gets instance from, 1c Method
+    Method.(Executing instance flow, Anum, Domain) -> Single Instance Flow.(ID, Activity, Domain)
+--
+    R833
+    provides value for, 1c Parameter
+    gets value from, 1 Data Flow
+    Parameter.(Input flow, Activity, Domain) -> Data Flow.(ID, Activity, Domain)
 --
     R835
     defines input into, 1 Method
