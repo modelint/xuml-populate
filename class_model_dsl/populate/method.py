@@ -24,6 +24,7 @@ class Method:
     """
     _logger = logging.getLogger(__name__)
     subsys_method_path = None
+    xi_fid = None  # Executing instance flow id
 
     @classmethod
     def parse(cls, method_file:Path, debug=False):
@@ -63,10 +64,10 @@ class Method:
                                             subsys_name=subsys_name, domain_name=domain_name)
 
             # Populate the executing instance (xi) flow
-            xi_fid = Flow.populate_instance_flow(mmdb, cname=class_name, activity=anum, domain=domain_name)
+            cls.xi_fid = Flow.populate_instance_flow(mmdb, cname=class_name, activity=anum, domain=domain_name)
             Relvar.insert(relvar='Method', tuples=[
                 Method_i(Anum=anum, Name=parsed_method.method, Class=class_name, Domain=domain_name,
-                         Executing_instance_flow=xi_fid)
+                         Executing_instance_flow=cls.xi_fid)
             ])
 
             Transaction.execute() # Populate empty method
@@ -81,9 +82,10 @@ class Method:
                 # Populate the Parameter's type if it hasn't already been populated
                 MMtype.populate_unknown(mmdb, name=p['type'], domain=domain_name)
 
+                input_flow = Flow.populate_data_flow_by_type(mmdb, mm_type=p['type'], activity=anum, domain=domain_name)
                 Relvar.insert(relvar='Parameter', tuples=[
                     Parameter_i(Name=p['name'], Signature=signum, Domain=domain_name,
-                                Type=p['type'])
+                                Input_flow=input_flow, Activity=anum, Type=p['type'])
                 ])
                 Transaction.execute() # Method parameter
                 cls._logger.info("Transaction closed: Populating parameter")
