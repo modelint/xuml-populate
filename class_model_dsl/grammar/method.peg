@@ -3,9 +3,9 @@
 method = BLOCK_END class_prefix signature BLOCK_END activity EOF
 
 class_prefix = icaps_name '.'
-signature = icaps_name input_parameters output_types? NL
+signature = icaps_name input_parameters output_type? NL
 input_parameters = '(' SP? (parameters? SP?) ')'
-output_types = ' : ' icaps_all_name (', ' icaps_all_name)*
+output_type = ' : ' icaps_all_name
 parameters = parameter (', ' parameter)*
 parameter = phrase SP? ':' SP? icaps_all_name
 

@@ -33,11 +33,11 @@ attributes
 --
 class Method
 attributes
-    Anum : Activity Number {I, I3, R826, R832}
+    Anum : Activity Number {I, R826, R832}
     Name : Method Name {I2}
     Class : Class Name {I2, R827}
-    Domain : Domain Name {I, I2, I3, R826, R827, R832}
-    Executing instance flow : Flow ID {I3, R832}
+    Domain : Domain Name {I, I2, R826, R827, R832}
+    Executing instance flow : Flow ID {R832}
 --
 class Method Signature
 attributes

@@ -3,7 +3,7 @@
 from arpeggio import PTNodeVisitor
 from collections import namedtuple
 
-Method_a = namedtuple('Method_a', 'class_name method flows_in flows_out activity')
+Method_a = namedtuple('Method_a', 'class_name method flows_in flow_out activity')
 
 class MethodVisitor(PTNodeVisitor):
 
@@ -14,9 +14,9 @@ class MethodVisitor(PTNodeVisitor):
         BLOCK_END class_prefix signature BLOCK_END activity EOF
         """
         class_name = children[0]
-        method_name, flows_in, flows_out = children[1].values()
+        method_name, flows_in, flow_out = children[1].values()
         activity = children[2]
-        return Method_a(class_name, method_name, flows_in, flows_out, activity)
+        return Method_a(class_name, method_name, flows_in, flow_out, activity)
 
     @classmethod
     def visit_class_prefix(cls, node, children):
@@ -31,8 +31,8 @@ class MethodVisitor(PTNodeVisitor):
         icaps_name input_parameters output_types?
         """
         name, iparams = children[:2]
-        otypes = None if len(children) < 3 else children[2]
-        return {'method_name': name, 'flows_in': iparams, 'flows_out': otypes}
+        otype = None if len(children) < 3 else children[2]
+        return {'method_name': name, 'flows_in': iparams, 'flow_out': otype}
 
     @classmethod
     def visit_input_parameters(cls, node, children):
@@ -42,11 +42,11 @@ class MethodVisitor(PTNodeVisitor):
         return [] if not children else children[0]
 
     @classmethod
-    def visit_output_types(cls, node, children):
+    def visit_output_type(cls, node, children):
         """
-        ' : ' icaps_all_name (', ' icaps_all_name)*
+        ' : ' icaps_all_name
         """
-        return children
+        return children[0]
 
     @classmethod
     def visit_parameters(cls, node, children):

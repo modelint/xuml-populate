@@ -99,7 +99,7 @@ class Flow:
 
         flow_id = cls.populate_non_scalar_flow()
         Relvar.insert(relvar='Instance_Flow', tuples=[
-            Instance_Flow_i(ID=flow_id, Activity=activity, Domain=domain, Class_Type=cname)
+            Instance_Flow_i(ID=flow_id, Activity=activity, Domain=domain, Class=cname)
         ])
         if single:
             Relvar.insert(relvar='Single_Instance_Flow', tuples=[
@@ -144,7 +144,7 @@ class Flow:
 
         # Populate Flow instance
         cls.flow_id_ctr[activity_id] +=1  # Increment the flow id counter for this activity
-        flow_id = cls.flow_id_ctr[activity_id]
+        flow_id = f"F{cls.flow_id_ctr[activity_id]}"
         Relvar.insert(relvar='Flow', tuples=[
             Flow_i(ID=flow_id, Activity=cls.activity, Domain=cls.domain)
         ])
