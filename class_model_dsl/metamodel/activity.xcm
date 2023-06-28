@@ -103,10 +103,9 @@ attributes
 --
 class Synchronous Output
 attributes
-    Anum : Activity Number {I, R829}
-    Domain : Domain Name {I, I2, R829, R831}
-    Output flow : Flow ID {I2, R831}
-    Activity : Activity Number {I2, R831}
+    Anum : Activity Number {I, R829, R831}
+    Domain : Domain Name {I, R829, R831}
+    Output flow : Flow ID {R831}
     Type : Type Name {R829}
 --
 relationships
@@ -148,7 +147,7 @@ relationships
     R831
     yields value in, 1 Data Flow
     transmits value from, 1c Synchronous Output
-    Synchronous Output.(Output flow, Activity, Domain) -> Data Flow.(ID, Activity, Domain)
+    Synchronous Output.(Output flow, Anum, Domain) -> Data Flow.(ID, Activity, Domain)
 --
     R832
     supplies self instance in, 1 Single Instance Flow

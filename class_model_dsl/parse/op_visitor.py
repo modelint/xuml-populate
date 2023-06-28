@@ -3,7 +3,7 @@
 from arpeggio import PTNodeVisitor
 from collections import namedtuple
 
-Op_a = namedtuple('Op_a', 'op_type ee op flows_in flows_out activity')
+Op_a = namedtuple('Op_a', 'op_type ee op flows_in flow_out activity')
 
 class OpVisitor(PTNodeVisitor):
 
@@ -17,7 +17,7 @@ class OpVisitor(PTNodeVisitor):
         a = None if not a else a[0]
         return Op_a(
             op_type=children[0]['op_type'], ee=children[0]['ee'], op=children[1]['op_name'],
-            flows_in=children[1]['flows_in'], flows_out=children[1]['flows_out'],
+            flows_in=children[1]['flows_in'], flow_out=children[1]['flow_out'],
             activity=a
         )
 
@@ -36,7 +36,7 @@ class OpVisitor(PTNodeVisitor):
         """
         name, iparams = children[:2]
         otypes = None if len(children) < 3 else children[2]
-        return {'op_name': name, 'flows_in': iparams, 'flows_out': otypes}
+        return {'op_name': name, 'flows_in': iparams, 'flow_out': otypes}
 
     @classmethod
     def visit_input_parameters(cls, node, children):
@@ -46,11 +46,11 @@ class OpVisitor(PTNodeVisitor):
         return [] if not children else children[0]
 
     @classmethod
-    def visit_output_types(cls, node, children):
+    def visit_output_type(cls, node, children):
         """
-        ' : ' icaps_all_name (', ' icaps_all_name)*
+        ' : ' icaps_all_name
         """
-        return children
+        return children[0]
 
     @classmethod
     def visit_parameters(cls, node, children):

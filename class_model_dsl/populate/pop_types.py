@@ -111,7 +111,7 @@ Parameter_i = namedtuple('Parameter_i', 'Name Signature Domain Input_flow Activi
 Method_Signature_i = namedtuple('Method_Signature_i', 'SIGnum Method Class Domain')
 Method_i = namedtuple('Method_i', 'Anum Name Class Domain Executing_instance_flow')
 Synchronous_Activity_i = namedtuple('Synchronous_Activity_i', 'Anum Domain')
-Synchronous_Output_i = namedtuple('Synchronous_Output_i', 'Anum Domain Output_flow Activity Type')
+Synchronous_Output_i = namedtuple('Synchronous_Output_i', 'Anum Domain Output_flow Type')
 
 # Flow
 Data_Flow_i = namedtuple('Data_Flow_i', 'ID Activity Domain')

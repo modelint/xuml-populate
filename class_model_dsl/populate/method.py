@@ -9,7 +9,7 @@ from class_model_dsl.populate.flow import Flow
 from class_model_dsl.populate.signature import Signature
 from class_model_dsl.populate.activity import Activity
 from class_model_dsl.populate.mm_type import MMtype
-from class_model_dsl.populate.pop_types import Method_Signature_i, Method_i, Parameter_i
+from class_model_dsl.populate.pop_types import Method_Signature_i, Method_i, Parameter_i, Synchronous_Output_i
 from class_model_dsl.parse.method_parser import MethodParser
 from pathlib import Path
 
@@ -94,4 +94,12 @@ class Method:
 
             # Add output flow
             if parsed_method.flow_out:
-                pass
+                # Populate Synchronous Output and an associated output Data Flow
+                Transaction.open(mmdb)
+                of_id = Flow.populate_data_flow_by_type(mmdb, label=None, mm_type=parsed_method.flow_out,
+                                                activity=anum, domain=domain_name)
+                Relvar.insert(relvar='Synchronous_Output', tuples=[
+                    Synchronous_Output_i(Anum=anum, Domain=domain_name,
+                                         Output_flow=of_id, Type=parsed_method.flow_out)
+                ])
+                Transaction.execute()

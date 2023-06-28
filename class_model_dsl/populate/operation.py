@@ -5,11 +5,12 @@ operation.py – Convert parsed operation to a relation
 import logging
 from PyRAL.transaction import Transaction
 from PyRAL.relvar import Relvar
+from class_model_dsl.populate.flow import Flow
 from class_model_dsl.populate.signature import Signature
 from class_model_dsl.populate.activity import Activity
 from class_model_dsl.populate.mm_type import MMtype
 from class_model_dsl.populate.pop_types import Op_Signature_i, Op_i, Parameter_i,\
-    Asynchronous_Operation_i, Synchronous_Operation_i
+    Asynchronous_Operation_i, Synchronous_Operation_i, Synchronous_Output_i
 from class_model_dsl.parse.op_parser import OpParser
 from pathlib import Path
 
@@ -55,9 +56,9 @@ class Operation:
         ])
         anum = Activity.populate_operation(mmdb=mmdb, action_text=parsed_op.activity,
                                            ee_name=parsed_op.ee, subsys_name=subsys_name, domain_name=domain_name,
-                                           synchronous=True if parsed_op.flows_out else False)
+                                           synchronous=True if parsed_op.flow_out else False)
 
-        if parsed_op.flows_out:
+        if parsed_op.flow_out:
             Relvar.insert(relvar='Synchronous_Operation', tuples=[
                 Synchronous_Operation_i(Name=parsed_op.op, EE=parsed_op.ee, Domain=domain_name, Anum=anum)
             ])
@@ -75,9 +76,23 @@ class Operation:
             Transaction.open(tclral=mmdb) # Operation parameter
             # Populate the Parameter's type if it hasn't already been populated
             MMtype.populate_unknown(mmdb, name=p['type'], domain=domain_name)
+            input_flow = Flow.populate_data_flow_by_type(mmdb, mm_type=p['type'], activity=anum,
+                                                         domain=domain_name, label=None)
             Relvar.insert(relvar='Parameter', tuples=[
                 Parameter_i(Name=p['name'], Signature=signum, Domain=domain_name,
-                            Type=p['type'])
+                            Input_flow=input_flow, Activity=anum, Type=p['type'])
             ])
             Transaction.execute() # Operation parameter
             logging.info("Transaction closed: Parameter")
+
+        # Add output flow
+        if parsed_op.flow_out:
+            # Populate Synchronous Output and an associated output Data Flow
+            Transaction.open(mmdb)
+            of_id = Flow.populate_data_flow_by_type(mmdb, label=None, mm_type=parsed_op.flow_out,
+                                                    activity=anum, domain=domain_name)
+            Relvar.insert(relvar='Synchronous_Output', tuples=[
+                Synchronous_Output_i(Anum=anum, Domain=domain_name,
+                                     Output_flow=of_id, Type=parsed_op.flow_out)
+            ])
+            Transaction.execute()

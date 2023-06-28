@@ -7,6 +7,7 @@ from class_model_dsl.mp_exceptions import MismatchedStateSignature
 from PyRAL.relvar import Relvar
 from PyRAL.transaction import Transaction
 from typing import TYPE_CHECKING
+from class_model_dsl.populate.flow import Flow
 from class_model_dsl.populate.signature import Signature
 from class_model_dsl.populate.activity import Activity
 from class_model_dsl.populate.mm_type import MMtype
@@ -74,9 +75,11 @@ class StateModel:
                         # Create a Data flow
                         # Populate the Parameter's type if it hasn't already been populated
                         MMtype.populate_unknown(mmdb, name=p.type, domain=sm.domain)
+                        input_flow = Flow.populate_data_flow_by_type(mmdb, mm_type=p.type, activity=anum,
+                                                                     domain=sm.domain, label=None)
                         Relvar.insert(relvar='Parameter', tuples=[
                             Parameter_i(Name=p.name, Signature=signum, Domain=sm.domain,
-                                        Type=p.type)
+                                        Input_flow=input_flow, Activity=anum, Type=p.type)
                         ])
                 else:
                     # Otherwise, just get the id of the matching signature
