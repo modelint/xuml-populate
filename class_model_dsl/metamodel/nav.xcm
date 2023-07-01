@@ -10,12 +10,6 @@ metadata
     Organization logo > mint
 domain Metamodel, META
 subsystem Navigation, NAV 925-949
-class Action
-attributes
-    ID : Action ID {I}
-    Activity : Activity Number {I, R949}
-    Domain : Domain Name {I, R949}
---
 class Association Hop
 attributes
     Number : Hop Number {I, R927}
@@ -99,7 +93,7 @@ attributes
 --
 class Perspective Hop
 attributes
-    Hop : Hop Number {I}
+    Number : Hop Number {I}
     Path : Path Name {I}
     Domain : Domain Name {I, R941}
     Side : Side {R941}
@@ -218,7 +212,7 @@ relationships
         Asymmetric Circular Hop
         Ordinal Hop
         From Asymmetric Association Class Hop
-    <subclass>.(Path, Number, Domain) -> Perspective Hop.(Path, Hop, Domain)
+    <subclass>.(Path, Number, Domain) -> Perspective Hop.(Path, Number, Domain)
 --
     OR938
     before / after, Hop

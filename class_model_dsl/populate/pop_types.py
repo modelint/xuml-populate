@@ -138,3 +138,27 @@ Class_Type_i = namedtuple('Class_Type_i', 'Name Domain')
 Scalar_Type_i = namedtuple('Scalar_Type_i', 'Name Domain')
 Table_Type_i = namedtuple('Table_Type_i', 'Name Domain')
 Table_Attribute_i = namedtuple('Table_Attribute_i', 'Name Table_type Domain Attribute_type')
+
+## Actions
+
+# Traverse action
+Action_i = namedtuple('Action_i','ID Activity Domain')
+Traverse_Action_i = namedtuple('Traverse_Action_i','ID Activity Domain Path Source_flow Destination_flow')
+Path_i = namedtuple('Path_i','Name Domain Dest_class')
+Hop_i = namedtuple('Hop_i','Number Path Domain Rnum Class_step')
+Perspective_Hop_i = namedtuple('Perspective_Hop_i','Number Path Domain Side Rnum')
+Association_Hop_i = namedtuple('Association_Hop_i','Number Path Domain')
+Circular_Hop_i = namedtuple('Circular_Hop_i','Number Path Domain Aggregation')
+Symmetric_Hop_i = namedtuple('Symmetric_Hop_i','Number Path Domain')
+Asymmetric_Circular_Hop_i = namedtuple('Symmetric_Hop_i','Number Path Domain')
+Ordinal_Hop_i = namedtuple('Ordinal_Hop_i','Number Path Domain Ascending')
+Straight_Hop_i = namedtuple('Straight_Hop_i','Number Path Domain')
+Assocation_Class_Hop_i = namedtuple('Association_Class_Hop_i','Number Path Domain')
+From_Asymmetric_Assocation_Class_Hop_i = namedtuple('From_Asymmetric_Association_Class_Hop_i','Number Path Domain')
+From_Symmetric_Assocation_Class_Hop_i = namedtuple('From_Symmetric_Association_Class_Hop_i','Number Path Domain')
+To_Assocation_Class_Hop_i = namedtuple('To_Association_Class_Hop_i','Number Path Domain')
+Generalization_Hop_i = namedtuple('Generalization_Hop_i','Number Path Domain')
+To_Superclass_Hop_i = namedtuple('To_Superclass_Hop_i','Number Path Domain')
+To_Subclass_Hop_i = namedtuple('To_Subclass_Hop_i','Number Path Domain')
+
+

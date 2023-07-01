@@ -10,6 +10,7 @@ from class_model_dsl.exceptions.action_exceptions import UndefinedRelationship, 
     UndefinedAssociation, NeedPerspectiveOrClassToHop, NeedPerspectiveToHop, UnexpectedClassOrPerspectiveInPath
 from class_model_dsl.parse.scrall_visitor import PATH_a
 from PyRAL.relation import Relation
+from PyRAL.transaction import Transaction
 from collections import namedtuple
 
 Hop = namedtuple('Hop', 'cname rnum')
@@ -331,7 +332,7 @@ class TraverseAction:
             return True # Non-reflexive hop to a participating class
 
     @classmethod
-    def build_path(cls, mmdb: 'Tk', source_class: str, domain: str, path: PATH_a):
+    def build_path(cls, mmdb: 'Tk', source_class: str, domain: str, path: PATH_a) -> str:
         """
         Populate the entire Action
 
@@ -357,6 +358,11 @@ class TraverseAction:
             # Destination class must a name
             raise NoDestinationInPath(path)
         cls.dest_class = terminal_hop.name
+
+        # Create Traverse Action and Path
+        Transaction.open(mmdb) # Traverse Action, Path and first Hop
+
+
 
 
 
@@ -404,4 +410,4 @@ class TraverseAction:
         if cls.dest_class != cls.class_cursor:
             # Path does not reach destination
             pass
-        pass # Success
+        return cls.dest_class
