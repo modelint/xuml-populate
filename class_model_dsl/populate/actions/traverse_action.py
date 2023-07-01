@@ -334,18 +334,19 @@ class TraverseAction:
     @classmethod
     def build_path(cls, mmdb: 'Tk', source_class: str, domain: str, path: PATH_a) -> str:
         """
-        Populate the entire Action
+        Step through a path populating it along the way.
 
         :param mmdb:
         :param source_class:
         :param domain:
         :param path:
-        :return:
+        :return: The Class Type encountered at the end of the Path
         """
         cls.mmdb = mmdb
         cls.path = path
         cls.class_cursor = source_class # Validation cursor is on this class now
         cls.domain = domain
+        cls.name = None  # The path text forms path name value
 
         # Verify adequate path length
         if len(path.hops) < 2:
@@ -359,15 +360,10 @@ class TraverseAction:
             raise NoDestinationInPath(path)
         cls.dest_class = terminal_hop.name
 
-        # Create Traverse Action and Path
-        Transaction.open(mmdb) # Traverse Action, Path and first Hop
-
-
-
-
-
-
-
+        # We have an open transaction for the Action superclass
+        # We must first add each Hop population to the transaction before
+        # determining the path_name, source, and destination flows which make it possible
+        # to add the Path and Traverse Action population
 
         # Valdiate path continuity
         # Step through the path validating each relationship, phrase, and class
@@ -379,6 +375,7 @@ class TraverseAction:
             if type(hop).__name__ == 'N_a':
                 # This should be a perspective since class names get eaten in the relationship hop handlers
                 # and a path cannot begin with a class name
+                # (any class name prefixing a path will have been processed to populate a labeled instance flow earlier)
                 if not cls.resolve_perspective(phrase=hop.name) and not cls.resolve_ordinal_perspective(perspective=hop.name):
                     raise UnexpectedClassOrPerspectiveInPath(name=hop.name, path=path)
 

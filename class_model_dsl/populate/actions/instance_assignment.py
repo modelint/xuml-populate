@@ -52,13 +52,19 @@ class InstanceAssignment:
         :param actn_id: The ID for this action
         :param inst_assign_parse: A parsed instance assignment
         """
-        lhs = inst_assign_parse.action_group.lhs
-        card = inst_assign_parse.action_group.card
-        rhs = inst_assign_parse.action_group.rhs
+        lhs = inst_assign_parse.lhs
+        card = inst_assign_parse.card
+        rhs = inst_assign_parse.rhs
         ctype = cname # Initialize with the instance/ee class
         for c in rhs.components:
             if type(c).__name__ == 'PATH_a':
                 # Process the path to create the traverse action and obtain the resultant Class Type name
-                ctype = TraverseAction.build_path(mmdb, source_class=cname, domain=domain, path=c)
+                ctype = TraverseAction.build_path(mmdb, source_class=ctype, domain=domain, path=c)
+            elif type(c).__name__ == 'N_a':
+                # An unordered prefix name
+                # It must refer to a previously created labeled Instance Flow
+                # Otherwise, exception
+                # Update the ctype to match the Instance Flow's Class Type
+                pass
             pass
         pass

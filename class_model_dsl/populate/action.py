@@ -81,42 +81,42 @@ class Action:
             InstanceAssignment.process(mmdb, actn_id=actn_id, cname=cls.cname, domain=domain,
                                        inst_assign_parse=aparse.action_group)
 
-            # Populate the Traverse Action
-            dest_class = None
-            # Process lhs
-            # Create an output flow for the lhs
-            output_flow = lhs.name.name
-            output_type = lhs.exp_type
-            # If an explicit type is specified, we must ensure that there is no conflict with the output of the rhs
-            # otherwise we apply the output type of the rhs. Either way, we need to process the rhs before proceeding
-
-            # Create the instance flow for the lhs
-            R = f"Anum:<{anum}>, Domain:<{domain}>"
-            r_result = Relation.restrict3(mmdb, relation='Method', restriction=R)
-            if not r_result.body:
-                return False
-            xi_flow = r_result.body[0]['Executing_instance_flow']
-            # Process rhs
-            components = aparse.action_group.rhs.components
-            # A variety of actions may be associated with these components, depends on the component type
-            card = aparse.action_group.card
-
-            Relvar.insert(relvar='Traverse_Action', tuples=[
-                Traverse_Action_i(ID=actn_id, Activity=anum, Domain=domain, Path=None,
-                                  Source_flow=xi_flow, Destination_flow=None)
-            ])
-            for c in components:
-                # if type(c).__name__ == 'N_a':
-                # Prefix name as input source
-                if type(c).__name__ == 'PATH_a':
-                    # Create instance of Path
-                    dest_class = TraverseAction.build_path(mmdb, source_class=cls.cname, domain=domain, path=c)
-
-            # Now that we have a destination class, create the LHS instance flow
-            # The type of the LHS is either declared explicitly or inferred based on the result of the RHS
-            lhs_class_type = lhs.exp_type if not None else dest_class
-            Flow.populate_instance_flow(cname=lhs_class_type, activity=anum, domain=domain,
-                                        label=lhs.name.name, single=True if card==1 else False)
-            # Resolve type of RHS
-            # Create an action of the appropriate type
+            # # Populate the Traverse Action
+            # dest_class = None
+            # # Process lhs
+            # # Create an output flow for the lhs
+            # output_flow = lhs.name.name
+            # output_type = lhs.exp_type
+            # # If an explicit type is specified, we must ensure that there is no conflict with the output of the rhs
+            # # otherwise we apply the output type of the rhs. Either way, we need to process the rhs before proceeding
+            #
+            # # Create the instance flow for the lhs
+            # R = f"Anum:<{anum}>, Domain:<{domain}>"
+            # r_result = Relation.restrict3(mmdb, relation='Method', restriction=R)
+            # if not r_result.body:
+            #     return False
+            # xi_flow = r_result.body[0]['Executing_instance_flow']
+            # # Process rhs
+            # components = aparse.action_group.rhs.components
+            # # A variety of actions may be associated with these components, depends on the component type
+            # card = aparse.action_group.card
+            #
+            # Relvar.insert(relvar='Traverse_Action', tuples=[
+            #     Traverse_Action_i(ID=actn_id, Activity=anum, Domain=domain, Path=None,
+            #                       Source_flow=xi_flow, Destination_flow=None)
+            # ])
+            # for c in components:
+            #     # if type(c).__name__ == 'N_a':
+            #     # Prefix name as input source
+            #     if type(c).__name__ == 'PATH_a':
+            #         # Create instance of Path
+            #         dest_class = TraverseAction.build_path(mmdb, source_class=cls.cname, domain=domain, path=c)
+            #
+            # # Now that we have a destination class, create the LHS instance flow
+            # # The type of the LHS is either declared explicitly or inferred based on the result of the RHS
+            # lhs_class_type = lhs.exp_type if not None else dest_class
+            # Flow.populate_instance_flow(cname=lhs_class_type, activity=anum, domain=domain,
+            #                             label=lhs.name.name, single=True if card==1 else False)
+            # # Resolve type of RHS
+            # # Create an action of the appropriate type
         pass
