@@ -9,11 +9,11 @@ from class_model_dsl.exceptions.action_exceptions import UndefinedRelationship, 
     MissingTorPrefInAssociativeRel, NoSubclassInHop, SubclassNotInGeneralization, PerspectiveNotDefined,\
     UndefinedAssociation, NeedPerspectiveOrClassToHop, NeedPerspectiveToHop, UnexpectedClassOrPerspectiveInPath
 from class_model_dsl.parse.scrall_visitor import PATH_a
+from PyRAL.relvar import Relvar
 from PyRAL.relation import Relation
-from PyRAL.transaction import Transaction
 from collections import namedtuple
 
-Hop = namedtuple('Hop', 'cname rnum')
+Hop = namedtuple('Hop', 'cname rnum populator')
 
 if TYPE_CHECKING:
     from tkinter import Tk
@@ -27,6 +27,7 @@ class TraverseAction:
 
     path_index = 0
     path = None
+    name = None
     source_flow = None
     dest_flow = None
     id = None
@@ -35,6 +36,11 @@ class TraverseAction:
     rel_cursor = None
     mmdb = None
     domain = None
+    hops = []
+
+
+
+
 
     @classmethod
     def validate_rel(cls, rnum: str):
@@ -201,10 +207,10 @@ class TraverseAction:
                     cls.path_index += 1
                     cls.resolve_perspective(phrase=cls.path.hops[cls.path_index])
                 else:
-                    # Create a straight hop and update the class_cursor to either the to or from class
+                    # Add a straight hop to the hop list and update the class_cursor to either the to or from class
                     # whichever does not match the class_cursor
                     cls.class_cursor = to_class if to_class != cls.class_cursor else from_class
-                    cls.straight_hop(to_class)
+                    cls.hops.append(Hop(cname=cls.class_cursor, rnum=cls.rel_cursor, populator=cls.straight_hop))
                 return
 
             if ref == 'T' or ref == 'P':
@@ -224,7 +230,8 @@ class TraverseAction:
                 # Is the next hop the association class?
                 if next_hop.name == from_class:
                     cls.class_cursor = from_class
-                    cls.to_association_class()
+                    cls.name += cls.class_cursor + '/'
+                    cls.hops.append(Hop(cname=cls.class_cursor, rnum=cls.rel_cursor, populator=cls.to_association_class))
                     return
                 elif next_hop.name == to_class:
                     # Asymmetric reflexive hop requires a perspective phrase
@@ -336,17 +343,17 @@ class TraverseAction:
         """
         Step through a path populating it along the way.
 
-        :param mmdb:
-        :param source_class:
-        :param domain:
-        :param path:
+        :param mmdb: THe metamodel db
+        :param source_class: This is the Class Type of the Instance Flow feeding the Traverse Action on R929
+        :param domain: The Action's Domain
+        :param path: Parsed Scrall representing a Path
         :return: The Class Type encountered at the end of the Path
         """
         cls.mmdb = mmdb
         cls.path = path
         cls.class_cursor = source_class # Validation cursor is on this class now
         cls.domain = domain
-        cls.name = None  # The path text forms path name value
+        cls.name = "/"  # The path text forms path name value
 
         # Verify adequate path length
         if len(path.hops) < 2:
@@ -373,7 +380,7 @@ class TraverseAction:
             hop = path.hops[cls.path_index]
 
             if type(hop).__name__ == 'N_a':
-                # This should be a perspective since class names get eaten in the relationship hop handlers
+                # This should be a perspective since flow names get eaten in the relationship hop handlers
                 # and a path cannot begin with a class name
                 # (any class name prefixing a path will have been processed to populate a labeled instance flow earlier)
                 if not cls.resolve_perspective(phrase=hop.name) and not cls.resolve_ordinal_perspective(perspective=hop.name):
@@ -381,6 +388,7 @@ class TraverseAction:
 
             elif type(hop).__name__ == 'R_a':
                 cls.rel_cursor = hop.rnum
+                cls.name += cls.rel_cursor + '/'
                 # This is either an Association, Generalization, or Ordinal Relationship
                 # Determine the type and call the corresponding hop populator
 
@@ -407,4 +415,6 @@ class TraverseAction:
         if cls.dest_class != cls.class_cursor:
             # Path does not reach destination
             pass
+
+        # Now we can populate the path
         return cls.dest_class
