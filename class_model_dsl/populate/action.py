@@ -8,6 +8,7 @@ from PyRAL.relation import Relation
 from PyRAL.transaction import Transaction
 from class_model_dsl.populate.actions.traverse_action import TraverseAction
 from class_model_dsl.populate.flow import Flow
+from class_model_dsl.populate.actions.instance_assignment import InstanceAssignment
 from class_model_dsl.populate.pop_types import Action_i, Traverse_Action_i
 from typing import TYPE_CHECKING
 from enum import Enum
@@ -77,10 +78,12 @@ class Action:
         # For now we'll just switch on the action_group name and later wrap all this up
         # into a dictionary of functions of some sort
         if agroup_name == 'Inst_Assignment_a':
+            InstanceAssignment.process(mmdb, actn_id=actn_id, cname=cls.cname, domain=domain,
+                                       inst_assign_parse=aparse.action_group)
+
             # Populate the Traverse Action
             dest_class = None
             # Process lhs
-            lhs = aparse.action_group.lhs
             # Create an output flow for the lhs
             output_flow = lhs.name.name
             output_type = lhs.exp_type
