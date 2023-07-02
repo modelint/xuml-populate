@@ -10,10 +10,10 @@ from class_model_dsl.exceptions.action_exceptions import UndefinedRelationship, 
     UndefinedAssociation, NeedPerspectiveOrClassToHop, NeedPerspectiveToHop, UnexpectedClassOrPerspectiveInPath
 from class_model_dsl.parse.scrall_visitor import PATH_a
 from class_model_dsl.populate.actions.action import Action
-from class_model_dsl.populate.pop_types import Action_i, Traverse_Action_i, Path_i, Hop_i, Assocation_Class_Hop_i,\
-    Circular_Hop_i, Symmetric_Hop_i, Asymmetric_Circular_Hop_i, Ordinal_Hop_i, Straight_Hop_i,\
-    From_Asymmetric_Assocation_Class_Hop_i, From_Symmetric_Assocation_Class_Hop_i, To_Assocation_Class_Hop_i,\
-    Perspective_Hop_i, Generalization_Hop_i, To_Subclass_Hop_i, To_Superclass_Hop_i
+from class_model_dsl.populate.pop_types import Action_i, Traverse_Action_i, Path_i, Hop_i, Assocation_Class_Hop_i, \
+    Circular_Hop_i, Symmetric_Hop_i, Asymmetric_Circular_Hop_i, Ordinal_Hop_i, Straight_Hop_i, \
+    From_Asymmetric_Assocation_Class_Hop_i, From_Symmetric_Assocation_Class_Hop_i, To_Assocation_Class_Hop_i, \
+    Perspective_Hop_i, Generalization_Hop_i, To_Subclass_Hop_i, To_Superclass_Hop_i, Association_Hop_i
 from PyRAL.relvar import Relvar
 from PyRAL.relation import Relation
 from collections import namedtuple
@@ -63,8 +63,8 @@ class TraverseAction:
 
         # Get the next action ID
         # Then process each hop
-        for h in cls.hops:
-            h.hoptype(to_class=h.to_class, rnum=h.rnum, attrs=h.attrs) # Call hop type method with hop type general and specific args
+        for number, h in enumerate(cls.hops, start=1):
+            h.hoptype(number=number, to_class=h.to_class, rnum=h.rnum, attrs=h.attrs) # Call hop type method with hop type general and specific args
         pass
 
 
@@ -105,15 +105,25 @@ class TraverseAction:
         _logger.info("ACTION:Traverse - Populating a to association class hop")
 
     @classmethod
-    def straight_hop(cls, rnum:str, to_class:str, attrs:Optional[Dict]):
+    def straight_hop(cls, number:int, rnum:str, to_class:str, attrs:Optional[Dict]):
         """
         Populate an instance of Straight HopArgs
 
-        :param to_class:
-        :param rnum:
-        :param attrs:  Not used, but required in signature
+        :param number:  Value (1, 2, 3... ) establishing order within a Path, See Hop.Number in the class model
+        :param to_class: Hop over to this class
+        :param rnum: Across this association
+        :param attrs:  Unused, but required in signature
         """
         _logger.info("ACTION:Traverse - Populating a straight hop")
+        Relvar.insert(relvar='Straight_hop', tuples=[
+            Straight_Hop_i(Number=number, Path=cls.path, Domain=cls.domain)
+        ])
+        Relvar.insert(relvar='Association_Hop', tuples=[
+            Association_Hop_i(Number=number, Path=cls.path, Domain=cls.domain)
+        ])
+        Relvar.insert(relvar='Hop', tuples=[
+            Hop_i(Number=number, Path=cls.path, Domain=cls.domain, Rnum=rnum, Class_step=to_class)
+        ])
 
     @classmethod
     def to_superclass_hop(cls):
