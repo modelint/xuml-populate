@@ -37,7 +37,7 @@ class InstanceAssignment:
     """
 
     @classmethod
-    def process(cls, mmdb: 'Tk', actn_id:str, cname:str, domain:str, inst_assign_parse):
+    def process(cls, mmdb: 'Tk', anum:str, cname:str, domain:str, inst_assign_parse):
         """
         Given a parsed instance set expression, populate each component action
         and return the resultant Class Type name
@@ -49,7 +49,7 @@ class InstanceAssignment:
         :param cname: The class (for an operation it is the proxy class)
         :param domain: In this domain
         :param mmdb: The metamodel db
-        :param actn_id: The ID for this action
+        :param anum: The Activity Number
         :param inst_assign_parse: A parsed instance assignment
         """
         lhs = inst_assign_parse.lhs
@@ -59,7 +59,7 @@ class InstanceAssignment:
         for c in rhs.components:
             if type(c).__name__ == 'PATH_a':
                 # Process the path to create the traverse action and obtain the resultant Class Type name
-                ctype = TraverseAction.build_path(mmdb, source_class=ctype, domain=domain, path=c)
+                ctype = TraverseAction.build_path(mmdb, anum=anum, source_class=ctype, domain=domain, path=c)
             elif type(c).__name__ == 'N_a':
                 # An unordered prefix name
                 # It must refer to a previously created labeled Instance Flow

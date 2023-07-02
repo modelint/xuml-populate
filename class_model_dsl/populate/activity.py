@@ -6,7 +6,7 @@ import logging
 from PyRAL.relvar import Relvar
 from class_model_dsl.populate.element import Element
 from class_model_dsl.parse.scrall_parser import ScrallParser
-from class_model_dsl.populate.action import Action
+from class_model_dsl.populate.statement import Statement
 from typing import TYPE_CHECKING
 from class_model_dsl.populate.pop_types import Activity_i, Asynchronous_Activity_i,\
     State_Activity_i, Synchronous_Activity_i
@@ -124,9 +124,9 @@ class Activity:
         return Anum
 
     @classmethod
-    def populate_actions(cls, mmdb: 'Tk'):
+    def process_statements(cls, mmdb: 'Tk'):
         """
-
+        Process each Scrall statement in the Method
         """
         # Populate all method activities
         for class_name, method_data in cls.methods.items():
@@ -134,8 +134,8 @@ class Activity:
                 cls._logger.info(f"Populating activity for method: {class_name}.{method_name}")
                 aparse = activity_data['parse']
                 for a in aparse:
-                    Action.populate_method(mmdb=mmdb, cname=class_name, method=method_name, anum=activity_data['anum'],
-                                           domain=activity_data['domain'], aparse=a)
+                    Statement.populate_method(mmdb=mmdb, cname=class_name, method=method_name, anum=activity_data['anum'],
+                                              domain=activity_data['domain'], aparse=a)
 
         pass
         # Populate all state activities

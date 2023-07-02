@@ -4,7 +4,7 @@ action_exceptions.py – Errors that occur while populating actions
 
 # Every error should have the same format
 # with a standard prefix and postfix defined here
-pre = "\nAction loader: -- "
+pre = "\nStatement loader: -- "
 post = " --"
 
 

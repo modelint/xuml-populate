@@ -1,5 +1,5 @@
 """
-action.py – Populate an action instance in PyRAL
+statement.py – Populate all actions in a Scrall statement
 """
 
 import logging
@@ -21,9 +21,9 @@ class ActivityType(Enum):
     STATE = 2
     OPERATION = 3
 
-class Action:
+class Statement:
     """
-    Create all relations for an Action
+    Create all relations for an Statement
     """
     _logger = logging.getLogger(__name__)
     next_action_id = {}
@@ -58,30 +58,16 @@ class Action:
     @classmethod
     def populate(cls, mmdb: 'Tk', anum: str, domain: str, aparse):
         """
-        Populate an Action
+        Populate a Statement
         """
-        # Each activity requires a new action counter
-        activity_key = f'{domain}:{anum}' # combine attributes to get id
-        if activity_key not in cls.next_action_id.keys():
-            cls.next_action_id[activity_key] = 0
-        cls.next_action_id[activity_key] += 1
-        actn_id = f'ACTN{cls.next_action_id[activity_key]}'
-
-        Transaction.open(mmdb) # Traverse Action
-
-        # Populate the Action superclass
-        Relvar.insert(relvar='Action', tuples=[
-            Action_i(ID=actn_id, Activity=anum, Domain=domain)
-        ])
-
         agroup_name = type(aparse.action_group).__name__
         # For now we'll just switch on the action_group name and later wrap all this up
         # into a dictionary of functions of some sort
         if agroup_name == 'Inst_Assignment_a':
-            InstanceAssignment.process(mmdb, actn_id=actn_id, cname=cls.cname, domain=domain,
+            InstanceAssignment.process(mmdb, anum=anum, cname=cls.cname, domain=domain,
                                        inst_assign_parse=aparse.action_group)
 
-            # # Populate the Traverse Action
+            # # Populate the Traverse Statement
             # dest_class = None
             # # Process lhs
             # # Create an output flow for the lhs

@@ -9,11 +9,17 @@ from class_model_dsl.exceptions.action_exceptions import UndefinedRelationship, 
     MissingTorPrefInAssociativeRel, NoSubclassInHop, SubclassNotInGeneralization, PerspectiveNotDefined,\
     UndefinedAssociation, NeedPerspectiveOrClassToHop, NeedPerspectiveToHop, UnexpectedClassOrPerspectiveInPath
 from class_model_dsl.parse.scrall_visitor import PATH_a
+from class_model_dsl.populate.actions.action import Action
+from class_model_dsl.populate.pop_types import Action_i, Traverse_Action_i, Path_i, Hop_i, Assocation_Class_Hop_i,\
+    Circular_Hop_i, Symmetric_Hop_i, Asymmetric_Circular_Hop_i, Ordinal_Hop_i, Straight_Hop_i,\
+    From_Asymmetric_Assocation_Class_Hop_i, From_Symmetric_Assocation_Class_Hop_i, To_Assocation_Class_Hop_i,\
+    Perspective_Hop_i, Generalization_Hop_i, To_Subclass_Hop_i, To_Superclass_Hop_i
 from PyRAL.relvar import Relvar
 from PyRAL.relation import Relation
 from collections import namedtuple
 
-Hop = namedtuple('Hop', 'cname rnum populator')
+# HopArgs = namedtuple('HopArgs', 'cname rnum attrs')
+Hop = namedtuple('Hop', 'hoptype to_class rnum attrs')
 
 if TYPE_CHECKING:
     from tkinter import Tk
@@ -22,14 +28,13 @@ _logger = logging.getLogger(__name__)
 
 class TraverseAction:
     """
-    Create all relations for a Traverse Action
+    Create all relations for a Traverse Statement
     """
 
     path_index = 0
     path = None
     name = None
-    source_flow = None
-    dest_flow = None
+    source_class = None
     id = None
     dest_class = None # End of path
     class_cursor = None
@@ -37,9 +42,30 @@ class TraverseAction:
     mmdb = None
     domain = None
     hops = []
+    anum = None
+    action_id = None
 
 
+    @classmethod
+    def populate(cls):
+        """
+        Populate the Traverse Statement, Path and all Hops
+        """
+        # Create a Traverse Action and Path
+        cls.action_id = Action.populate(cls.mmdb, cls.anum, cls.domain)
+        Relvar.insert(relvar='Traverse_Action', tuples=[
+            Traverse_Action_i(ID=cls.action_id, Activity=cls.anum, Domain=cls.domain, Path=cls.name,
+                              Source_flow=cls.source_class, Destination_flow=cls.dest_class)
+        ])
+        Relvar.insert(relvar='Path', tuples=[
+            Path_i(Name=cls.name, Domain=cls.domain, Dest_class=cls.dest_class)
+        ])
 
+        # Get the next action ID
+        # Then process each hop
+        for h in cls.hops:
+            h.hoptype(to_class=h.to_class, rnum=h.rnum, attrs=h.attrs) # Call hop type method with hop type general and specific args
+        pass
 
 
     @classmethod
@@ -79,11 +105,13 @@ class TraverseAction:
         _logger.info("ACTION:Traverse - Populating a to association class hop")
 
     @classmethod
-    def straight_hop(cls, to_class:str):
+    def straight_hop(cls, rnum:str, to_class:str, attrs:Optional[Dict]):
         """
-        Populate an instance of Straight Hop
+        Populate an instance of Straight HopArgs
 
-        :param to_class: Hop leads to this class
+        :param to_class:
+        :param rnum:
+        :param attrs:  Not used, but required in signature
         """
         _logger.info("ACTION:Traverse - Populating a straight hop")
 
@@ -159,7 +187,7 @@ class TraverseAction:
     @classmethod
     def hop_generalization(cls, refs:List[Dict[str,str]]):
         """
-        Populate a Generalization Hop
+        Populate a Generalization HopArgs
 
         :param refs:
         :return:
@@ -210,7 +238,7 @@ class TraverseAction:
                     # Add a straight hop to the hop list and update the class_cursor to either the to or from class
                     # whichever does not match the class_cursor
                     cls.class_cursor = to_class if to_class != cls.class_cursor else from_class
-                    cls.hops.append(Hop(cname=cls.class_cursor, rnum=cls.rel_cursor, populator=cls.straight_hop))
+                    cls.hops.append( Hop(hoptype=cls.straight_hop, to_class=cls.class_cursor, rnum=cls.rel_cursor, attrs=None) )
                 return
 
             if ref == 'T' or ref == 'P':
@@ -231,7 +259,8 @@ class TraverseAction:
                 if next_hop.name == from_class:
                     cls.class_cursor = from_class
                     cls.name += cls.class_cursor + '/'
-                    cls.hops.append(Hop(cname=cls.class_cursor, rnum=cls.rel_cursor, populator=cls.to_association_class))
+                    cls.hops.append( Hop(hoptype=cls.to_association_class, to_class=cls.class_cursor, rnum=cls.rel_cursor,
+                                         attrs=None))
                     return
                 elif next_hop.name == to_class:
                     # Asymmetric reflexive hop requires a perspective phrase
@@ -313,7 +342,7 @@ class TraverseAction:
             # So it must be either 1 or 2
             if cls.class_cursor == viewed_class:
                 # The class_cursor is one of the participating classes, i.e. not the association class
-                # So it is a Circular Hop from-to the same class
+                # So it is a Circular HopArgs from-to the same class
                 if symmetry == 1:
                     # Populate a symmetric hop
                     cls.symmetric_hop(viewed_class)
@@ -339,18 +368,21 @@ class TraverseAction:
             return True # Non-reflexive hop to a participating class
 
     @classmethod
-    def build_path(cls, mmdb: 'Tk', source_class: str, domain: str, path: PATH_a) -> str:
+    def build_path(cls, mmdb: 'Tk', anum: str, source_class: str, domain: str, path: PATH_a) -> str:
         """
         Step through a path populating it along the way.
 
+        :param anum:
         :param mmdb: THe metamodel db
-        :param source_class: This is the Class Type of the Instance Flow feeding the Traverse Action on R929
-        :param domain: The Action's Domain
+        :param source_class: This is the Class Type of the Instance Flow feeding the Traverse Statement on R929
+        :param domain: The Statement's Domain
         :param path: Parsed Scrall representing a Path
         :return: The Class Type encountered at the end of the Path
         """
         cls.mmdb = mmdb
         cls.path = path
+        cls.anum = anum
+        cls.source_class = source_class
         cls.class_cursor = source_class # Validation cursor is on this class now
         cls.domain = domain
         cls.name = "/"  # The path text forms path name value
@@ -367,10 +399,10 @@ class TraverseAction:
             raise NoDestinationInPath(path)
         cls.dest_class = terminal_hop.name
 
-        # We have an open transaction for the Action superclass
-        # We must first add each Hop population to the transaction before
+        # We have an open transaction for the Statement superclass
+        # We must first add each HopArgs population to the transaction before
         # determining the path_name, source, and destination flows which make it possible
-        # to add the Path and Traverse Action population
+        # to add the Path and Traverse Statement population
 
         # Valdiate path continuity
         # Step through the path validating each relationship, phrase, and class
@@ -417,4 +449,6 @@ class TraverseAction:
             pass
 
         # Now we can populate the path
+        cls.populate()
+
         return cls.dest_class
