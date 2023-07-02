@@ -2,9 +2,9 @@ metadata
     Title : Navigation Subsystem / Shlaer-Mellor Metamodel
     Author : Leon Starr
     Document ID : mint.sm-meta.action.td.6
-    Version : 0.6.1
+    Version : 0.6.2
     /// Creation date : September 11, 2021
-    Modification date : June 29, 2023
+    Modification date : Jul 2, 2023
     Organization : Model Integration, LLC / www.modelint.com
     Copyright notice > MIT
     Organization logo > mint
@@ -227,14 +227,4 @@ relationships
     specifies target, 1 Perspective
     is specified as target of, Mc Perspective Hope
     Perspective Hop.(Side, Rnum, Domain) -> Perspective.(Side, Rnum, Domain)
---
-    R948
-    executes in, 1 Activity
-    executes, Mc Action
-    Action.(Activity, Domain) -> Activity.(Anum, Domain)
---
-    R949
-    is sub of, 1 Action
-    is super of, 1 Traverse Action
-    Traverse Action.(ID, Activity, Domain) -> Action.(ID, Activity, Domain)
 --

@@ -10,12 +10,14 @@ from class_model_dsl.exceptions.action_exceptions import UndefinedRelationship, 
     UndefinedAssociation, NeedPerspectiveOrClassToHop, NeedPerspectiveToHop, UnexpectedClassOrPerspectiveInPath
 from class_model_dsl.parse.scrall_visitor import PATH_a
 from class_model_dsl.populate.actions.action import Action
-from class_model_dsl.populate.pop_types import Action_i, Traverse_Action_i, Path_i, Hop_i, Assocation_Class_Hop_i, \
+from class_model_dsl.populate.flow import Flow
+from class_model_dsl.populate.pop_types import Action_i, Traverse_Action_i, Path_i, Hop_i, Association_Class_Hop_i, \
     Circular_Hop_i, Symmetric_Hop_i, Asymmetric_Circular_Hop_i, Ordinal_Hop_i, Straight_Hop_i, \
     From_Asymmetric_Assocation_Class_Hop_i, From_Symmetric_Assocation_Class_Hop_i, To_Assocation_Class_Hop_i, \
     Perspective_Hop_i, Generalization_Hop_i, To_Subclass_Hop_i, To_Superclass_Hop_i, Association_Hop_i
 from PyRAL.relvar import Relvar
 from PyRAL.relation import Relation
+from PyRAL.transaction import Transaction
 from collections import namedtuple
 
 # HopArgs = namedtuple('HopArgs', 'cname rnum attrs')
@@ -35,6 +37,7 @@ class TraverseAction:
     path = None
     name = None
     source_class = None
+    source_flow = None
     id = None
     dest_class = None # End of path
     class_cursor = None
@@ -44,6 +47,7 @@ class TraverseAction:
     hops = []
     anum = None
     action_id = None
+    mult = None
 
 
     @classmethod
@@ -51,11 +55,16 @@ class TraverseAction:
         """
         Populate the Traverse Statement, Path and all Hops
         """
+        cls.name = cls.name.rstrip('_') # Remove trailing '_' from the path name
         # Create a Traverse Action and Path
         cls.action_id = Action.populate(cls.mmdb, cls.anum, cls.domain)
+        # Create the Traverse action destination flow (the output for R930)
+        dest_flow = Flow.populate_instance_flow(cls.mmdb, cname=cls.dest_class, activity=cls.anum, domain=cls.domain, label=None,
+                                    single=True if cls.mult=='1' else False)
+
         Relvar.insert(relvar='Traverse_Action', tuples=[
             Traverse_Action_i(ID=cls.action_id, Activity=cls.anum, Domain=cls.domain, Path=cls.name,
-                              Source_flow=cls.source_class, Destination_flow=cls.dest_class)
+                              Source_flow=cls.source_flow, Destination_flow=dest_flow)
         ])
         Relvar.insert(relvar='Path', tuples=[
             Path_i(Name=cls.name, Domain=cls.domain, Dest_class=cls.dest_class)
@@ -101,8 +110,20 @@ class TraverseAction:
         _logger.info("ACTION:Traverse - Populating a from asymmetric assoc class hop")
 
     @classmethod
-    def to_association_class(cls):
+    def to_association_class(cls, number:int, rnum:str, to_class:str, attrs:Optional[Dict]):
         _logger.info("ACTION:Traverse - Populating a to association class hop")
+        Relvar.insert(relvar='To_Association_Class_Hop', tuples=[
+            To_Assocation_Class_Hop_i(Number=number, Path=cls.name, Domain=cls.domain)
+        ])
+        Relvar.insert(relvar='Association_Class_Hop', tuples=[
+            Association_Class_Hop_i(Number=number, Path=cls.name, Domain=cls.domain)
+        ])
+        Relvar.insert(relvar='Association_Hop', tuples=[
+            Association_Hop_i(Number=number, Path=cls.name, Domain=cls.domain)
+        ])
+        Relvar.insert(relvar='Hop', tuples=[
+            Hop_i(Number=number, Path=cls.name, Domain=cls.domain, Rnum=rnum, Class_step=to_class)
+        ])
 
     @classmethod
     def straight_hop(cls, number:int, rnum:str, to_class:str, attrs:Optional[Dict]):
@@ -115,14 +136,14 @@ class TraverseAction:
         :param attrs:  Unused, but required in signature
         """
         _logger.info("ACTION:Traverse - Populating a straight hop")
-        Relvar.insert(relvar='Straight_hop', tuples=[
-            Straight_Hop_i(Number=number, Path=cls.path, Domain=cls.domain)
+        Relvar.insert(relvar='Straight_Hop', tuples=[
+            Straight_Hop_i(Number=number, Path=cls.name, Domain=cls.domain)
         ])
         Relvar.insert(relvar='Association_Hop', tuples=[
-            Association_Hop_i(Number=number, Path=cls.path, Domain=cls.domain)
+            Association_Hop_i(Number=number, Path=cls.name, Domain=cls.domain)
         ])
         Relvar.insert(relvar='Hop', tuples=[
-            Hop_i(Number=number, Path=cls.path, Domain=cls.domain, Rnum=rnum, Class_step=to_class)
+            Hop_i(Number=number, Path=cls.name, Domain=cls.domain, Rnum=rnum, Class_step=to_class)
         ])
 
     @classmethod
@@ -247,7 +268,18 @@ class TraverseAction:
                 else:
                     # Add a straight hop to the hop list and update the class_cursor to either the to or from class
                     # whichever does not match the class_cursor
+
+                    # Update multiplicity for this hop
+                    # We need to look up the Perspective to get the multiplicity
+                    # Since this is an R ref (no association class) we just need to specify the
+                    # rnum, domain, and viewed class which will be the updated class cursor
                     cls.class_cursor = to_class if to_class != cls.class_cursor else from_class
+                    R = f"Rnum:<{cls.rel_cursor}>, Domain:<{cls.domain}>, Viewed_class:<{cls.class_cursor}>"
+                    result = Relation.restrict3(cls.mmdb, relation='Perspective', restriction=R)
+                    if not result.body:
+                        # TODO: raise exception
+                        return False
+                    cls.mult = result.body[0]['Multiplicity']
                     cls.hops.append( Hop(hoptype=cls.straight_hop, to_class=cls.class_cursor, rnum=cls.rel_cursor, attrs=None) )
                 return
 
@@ -268,7 +300,15 @@ class TraverseAction:
                 # Is the next hop the association class?
                 if next_hop.name == from_class:
                     cls.class_cursor = from_class
-                    cls.name += cls.class_cursor + '/'
+                    # Update multiplicty
+                    R = f"Rnum:<{cls.rel_cursor}>, Domain:<{cls.domain}>, Class:<{cls.class_cursor}>"
+                    result = Relation.restrict3(cls.mmdb, relation='Association_Class', restriction=R)
+                    if not result.body:
+                        # TODO: raise exception
+                        return False
+                    cls.mult = result.body[0]['Multiplicity']
+
+                    cls.name += cls.class_cursor + '_'
                     cls.hops.append( Hop(hoptype=cls.to_association_class, to_class=cls.class_cursor, rnum=cls.rel_cursor,
                                          attrs=None))
                     return
@@ -378,13 +418,14 @@ class TraverseAction:
             return True # Non-reflexive hop to a participating class
 
     @classmethod
-    def build_path(cls, mmdb: 'Tk', anum: str, source_class: str, domain: str, path: PATH_a) -> str:
+    def build_path(cls, mmdb: 'Tk', anum: str, source_class: str, source_flow:str, domain: str, path: PATH_a) -> str:
         """
         Step through a path populating it along the way.
 
         :param anum:
         :param mmdb: THe metamodel db
         :param source_class: This is the Class Type of the Instance Flow feeding the Traverse Statement on R929
+        :param source_flow: The flow id feeding into the Traverse Action
         :param domain: The Statement's Domain
         :param path: Parsed Scrall representing a Path
         :return: The Class Type encountered at the end of the Path
@@ -393,9 +434,10 @@ class TraverseAction:
         cls.path = path
         cls.anum = anum
         cls.source_class = source_class
+        cls.source_flow = source_flow
         cls.class_cursor = source_class # Validation cursor is on this class now
         cls.domain = domain
-        cls.name = "/"  # The path text forms path name value
+        cls.name = "_"  # The path text forms path name value
 
         # Verify adequate path length
         if len(path.hops) < 2:
@@ -408,6 +450,23 @@ class TraverseAction:
             # Destination class must a name
             raise NoDestinationInPath(path)
         cls.dest_class = terminal_hop.name
+
+        # Set initial source flow multiplicity
+        # We need to look up the flow multiplicity
+        R = f"ID:<{cls.source_flow}>, Activity:<{cls.anum}>, Domain:<{cls.domain}>"
+        result = Relation.restrict3(cls.mmdb, relation='Single_Instance_Flow', restriction=R)
+        if result.body:
+            cls.mult = '1'
+        else:
+            # It must be a Multiple Instance Flow
+            result = Relation.restrict3(cls.mmdb, relation='Multiple_Instance_Flow', restriction=R)
+            if result.body:
+                cls.mult = 'M'
+            else:
+                pass
+                # TODO: raise exception
+
+
 
         # We have an open transaction for the Statement superclass
         # We must first add each HopArgs population to the transaction before
@@ -430,7 +489,7 @@ class TraverseAction:
 
             elif type(hop).__name__ == 'R_a':
                 cls.rel_cursor = hop.rnum
-                cls.name += cls.rel_cursor + '/'
+                cls.name += cls.rel_cursor + '_'
                 # This is either an Association, Generalization, or Ordinal Relationship
                 # Determine the type and call the corresponding hop populator
 
@@ -460,5 +519,7 @@ class TraverseAction:
 
         # Now we can populate the path
         cls.populate()
+        Transaction.execute()
+        Relvar.printall(mmdb)
 
         return cls.dest_class

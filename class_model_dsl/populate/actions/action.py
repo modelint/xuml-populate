@@ -25,7 +25,7 @@ class Action:
     next_action_id = {}
 
     @classmethod
-    def populate(cls, mmdb: 'Tk', anum:str, domain:str):
+    def populate(cls, mmdb: 'Tk', anum:str, domain:str) -> str:
         """
 
         :param mmdb:
@@ -48,3 +48,4 @@ class Action:
         Relvar.insert(relvar='Action', tuples=[
             Action_i(ID=actn_id, Activity=anum, Domain=domain)
         ])
+        return actn_id

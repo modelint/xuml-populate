@@ -37,29 +37,34 @@ class InstanceAssignment:
     """
 
     @classmethod
-    def process(cls, mmdb: 'Tk', anum:str, cname:str, domain:str, inst_assign_parse):
+    def process(cls, mmdb: 'Tk', anum:str, cname:str, domain:str, inst_assign_parse, xi_flow_id:str, signum:str):
         """
         Given a parsed instance set expression, populate each component action
         and return the resultant Class Type name
 
-        We start by setting the assumed ctype to the cname (class of the instance/ee executing this action).
-        The ctype is updated as we process each component of the instance set expression until we reach the
-        final output ctype which determines the lhs Class Type or any conflict.
+        We'll need an initial flow and we'll need to create intermediate instance flows to connect the components.
+        The final output flow must be an instance flow. The associated Class Type determines the type of the
+        assignment which must match any explicit type.
 
+        :param mmdb: The metamodel db
         :param cname: The class (for an operation it is the proxy class)
         :param domain: In this domain
-        :param mmdb: The metamodel db
         :param anum: The Activity Number
         :param inst_assign_parse: A parsed instance assignment
+        :param xi_flow_id: The ID of the executing instance flow (the instance executing this activity)
+        :param signum: The signature number so we can look up any input parameters
         """
         lhs = inst_assign_parse.lhs
         card = inst_assign_parse.card
         rhs = inst_assign_parse.rhs
         ctype = cname # Initialize with the instance/ee class
+        input_flow = xi_flow_id
+
         for c in rhs.components:
             if type(c).__name__ == 'PATH_a':
                 # Process the path to create the traverse action and obtain the resultant Class Type name
-                ctype = TraverseAction.build_path(mmdb, anum=anum, source_class=ctype, domain=domain, path=c)
+                ctype = TraverseAction.build_path(mmdb, anum=anum, source_class=ctype, source_flow = input_flow,
+                                                  domain=domain, path=c)
             elif type(c).__name__ == 'N_a':
                 # An unordered prefix name
                 # It must refer to a previously created labeled Instance Flow

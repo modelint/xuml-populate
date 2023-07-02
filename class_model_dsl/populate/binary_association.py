@@ -58,7 +58,7 @@ class BinaryAssociation:
 
         if cls.assoc_cname:
             Relvar.insert(relvar='Association_Class', tuples=[
-                Association_Class_i(Rnum=cls.rnum, Class=cls.assoc_cname, Domain=domain)
+                Association_Class_i(Rnum=cls.rnum, Class=cls.assoc_cname, Domain=domain, Multiplicity=cls.assoc_mult)
             ])
 
         # Populate the T and P perspectives of an asymmetric binary association

@@ -32,6 +32,8 @@ class Statement:
     operation = None # operation name
     method = None  # method name
     cname = None
+    signum = None
+    xi_flow_id = None
 
     @classmethod
     def populate_method(cls, mmdb: 'Tk', cname: str, method:str, anum: str, domain: str, aparse):
@@ -52,6 +54,22 @@ class Statement:
         cls.activity_type = ActivityType.METHOD
         cls.cname = cname
         cls.method = method
+
+        # Look up signature
+        R = f"Method:<{method}>, Class:<{cname}>, Domain:<{domain}>"
+        result = Relation.restrict3(mmdb, relation='Method_Signature', restriction=R)
+        if not result.body:
+            # TODO: raise exception here
+            pass
+        cls.signum = result.body[0]['SIGnum']
+
+        # Look up xi flow
+        R = f"Name:<{method}>, Class:<{cname}>, Domain:<{domain}>"
+        result = Relation.restrict3(mmdb, relation='Method', restriction=R)
+        if not result.body:
+            # TODO: raise exception here
+            pass
+        cls.xi_flow_id = result.body[0]['Executing_instance_flow']
         cls.populate(mmdb, anum, domain, aparse)
 
 
@@ -65,7 +83,8 @@ class Statement:
         # into a dictionary of functions of some sort
         if agroup_name == 'Inst_Assignment_a':
             InstanceAssignment.process(mmdb, anum=anum, cname=cls.cname, domain=domain,
-                                       inst_assign_parse=aparse.action_group)
+                                       inst_assign_parse=aparse.action_group, xi_flow_id=cls.xi_flow_id,
+                                       signum=cls.signum)
 
             # # Populate the Traverse Statement
             # dest_class = None
