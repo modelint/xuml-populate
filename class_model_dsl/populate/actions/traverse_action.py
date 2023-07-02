@@ -301,12 +301,22 @@ class TraverseAction:
                 if next_hop.name == from_class:
                     cls.class_cursor = from_class
                     # Update multiplicty
+                    # First check multiplicity on to_class perspective (same as ref)
+                    R = f"Rnum:<{cls.rel_cursor}>, Domain:<{cls.domain}>, Side:<{ref}>"
+                    result = Relation.restrict3(cls.mmdb, relation='Perspective', restriction=R)
+                    if not result.body:
+                        # TODO: raise exception
+                        return False
+                    cls.mult = result.body[0]['Multiplicity'] # Set multiplicity based on the perspective
+                    # If multiplicity has been set to 1, but associative multiplicty is M, we need to set it as M
                     R = f"Rnum:<{cls.rel_cursor}>, Domain:<{cls.domain}>, Class:<{cls.class_cursor}>"
                     result = Relation.restrict3(cls.mmdb, relation='Association_Class', restriction=R)
                     if not result.body:
                         # TODO: raise exception
                         return False
-                    cls.mult = result.body[0]['Multiplicity']
+                    associative_mult = result.body[0]['Multiplicity']
+                    # Associative mult of M overrides a single mult
+                    cls.mult = 'M' if associative_mult == 'M' else cls.mult
 
                     cls.name += cls.class_cursor + '_'
                     cls.hops.append( Hop(hoptype=cls.to_association_class, to_class=cls.class_cursor, rnum=cls.rel_cursor,

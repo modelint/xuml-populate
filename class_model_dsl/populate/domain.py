@@ -97,7 +97,7 @@ class Domain:
         Lineage.Derive(mmdb=mmdb, domain=domain.Name)
 
         # Print out the populated metamodel
-        #Relvar.printall(mmdb)
+        # Relvar.printall(mmdb)
 
         # Populate actions for all Activities
         Activity.process_statements(mmdb)
