@@ -530,6 +530,6 @@ class TraverseAction:
         # Now we can populate the path
         cls.populate()
         Transaction.execute()
-        Relvar.printall(mmdb)
+        # Relvar.printall(mmdb)
 
         return cls.dest_class

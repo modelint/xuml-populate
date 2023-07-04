@@ -40,6 +40,7 @@ class Flow:
         :param domain:
         :return: The generated flow id
         """
+        cls.mmdb = mmdb
         # For now we distinguish only between class and scalar types
         # Is the type a Class Type?
         R = f"Name:<{mm_type}>, Domain:<{domain}>"

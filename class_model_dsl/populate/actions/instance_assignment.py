@@ -5,6 +5,13 @@ instance_assignment.py – Break an instance set generator into one or more comp
 import logging
 from typing import TYPE_CHECKING, Set, Dict, List, Optional
 from class_model_dsl.populate.actions.traverse_action import TraverseAction
+from class_model_dsl.populate.actions.select_action import SelectAction
+from class_model_dsl.populate.mm_class import MMclass
+from class_model_dsl.populate.flow import Flow
+
+from PyRAL.relvar import Relvar
+from PyRAL.relation import Relation
+from PyRAL.transaction import Transaction
 
 if TYPE_CHECKING:
     from tkinter import Tk
@@ -66,10 +73,38 @@ class InstanceAssignment:
                 ctype = TraverseAction.build_path(mmdb, anum=anum, source_class=ctype, source_flow = input_flow,
                                                   domain=domain, path=c)
             elif type(c).__name__ == 'N_a':
+                # Check to see if it is a class name
+                if MMclass.exists(cname=c.name, domain=domain):
+                    # Need to create a source instance flow
+                    pass
+                else:
+                    # Look for a labeled instance flow
+                    R = f"Name:<{c.name}>, Activity:<{anum}>, Domain:<{domain}>"
+                    result = Relation.restrict3(mmdb, relation='Label', restriction=R)
+                    if result.body:
+                        # Labeled flow found
+                        cls.input_flow = result.body[0]['Flow']
+                    else:
+                        pass
+            elif type(c).__name__ == 'Selection_a':
+                # Process to populate a select action, the output type does not change
+                # since we are selecting on a known class
+                pass
+
+
                 # An unordered prefix name
                 # It must refer to a previously created labeled Instance Flow
                 # Otherwise, exception
                 # Update the ctype to match the Instance Flow's Class Type
                 pass
+        # Process LHS after all components have been processed
+        output_flow_label = lhs.name.name
+        if lhs.exp_type and lhs.exp_type != ctype:
+            # Raise assignment type mismatch exception
             pass
+        Transaction.open(mmdb)
+        Flow.populate_instance_flow(mmdb, cname=ctype, activity=anum, domain=domain,label=output_flow_label,
+                                    single=True if card == '1c' else False)
+        Transaction.execute()
+        Relvar.printall(mmdb)
         pass

@@ -10,6 +10,8 @@ from class_model_dsl.populate.attribute import Attribute
 from class_model_dsl.populate.mm_type import MMtype
 from class_model_dsl.populate.pop_types import Class_i, Alias_i
 
+from PyRAL.relation import Relation
+
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -22,6 +24,7 @@ class MMclass:
     Create a class relation
     """
     _logger = logging.getLogger(__name__)
+    mmdb = None
     record = None
     name = None
     alias = None
@@ -33,9 +36,24 @@ class MMclass:
     ee_ops = None
 
     @classmethod
+    def exists(cls, cname:str, domain:str) -> bool:
+        """
+
+        :param cname:  Name of the class
+        :param domain: Its domain name
+        :return: True if the class has been populated into this domain
+        """
+        R = f"Name:<{cname}>, Domain:<{domain}>"
+        result = Relation.restrict3(cls.mmdb, relation='Class', restriction=R)
+        return bool(result.body)
+
+
+
+    @classmethod
     def populate(cls, mmdb: 'Tk', domain: str, subsystem, record):
         """Constructor"""
 
+        cls.mmdb = mmdb
         cls.record = record
         cls.name = record['name']
         cls.attributes = record['attributes']
