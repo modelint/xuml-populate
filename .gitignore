@@ -3,3 +3,4 @@
 *.pyc
 *.pdf
 *.db
+.DS_Store

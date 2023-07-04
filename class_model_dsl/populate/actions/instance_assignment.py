@@ -68,35 +68,32 @@ class InstanceAssignment:
         input_flow = xi_flow_id
 
         for c in rhs.components:
-            if type(c).__name__ == 'PATH_a':
-                # Process the path to create the traverse action and obtain the resultant Class Type name
-                ctype = TraverseAction.build_path(mmdb, anum=anum, source_class=ctype, source_flow = input_flow,
-                                                  domain=domain, path=c)
-            elif type(c).__name__ == 'N_a':
-                # Check to see if it is a class name
-                if MMclass.exists(cname=c.name, domain=domain):
-                    # Need to create a source instance flow
-                    pass
-                else:
-                    # Look for a labeled instance flow
-                    R = f"Name:<{c.name}>, Activity:<{anum}>, Domain:<{domain}>"
-                    result = Relation.restrict3(mmdb, relation='Label', restriction=R)
-                    if result.body:
-                        # Labeled flow found
-                        cls.input_flow = result.body[0]['Flow']
-                    else:
+            match type(c).__name__:
+                case 'PATH_a':
+                    # Process the path to create the traverse action and obtain the resultant Class Type name
+                    ctype = TraverseAction.build_path(mmdb, anum=anum, source_class=ctype, source_flow = input_flow,
+                                                      domain=domain, path=c)
+                case 'N_a':
+                    # Check to see if it is a class name
+                    if MMclass.exists(cname=c.name, domain=domain):
+                        # Need to create a source instance flow
                         pass
-            elif type(c).__name__ == 'Selection_a':
-                # Process to populate a select action, the output type does not change
-                # since we are selecting on a known class
-                pass
+                    else:
+                        # Look for a labeled instance flow
+                        R = f"Name:<{c.name}>, Activity:<{anum}>, Domain:<{domain}>"
+                        result = Relation.restrict3(mmdb, relation='Label', restriction=R)
+                        if result.body:
+                            # Labeled flow found
+                            cls.input_flow = result.body[0]['Flow']
+                        else:
+                            pass
+                case 'Selection_a':
+                    # Process to populate a select action, the output type does not change
+                    # since we are selecting on a known class
+                    print()
+                    pass
 
 
-                # An unordered prefix name
-                # It must refer to a previously created labeled Instance Flow
-                # Otherwise, exception
-                # Update the ctype to match the Instance Flow's Class Type
-                pass
         # Process LHS after all components have been processed
         output_flow_label = lhs.name.name
         if lhs.exp_type and lhs.exp_type != ctype:
@@ -107,4 +104,3 @@ class InstanceAssignment:
                                     single=True if card == '1c' else False)
         Transaction.execute()
         Relvar.printall(mmdb)
-        pass
