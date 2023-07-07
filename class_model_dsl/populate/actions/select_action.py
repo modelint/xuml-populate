@@ -22,14 +22,26 @@ class SelectAction:
     Create all relations for a Select Statement
     """
 
-    source_flow = None
-
+    input_flow = None
 
     @classmethod
-    def populate(cls, input_name:str):
+    def process_criteria(cls, criteria):
+        for c in criteria:
+            match type(c).__name__:
+                case 'N_a':
+                    # We have an attribute
+                    print()
+                case _:
+                    _logger.error("No match case for criteria in select populate")
+
+    @classmethod
+    def populate(cls, input_flow:str, select_agroup):
         """
         Populate the Select Statement
 
-        :param input_name: The name of a Class or an Instance Flow
+        :param select_agroup:  The parsed Scrall select action group
+        :param input_flow: The name of a Class or an Instance Flow
         """
-        pass
+        cls.input_flow = input_flow
+        cls.select_agroup = select_agroup
+        cls.process_criteria(criteria=select_agroup.criteria)

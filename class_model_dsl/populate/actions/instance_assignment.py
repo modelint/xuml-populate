@@ -43,6 +43,8 @@ class InstanceAssignment:
     etc). The Scrall syntax will later be udpated to accommodate such expressions.
     """
 
+    input_flow = None
+
     @classmethod
     def process(cls, mmdb: 'Tk', anum:str, cname:str, domain:str, inst_assign_parse, xi_flow_id:str, signum:str):
         """
@@ -90,8 +92,7 @@ class InstanceAssignment:
                 case 'Selection_a':
                     # Process to populate a select action, the output type does not change
                     # since we are selecting on a known class
-                    print()
-                    pass
+                    SelectAction.populate(input_flow=cls.input_flow, select_agroup=c)
 
 
         # Process LHS after all components have been processed
