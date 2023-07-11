@@ -4,7 +4,7 @@ select_action.py – Populate a selection action instance in PyRAL
 
 import logging
 from typing import TYPE_CHECKING, Set, Dict, List, Optional
-from class_model_dsl.parse.scrall_visitor import PATH_a
+from scrall.parse.visitor import PATH_a
 from class_model_dsl.populate.actions.action import Action
 from class_model_dsl.populate.flow import Flow
 from PyRAL.relvar import Relvar

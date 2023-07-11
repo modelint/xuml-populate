@@ -8,7 +8,7 @@ from class_model_dsl.exceptions.action_exceptions import UndefinedRelationship, 
     NoDestinationInPath, UndefinedClass, RelationshipUnreachableFromClass, HopToUnreachableClass,\
     MissingTorPrefInAssociativeRel, NoSubclassInHop, SubclassNotInGeneralization, PerspectiveNotDefined,\
     UndefinedAssociation, NeedPerspectiveOrClassToHop, NeedPerspectiveToHop, UnexpectedClassOrPerspectiveInPath
-from class_model_dsl.parse.scrall_visitor import PATH_a
+from scrall.parse.visitor import PATH_a
 from class_model_dsl.populate.actions.action import Action
 from class_model_dsl.populate.flow import Flow
 from class_model_dsl.populate.pop_types import Action_i, Traverse_Action_i, Path_i, Hop_i, Association_Class_Hop_i, \

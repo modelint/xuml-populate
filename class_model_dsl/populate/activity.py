@@ -5,7 +5,7 @@ activity.py – Populate an activity instance in PyRAL
 import logging
 from PyRAL.relvar import Relvar
 from class_model_dsl.populate.element import Element
-from class_model_dsl.parse.scrall_parser import ScrallParser
+from scrall.parse.parser import ScrallParser
 from class_model_dsl.populate.statement import Statement
 from typing import TYPE_CHECKING
 from class_model_dsl.populate.pop_types import Activity_i, Asynchronous_Activity_i,\
@@ -45,7 +45,7 @@ class Activity:
             cls.methods[class_name][method_name]['domain'] = domain_name
             cls.methods[class_name][method_name]['text'] = action_text
         # Parse the scrall and save for later population
-        cls.methods[class_name][method_name]['parse'] = ScrallParser.parse(scrall_text=action_text, debug=False)
+        cls.methods[class_name][method_name]['parse'] = ScrallParser.parse_text(scrall_text=action_text, debug=False)
         return Anum
 
     @classmethod
@@ -63,7 +63,7 @@ class Activity:
         :return:
         """
         Anum = cls.populate(mmdb, action_text, subsys_name, domain_name, synchronous)
-        cls.operations[ee_name] = ScrallParser.parse(scrall_text=action_text, debug=False)
+        cls.operations[ee_name] = ScrallParser.parse_text(scrall_text=action_text, debug=False)
         return Anum
 
     @classmethod
@@ -112,7 +112,7 @@ class Activity:
         action_text = '\n'.join(actions)+'\n'
         if state_model not in cls.sm:
             cls.sm[state_model] = {}
-        parsed_activity = ScrallParser.parse(scrall_text=action_text, debug=False)
+        parsed_activity = ScrallParser.parse_text(scrall_text=action_text, debug=False)
         cls.sm[state_model][state] = parsed_activity # To record parsed actions for debugging
         # cls.populate_activity(text=action_text, pa=parsed_activity)
 
