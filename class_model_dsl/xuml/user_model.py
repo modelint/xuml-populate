@@ -119,7 +119,7 @@ class UserModel:
         """Populate the database from the parsed input"""
 
         cls._logger.info("Populating the model")
-        from PyRAL.database import Database # Metamodel load or creates has already initialized the DB session
+        from pyral.database import Database # Metamodel load or creates has already initialized the DB session
 
         # Verify that only one domain_name has been specified
         # For now we are processing only a single domain_name.
