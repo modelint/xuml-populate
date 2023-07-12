@@ -3,7 +3,7 @@ ordinal.py – Convert parsed relationshiop to a relation
 """
 
 import logging
-from PyRAL.relvar import Relvar
+from pyral.relvar import Relvar
 from typing import TYPE_CHECKING
 
 from class_model_dsl.populate.pop_types import Ordinal_Relationship

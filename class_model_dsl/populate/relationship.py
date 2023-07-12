@@ -7,8 +7,8 @@ from class_model_dsl.populate.element import Element
 from class_model_dsl.populate.generalization import Generalization
 from class_model_dsl.populate.binary_association import BinaryAssociation
 from class_model_dsl.populate.ordinal import Ordinal
-from PyRAL.transaction import Transaction
-from PyRAL.relvar import Relvar
+from pyral.transaction import Transaction
+from pyral.relvar import Relvar
 from class_model_dsl.mp_exceptions import UnknownRelationshipType
 from typing import TYPE_CHECKING
 from class_model_dsl.populate.pop_types import Rel_i

@@ -3,8 +3,8 @@ attribute.py – Create an attribute relation
 """
 
 import logging
-from PyRAL.relvar import Relvar
-from PyRAL.relation import Relation
+from pyral.relvar import Relvar
+from pyral.relation import Relation
 from typing import Set
 from class_model_dsl.populate.mm_type import MMtype
 from class_model_dsl.populate.pop_types import \

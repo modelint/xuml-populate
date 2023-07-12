@@ -7,9 +7,9 @@ from typing import TYPE_CHECKING
 from class_model_dsl.populate.element import Element
 from class_model_dsl.populate.pop_types import Element_i, Spanning_Element_i, Type_i,\
     Class_Type_i, Scalar_Type_i, Table_Type_i, Table_Attribute_i
-from PyRAL.relvar import Relvar
-from PyRAL.relation import Relation
-from PyRAL.transaction import Transaction
+from pyral.relvar import Relvar
+from pyral.relation import Relation
+from pyral.transaction import Transaction
 
 if TYPE_CHECKING:
     from tkinter import Tk

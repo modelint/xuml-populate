@@ -3,7 +3,7 @@ signature.py – Populate a Signature in PyRAL
 """
 
 import logging
-from PyRAL.relvar import Relvar
+from pyral.relvar import Relvar
 from typing import TYPE_CHECKING
 from class_model_dsl.populate.element import Element
 from class_model_dsl.populate.pop_types import Signature_i

@@ -4,8 +4,8 @@ state_model.py – Populate a lifecycle instance into the metamodel
 
 import logging
 from class_model_dsl.mp_exceptions import MismatchedStateSignature
-from PyRAL.relvar import Relvar
-from PyRAL.transaction import Transaction
+from pyral.relvar import Relvar
+from pyral.transaction import Transaction
 from typing import TYPE_CHECKING
 from class_model_dsl.populate.flow import Flow
 from class_model_dsl.populate.signature import Signature

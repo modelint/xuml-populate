@@ -3,8 +3,8 @@ flow.py – Populate a Flow in PyRAL
 """
 
 import logging
-from PyRAL.relvar import Relvar
-from PyRAL.relation import Relation
+from pyral.relvar import Relvar
+from pyral.relation import Relation
 from typing import TYPE_CHECKING, Optional
 from class_model_dsl.populate.pop_types import Data_Flow_i, Flow_i,\
     Multiple_Instance_Flow_i, Single_Instance_Flow_i, Instance_Flow_i,\

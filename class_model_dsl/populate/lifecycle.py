@@ -3,7 +3,7 @@ lifecycle.py – Populate a lifecycle instance into the metamodel
 """
 
 import logging
-from PyRAL.relvar import Relvar
+from pyral.relvar import Relvar
 from typing import TYPE_CHECKING
 
 from class_model_dsl.populate.pop_types import Lifecycle_i, State_Model_i, Non_Deletion_State_i, Real_State_i, State_i

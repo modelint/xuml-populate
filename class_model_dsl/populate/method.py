@@ -3,8 +3,8 @@ method.py – Convert parsed method to a relation
 """
 
 import logging
-from PyRAL.transaction import Transaction
-from PyRAL.relvar import Relvar
+from pyral.transaction import Transaction
+from pyral.relvar import Relvar
 from class_model_dsl.populate.flow import Flow
 from class_model_dsl.populate.signature import Signature
 from class_model_dsl.populate.activity import Activity

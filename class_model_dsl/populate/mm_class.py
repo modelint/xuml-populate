@@ -3,14 +3,14 @@ mm_class.py – Convert parsed class to a relation
 """
 
 import logging
-from PyRAL.transaction import Transaction
-from PyRAL.relvar import Relvar
+from pyral.transaction import Transaction
+from pyral.relvar import Relvar
 from class_model_dsl.populate.element import Element
 from class_model_dsl.populate.attribute import Attribute
 from class_model_dsl.populate.mm_type import MMtype
 from class_model_dsl.populate.pop_types import Class_i, Alias_i
 
-from PyRAL.relation import Relation
+from pyral.relation import Relation
 
 from typing import TYPE_CHECKING
 

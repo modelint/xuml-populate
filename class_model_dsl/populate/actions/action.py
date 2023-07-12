@@ -5,9 +5,9 @@ action.py – Populate an action superclass instance in PyRAL
 import logging
 from typing import TYPE_CHECKING, Set, Dict, List, Optional
 from scrall.parse.visitor import PATH_a
-from PyRAL.relvar import Relvar
-from PyRAL.relation import Relation
-from PyRAL.transaction import Transaction
+from pyral.relvar import Relvar
+from pyral.relation import Relation
+from pyral.transaction import Transaction
 from class_model_dsl.populate.pop_types import Action_i
 from collections import namedtuple
 

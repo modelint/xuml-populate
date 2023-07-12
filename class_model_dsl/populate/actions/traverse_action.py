@@ -15,9 +15,9 @@ from class_model_dsl.populate.pop_types import Action_i, Traverse_Action_i, Path
     Circular_Hop_i, Symmetric_Hop_i, Asymmetric_Circular_Hop_i, Ordinal_Hop_i, Straight_Hop_i, \
     From_Asymmetric_Assocation_Class_Hop_i, From_Symmetric_Assocation_Class_Hop_i, To_Assocation_Class_Hop_i, \
     Perspective_Hop_i, Generalization_Hop_i, To_Subclass_Hop_i, To_Superclass_Hop_i, Association_Hop_i
-from PyRAL.relvar import Relvar
-from PyRAL.relation import Relation
-from PyRAL.transaction import Transaction
+from pyral.relvar import Relvar
+from pyral.relation import Relation
+from pyral.transaction import Transaction
 from collections import namedtuple
 
 # HopArgs = namedtuple('HopArgs', 'cname rnum attrs')

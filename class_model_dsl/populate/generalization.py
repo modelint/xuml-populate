@@ -3,7 +3,7 @@ generalization.py – Convert parsed relationship to a relation
 """
 
 import logging
-from PyRAL.relvar import Relvar
+from pyral.relvar import Relvar
 from typing import TYPE_CHECKING
 from class_model_dsl.mp_exceptions import LessThanTwoSubclassesInGeneralization
 

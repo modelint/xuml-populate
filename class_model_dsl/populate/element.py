@@ -3,7 +3,7 @@ element.py – Populate an element instance in PyRAL
 """
 
 import logging
-from PyRAL.relvar import Relvar
+from pyral.relvar import Relvar
 from typing import TYPE_CHECKING
 from class_model_dsl.populate.pop_types import Element_i, Spanning_Element_i, Subsystem_Element_i
 # TODO: Add spanning element support

@@ -3,8 +3,8 @@ ee.py – Convert external entity to a relation
 """
 
 import logging
-from PyRAL.transaction import Transaction
-from PyRAL.relvar import Relvar
+from pyral.transaction import Transaction
+from pyral.relvar import Relvar
 from class_model_dsl.populate.element import Element
 from class_model_dsl.populate.operation import Operation
 from class_model_dsl.populate.pop_types import EE_i

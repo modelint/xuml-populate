@@ -8,9 +8,9 @@ import logging
 from pathlib import Path
 from class_model_dsl.parse.model_parser import ModelParser
 from class_model_dsl.mp_exceptions import ModelParseError, MPIOException
-from PyRAL.database import Database
-from PyRAL.relvar import Relvar
-from PyRAL.rtypes import Attribute, Mult as DBMult
+from pyral.database import Database
+from pyral.relvar import Relvar
+from pyral.rtypes import Attribute, Mult as DBMult
 import yaml
 
 

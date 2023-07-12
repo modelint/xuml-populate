@@ -3,9 +3,9 @@ statement.py – Populate all actions in a Scrall statement
 """
 
 import logging
-from PyRAL.relvar import Relvar
-from PyRAL.relation import Relation
-from PyRAL.transaction import Transaction
+from pyral.relvar import Relvar
+from pyral.relation import Relation
+from pyral.transaction import Transaction
 from class_model_dsl.populate.actions.traverse_action import TraverseAction
 from class_model_dsl.populate.flow import Flow
 from class_model_dsl.populate.actions.instance_assignment import InstanceAssignment

@@ -9,9 +9,9 @@ from class_model_dsl.populate.actions.select_action import SelectAction
 from class_model_dsl.populate.mm_class import MMclass
 from class_model_dsl.populate.flow import Flow
 
-from PyRAL.relvar import Relvar
-from PyRAL.relation import Relation
-from PyRAL.transaction import Transaction
+from pyral.relvar import Relvar
+from pyral.relation import Relation
+from pyral.transaction import Transaction
 
 if TYPE_CHECKING:
     from tkinter import Tk

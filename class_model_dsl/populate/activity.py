@@ -3,7 +3,7 @@ activity.py – Populate an activity instance in PyRAL
 """
 
 import logging
-from PyRAL.relvar import Relvar
+from pyral.relvar import Relvar
 from class_model_dsl.populate.element import Element
 from scrall.parse.parser import ScrallParser
 from class_model_dsl.populate.statement import Statement

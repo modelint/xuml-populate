@@ -5,7 +5,7 @@ pop_types.py - Named tuples corresponding to each MM type
 # TODO Generate these from the metamodel parse
 
 from collections import namedtuple
-from PyRAL.rtypes import Mult as DBMult
+from pyral.rtypes import Mult as DBMult
 
 mult_tclral = {
     'M': DBMult.AT_LEAST_ONE,
