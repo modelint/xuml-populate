@@ -79,8 +79,8 @@ class Flow:
         return flow_id
 
     @classmethod
-    def populate_instance_flow(cls, mmdb: 'Tk', cname:str, activity:str, domain:str, label:Optional[str],
-                               single:bool=False) -> str:
+    def populate_instance_flow(cls, mmdb: 'Tk', cname: str, activity: str, domain: str, label:Optional[str],
+                               single: bool = False) -> str:
         """
         Populate an instance of Scalar flow
 

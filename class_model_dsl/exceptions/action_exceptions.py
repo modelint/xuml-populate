@@ -14,6 +14,18 @@ class ActionException(Exception):
 class TraversalActionException(ActionException):
     pass
 
+class SelectActionException(ActionException):
+    pass
+
+class ComparingNonAttributeInSelection(SelectActionException):
+    def __init__(self, name, cname):
+        self.name = name
+        self.cname = cname
+
+    def __str__(self):
+        return f'{pre}Select action restriction on class [{self.cname}] is comparing on name [{self.name}] that' \
+               f' is not an attribute of that class.{post}'
+
 class NoDestinationInPath(ActionException):
     def __init__(self, path):
         self.path = path

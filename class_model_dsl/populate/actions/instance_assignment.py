@@ -13,6 +13,13 @@ from pyral.relvar import Relvar
 from pyral.relation import Relation
 from pyral.transaction import Transaction
 
+from collections import namedtuple
+
+Iflow = namedtuple("Iflow", "id cname")
+"""Instance flow descriptor"""
+Tflow = namedtuple("Tflow", "id table_type")
+"""Table flow descriptor"""
+
 if TYPE_CHECKING:
     from tkinter import Tk
 
@@ -67,19 +74,23 @@ class InstanceAssignment:
         card = inst_assign_parse.card
         rhs = inst_assign_parse.rhs
         ctype = cname # Initialize with the instance/ee class
-        input_flow = xi_flow_id
+        input_flow = Iflow(id=xi_flow_id, cname=cname)
 
         for c in rhs.components:
             match type(c).__name__:
                 case 'PATH_a':
                     # Process the path to create the traverse action and obtain the resultant Class Type name
-                    ctype = TraverseAction.build_path(mmdb, anum=anum, source_class=ctype, source_flow = input_flow,
+                    ctype = TraverseAction.build_path(mmdb, anum=anum, source_class=ctype, source_flow=input_flow.id,
                                                       domain=domain, path=c)
                 case 'N_a':
                     # Check to see if it is a class name
                     if MMclass.exists(cname=c.name, domain=domain):
-                        # Need to create a source instance flow
-                        pass
+                        # An encountered class name on the RHS is the source of a multiple instance flow
+                        # We create that and set it as the current RHS input flow
+                        Transaction.open(mmdb)
+                        cls.input_flow = Iflow(id=Flow.populate_instance_flow(
+                            mmdb, cname=c.name, activity=anum, domain=domain, label=None), cname=c.name)
+                        Transaction.execute()
                     else:
                         # Look for a labeled instance flow
                         R = f"Name:<{c.name}>, Activity:<{anum}>, Domain:<{domain}>"
@@ -92,7 +103,7 @@ class InstanceAssignment:
                 case 'Selection_a':
                     # Process to populate a select action, the output type does not change
                     # since we are selecting on a known class
-                    SelectAction.populate(input_flow=cls.input_flow, select_agroup=c)
+                    SelectAction.populate(mmdb, input_flow=cls.input_flow, select_agroup=c, domain=domain)
 
 
         # Process LHS after all components have been processed

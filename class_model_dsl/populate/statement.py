@@ -100,7 +100,7 @@ class Statement:
             # r_result = Relation.restrict3(mmdb, relation='Method', restriction=R)
             # if not r_result.body:
             #     return False
-            # xi_flow = r_result.body[0]['Executing_instance_flow']
+            # input_flow = r_result.body[0]['Executing_instance_flow']
             # # Process rhs
             # components = aparse.action_group.rhs.components
             # # A variety of actions may be associated with these components, depends on the component type
@@ -108,7 +108,7 @@ class Statement:
             #
             # Relvar.insert(relvar='Traverse_Action', tuples=[
             #     Traverse_Action_i(ID=actn_id, Activity=anum, Domain=domain, Path=None,
-            #                       Source_flow=xi_flow, Destination_flow=None)
+            #                       Source_flow=input_flow, Destination_flow=None)
             # ])
             # for c in components:
             #     # if type(c).__name__ == 'N_a':
