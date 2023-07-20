@@ -4,10 +4,11 @@ select_action.py – Populate a selection action instance in PyRAL
 
 import logging
 from typing import TYPE_CHECKING, Set, Dict, List, Optional
-from class_model_dsl.exceptions.action_exceptions import ComparingNonAttributeInSelection
+from class_model_dsl.exceptions.action_exceptions import ComparingNonAttributeInSelection, NoInputInstanceFlow
 from pyral.relation import Relation
 from pyral.transaction import Transaction
 from collections import namedtuple
+from scrall.parse.visitor import N_a, BOOL_a, Op_a
 
 
 if TYPE_CHECKING:
@@ -20,12 +21,13 @@ class SelectAction:
     Create all relations for a Select Statement
     """
 
-    input_flow = None
+    input_instance_flow = None  # We are selecting instances from this instance flow
+    cname = None  # We are performing a selection on this class
     comparison_criteria = []
     restriction_text = ""
     cardinality = None
-    domain = None
-    mmdb = None
+    domain = None  # in this domain
+    mmdb = None  # The database
 
     @classmethod
     def determine_cardinality(cls):
@@ -44,12 +46,11 @@ class SelectAction:
         :param name:
         :return:
         """
-        R = f"Name:<{name}>, Class:<{cls.input_flow.cname}>, Domain:<{cls.domain}>"
+        R = f"Name:<{name}>, Class:<{cls.cname}>, Domain:<{cls.domain}>"
         result = Relation.restrict3(cls.mmdb, relation='Attribute', restriction=R)
         if not result.body:
-            _logger.error(f"Select action restriction on class {cls.input_flow.cname} is comparing on name {name} that"
-                          f"is not an attribute of that class.")
-            raise ComparingNonAttributeInSelection(name=name, cname=cls.input_flow.cname)
+            raise ComparingNonAttributeInSelection(f"select action restriction on class [{cls.cname}] is "
+                                                   f"comparing on name [{name}] that is not an attribute of that class")
         cls.comparison_criteria.append({'attr': name, 'op': op})
         cls.attr_set = True
 
@@ -104,21 +105,37 @@ class SelectAction:
         :return:
         """
         # Criteria is a scalar expression
-        cls.walk_criteria(criteria.op, criteria.operands)
+        # Consider case where there is a single boolean value critieria
+        if type(criteria).__name__ == 'N_a':
+            criteria = BOOL_a(op='==', operands=[criteria, N_a(name='true')])
+        op = criteria.op
+        operands = criteria.operands
+        cls.walk_criteria(op, operands)
         pass
 
 
     @classmethod
-    def populate(cls, mmdb: 'Tk', input_flow: str, select_agroup, domain:str):
+    def populate(cls, mmdb: 'Tk', input_instance_flow: str, anum: str, select_agroup, domain: str):
         """
         Populate the Select Statement
 
         :param mmdb:
+        :param input_instance_flow: The id of the executing instance flow
+        :param anum:
+        :param domain:
         :param select_agroup:  The parsed Scrall select action group
-        :param input_flow: The id of the executing instance flow
         """
         cls.mmdb = mmdb
         cls.domain = domain
-        cls.input_flow = input_flow
+        cls.input_instance_flow = input_instance_flow
+        # Determine this flow's Class Type
+        R = f"ID:<{input_instance_flow}>, Activity:<{anum}>, Domain:<{cls.domain}>"
+        result = Relation.restrict3(cls.mmdb, relation='Instance_Flow', restriction=R)
+        if not result.body:
+            raise NoInputInstanceFlow(f"select action input flow [{input_instance_flow}:{anum}:{domain}]"
+                                      f" is not an instance flow")
+        cls.cname = result.body[0]['Class']
+
         cls.select_agroup = select_agroup
         cls.process_criteria(criteria=select_agroup.criteria)
+        pass

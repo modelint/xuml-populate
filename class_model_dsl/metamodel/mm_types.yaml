@@ -2,11 +2,15 @@
 Action ID : string
 Activity Number : string
 Alias Name : string
+Ascending Descending : string
 Attribute Name : string
 Boolean : boolean
+Cardinality : string
 Class Name : string
 Class Number : string
+Comp Op : string
 Constrained Loop Number : string
+Criterion ID : string
 Description : string
 Domain Alias : string
 Domain Name : string
@@ -33,6 +37,7 @@ Path Name : string
 Phrase Name : string
 Reference Type : string
 Relationship Number : string
+Restriction Expression : string
 Spanning Element Label : string
 Side : string
 Signature Number : string

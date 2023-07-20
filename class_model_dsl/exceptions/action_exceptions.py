@@ -17,14 +17,11 @@ class TraversalActionException(ActionException):
 class SelectActionException(ActionException):
     pass
 
-class ComparingNonAttributeInSelection(SelectActionException):
-    def __init__(self, name, cname):
-        self.name = name
-        self.cname = cname
+class NoInputInstanceFlow(SelectActionException):
+    pass
 
-    def __str__(self):
-        return f'{pre}Select action restriction on class [{self.cname}] is comparing on name [{self.name}] that' \
-               f' is not an attribute of that class.{post}'
+class ComparingNonAttributeInSelection(SelectActionException):
+    pass
 
 class NoDestinationInPath(ActionException):
     def __init__(self, path):

@@ -73,14 +73,14 @@ class InstanceAssignment:
         lhs = inst_assign_parse.lhs
         card = inst_assign_parse.card
         rhs = inst_assign_parse.rhs
-        ctype = cname # Initialize with the instance/ee class
-        input_flow = Iflow(id=xi_flow_id, cname=cname)
+        ctype = cname  # Initialize with the instance/ee class
+        input_flow = xi_flow_id
 
         for c in rhs.components:
             match type(c).__name__:
                 case 'PATH_a':
                     # Process the path to create the traverse action and obtain the resultant Class Type name
-                    ctype = TraverseAction.build_path(mmdb, anum=anum, source_class=ctype, source_flow=input_flow.id,
+                    ctype = TraverseAction.build_path(mmdb, anum=anum, source_class=ctype, source_flow=input_flow,
                                                       domain=domain, path=c)
                 case 'N_a':
                     # Check to see if it is a class name
@@ -103,7 +103,8 @@ class InstanceAssignment:
                 case 'Selection_a':
                     # Process to populate a select action, the output type does not change
                     # since we are selecting on a known class
-                    SelectAction.populate(mmdb, input_flow=cls.input_flow, select_agroup=c, domain=domain)
+                    SelectAction.populate(mmdb, input_instance_flow=cls.input_flow, anum=anum, select_agroup=c,
+                                          domain=domain)
 
 
         # Process LHS after all components have been processed
@@ -112,7 +113,7 @@ class InstanceAssignment:
             # Raise assignment type mismatch exception
             pass
         Transaction.open(mmdb)
-        Flow.populate_instance_flow(mmdb, cname=ctype, activity=anum, domain=domain,label=output_flow_label,
+        Flow.populate_instance_flow(mmdb, cname=ctype, activity=anum, domain=domain, label=output_flow_label,
                                     single=True if card == '1c' else False)
         Transaction.execute()
         Relvar.printall(mmdb)
