@@ -50,15 +50,14 @@ Asymmetric_Perspective_i = namedtuple('Asymmetric_Perspective_i', 'Side Rnum Dom
 T_Perspective_i = namedtuple('T_Perspective_i', 'Side Rnum Domain')
 P_Perspective_i = namedtuple('P_Perspective_i', 'Side Rnum Domain')
 Association_Reference_i = namedtuple('Association_Reference_i', 'Ref_type From_class To_class Rnum Domain Perspective')
-Simple_Association_Reference_i = namedtuple('Simple_Association_Reference_i', 'Ref_type From_class To_class Rnum Domain')
+Simple_Association_Reference_i = namedtuple('Simple_Association_Reference_i',
+                                            'Ref_type From_class To_class Rnum Domain')
 Referring_Class_i = namedtuple('Referring_Class_i', 'Rnum Class Domain')
 Association_Class_Reference_i = namedtuple('Association_Class_Reference_i',
                                            'Ref_type Association_class Participating_class '
                                            'Rnum Domain')
 T_Reference_i = namedtuple('T_Reference_i', 'Ref_type Association_class Participating_class Rnum Domain')
 P_Reference_i = namedtuple('P_Reference_i', 'Ref_type Association_class Participating_class Rnum Domain')
-
-
 
 # Generalization
 Generalization_i = namedtuple('Generalization_i', 'Rnum Domain Superclass')
@@ -142,23 +141,36 @@ Table_Attribute_i = namedtuple('Table_Attribute_i', 'Name Table_type Domain Attr
 ## Actions
 
 # Traverse action
-Action_i = namedtuple('Action_i','ID Activity Domain')
-Traverse_Action_i = namedtuple('Traverse_Action_i','ID Activity Domain Path Source_flow Destination_flow')
-Path_i = namedtuple('Path_i','Name Domain Dest_class')
-Hop_i = namedtuple('Hop_i','Number Path Domain Rnum Class_step')
-Perspective_Hop_i = namedtuple('Perspective_Hop_i','Number Path Domain Side Rnum')
-Association_Hop_i = namedtuple('Association_Hop_i','Number Path Domain')
-Circular_Hop_i = namedtuple('Circular_Hop_i','Number Path Domain Aggregation')
-Symmetric_Hop_i = namedtuple('Symmetric_Hop_i','Number Path Domain')
-Asymmetric_Circular_Hop_i = namedtuple('Symmetric_Hop_i','Number Path Domain')
-Ordinal_Hop_i = namedtuple('Ordinal_Hop_i','Number Path Domain Ascending')
-Straight_Hop_i = namedtuple('Straight_Hop_i','Number Path Domain')
-Association_Class_Hop_i = namedtuple('Association_Class_Hop_i','Number Path Domain')
-From_Asymmetric_Assocation_Class_Hop_i = namedtuple('From_Asymmetric_Association_Class_Hop_i','Number Path Domain')
-From_Symmetric_Assocation_Class_Hop_i = namedtuple('From_Symmetric_Association_Class_Hop_i','Number Path Domain')
-To_Assocation_Class_Hop_i = namedtuple('To_Association_Class_Hop_i','Number Path Domain')
-Generalization_Hop_i = namedtuple('Generalization_Hop_i','Number Path Domain')
-To_Superclass_Hop_i = namedtuple('To_Superclass_Hop_i','Number Path Domain')
-To_Subclass_Hop_i = namedtuple('To_Subclass_Hop_i','Number Path Domain')
+Action_i = namedtuple('Action_i', 'ID Activity Domain')
+Traverse_Action_i = namedtuple('Traverse_Action_i', 'ID Activity Domain Path Source_flow Destination_flow')
+Path_i = namedtuple('Path_i', 'Name Domain Dest_class')
+Hop_i = namedtuple('Hop_i', 'Number Path Domain Rnum Class_step')
+Perspective_Hop_i = namedtuple('Perspective_Hop_i', 'Number Path Domain Side Rnum')
+Association_Hop_i = namedtuple('Association_Hop_i', 'Number Path Domain')
+Circular_Hop_i = namedtuple('Circular_Hop_i', 'Number Path Domain Aggregation')
+Symmetric_Hop_i = namedtuple('Symmetric_Hop_i', 'Number Path Domain')
+Asymmetric_Circular_Hop_i = namedtuple('Symmetric_Hop_i', 'Number Path Domain')
+Ordinal_Hop_i = namedtuple('Ordinal_Hop_i', 'Number Path Domain Ascending')
+Straight_Hop_i = namedtuple('Straight_Hop_i', 'Number Path Domain')
+Association_Class_Hop_i = namedtuple('Association_Class_Hop_i', 'Number Path Domain')
+From_Asymmetric_Assocation_Class_Hop_i = namedtuple('From_Asymmetric_Association_Class_Hop_i', 'Number Path Domain')
+From_Symmetric_Assocation_Class_Hop_i = namedtuple('From_Symmetric_Association_Class_Hop_i', 'Number Path Domain')
+To_Assocation_Class_Hop_i = namedtuple('To_Association_Class_Hop_i', 'Number Path Domain')
+Generalization_Hop_i = namedtuple('Generalization_Hop_i', 'Number Path Domain')
+To_Superclass_Hop_i = namedtuple('To_Superclass_Hop_i', 'Number Path Domain')
+To_Subclass_Hop_i = namedtuple('To_Subclass_Hop_i', 'Number Path Domain')
 
-
+# Select action
+Comparison_Criterion_i = namedtuple('Comparison_Criterion_i', 'ID Select_action Activity Attribute Class Domain'
+                                                              'Compared_input Comparison')
+Equivalence_Criterion_i = namedtuple('Equivalence_Criterion_i', 'ID Select_action Activity Attribute Class Domain'
+                                                                'Operation Value Scalar_type')
+Restriction_Criterion_i = namedtuple('Restriction_Criterion_i', 'ID Select_action Activity Attribute Class Domain')
+Ranking_Criterion_i = namedtuple('Ranking_Criterion_i', 'ID Select_action Activity Attribute Class Domain Order')
+Identifer_Select_i = namedtuple('Identifer_Select_i', 'Action Activity Domain Identifier Class')
+Many_Select_i = namedtuple('Many_Select_i', 'Action Activity Domain Output_flow')
+Single_Select_i = namedtuple('Single_Select_i', 'Action Activity Domain Output_flow')
+Zero_One_Cardinality_Select_i = namedtuple('Zero_One_Cardinality_Select_i', 'Action Activity Domain')
+Projected_Attribute_i = namedtuple('Projected_Attribute_i', 'Attribute Class Select_action Activity Domain')
+Restriction_i = namedtuple('Restriction_i', 'Select_action Activity Class Domain Expression')
+Select_Action_i = namedtuple('Select_Action_i', 'Action Activity Class Domain Input_flow Selection_cardinality')
