@@ -19,6 +19,7 @@ EE Name : string
 Element Label : string
 Element Number : int
 Enumeration Value : string
+Equivalence Op : string
 Event Name : string
 First Last All : string
 Flow ID : string
@@ -48,3 +49,4 @@ Subsystem Name : string
 Subsystem Element Label : string
 Type Number : string
 Type Name : string
+Value Representation : string

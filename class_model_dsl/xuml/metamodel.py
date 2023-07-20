@@ -146,7 +146,16 @@ class Metamodel:
             return
 
         cname = unspace(mm_class['name'])
-        attrs = [Attribute(name=a['name'], type=cls.types[a['type']]) for a in mm_class['attributes']]
+        try:
+            attrs = [Attribute(name=a['name'], type=cls.types[a['type']]) for a in mm_class['attributes']]
+        except KeyError as e:
+            # The only optional key here is 'type', so the this must be a missing type
+            # Check just to be sure though
+            if e.args[0] not in cls.types:
+                cls._logger.error(f"Type [{e.args[0]}] not found in mm_types.yaml file")
+            raise
+
+
         ids = {}
         for a in mm_class['attributes']:
             identifiers = a.get('I', [])  # This attr might not participate in any identifier

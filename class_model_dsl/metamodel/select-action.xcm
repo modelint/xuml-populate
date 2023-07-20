@@ -20,10 +20,11 @@ class Comparison Criterion
 attributes
     ID : Criterion ID {I, R884}
     Select action : Action ID {I, R884}
-    Activity : Activity Number {I, R884}
+    Activity : Activity Number {I, R884, R881}
     Attribute : Attribute Name {I, R884}
     Class : Class Name {I, R884}
-    Domain : Domain Name {I, R884}
+    Domain : Domain Name {I, R884, R881}
+    Compared input : Flow ID {R881}
     Comparison : Comp Op
 --
 class Equivalence Criterion
@@ -49,7 +50,7 @@ attributes
     Action : Action ID {I, R882}
     Activity : Activity Number {I, R882}
     Domain : Domain Name {I, R882, R878}
-    Identifier : Identifier Number {R878}
+    Identifier : ID Number {R878}
     Class : Class Name {R878c}
 --
 class Instance Flow <import:Flow>
@@ -182,6 +183,7 @@ relationships
     R881
     compares value from, 1 Scalar Flow
     has value compared in, Mc Comparison Criterion
+    Copmarision Criterion.(Compared input, Activity, Domain) -> Scalar Flow.(ID, Activity, Domain)
 --
     R882
     Single Select +
@@ -200,7 +202,7 @@ relationships
         Ranking Criterion
         Comparison Criterion
         Equivalence Criterion
-    <subclass>.(ID, Select Action, Activity, Attribute, Class, Domain) -> Restriction Criterion.(ID, Select Action, Activity, Attribute, Class, Domain)
+    <subclass>.(ID, Select action, Activity, Attribute, Class, Domain) -> Restriction Criterion.(ID, Select action, Activity, Attribute, Class, Domain)
 --
     R885
     specifies type of value in, Mc Equivalence Criterion
