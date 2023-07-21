@@ -47,7 +47,7 @@ attributes
 --
 class Identifier Select
 attributes
-    Action : Action ID {I, R882}
+    ID : Action ID {I, R882}
     Activity : Activity Number {I, R882}
     Domain : Domain Name {I, R882, R878}
     Identifier : ID Number {R878}
@@ -61,7 +61,7 @@ attributes
 --
 class Many Select
 attributes
-    Action : Action ID {I, R875}
+    ID : Action ID {I, R875}
     Activity : Activity Number {I, R875, R880}
     Domain : Domain Name {I, R875, R880}
     Output flow : Flow ID {R880}
@@ -115,7 +115,7 @@ attributes
 --
 class Select Action
 attributes
-    Action : Action ID {I, R901}
+    ID : Action ID {I, R901}
     Activity : Activity Number {I, R901, R876}
     Class : Class Name {I, R876}
     Domain : Domain Name {I, R901, R876}
@@ -130,7 +130,7 @@ attributes
 --
 class Single Select
 attributes
-    Action : Action ID {I, R875}
+    ID : Action ID {I, R875}
     Activity : Activity Number {I, R875, R879}
     Domain : Domain Name {I, R875, R879}
     Output flow : Flow ID {R879}
@@ -142,7 +142,7 @@ attributes
 --
 class Zero One Cardinality Select
 attributes
-    Action : Action ID {I, R882}
+    ID : Action ID {I, R882}
     Activity : Activity Number {I, R882}
     Domain : Domain Name {I, R882}
 --
@@ -151,7 +151,7 @@ relationships
     Selection +
         Single Select
         Many Select
-    <subclass>.(Action, Activity, Domain) -> Select Action.(Action, Activity, Domain)
+    <subclass>.(ID, Activity, Domain) -> Select Action.(ID, Activity, Domain)
 --
     R876
     specifies instances in, 1 Instance Flow
@@ -190,12 +190,12 @@ relationships
         Identifier Select
         Zero One Cardinality Select
         Criterion One Select
-    <subclass>.(Action, Activity, Domain) -> Single Selec.(Action, Activity, Domain)
+    <subclass>.(ID, Activity, Domain) -> Single Select.(ID, Activity, Domain)
 --
     R883
     has instances selected by, 1c Restriction
     seleects instances for, 1 Select Action
-    Restriction.(Select action, Activity, Class, Domain) -> Select Action.(Action, Activity, Class, Domain)
+    Restriction.(Select action, Activity, Class, Domain) -> Select Action.(ID, Activity, Class, Domain)
 --
     R884
     Restriction Criterion +
@@ -214,5 +214,5 @@ relationships
     projects on, Mc Attribute
     1 Projected Attribute
     Projected Attribute.(Attribute, Class, Domain) -> Attribute.(Name, Class, Domain)
-    Projected Attribute.(Select action, Activity, Class, Domain) -> Select Action.(Action, Activity, Class, Domain)
+    Projected Attribute.(Select action, Activity, Class, Domain) -> Select Action.(ID, Activity, Class, Domain)
 --

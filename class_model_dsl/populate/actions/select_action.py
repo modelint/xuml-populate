@@ -45,7 +45,7 @@ class SelectAction:
         cls.criterion_ctr += 1
         criterion_id = cls.criterion_ctr
         Relvar.insert(relvar='Restriction_Criterion', tuples=[
-            Restriction_Criterion_i(ID=id, Select_action=cls.action_id, Activity=cls.anum, Attribute=attr,
+            Restriction_Criterion_i(ID=criterion_id, Select_action=cls.action_id, Activity=cls.anum, Attribute=attr,
                                     Class=cls.cname, Domain=cls.domain)
         ])
         return criterion_id
@@ -113,7 +113,7 @@ class SelectAction:
         # Populate the Equivalence Criterion
         Relvar.insert(relvar='Equivalence_Criterion', tuples=[
             Equivalence_Criterion_i(ID=criterion_id, Select_action=cls.action_id, Activity=cls.anum, Class=cls.cname,
-                                    Domain=cls.domain, Equal="true" if op == "==" else "false",
+                                    Attribute=attr, Domain=cls.domain, Equal="true" if op == "==" else "false",
                                     Value="true" if setting else "false", Scalar_type="Boolean")
         ])
 
@@ -122,7 +122,7 @@ class SelectAction:
         pass
 
     @classmethod
-    def process_flow(cls, name: str, op: str, input_param: bool):
+    def process_flow(cls, name: str, op: str, input_param: bool=False):
         print(f"Populating [{name}] as flow")
 
     @classmethod
@@ -178,14 +178,13 @@ class SelectAction:
                             cls.process_bool_value(attr=attr_set, op=operator, setting=(n == 'true'))
                         else:
                             # It must be the name of a scalar flow that should have been set with some value
-                            cls.process_flow(o.name, op=operator, False)
+                            cls.process_flow(name=o.name, op=operator)
                 case 'BOOL_a':
                     text += cls.walk_criteria(o.op, o.operands, attr_set)
                 case 'MATH_a':
                     text += cls.walk_criteria(o.op, o.operands, attr_set)
                 case 'UNARY_a':
                     print()
-
         return text
 
     @classmethod
@@ -226,19 +225,19 @@ class SelectAction:
                                                          label=None, single=True)
             # Populate the Single Select subclass
             Relvar.insert(relvar='Single_Select', tuples=[
-                Single_Select_i(Action=cls.action_id, Activity=cls.anum, Domain=cls.domain, Output_flow=output_flow_id)
+                Single_Select_i(ID=cls.action_id, Activity=cls.anum, Domain=cls.domain, Output_flow=output_flow_id)
             ])
             if selection_idnum:
                 # Populate an Identifier Select subclass
                 Relvar.insert(relvar='Identifier_Select', tuples=[
-                    Identifer_Select_i(Action=cls.action_id, Activity=cls.anum, Domain=cls.domain,
+                    Identifer_Select_i(ID=cls.action_id, Activity=cls.anum, Domain=cls.domain,
                                        Identifier=selection_idnum, Class=cls.cname)
                 ])
             else:
                 # Populate an Identifier Select subclass
                 # Note that if both ONE cardinality specified and identifier select, identifier select takes precedence
                 Relvar.insert(relvar='Zero_One_Cardinality_Select', tuples=[
-                    Zero_One_Cardinality_Select_i(Action=cls.action_id, Activity=cls.anum, Domain=cls.domain)
+                    Zero_One_Cardinality_Select_i(ID=cls.action_id, Activity=cls.anum, Domain=cls.domain)
                 ])
         else:
             # Many select with Multiple Instance Flow output
@@ -246,7 +245,7 @@ class SelectAction:
                                                          domain=cls.domain, label=None, single=False)
             # Populate the Many Select subclass
             Relvar.insert(relvar='Many_Select', tuples=[
-                Many_Select_i(Action=cls.action_id, Activity=cls.anum, Domain=cls.domain, Output_flow=output_flow_id)
+                Many_Select_i(ID=cls.action_id, Activity=cls.anum, Domain=cls.domain, Output_flow=output_flow_id)
             ])
 
 
@@ -283,7 +282,7 @@ class SelectAction:
         # Populate the Action superclass instance and obtain its action_id
         cls.action_id = Action.populate(mmdb, anum, domain)  # Transaction open
         Relvar.insert(relvar='Select_Action', tuples=[
-            Select_Action_i(Action=cls.action_id, Activity=anum, Class=cls.cname, Domain=domain,
+            Select_Action_i(ID=cls.action_id, Activity=anum, Class=cls.cname, Domain=domain,
                             Input_flow=cls.input_instance_flow, Selection_cardinality=cls.cardinality)
         ])
         cls.select_agroup = select_agroup
@@ -293,3 +292,4 @@ class SelectAction:
 
         # We now have a transaction with all select-action instances, enter into the metamodel db
         Transaction.execute()  # Select Action
+        pass

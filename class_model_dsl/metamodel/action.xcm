@@ -27,11 +27,11 @@ attributes
     Activity {I, R901}
     Domain {I, R901}
 --
-class Dummy Action
+class Select Action <import:Select Action>
 attributes
-    ID : Action ID {I, R901}
-    Activity : Activity Number {I, R901}
-    Domain : Domain Name {I, R901}
+    ID {I, R901}
+    Activity {I, R901}
+    Domain {I, R901}
 --
 relationships
     R900
@@ -41,7 +41,7 @@ relationships
 --
     R901
     Action +
-        Dummy Action
+        Select Action
         Traverse Action
     <subclass>.(ID, Activity, Domain) -> Action.(ID, Activity, Domain)
 --
