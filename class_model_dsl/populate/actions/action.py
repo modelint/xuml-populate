@@ -42,7 +42,7 @@ class Action:
         actn_id = f'ACTN{cls.next_action_id[activity_key]}'
 
         # Now populate an instance of Action
-        Transaction.open(mmdb) # Traverse Statement
+        Transaction.open(mmdb)  # Action of some type
 
         # Populate the Statement superclass
         Relvar.insert(relvar='Action', tuples=[
