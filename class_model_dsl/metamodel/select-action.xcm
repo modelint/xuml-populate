@@ -35,7 +35,7 @@ attributes
     Attribute : Attribute Name {I, R884}
     Class : Class Name {I, R884}
     Domain : Domain Name {I, R884, R885}
-    Operation : Equivalence Op
+    Equal : Boolean
     Value : Value Representation
     Scalar type : Type Name {R885}
 --

@@ -164,7 +164,7 @@ To_Subclass_Hop_i = namedtuple('To_Subclass_Hop_i', 'Number Path Domain')
 Comparison_Criterion_i = namedtuple('Comparison_Criterion_i', 'ID Select_action Activity Attribute Class Domain'
                                                               'Compared_input Comparison')
 Equivalence_Criterion_i = namedtuple('Equivalence_Criterion_i', 'ID Select_action Activity Attribute Class Domain'
-                                                                'Operation Value Scalar_type')
+                                                                ' Equal Value Scalar_type')
 Restriction_Criterion_i = namedtuple('Restriction_Criterion_i', 'ID Select_action Activity Attribute Class Domain')
 Ranking_Criterion_i = namedtuple('Ranking_Criterion_i', 'ID Select_action Activity Attribute Class Domain Order')
 Identifer_Select_i = namedtuple('Identifer_Select_i', 'Action Activity Domain Identifier Class')

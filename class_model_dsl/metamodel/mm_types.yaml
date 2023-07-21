@@ -19,7 +19,6 @@ EE Name : string
 Element Label : string
 Element Number : int
 Enumeration Value : string
-Equivalence Op : string
 Event Name : string
 First Last All : string
 Flow ID : string

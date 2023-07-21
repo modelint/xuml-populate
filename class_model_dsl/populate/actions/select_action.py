@@ -8,7 +8,8 @@ from class_model_dsl.exceptions.action_exceptions import ComparingNonAttributeIn
 from class_model_dsl.populate.actions.action import Action
 from class_model_dsl.populate.flow import Flow
 from class_model_dsl.populate.pop_types import Select_Action_i, Single_Select_i, Identifer_Select_i,\
-    Zero_One_Cardinality_Select_i, Many_Select_i
+    Zero_One_Cardinality_Select_i, Many_Select_i, Restriction_i, Restriction_Criterion_i,\
+    Equivalence_Criterion_i, Comparison_Criterion_i, Ranking_Criterion_i, Projected_Attribute_i
 from pyral.relvar import Relvar
 from pyral.relation import Relation
 from pyral.transaction import Transaction
@@ -31,11 +32,23 @@ class SelectAction:
     anum = None
     expression = None
     comparison_criteria = []
+    equivalence_criteria = []
     restriction_text = ""
     cardinality = None
     action_id = None
     domain = None  # in this domain
     mmdb = None  # The database
+    criterion_ctr = 0
+
+    @classmethod
+    def pop_restriction_criterion(cls, attr: str) -> int:
+        cls.criterion_ctr += 1
+        criterion_id = cls.criterion_ctr
+        Relvar.insert(relvar='Restriction_Criterion', tuples=[
+            Restriction_Criterion_i(ID=id, Select_action=cls.action_id, Activity=cls.anum, Attribute=attr,
+                                    Class=cls.cname, Domain=cls.domain)
+        ])
+        return criterion_id
 
     @classmethod
     def identifier_selection(cls) -> int:
@@ -85,17 +98,31 @@ class SelectAction:
         return 0
 
     @classmethod
-    def process_bool_value(cls, attr: str, setting: bool):
-        R = f"Name:<{attr}>, Class:<{cls.cname}>, Domain:<{cls.domain}>"
-        result = Relation.restrict3(cls.mmdb, relation='Attribute', restriction=R)
-        type = result.body[0]['Type']
+    def process_bool_value(cls, attr: str, op: str, setting: bool):
+        """
+        An Equivalence Criterion is populated when a boolean value is compared
+        against an Attribute typed Boolean
+
+        :param attr: THe name of the class attribute typed boolean
+        :param op: The comparision operation as ==
+        :param setting:
+        :return:
+        """
+        # Populate the Restriction Criterion superclass
+        criterion_id = cls.pop_restriction_criterion(attr=attr)
+        # Populate the Equivalence Criterion
+        Relvar.insert(relvar='Equivalence_Criterion', tuples=[
+            Equivalence_Criterion_i(ID=criterion_id, Select_action=cls.action_id, Activity=cls.anum, Class=cls.cname,
+                                    Domain=cls.domain, Equal="true" if op == "==" else "false",
+                                    Value="true" if setting else "false", Scalar_type="Boolean")
+        ])
 
     @classmethod
-    def process_enum_value(cls, attr: str, enum: str):
+    def process_enum_value(cls, attr: str, op: str, enum: str):
         pass
 
     @classmethod
-    def process_flow(cls, name: str, input_param: bool):
+    def process_flow(cls, name: str, op: str, input_param: bool):
         print(f"Populating [{name}] as flow")
 
     @classmethod
@@ -145,13 +172,13 @@ class SelectAction:
                         text += f" {o.name}"
                         if o.name.startswith('_'):
                             # It's an enum value
-                            cls.process_enum_value(attr=attr_set, enum=o.name)
+                            cls.process_enum_value(attr=attr_set, op=operator, enum=o.name)
                         elif (n := o.name.lower()) in {'true', 'false'}:
                             # It's a boolean value
-                            cls.process_bool_value(attr=attr_set, setting=(n == 'true'))
+                            cls.process_bool_value(attr=attr_set, op=operator, setting=(n == 'true'))
                         else:
                             # It must be the name of a scalar flow that should have been set with some value
-                            cls.process_flow(o.name, False)
+                            cls.process_flow(o.name, op=operator, False)
                 case 'BOOL_a':
                     text += cls.walk_criteria(o.op, o.operands, attr_set)
                 case 'MATH_a':
@@ -182,6 +209,15 @@ class SelectAction:
             criteria = BOOL_a(op='==', operands=[criteria, N_a(name='true')])
         # Walk the parse tree and save all attributes, ops, values, and input scalar flows
         cls.expression = cls.walk_criteria(criteria.op, criteria.operands)
+        # Populate the Restriction class
+        Relvar.insert(relvar='Restriction', tuples=[
+            Restriction_i(Select_action=cls.action_id, Activity=cls.anum, Class=cls.cname, Domain=cls.domain,
+                          Expression=cls.expression)
+        ])
+
+
+
+
         # Determine if this should be an Identifier Select subclass that yields at most one instance
         selection_idnum = cls.identifier_selection()
         if selection_idnum or cls.cardinality == 'ONE':
