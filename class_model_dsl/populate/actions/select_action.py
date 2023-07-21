@@ -7,13 +7,12 @@ from typing import TYPE_CHECKING, Set, Dict, List, Optional
 from class_model_dsl.exceptions.action_exceptions import ComparingNonAttributeInSelection, NoInputInstanceFlow
 from class_model_dsl.populate.actions.action import Action
 from class_model_dsl.populate.flow import Flow
-from class_model_dsl.populate.pop_types import Select_Action_i, Single_Select_i, Identifer_Select_i,\
-    Zero_One_Cardinality_Select_i, Many_Select_i, Restriction_i, Restriction_Criterion_i,\
+from class_model_dsl.populate.pop_types import Select_Action_i, Single_Select_i, Identifer_Select_i, \
+    Zero_One_Cardinality_Select_i, Many_Select_i, Restriction_i, Restriction_Criterion_i, \
     Equivalence_Criterion_i, Comparison_Criterion_i, Ranking_Criterion_i, Projected_Attribute_i
 from pyral.relvar import Relvar
 from pyral.relation import Relation
 from pyral.transaction import Transaction
-from collections import namedtuple
 from scrall.parse.visitor import N_a, BOOL_a, Op_a
 
 if TYPE_CHECKING:
@@ -28,6 +27,7 @@ class SelectAction:
     """
 
     input_instance_flow = None  # We are selecting instances from this instance flow
+    output_instance_flow = None
     cname = None  # We are performing a selection on this class
     anum = None
     expression = None
@@ -122,7 +122,7 @@ class SelectAction:
         pass
 
     @classmethod
-    def process_flow(cls, name: str, op: str, input_param: bool=False):
+    def process_flow(cls, name: str, op: str, input_param: bool = False):
         print(f"Populating [{name}] as flow")
 
     @classmethod
@@ -159,7 +159,7 @@ class SelectAction:
         for o in operands:
             match type(o).__name__:
                 case 'IN_a':
-                    cls.process_flow(o, True)
+                    cls.process_flow(name=o, op=operator, input_param=True)
                     text += f" {o.name}"
                 case 'N_a':
                     if not attr_set:
@@ -214,14 +214,12 @@ class SelectAction:
                           Expression=cls.expression)
         ])
 
-
-
-
         # Determine if this should be an Identifier Select subclass that yields at most one instance
         selection_idnum = cls.identifier_selection()
         if selection_idnum or cls.cardinality == 'ONE':
             # Populate a single instance flow for the selection output
-            output_flow_id = Flow.populate_instance_flow(cls.mmdb, cname=cls.cname, activity=cls.anum, domain=cls.domain,
+            output_flow_id = Flow.populate_instance_flow(cls.mmdb, cname=cls.cname, activity=cls.anum,
+                                                         domain=cls.domain,
                                                          label=None, single=True)
             # Populate the Single Select subclass
             Relvar.insert(relvar='Single_Select', tuples=[
@@ -241,16 +239,16 @@ class SelectAction:
                 ])
         else:
             # Many select with Multiple Instance Flow output
-            output_flow_id = Flow.populate_instance_flow(cls.mmdb, cname=cls.cname, activity=cls.anum,
-                                                         domain=cls.domain, label=None, single=False)
+            cls.output_instance_flow = Flow.populate_instance_flow(cls.mmdb, cname=cls.cname, activity=cls.anum,
+                                                                   domain=cls.domain, label=None, single=False)
             # Populate the Many Select subclass
             Relvar.insert(relvar='Many_Select', tuples=[
-                Many_Select_i(ID=cls.action_id, Activity=cls.anum, Domain=cls.domain, Output_flow=output_flow_id)
+                Many_Select_i(ID=cls.action_id, Activity=cls.anum, Domain=cls.domain,
+                              Output_flow=cls.output_instance_flow)
             ])
 
-
     @classmethod
-    def populate(cls, mmdb: 'Tk', input_instance_flow: str, anum: str, select_agroup, domain: str):
+    def populate(cls, mmdb: 'Tk', input_instance_flow: str, anum: str, select_agroup, domain: str) -> str:
         """
         Populate the Select Statement
 
@@ -292,4 +290,4 @@ class SelectAction:
 
         # We now have a transaction with all select-action instances, enter into the metamodel db
         Transaction.execute()  # Select Action
-        pass
+        return cls.output_instance_flow

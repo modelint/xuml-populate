@@ -25,6 +25,7 @@ if TYPE_CHECKING:
 
 _logger = logging.getLogger(__name__)
 
+
 class InstanceAssignment:
     """
     Break down a Scrall instance assignment statement into action semantics and populate them
@@ -53,7 +54,7 @@ class InstanceAssignment:
     input_flow = None
 
     @classmethod
-    def process(cls, mmdb: 'Tk', anum:str, cname:str, domain:str, inst_assign_parse, xi_flow_id:str, signum:str):
+    def process(cls, mmdb: 'Tk', anum: str, cname: str, domain: str, inst_assign_parse, xi_flow_id: str, signum: str):
         """
         Given a parsed instance set expression, populate each component action
         and return the resultant Class Type name
@@ -80,8 +81,9 @@ class InstanceAssignment:
             match type(c).__name__:
                 case 'PATH_a':
                     # Process the path to create the traverse action and obtain the resultant Class Type name
-                    ctype = TraverseAction.build_path(mmdb, anum=anum, source_class=ctype, source_flow=input_flow,
-                                                      domain=domain, path=c)
+                    cls.input_flow = TraverseAction.build_path(mmdb, anum=anum, source_class=ctype,
+                                                                source_flow=cls.input_flow,
+                                                                domain=domain, path=c)
                 case 'N_a':
                     # Check to see if it is a class name
                     if MMclass.exists(cname=c.name, domain=domain):
@@ -103,9 +105,9 @@ class InstanceAssignment:
                 case 'Selection_a':
                     # Process to populate a select action, the output type does not change
                     # since we are selecting on a known class
-                    SelectAction.populate(mmdb, input_instance_flow=cls.input_flow, anum=anum, select_agroup=c,
-                                          domain=domain)
-
+                    cls.input_flow = SelectAction.populate(mmdb, input_instance_flow=cls.input_flow, anum=anum,
+                                                            select_agroup=c, domain=domain)
+                    pass
 
         # Process LHS after all components have been processed
         output_flow_label = lhs.name.name

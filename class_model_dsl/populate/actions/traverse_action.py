@@ -4,9 +4,9 @@ traverse_action.py – Populate a traverse action instance in PyRAL
 
 import logging
 from typing import TYPE_CHECKING, Set, Dict, List, Optional
-from class_model_dsl.exceptions.action_exceptions import UndefinedRelationship, IncompletePath,\
-    NoDestinationInPath, UndefinedClass, RelationshipUnreachableFromClass, HopToUnreachableClass,\
-    MissingTorPrefInAssociativeRel, NoSubclassInHop, SubclassNotInGeneralization, PerspectiveNotDefined,\
+from class_model_dsl.exceptions.action_exceptions import UndefinedRelationship, IncompletePath, \
+    NoDestinationInPath, UndefinedClass, RelationshipUnreachableFromClass, HopToUnreachableClass, \
+    MissingTorPrefInAssociativeRel, NoSubclassInHop, SubclassNotInGeneralization, PerspectiveNotDefined, \
     UndefinedAssociation, NeedPerspectiveOrClassToHop, NeedPerspectiveToHop, UnexpectedClassOrPerspectiveInPath
 from scrall.parse.visitor import PATH_a
 from class_model_dsl.populate.actions.action import Action
@@ -28,6 +28,7 @@ if TYPE_CHECKING:
 
 _logger = logging.getLogger(__name__)
 
+
 class TraverseAction:
     """
     Create all relations for a Traverse Statement
@@ -39,7 +40,7 @@ class TraverseAction:
     source_class = None
     source_flow = None
     id = None
-    dest_class = None # End of path
+    dest_class = None  # End of path
     class_cursor = None
     rel_cursor = None
     mmdb = None
@@ -48,23 +49,24 @@ class TraverseAction:
     anum = None
     action_id = None
     mult = None
-
+    dest_flow = None
 
     @classmethod
     def populate(cls):
         """
         Populate the Traverse Statement, Path and all Hops
         """
-        cls.name = cls.name.rstrip('_') # Remove trailing '_' from the path name
+        cls.name = cls.name.rstrip('_')  # Remove trailing '_' from the path name
         # Create a Traverse Action and Path
         cls.action_id = Action.populate(cls.mmdb, cls.anum, cls.domain)
         # Create the Traverse action destination flow (the output for R930)
-        dest_flow = Flow.populate_instance_flow(cls.mmdb, cname=cls.dest_class, activity=cls.anum, domain=cls.domain, label=None,
-                                    single=True if cls.mult=='1' else False)
+        cls.dest_flow = Flow.populate_instance_flow(cls.mmdb, cname=cls.dest_class, activity=cls.anum,
+                                                    domain=cls.domain, label=None,
+                                                    single=True if cls.mult == '1' else False)
 
         Relvar.insert(relvar='Traverse_Action', tuples=[
             Traverse_Action_i(ID=cls.action_id, Activity=cls.anum, Domain=cls.domain, Path=cls.name,
-                              Source_flow=cls.source_flow, Destination_flow=dest_flow)
+                              Source_flow=cls.source_flow, Destination_flow=cls.dest_flow)
         ])
         Relvar.insert(relvar='Path', tuples=[
             Path_i(Name=cls.name, Domain=cls.domain, Dest_class=cls.dest_class)
@@ -73,9 +75,9 @@ class TraverseAction:
         # Get the next action ID
         # Then process each hop
         for number, h in enumerate(cls.hops, start=1):
-            h.hoptype(number=number, to_class=h.to_class, rnum=h.rnum, attrs=h.attrs) # Call hop type method with hop type general and specific args
+            h.hoptype(number=number, to_class=h.to_class, rnum=h.rnum,
+                      attrs=h.attrs)  # Call hop type method with hop type general and specific args
         pass
-
 
     @classmethod
     def validate_rel(cls, rnum: str):
@@ -84,17 +86,16 @@ class TraverseAction:
             _logger.error(f"Undefined Rnum {rnum} in Domain {cls.domain}")
             raise UndefinedRelationship(rnum, cls.domain)
 
-
     @classmethod
-    def ordinal_hop(cls, cname:str, ascending:bool):
+    def ordinal_hop(cls, cname: str, ascending: bool):
         _logger.info("ACTION:Traverse - Populating an ordinal hop")
 
     @classmethod
-    def symmetric_hop(cls, cname:str):
+    def symmetric_hop(cls, cname: str):
         _logger.info("ACTION:Traverse - Populating a circular symmetric hop")
 
     @classmethod
-    def asymmetric_circular_hop(cls, cname:str, side:str):
+    def asymmetric_circular_hop(cls, cname: str, side: str):
         _logger.info("ACTION:Traverse - Populating an asymmetric circular hop")
 
     @classmethod
@@ -102,7 +103,7 @@ class TraverseAction:
         _logger.info("ACTION:Traverse - Populating a from symmetric assoc class hop")
 
     @classmethod
-    def from_asymmetric_association_class(cls, side:str):
+    def from_asymmetric_association_class(cls, side: str):
         """
         :param side: Perspective side (T or P)
         :return:
@@ -110,7 +111,7 @@ class TraverseAction:
         _logger.info("ACTION:Traverse - Populating a from asymmetric assoc class hop")
 
     @classmethod
-    def to_association_class(cls, number:int, rnum:str, to_class:str, attrs:Optional[Dict]):
+    def to_association_class(cls, number: int, rnum: str, to_class: str, attrs: Optional[Dict]):
         _logger.info("ACTION:Traverse - Populating a to association class hop")
         Relvar.insert(relvar='To_Association_Class_Hop', tuples=[
             To_Assocation_Class_Hop_i(Number=number, Path=cls.name, Domain=cls.domain)
@@ -126,7 +127,7 @@ class TraverseAction:
         ])
 
     @classmethod
-    def straight_hop(cls, number:int, rnum:str, to_class:str, attrs:Optional[Dict]):
+    def straight_hop(cls, number: int, rnum: str, to_class: str, attrs: Optional[Dict]):
         """
         Populate an instance of Straight HopArgs
 
@@ -155,7 +156,7 @@ class TraverseAction:
         _logger.info("ACTION:Traverse - Populating a to subclass hop")
 
     @classmethod
-    def is_assoc_class(cls, cname:str, rnum:str) -> bool:
+    def is_assoc_class(cls, cname: str, rnum: str) -> bool:
         """
         Returns true
         :param cname: Class to investigate
@@ -166,7 +167,7 @@ class TraverseAction:
         return bool(Relation.restrict3(tclral=cls.mmdb, restriction=r, relation="Association_Class").body)
 
     @classmethod
-    def is_reflexive(cls, rnum:str) -> int:
+    def is_reflexive(cls, rnum: str) -> int:
         """
         Is this a reflexive association and, if so, how many perspectives does it have?
         An association with both a T and P perspective is an asymmetric association while
@@ -187,7 +188,7 @@ class TraverseAction:
         return len(perspectives.body) if len(vclasses) == 1 else 0
 
     @classmethod
-    def reachable_classes(cls, rnum:str) -> Set[str]:
+    def reachable_classes(cls, rnum: str) -> Set[str]:
         """
         Return a set of all classes reachable on the provided relationship
 
@@ -203,7 +204,7 @@ class TraverseAction:
         return reachable_classes
 
     @classmethod
-    def resolve_ordinal_perspective(cls, perspective:str) -> bool:
+    def resolve_ordinal_perspective(cls, perspective: str) -> bool:
         # Search for ordinal rel with the supplied perspective
         # TODO: Update metamodel with two additional identifiers
         R = f"Ranked_class:<{cls.class_cursor}>, Domain:<{cls.domain}>, " \
@@ -216,7 +217,7 @@ class TraverseAction:
         return True
 
     @classmethod
-    def hop_generalization(cls, refs:List[Dict[str,str]]):
+    def hop_generalization(cls, refs: List[Dict[str, str]]):
         """
         Populate a Generalization HopArgs
 
@@ -247,7 +248,7 @@ class TraverseAction:
             return
 
     @classmethod
-    def hop_association(cls, refs:List[Dict[str,str]]):
+    def hop_association(cls, refs: List[Dict[str, str]]):
         """
         Populate hop across the association
 
@@ -280,7 +281,8 @@ class TraverseAction:
                         # TODO: raise exception
                         return False
                     cls.mult = result.body[0]['Multiplicity']
-                    cls.hops.append( Hop(hoptype=cls.straight_hop, to_class=cls.class_cursor, rnum=cls.rel_cursor, attrs=None) )
+                    cls.hops.append(
+                        Hop(hoptype=cls.straight_hop, to_class=cls.class_cursor, rnum=cls.rel_cursor, attrs=None))
                 return
 
             if ref == 'T' or ref == 'P':
@@ -307,7 +309,7 @@ class TraverseAction:
                     if not result.body:
                         # TODO: raise exception
                         return False
-                    cls.mult = result.body[0]['Multiplicity'] # Set multiplicity based on the perspective
+                    cls.mult = result.body[0]['Multiplicity']  # Set multiplicity based on the perspective
                     # If multiplicity has been set to 1, but associative multiplicty is M, we need to set it as M
                     R = f"Rnum:<{cls.rel_cursor}>, Domain:<{cls.domain}>, Class:<{cls.class_cursor}>"
                     result = Relation.restrict3(cls.mmdb, relation='Association_Class', restriction=R)
@@ -319,8 +321,9 @@ class TraverseAction:
                     cls.mult = 'M' if associative_mult == 'M' else cls.mult
 
                     cls.name += cls.class_cursor + '_'
-                    cls.hops.append( Hop(hoptype=cls.to_association_class, to_class=cls.class_cursor, rnum=cls.rel_cursor,
-                                         attrs=None))
+                    cls.hops.append(
+                        Hop(hoptype=cls.to_association_class, to_class=cls.class_cursor, rnum=cls.rel_cursor,
+                            attrs=None))
                     return
                 elif next_hop.name == to_class:
                     # Asymmetric reflexive hop requires a perspective phrase
@@ -365,9 +368,8 @@ class TraverseAction:
                 cls.resolve_perspective(phrase=next_hop.name)
                 return
 
-
     @classmethod
-    def resolve_perspective(cls, phrase:str) -> bool:
+    def resolve_perspective(cls, phrase: str) -> bool:
         """
         Populate hop across the association perspective
 
@@ -386,9 +388,9 @@ class TraverseAction:
         # The next hop may be a class name that matches the viewed class
         # If so, we can move the path index forward so that we don't process that class as a separate hop
         try:
-            next_hop = cls.path.hops[cls.path_index+1]
+            next_hop = cls.path.hops[cls.path_index + 1]
             if next_hop.name == viewed_class:
-                cls.path_index +=1
+                cls.path_index += 1
         except (IndexError, AttributeError) as e:
             # We're already processing the last hop in the path, so don't bother advancing the path index or the
             # next hop is an rnum and not a name in which case we certainly don't want to advance the path index
@@ -409,14 +411,14 @@ class TraverseAction:
                 else:
                     # Populate an asymmetric hop
                     cls.asymmetric_circular_hop(viewed_class, side)
-                return True # Circular hop populated
+                return True  # Circular hop populated
             else:
                 # The class_cursor must be the association class
                 if symmetry == 1:
                     cls.from_symmetric_association_class(rnum)
                 else:
                     cls.from_asymmetric_association_class(side)
-                return True # From assoc class hop populated
+                return True  # From assoc class hop populated
         else:  # Non-reflexive association (non-circular hop)
             # We are either hopping from the association class to a viewed class or
             # from the other participating class to the viewed class
@@ -425,10 +427,10 @@ class TraverseAction:
             else:
                 cls.class_cursor = viewed_class
                 cls.straight_hop()
-            return True # Non-reflexive hop to a participating class
+            return True  # Non-reflexive hop to a participating class
 
     @classmethod
-    def build_path(cls, mmdb: 'Tk', anum: str, source_class: str, source_flow:str, domain: str, path: PATH_a) -> str:
+    def build_path(cls, mmdb: 'Tk', anum: str, source_class: str, source_flow: str, domain: str, path: PATH_a) -> str:
         """
         Step through a path populating it along the way.
 
@@ -445,7 +447,7 @@ class TraverseAction:
         cls.anum = anum
         cls.source_class = source_class
         cls.source_flow = source_flow
-        cls.class_cursor = source_class # Validation cursor is on this class now
+        cls.class_cursor = source_class  # Validation cursor is on this class now
         cls.domain = domain
         cls.name = "_"  # The path text forms path name value
 
@@ -476,8 +478,6 @@ class TraverseAction:
                 pass
                 # TODO: raise exception
 
-
-
         # We have an open transaction for the Statement superclass
         # We must first add each HopArgs population to the transaction before
         # determining the path_name, source, and destination flows which make it possible
@@ -487,14 +487,15 @@ class TraverseAction:
         # Step through the path validating each relationship, phrase, and class
         # Ensure that each step is reachable on the class model
         cls.path_index = 0
-        while cls.path_index < len(path.hops)-1:
+        while cls.path_index < len(path.hops) - 1:
             hop = path.hops[cls.path_index]
 
             if type(hop).__name__ == 'N_a':
                 # This should be a perspective since flow names get eaten in the relationship hop handlers
                 # and a path cannot begin with a class name
                 # (any class name prefixing a path will have been processed to populate a labeled instance flow earlier)
-                if not cls.resolve_perspective(phrase=hop.name) and not cls.resolve_ordinal_perspective(perspective=hop.name):
+                if not cls.resolve_perspective(phrase=hop.name) and not cls.resolve_ordinal_perspective(
+                        perspective=hop.name):
                     raise UnexpectedClassOrPerspectiveInPath(name=hop.name, path=path)
 
             elif type(hop).__name__ == 'R_a':
@@ -505,7 +506,7 @@ class TraverseAction:
 
                 # First we look for any References to or from the class cursor
                 R = f"(From_class:<{cls.class_cursor}> OR To_class:<{cls.class_cursor}>), Rnum:<{hop.rnum}>, " \
-                       f"Domain:<{cls.domain}>"
+                    f"Domain:<{cls.domain}>"
                 if Relation.restrict3(tclral=cls.mmdb, restriction=R, relation="Reference").body:
                     P = ('Ref', 'From_class', 'To_class')
                     refs = Relation.project2(cls.mmdb, attributes=P, svar_name='rhop').body
@@ -517,11 +518,10 @@ class TraverseAction:
                         cls.hop_association(refs)
                 else:
                     # The perspective must be specified in the next hop
-                    cls.path_index +=1
+                    cls.path_index += 1
                     cls.resolve_ordinal_perspective(perspective=cls.path.hops[cls.path_index].name)
 
             cls.path_index += 1
-
 
         if cls.dest_class != cls.class_cursor:
             # Path does not reach destination
@@ -532,4 +532,4 @@ class TraverseAction:
         Transaction.execute()
         # Relvar.printall(mmdb)
 
-        return cls.dest_class
+        return cls.dest_flow
