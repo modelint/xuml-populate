@@ -53,12 +53,13 @@ class InstanceAssignment:
     """
 
     input_instance_flow = None  # The instance flow feeding the next component on the RHS
+    input_instance_ctype = None # The class type of the input instance flow
     max_mult = None  # The maximum multiplicity of the input instance flow, 1 or M
     assign_zero_one = None  # Does assignment operator limit to a zero or one instance selection?
 
     @classmethod
     def process(cls, mmdb: 'Tk', anum: str, cname: str, domain: str, inst_assign_parse,
-                xi_flow_id: str, signum: str, scrall_text:str):
+                xi_flow_id: str, signum: str, activity_path:str, scrall_text:str):
         """
         Given a parsed instance set expression, populate each component action
         and return the resultant Class Type name
@@ -74,6 +75,8 @@ class InstanceAssignment:
         :param inst_assign_parse: A parsed instance assignment
         :param xi_flow_id: The ID of the executing instance flow (the instance executing this activity)
         :param signum: The signature number so we can look up any input parameters
+        :param activity_path: Human readable path to the activity for error reporting
+        :param scrall_text: The parsed scrall text for error reporting
         """
         lhs = inst_assign_parse.lhs
         cls.assign_zero_one = True if inst_assign_parse.card == '1' else False
@@ -85,9 +88,9 @@ class InstanceAssignment:
             match type(c).__name__:
                 case 'PATH_a':
                     # Process the path to create the traverse action and obtain the resultant Class Type name
-                    cls.input_instance_flow, cls.max_mult = TraverseAction.build_path(mmdb, anum=anum, source_class=ctype,
-                                                                        source_flow=cls.input_instance_flow,
-                                                                        domain=domain, path=c)
+                    cls.input_instance_flow, cls.input_instance_ctype, cls.max_mult = TraverseAction.build_path(
+                        mmdb, anum=anum, source_class=ctype, source_flow=cls.input_instance_flow,
+                        domain=domain, path=c, activity_path=activity_path, scrall_text=scrall_text)
                 case 'N_a':
                     # Check to see if it is a class name
                     if MMclass.exists(cname=c.name, domain=domain):
@@ -109,19 +112,24 @@ class InstanceAssignment:
                 case 'Selection_a':
                     # Process to populate a select action, the output type does not change
                     # since we are selecting on a known class
-                    cls.input_instance_flow = SelectAction.populate(mmdb, input_instance_flow=cls.input_instance_flow, anum=anum,
-                                                                    select_agroup=c, domain=domain)
+                    cls.input_instance_flow, cls.input_instance_ctype, cls.max_mult = SelectAction.populate(
+                        mmdb, input_instance_flow=cls.input_instance_flow, anum=anum, select_agroup=c, domain=domain,
+                        activity_path=activity_path, scrall_text=scrall_text)
 
         # Process LHS after all components have been processed
         if cls.assign_zero_one and cls.max_mult != 1:
-            raise AssignZeroOneInstanceHasMultiple
-            #TODO: pass character position in argument to the error
+            a, b = inst_assign_parse.X
+            text = scrall_text[a:b]
+            raise AssignZeroOneInstanceHasMultiple(activity_path, text)
         output_flow_label = lhs.name.name
-        if lhs.exp_type and lhs.exp_type != ctype:
+        if lhs.exp_type and lhs.exp_type != cls.input_instance_ctype:
             # Raise assignment type mismatch exception
             pass
         Transaction.open(mmdb)
-        Flow.populate_instance_flow(mmdb, cname=ctype, activity=anum, domain=domain, label=output_flow_label,
-                                    single=True if card == '1c' else False)
+        assigned_flow = Flow.populate_instance_flow(mmdb, cname=cls.input_instance_ctype, activity=anum, domain=domain,
+                                    label=output_flow_label, single=cls.assign_zero_one)
+
+        _logger.info(f"INSERT Instance Flow (assignment): ["
+                     f"{domain}:{cls.input_instance_ctype}:{activity_path.split(':')[-1]}"
+                     f":{output_flow_label}:{assigned_flow}]")
         Transaction.execute()
-        Relvar.printall(mmdb)

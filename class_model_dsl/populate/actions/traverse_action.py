@@ -50,6 +50,8 @@ class TraverseAction:
     action_id = None
     mult = None
     dest_flow = None
+    activity_path = None
+    scrall_text = None
 
     @classmethod
     def populate(cls):
@@ -64,6 +66,9 @@ class TraverseAction:
                                                     domain=cls.domain, label=None,
                                                     single=True if cls.mult == '1' else False)
 
+        _logger.info(f"INSERT Traverse action output Flow: ["
+                     f"{cls.domain}:{cls.dest_class}:{cls.activity_path.split(':')[-1]}"
+                     f":{cls.dest_flow}]")
         Relvar.insert(relvar='Traverse_Action', tuples=[
             Traverse_Action_i(ID=cls.action_id, Activity=cls.anum, Domain=cls.domain, Path=cls.name,
                               Source_flow=cls.source_flow, Destination_flow=cls.dest_flow)
@@ -431,7 +436,7 @@ class TraverseAction:
 
     @classmethod
     def build_path(cls, mmdb: 'Tk', anum: str, source_class: str, source_flow: str, domain: str,
-                   path: PATH_a) -> (str, str):
+                   path: PATH_a, activity_path: str, scrall_text: str) -> (str, str, str):
         """
         Step through a path populating it along the way.
 
@@ -441,7 +446,7 @@ class TraverseAction:
         :param source_flow: The flow id feeding into the Traverse Action
         :param domain: The Statement's Domain
         :param path: Parsed Scrall representing a Path
-        :return: The output instance flow id and its maximum instance multiplicity, 1 or M
+        :return: The output instance flow id, its Class Type name and its maximum instance multiplicity, 1 or M
         """
         cls.mmdb = mmdb
         cls.path = path
@@ -451,6 +456,8 @@ class TraverseAction:
         cls.class_cursor = source_class  # Validation cursor is on this class now
         cls.domain = domain
         cls.name = "_"  # The path text forms path name value
+        cls.activity_path = activity_path
+        cls.scrall_text = scrall_text
 
         # Verify adequate path length
         if len(path.hops) < 2:
@@ -533,4 +540,4 @@ class TraverseAction:
         Transaction.execute()
         # Relvar.printall(mmdb)
 
-        return cls.dest_flow, cls.mult
+        return cls.dest_flow, cls.dest_class, cls.mult

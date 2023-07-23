@@ -4,7 +4,7 @@ action_exceptions.py – Errors that occur while populating actions
 
 # Every error should have the same format
 # with a standard prefix and postfix defined here
-pre = "\nStatement loader: -- "
+pre = "\nScrall populator: -- "
 post = " --"
 
 
@@ -21,11 +21,13 @@ class NoInputInstanceFlow(SelectActionException):
     pass
 
 class AssignZeroOneInstanceHasMultiple(ActionException):
-    def __init__(self, position):
-        self.position = position
+    def __init__(self, path, text):
+        self.path = path
+        self.text = text
 
     def __str__(self):
-        return f'{pre}LHS of single instance assignment may receive more than one instance.{post}'
+        return f'{pre}Single instance assignment operator may recieve multiple instances, try ..= operator or ' \
+               f'modify RHS to yield at most one instance{post}\n\t[{self.path}] >> {self.text}'
 
 class ComparingNonAttributeInSelection(SelectActionException):
     pass

@@ -66,6 +66,8 @@ class Method:
             # Populate the executing instance (xi) flow
             cls.xi_fid = Flow.populate_instance_flow(mmdb, cname=class_name, activity=anum, domain=domain_name,
                                                      label=None, single=True)
+            cls._logger.info(f"INSERT Instance Flow (method xi): [{domain_name}:{class_name}:{parsed_method.method}:"
+                             f"{cls.xi_fid}]")
             Relvar.insert(relvar='Method', tuples=[
                 Method_i(Anum=anum, Name=parsed_method.method, Class=class_name, Domain=domain_name,
                          Executing_instance_flow=cls.xi_fid)
@@ -84,7 +86,9 @@ class Method:
                 MMtype.populate_unknown(mmdb, name=p['type'], domain=domain_name)
 
                 input_flow = Flow.populate_data_flow_by_type(mmdb, mm_type=p['type'], activity=anum,
-                                                             domain=domain_name, label=None)
+                                                             domain=domain_name, label=p['name'])
+                cls._logger.info(f"INSERT Scalar Flow (method input): ["
+                                 f"{domain_name}:{class_name}:{parsed_method.method}:^{p['name']}:{input_flow}]")
                 Relvar.insert(relvar='Parameter', tuples=[
                     Parameter_i(Name=p['name'], Signature=signum, Domain=domain_name,
                                 Input_flow=input_flow, Activity=anum, Type=p['type'])
@@ -102,4 +106,6 @@ class Method:
                     Synchronous_Output_i(Anum=anum, Domain=domain_name,
                                          Output_flow=of_id, Type=parsed_method.flow_out)
                 ])
+                cls._logger.info(f"INSERT Flow (method output): ["
+                                 f"{domain_name}:{class_name}:{parsed_method.method}:^{of_id}]")
                 Transaction.execute()

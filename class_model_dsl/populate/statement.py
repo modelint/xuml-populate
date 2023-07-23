@@ -23,7 +23,7 @@ class ActivityType(Enum):
 
 class Statement:
     """
-    Create all relations for an Statement
+    Create all relations for a Statement
     """
     _logger = logging.getLogger(__name__)
     next_action_id = {}
@@ -70,11 +70,12 @@ class Statement:
             # TODO: raise exception here
             pass
         cls.xi_flow_id = result.body[0]['Executing_instance_flow']
-        cls.populate(mmdb, anum, domain, aparse, scrall_text)
+        activity_path = f"{domain}:{cname}:{method}.mtd"
+        cls.populate(mmdb, anum, domain, aparse, activity_path, scrall_text)
 
 
     @classmethod
-    def populate(cls, mmdb: 'Tk', anum: str, domain: str, aparse, scrall_text:str):
+    def populate(cls, mmdb: 'Tk', anum: str, domain: str, aparse, activity_path:str, scrall_text:str):
         """
         Populate a Statement
         """
@@ -84,7 +85,7 @@ class Statement:
         if agroup_name == 'Inst_Assignment_a':
             InstanceAssignment.process(mmdb, anum=anum, cname=cls.cname, domain=domain,
                                        inst_assign_parse=aparse.action_group, xi_flow_id=cls.xi_flow_id,
-                                       signum=cls.signum, scrall_text=scrall_text)
+                                       signum=cls.signum, activity_path=activity_path, scrall_text=scrall_text)
 
             # # Populate the Traverse Statement
             # dest_class = None

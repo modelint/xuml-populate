@@ -39,6 +39,9 @@ class SelectAction:
     domain = None  # in this domain
     mmdb = None  # The database
     criterion_ctr = 0
+    activity_path = None
+    scrall_text = None
+    max_mult = None
 
     @classmethod
     def pop_restriction_criterion(cls, attr: str) -> int:
@@ -217,10 +220,14 @@ class SelectAction:
         # Determine if this should be an Identifier Select subclass that yields at most one instance
         selection_idnum = cls.identifier_selection()
         if selection_idnum or cls.cardinality == 'ONE':
+            cls.max_mult = '1'
             # Populate a single instance flow for the selection output
-            output_flow_id = Flow.populate_instance_flow(cls.mmdb, cname=cls.cname, activity=cls.anum,
+            cls.output_instance_flow = Flow.populate_instance_flow(cls.mmdb, cname=cls.cname, activity=cls.anum,
                                                          domain=cls.domain,
                                                          label=None, single=True)
+            _logger.info(f"INSERT Select action output single instance Flow: ["
+                         f"{cls.domain}:{cls.cname}:{cls.activity_path.split(':')[-1]}"
+                         f":{cls.output_instance_flow}]")
             # Populate the Single Select subclass
             Relvar.insert(relvar='Single_Select', tuples=[
                 Single_Select_i(ID=cls.action_id, Activity=cls.anum, Domain=cls.domain, Output_flow=output_flow_id)
@@ -239,8 +246,12 @@ class SelectAction:
                 ])
         else:
             # Many select with Multiple Instance Flow output
+            cls.max_mult = 'M'
             cls.output_instance_flow = Flow.populate_instance_flow(cls.mmdb, cname=cls.cname, activity=cls.anum,
                                                                    domain=cls.domain, label=None, single=False)
+            _logger.info(f"INSERT Select action output multiple instance Flow: ["
+                         f"{cls.domain}:{cls.cname}:{cls.activity_path.split(':')[-1]}"
+                         f":{cls.output_instance_flow}]")
             # Populate the Many Select subclass
             Relvar.insert(relvar='Many_Select', tuples=[
                 Many_Select_i(ID=cls.action_id, Activity=cls.anum, Domain=cls.domain,
@@ -248,7 +259,8 @@ class SelectAction:
             ])
 
     @classmethod
-    def populate(cls, mmdb: 'Tk', input_instance_flow: str, anum: str, select_agroup, domain: str) -> str:
+    def populate(cls, mmdb: 'Tk', input_instance_flow: str, anum: str, select_agroup, domain: str, activity_path: str,
+                 scrall_text: str) -> str:
         """
         Populate the Select Statement
 
@@ -263,6 +275,8 @@ class SelectAction:
         cls.mmdb = mmdb
         cls.domain = domain
         cls.anum = anum
+        cls.activity_path = activity_path
+        cls.scrall_text = scrall_text
         # Cardinality is specified as 1 or M on the selection
         # If 1, user wants at most one arbitrary instance, even if many are selected
         # If M, get them all.
@@ -290,4 +304,4 @@ class SelectAction:
 
         # We now have a transaction with all select-action instances, enter into the metamodel db
         Transaction.execute()  # Select Action
-        return cls.output_instance_flow
+        return cls.output_instance_flow, cls.cname, cls.max_mult
