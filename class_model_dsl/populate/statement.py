@@ -36,7 +36,7 @@ class Statement:
     xi_flow_id = None
 
     @classmethod
-    def populate_method(cls, mmdb: 'Tk', cname: str, method:str, anum: str, domain: str, aparse):
+    def populate_method(cls, mmdb: 'Tk', cname: str, method:str, anum: str, domain: str, aparse, scrall_text:str):
         """
         When we populate a method we need to know the class and method name so that we can
         later look up its inputs (executing class and parameter inputs).
@@ -70,11 +70,11 @@ class Statement:
             # TODO: raise exception here
             pass
         cls.xi_flow_id = result.body[0]['Executing_instance_flow']
-        cls.populate(mmdb, anum, domain, aparse)
+        cls.populate(mmdb, anum, domain, aparse, scrall_text)
 
 
     @classmethod
-    def populate(cls, mmdb: 'Tk', anum: str, domain: str, aparse):
+    def populate(cls, mmdb: 'Tk', anum: str, domain: str, aparse, scrall_text:str):
         """
         Populate a Statement
         """
@@ -84,7 +84,7 @@ class Statement:
         if agroup_name == 'Inst_Assignment_a':
             InstanceAssignment.process(mmdb, anum=anum, cname=cls.cname, domain=domain,
                                        inst_assign_parse=aparse.action_group, xi_flow_id=cls.xi_flow_id,
-                                       signum=cls.signum)
+                                       signum=cls.signum, scrall_text=scrall_text)
 
             # # Populate the Traverse Statement
             # dest_class = None
@@ -100,7 +100,7 @@ class Statement:
             # r_result = Relation.restrict3(mmdb, relation='Method', restriction=R)
             # if not r_result.body:
             #     return False
-            # input_flow = r_result.body[0]['Executing_instance_flow']
+            # input_instance_flow = r_result.body[0]['Executing_instance_flow']
             # # Process rhs
             # components = aparse.action_group.rhs.components
             # # A variety of actions may be associated with these components, depends on the component type
@@ -108,7 +108,7 @@ class Statement:
             #
             # Relvar.insert(relvar='Traverse_Action', tuples=[
             #     Traverse_Action_i(ID=actn_id, Activity=anum, Domain=domain, Path=None,
-            #                       Source_flow=input_flow, Destination_flow=None)
+            #                       Source_flow=input_instance_flow, Destination_flow=None)
             # ])
             # for c in components:
             #     # if type(c).__name__ == 'N_a':

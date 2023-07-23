@@ -430,7 +430,8 @@ class TraverseAction:
             return True  # Non-reflexive hop to a participating class
 
     @classmethod
-    def build_path(cls, mmdb: 'Tk', anum: str, source_class: str, source_flow: str, domain: str, path: PATH_a) -> str:
+    def build_path(cls, mmdb: 'Tk', anum: str, source_class: str, source_flow: str, domain: str,
+                   path: PATH_a) -> (str, str):
         """
         Step through a path populating it along the way.
 
@@ -440,7 +441,7 @@ class TraverseAction:
         :param source_flow: The flow id feeding into the Traverse Action
         :param domain: The Statement's Domain
         :param path: Parsed Scrall representing a Path
-        :return: The Class Type encountered at the end of the Path
+        :return: The output instance flow id and its maximum instance multiplicity, 1 or M
         """
         cls.mmdb = mmdb
         cls.path = path
@@ -532,4 +533,4 @@ class TraverseAction:
         Transaction.execute()
         # Relvar.printall(mmdb)
 
-        return cls.dest_flow
+        return cls.dest_flow, cls.mult

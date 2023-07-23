@@ -8,6 +8,7 @@ from class_model_dsl.populate.actions.traverse_action import TraverseAction
 from class_model_dsl.populate.actions.select_action import SelectAction
 from class_model_dsl.populate.mm_class import MMclass
 from class_model_dsl.populate.flow import Flow
+from class_model_dsl.exceptions.action_exceptions import AssignZeroOneInstanceHasMultiple
 
 from pyral.relvar import Relvar
 from pyral.relation import Relation
@@ -51,10 +52,13 @@ class InstanceAssignment:
     etc). The Scrall syntax will later be udpated to accommodate such expressions.
     """
 
-    input_flow = None
+    input_instance_flow = None  # The instance flow feeding the next component on the RHS
+    max_mult = None  # The maximum multiplicity of the input instance flow, 1 or M
+    assign_zero_one = None  # Does assignment operator limit to a zero or one instance selection?
 
     @classmethod
-    def process(cls, mmdb: 'Tk', anum: str, cname: str, domain: str, inst_assign_parse, xi_flow_id: str, signum: str):
+    def process(cls, mmdb: 'Tk', anum: str, cname: str, domain: str, inst_assign_parse,
+                xi_flow_id: str, signum: str, scrall_text:str):
         """
         Given a parsed instance set expression, populate each component action
         and return the resultant Class Type name
@@ -72,25 +76,25 @@ class InstanceAssignment:
         :param signum: The signature number so we can look up any input parameters
         """
         lhs = inst_assign_parse.lhs
-        card = inst_assign_parse.card
+        cls.assign_zero_one = True if inst_assign_parse.card == '1' else False
         rhs = inst_assign_parse.rhs
         ctype = cname  # Initialize with the instance/ee class
-        input_flow = xi_flow_id
+        cls.input_instance_flow = xi_flow_id
 
         for c in rhs.components:
             match type(c).__name__:
                 case 'PATH_a':
                     # Process the path to create the traverse action and obtain the resultant Class Type name
-                    cls.input_flow = TraverseAction.build_path(mmdb, anum=anum, source_class=ctype,
-                                                                source_flow=cls.input_flow,
-                                                                domain=domain, path=c)
+                    cls.input_instance_flow, cls.max_mult = TraverseAction.build_path(mmdb, anum=anum, source_class=ctype,
+                                                                        source_flow=cls.input_instance_flow,
+                                                                        domain=domain, path=c)
                 case 'N_a':
                     # Check to see if it is a class name
                     if MMclass.exists(cname=c.name, domain=domain):
                         # An encountered class name on the RHS is the source of a multiple instance flow
                         # We create that and set it as the current RHS input flow
                         Transaction.open(mmdb)
-                        cls.input_flow = Iflow(id=Flow.populate_instance_flow(
+                        cls.input_instance_flow = Iflow(id=Flow.populate_instance_flow(
                             mmdb, cname=c.name, activity=anum, domain=domain, label=None), cname=c.name)
                         Transaction.execute()
                     else:
@@ -99,17 +103,19 @@ class InstanceAssignment:
                         result = Relation.restrict3(mmdb, relation='Label', restriction=R)
                         if result.body:
                             # Labeled flow found
-                            cls.input_flow = result.body[0]['Flow']
+                            cls.input_instance_flow = result.body[0]['Flow']
                         else:
                             pass
                 case 'Selection_a':
                     # Process to populate a select action, the output type does not change
                     # since we are selecting on a known class
-                    cls.input_flow = SelectAction.populate(mmdb, input_instance_flow=cls.input_flow, anum=anum,
-                                                            select_agroup=c, domain=domain)
-                    pass
+                    cls.input_instance_flow = SelectAction.populate(mmdb, input_instance_flow=cls.input_instance_flow, anum=anum,
+                                                                    select_agroup=c, domain=domain)
 
         # Process LHS after all components have been processed
+        if cls.assign_zero_one and cls.max_mult != 1:
+            raise AssignZeroOneInstanceHasMultiple
+            #TODO: pass character position in argument to the error
         output_flow_label = lhs.name.name
         if lhs.exp_type and lhs.exp_type != ctype:
             # Raise assignment type mismatch exception

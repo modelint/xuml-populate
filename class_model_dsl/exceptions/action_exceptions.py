@@ -20,6 +20,13 @@ class SelectActionException(ActionException):
 class NoInputInstanceFlow(SelectActionException):
     pass
 
+class AssignZeroOneInstanceHasMultiple(ActionException):
+    def __init__(self, position):
+        self.position = position
+
+    def __str__(self):
+        return f'{pre}LHS of single instance assignment may receive more than one instance.{post}'
+
 class ComparingNonAttributeInSelection(SelectActionException):
     pass
 
