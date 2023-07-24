@@ -9,6 +9,7 @@ from pyral.transaction import Transaction
 from class_model_dsl.populate.actions.traverse_action import TraverseAction
 from class_model_dsl.populate.flow import Flow
 from class_model_dsl.populate.actions.instance_assignment import InstanceAssignment
+from class_model_dsl.populate.actions.table_assignment import TableAssignment
 from class_model_dsl.populate.pop_types import Action_i, Traverse_Action_i
 from typing import TYPE_CHECKING
 from enum import Enum
@@ -49,7 +50,7 @@ class Statement:
         :param anum:
         :param domain:
         :param aparse:
-        :return:
+        :param scrall_text:
         """
         cls.activity_type = ActivityType.METHOD
         cls.cname = cname
@@ -82,10 +83,16 @@ class Statement:
         agroup_name = type(aparse.action_group).__name__
         # For now we'll just switch on the action_group name and later wrap all this up
         # into a dictionary of functions of some sort
-        if agroup_name == 'Inst_Assignment_a':
-            InstanceAssignment.process(mmdb, anum=anum, cname=cls.cname, domain=domain,
-                                       inst_assign_parse=aparse.action_group, xi_flow_id=cls.xi_flow_id,
-                                       signum=cls.signum, activity_path=activity_path, scrall_text=scrall_text)
+        match agroup_name:
+            case 'Inst_Assignment_a':
+                InstanceAssignment.process(mmdb, anum=anum, cname=cls.cname, domain=domain,
+                                           inst_assign_parse=aparse.action_group, xi_flow_id=cls.xi_flow_id,
+                                           activity_path=activity_path, scrall_text=scrall_text)
+            case 'Table_Assignment_a':
+                TableAssignment.process(mmdb, anum=anum, cname=cls.cname, domain=domain,
+                                        table_assign_parse=aparse.action_group, xi_flow_id=cls.xi_flow_id,
+                                        activity_path=activity_path, scrall_text=scrall_text)
+                pass
 
             # # Populate the Traverse Statement
             # dest_class = None

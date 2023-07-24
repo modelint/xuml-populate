@@ -59,7 +59,7 @@ class InstanceAssignment:
 
     @classmethod
     def process(cls, mmdb: 'Tk', anum: str, cname: str, domain: str, inst_assign_parse,
-                xi_flow_id: str, signum: str, activity_path:str, scrall_text:str):
+                xi_flow_id: str, activity_path:str, scrall_text:str):
         """
         Given a parsed instance set expression, populate each component action
         and return the resultant Class Type name
@@ -74,7 +74,6 @@ class InstanceAssignment:
         :param anum: The Activity Number
         :param inst_assign_parse: A parsed instance assignment
         :param xi_flow_id: The ID of the executing instance flow (the instance executing this activity)
-        :param signum: The signature number so we can look up any input parameters
         :param activity_path: Human readable path to the activity for error reporting
         :param scrall_text: The parsed scrall text for error reporting
         """
