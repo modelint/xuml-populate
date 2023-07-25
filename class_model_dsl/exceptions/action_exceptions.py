@@ -21,13 +21,22 @@ class NoInputInstanceFlow(SelectActionException):
     pass
 
 class AssignZeroOneInstanceHasMultiple(ActionException):
-    def __init__(self, path, text):
+    def __init__(self, path, text, x):
         self.path = path
-        self.text = text
+        self.text = text[slice(*x)]
 
     def __str__(self):
         return f'{pre}Single instance assignment operator may recieve multiple instances, try ..= operator or ' \
                f'modify RHS to yield at most one instance{post}\n\t[{self.path}] >> {self.text}'
+
+class NoClassOrInstanceFlowForInstanceSetName(ActionException):
+    def __init__(self, path, text, x):
+        self.path = path
+        self.text = text[slice(*x)]
+
+    def __str__(self):
+        return f'{pre}Name in instance set is neither a class or an instance flow source' \
+               f'{post}\n\t[{self.path}] >> {self.text}'
 
 class ComparingNonAttributeInSelection(SelectActionException):
     pass

@@ -117,9 +117,7 @@ class InstanceAssignment:
 
         # Process LHS after all components have been processed
         if cls.assign_zero_one and cls.max_mult != 1:
-            a, b = inst_assign_parse.X
-            text = scrall_text[a:b]
-            raise AssignZeroOneInstanceHasMultiple(activity_path, text)
+            raise AssignZeroOneInstanceHasMultiple(path=activity_path, text=scrall_text, x=inst_assign_parse.X)
         output_flow_label = lhs.name.name
         if lhs.exp_type and lhs.exp_type != cls.input_instance_ctype:
             # Raise assignment type mismatch exception

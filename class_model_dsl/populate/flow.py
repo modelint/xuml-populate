@@ -6,12 +6,13 @@ import logging
 from pyral.relvar import Relvar
 from pyral.relation import Relation
 from typing import TYPE_CHECKING, Optional
-from class_model_dsl.populate.pop_types import Data_Flow_i, Flow_i,\
-    Multiple_Instance_Flow_i, Single_Instance_Flow_i, Instance_Flow_i,\
+from class_model_dsl.populate.pop_types import Data_Flow_i, Flow_i, \
+    Multiple_Instance_Flow_i, Single_Instance_Flow_i, Instance_Flow_i, \
     Control_Flow_i, Non_Scalar_Flow_i, Scalar_Flow_i, Table_Flow_i, Label_i
 
 if TYPE_CHECKING:
     from tkinter import Tk
+
 
 # TODO: Add Table and Control Flow population
 
@@ -28,7 +29,8 @@ class Flow:
     mmdb = None
 
     @classmethod
-    def populate_data_flow_by_type(cls, mmdb: 'Tk', label:Optional[str], mm_type:str, activity:str, domain:str) -> str:
+    def populate_data_flow_by_type(cls, mmdb: 'Tk', label: Optional[str], mm_type: str, activity: str,
+                                   domain: str) -> str:
         """
         Populate an instance of Data Flow and determine its subclasses based on the supplied
         Class, Scalar, or Table Type.
@@ -55,7 +57,8 @@ class Flow:
         return flow_id
 
     @classmethod
-    def populate_scalar_flow(cls, mmdb: 'Tk', label:Optional[str], scalar_type:str, activity:str, domain:str) -> str:
+    def populate_scalar_flow(cls, mmdb: 'Tk', label: Optional[str], scalar_type: str, activity: str,
+                             domain: str) -> str:
         """
         Populate an instance of Scalar flow
 
@@ -79,7 +82,7 @@ class Flow:
         return flow_id
 
     @classmethod
-    def populate_instance_flow(cls, mmdb: 'Tk', cname: str, activity: str, domain: str, label:Optional[str],
+    def populate_instance_flow(cls, mmdb: 'Tk', cname: str, activity: str, domain: str, label: Optional[str],
                                single: bool = False) -> str:
         """
         Populate an instance of Scalar flow
@@ -134,17 +137,26 @@ class Flow:
         return flow_id
 
     @classmethod
+    def populate_table_flow(cls, mmdb: 'Tk', activity: str, domain: str, tname: str, label: Optional[str],
+                            is_tuple: bool = False) -> str:
+        flow_id = cls.populate_flow()
+        Relvar.insert(relvar='Table_Flow', tuples=[
+            Table_Flow_i(ID=flow_id, Activity=cls.activity, Domain=cls.domain, Type=tname, Tuple=is_tuple)
+        ])
+        return flow_id
+
+    @classmethod
     def populate_flow(cls) -> str:
         """
         Populate Flow instance and optional Label
         """
         # Each activity requires a new flow id counter
-        activity_id = f'{cls.domain}:{cls.activity}' # combine attributes to get id
+        activity_id = f'{cls.domain}:{cls.activity}'  # combine attributes to get id
         if activity_id not in cls.flow_id_ctr.keys():
             cls.flow_id_ctr[activity_id] = 0
 
         # Populate Flow instance
-        cls.flow_id_ctr[activity_id] +=1  # Increment the flow id counter for this activity
+        cls.flow_id_ctr[activity_id] += 1  # Increment the flow id counter for this activity
         flow_id = f"F{cls.flow_id_ctr[activity_id]}"
         Relvar.insert(relvar='Flow', tuples=[
             Flow_i(ID=flow_id, Activity=cls.activity, Domain=cls.domain)

@@ -122,7 +122,7 @@ Multiple_Instance_Flow_i = namedtuple('Multiple_Instance_Flow_i', 'ID Activity D
 Single_Instance_Flow_i = namedtuple('Single_Instance_Flow_i', 'ID Activity Domain')
 Non_Scalar_Flow_i = namedtuple('Non_Scalar_Flow_i', 'ID Activity Domain')
 Scalar_Flow_i = namedtuple('Scalar_Flow_i', 'ID Activity Domain Type')
-Table_Flow_i = namedtuple('Table_Flow_i', 'ID Activity Domain Tuple')
+Table_Flow_i = namedtuple('Table_Flow_i', 'ID Activity Domain Type Tuple')
 
 # External Entity
 EE_i = namedtuple('EE_i', 'EEnum Name Class Domain')
