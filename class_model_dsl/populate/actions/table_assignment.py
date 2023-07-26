@@ -4,12 +4,8 @@ table_assignment.py – Populate elements of a table assignment
 
 import logging
 from typing import TYPE_CHECKING, Set, Dict, List, Optional
-from class_model_dsl.populate.actions.traverse_action import TraverseAction
-from class_model_dsl.populate.actions.select_action import SelectAction
-from class_model_dsl.populate.mm_class import MMclass
+from class_model_dsl.populate.actions.expressions.table_expr import TableExpr
 from class_model_dsl.populate.flow import Flow
-from class_model_dsl.exceptions.action_exceptions import AssignZeroOneInstanceHasMultiple
-from class_model_dsl.populate.actions.instance_set import InstanceSet
 
 from pyral.relvar import Relvar
 from pyral.relation import Relation
@@ -38,17 +34,6 @@ class TableAssignment:
     scrall_text = None
 
     @classmethod
-    def walk_table_expr(cls, operator, operands) -> str:
-        text = f" {operator} "  # Flatten operator into temporary string
-        for o in operands:
-            match type(o).__name__:
-                case 'INST_a':
-                    InstanceSet.process(mmdb=cls.mmdb, anum=cls.anum, iset_parse=o, domain=cls.domain,
-                                        activity_path=cls.activity_path, scrall_text=cls.scrall_text)
-
-        pass
-
-    @classmethod
     def process(cls, mmdb: 'Tk', anum: str, cname: str, domain: str, table_assign_parse,
                 xi_flow_id: str, activity_path: str, scrall_text: str):
         """
@@ -68,26 +53,19 @@ class TableAssignment:
         :param activity_path: Human readable path to the activity for error reporting
         :param scrall_text: The parsed scrall text for error reporting
         """
-        cls.mmdb = mmdb
-        cls.anum = anum
-        cls.domain = domain
-        cls.activity_path = activity_path
-        cls.scrall_text = scrall_text
         lhs = table_assign_parse.lhs
         rhs = table_assign_parse.rhs
-        ctype = cname  # Initialize with the instance/ee class
         cls.input_instance_flow = xi_flow_id
 
-        # TODO: Walk table expression and populate components
-        expr_txt = cls.walk_table_expr(rhs.op, rhs.operands)
+        output_flow = TableExpr.process(mmdb, operator=rhs.op, operands=rhs.operands, anum=anum, domain=domain,
+                                        activity_path=activity_path, scrall_text=scrall_text)
 
         output_flow_label = lhs.name.name
         if lhs.exp_type and lhs.exp_type != cls.input_instance_ctype:
             # Raise assignment type mismatch exception
             pass
         Transaction.open(mmdb)
-        # TODO: need value for Table Type Name
-        assigned_flow = Flow.populate_table_flow(mmdb, tname='', activity=anum, domain=domain,
+        assigned_flow = Flow.populate_table_flow(mmdb, tname=output_flow.ttype, activity=anum, domain=domain,
                                                  label=output_flow_label)
 
         _logger.info(f"INSERT Table Flow (assignment): ["

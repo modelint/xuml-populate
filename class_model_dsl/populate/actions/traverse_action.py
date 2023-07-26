@@ -11,6 +11,7 @@ from class_model_dsl.exceptions.action_exceptions import UndefinedRelationship, 
 from scrall.parse.visitor import PATH_a
 from class_model_dsl.populate.actions.action import Action
 from class_model_dsl.populate.flow import Flow
+from class_model_dsl.populate.actions.aparse_types import InstanceFlow_ap, MaxMult
 from class_model_dsl.populate.pop_types import Action_i, Traverse_Action_i, Path_i, Hop_i, Association_Class_Hop_i, \
     Circular_Hop_i, Symmetric_Hop_i, Asymmetric_Circular_Hop_i, Ordinal_Hop_i, Straight_Hop_i, \
     From_Asymmetric_Assocation_Class_Hop_i, From_Symmetric_Assocation_Class_Hop_i, To_Assocation_Class_Hop_i, \
@@ -48,7 +49,7 @@ class TraverseAction:
     hops = []
     anum = None
     action_id = None
-    mult = None
+    mult = None  # Max mult of the current hop
     dest_flow = None
     activity_path = None
     scrall_text = None
@@ -58,20 +59,20 @@ class TraverseAction:
         """
         Populate the Traverse Statement, Path and all Hops
         """
-        cls.name = cls.name.rstrip('_')  # Remove trailing '_' from the path name
+        cls.name = cls.name.rstrip('/')  # Remove trailing '/' from the path name
         # Create a Traverse Action and Path
         cls.action_id = Action.populate(cls.mmdb, cls.anum, cls.domain)
         # Create the Traverse action destination flow (the output for R930)
         cls.dest_flow = Flow.populate_instance_flow(cls.mmdb, cname=cls.dest_class, activity=cls.anum,
                                                     domain=cls.domain, label=None,
-                                                    single=True if cls.mult == '1' else False)
+                                                    single=True if cls.mult == MaxMult.ONE else False)
 
         _logger.info(f"INSERT Traverse action output Flow: ["
                      f"{cls.domain}:{cls.dest_class}:{cls.activity_path.split(':')[-1]}"
                      f":{cls.dest_flow}]")
         Relvar.insert(relvar='Traverse_Action', tuples=[
             Traverse_Action_i(ID=cls.action_id, Activity=cls.anum, Domain=cls.domain, Path=cls.name,
-                              Source_flow=cls.source_flow, Destination_flow=cls.dest_flow)
+                              Source_flow=cls.source_flow.fid, Destination_flow=cls.dest_flow)
         ])
         Relvar.insert(relvar='Path', tuples=[
             Path_i(Name=cls.name, Domain=cls.domain, Dest_class=cls.dest_class)
@@ -285,7 +286,7 @@ class TraverseAction:
                     if not result.body:
                         # TODO: raise exception
                         return False
-                    cls.mult = result.body[0]['Multiplicity']
+                    cls.mult = MaxMult.ONE if result.body[0]['Multiplicity'] == '1' else MaxMult.MANY
                     cls.hops.append(
                         Hop(hoptype=cls.straight_hop, to_class=cls.class_cursor, rnum=cls.rel_cursor, attrs=None))
                 return
@@ -314,7 +315,8 @@ class TraverseAction:
                     if not result.body:
                         # TODO: raise exception
                         return False
-                    cls.mult = result.body[0]['Multiplicity']  # Set multiplicity based on the perspective
+                    # Set multiplicity based on the perspective
+                    cls.mult = MaxMult.ONE if result.body[0]['Multiplicity'] == '1' else MaxMult.MANY
                     # If multiplicity has been set to 1, but associative multiplicty is M, we need to set it as M
                     R = f"Rnum:<{cls.rel_cursor}>, Domain:<{cls.domain}>, Class:<{cls.class_cursor}>"
                     result = Relation.restrict3(cls.mmdb, relation='Association_Class', restriction=R)
@@ -323,9 +325,9 @@ class TraverseAction:
                         return False
                     associative_mult = result.body[0]['Multiplicity']
                     # Associative mult of M overrides a single mult
-                    cls.mult = 'M' if associative_mult == 'M' else cls.mult
+                    cls.mult = MaxMult.MANY if associative_mult == 'M' else cls.mult
 
-                    cls.name += cls.class_cursor + '_'
+                    cls.name += cls.class_cursor + '/'
                     cls.hops.append(
                         Hop(hoptype=cls.to_association_class, to_class=cls.class_cursor, rnum=cls.rel_cursor,
                             attrs=None))
@@ -436,10 +438,12 @@ class TraverseAction:
 
     @classmethod
     def build_path(cls, mmdb: 'Tk', anum: str, source_class: str, source_flow: str, domain: str,
-                   path: PATH_a, activity_path: str, scrall_text: str) -> (str, str, str):
+                   path: PATH_a, activity_path: str, scrall_text: str) -> InstanceFlow_ap:
         """
         Step through a path populating it along the way.
 
+        :param scrall_text:
+        :param activity_path:
         :param anum:
         :param mmdb: THe metamodel db
         :param source_class: This is the Class Type of the Instance Flow feeding the Traverse Statement on R929
@@ -455,7 +459,7 @@ class TraverseAction:
         cls.source_flow = source_flow
         cls.class_cursor = source_class  # Validation cursor is on this class now
         cls.domain = domain
-        cls.name = "_"  # The path text forms path name value
+        cls.name = "/"  # The path text forms path name value
         cls.activity_path = activity_path
         cls.scrall_text = scrall_text
 
@@ -470,21 +474,6 @@ class TraverseAction:
             # Destination class must a name
             raise NoDestinationInPath(path)
         cls.dest_class = terminal_hop.name
-
-        # Set initial source flow multiplicity
-        # We need to look up the flow multiplicity
-        R = f"ID:<{cls.source_flow}>, Activity:<{cls.anum}>, Domain:<{cls.domain}>"
-        result = Relation.restrict3(cls.mmdb, relation='Single_Instance_Flow', restriction=R)
-        if result.body:
-            cls.mult = '1'
-        else:
-            # It must be a Multiple Instance Flow
-            result = Relation.restrict3(cls.mmdb, relation='Multiple_Instance_Flow', restriction=R)
-            if result.body:
-                cls.mult = 'M'
-            else:
-                pass
-                # TODO: raise exception
 
         # We have an open transaction for the Statement superclass
         # We must first add each HopArgs population to the transaction before
@@ -508,7 +497,7 @@ class TraverseAction:
 
             elif type(hop).__name__ == 'R_a':
                 cls.rel_cursor = hop.rnum
-                cls.name += cls.rel_cursor + '_'
+                cls.name += cls.rel_cursor + '/'
                 # This is either an Association, Generalization, or Ordinal Relationship
                 # Determine the type and call the corresponding hop populator
 
@@ -540,4 +529,4 @@ class TraverseAction:
         Transaction.execute()
         # Relvar.printall(mmdb)
 
-        return cls.dest_flow, cls.dest_class, cls.mult
+        return InstanceFlow_ap(fid=cls.dest_flow, ctype=cls.dest_class, max_mult=cls.mult)

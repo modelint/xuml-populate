@@ -9,6 +9,7 @@ from class_model_dsl.populate.actions.select_action import SelectAction
 from class_model_dsl.populate.mm_class import MMclass
 from class_model_dsl.populate.flow import Flow
 from class_model_dsl.exceptions.action_exceptions import AssignZeroOneInstanceHasMultiple
+from class_model_dsl.populate.actions.aparse_types import InstanceFlow_ap
 
 from pyral.relvar import Relvar
 from pyral.relation import Relation
@@ -53,13 +54,13 @@ class InstanceAssignment:
     """
 
     input_instance_flow = None  # The instance flow feeding the next component on the RHS
-    input_instance_ctype = None # The class type of the input instance flow
+    input_instance_ctype = None  # The class type of the input instance flow
     max_mult = None  # The maximum multiplicity of the input instance flow, 1 or M
     assign_zero_one = None  # Does assignment operator limit to a zero or one instance selection?
 
     @classmethod
     def process(cls, mmdb: 'Tk', anum: str, cname: str, domain: str, inst_assign_parse,
-                xi_flow_id: str, activity_path:str, scrall_text:str):
+                xi_flow_id: str, activity_path: str, scrall_text: str):
         """
         Given a parsed instance set expression, populate each component action
         and return the resultant Class Type name
@@ -81,7 +82,7 @@ class InstanceAssignment:
         cls.assign_zero_one = True if inst_assign_parse.card == '1' else False
         rhs = inst_assign_parse.rhs
         ctype = cname  # Initialize with the instance/ee class
-        cls.input_instance_flow = xi_flow_id
+        cls.input_instance_flow = InstanceFlow_ap(fid=xi_flow_id, ctype=cname, max_mult='1')
 
         for c in rhs.components:
             match type(c).__name__:
@@ -124,9 +125,10 @@ class InstanceAssignment:
             pass
         Transaction.open(mmdb)
         assigned_flow = Flow.populate_instance_flow(mmdb, cname=cls.input_instance_ctype, activity=anum, domain=domain,
-                                    label=output_flow_label, single=cls.assign_zero_one)
+                                                    label=output_flow_label, single=cls.assign_zero_one)
 
         _logger.info(f"INSERT Instance Flow (assignment): ["
                      f"{domain}:{cls.input_instance_ctype}:{activity_path.split(':')[-1]}"
                      f":{output_flow_label}:{assigned_flow}]")
         Transaction.execute()
+        pass
