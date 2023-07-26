@@ -20,6 +20,15 @@ class SelectActionException(ActionException):
 class NoInputInstanceFlow(SelectActionException):
     pass
 
+class SelectionOnNonInstanceFlow(ActionException):
+    def __init__(self, path, text, x):
+        self.path = path
+        self.text = text[slice(*x)]
+
+    def __str__(self):
+        return f'{pre}Cannot select on a non instance flow. Verify input to selection phrase' \
+               f'{post}\n\t[{self.path}] >> {self.text}'
+
 class AssignZeroOneInstanceHasMultiple(ActionException):
     def __init__(self, path, text, x):
         self.path = path

@@ -2,57 +2,91 @@
 
 import logging
 from typing import TYPE_CHECKING, Set, Dict, List, Optional
+from class_model_dsl.populate.actions.traverse_action import TraverseAction
 from class_model_dsl.populate.mm_class import MMclass
 from class_model_dsl.populate.flow import Flow
 from class_model_dsl.populate.actions.select_action import SelectAction
+from class_model_dsl.populate.actions.aparse_types import InstanceFlow_ap, MaxMult
 from pyral.relation import Relation
 from pyral.transaction import Transaction
-from class_model_dsl.exceptions.action_exceptions import NoClassOrInstanceFlowForInstanceSetName
-
-from collections import namedtuple
-Iflow = namedtuple("Iflow", "id cname")
-"""Instance flow descriptor"""
-Tflow = namedtuple("Tflow", "id table_type")
-"""Table flow descriptor"""
-
+from class_model_dsl.exceptions.action_exceptions import NoClassOrInstanceFlowForInstanceSetName,\
+    SelectionOnNonInstanceFlow
 
 if TYPE_CHECKING:
     from tkinter import Tk
 
 _logger = logging.getLogger(__name__)
+
+
 class InstanceSet:
     """
     Entry point for breaking down a parsed Instance Set
     """
 
+    component_flow = None
+
     @classmethod
-    def process(cls, mmdb: 'Tk', anum: str, iset_parse, domain: str, activity_path: str, scrall_text: str):
-        for c in iset_parse.components:
+    def process(cls, mmdb: 'Tk', anum: str, input_instance_flow: InstanceFlow_ap, iset_parse, domain: str,
+                activity_path: str, scrall_text: str) -> InstanceFlow_ap:
+        """
+
+        :param input_instance_flow:
+        :param mmdb:
+        :param anum:
+        :param iset_parse:
+        :param domain:
+        :param activity_path:
+        :param scrall_text:
+        :return:
+        """
+        cls.component_flow = input_instance_flow  # This will be input to the first component
+        for c in iset_parse:
             match type(c).__name__:
+                case 'PATH_a':
+                    # Process the path to create the traverse action and obtain the resultant Class Type name
+                    cls.component_flow = TraverseAction.build_path(
+                        mmdb, anum=anum, input_instance_flow=cls.component_flow, domain=domain, path=c,
+                        activity_path=activity_path, scrall_text=scrall_text)
                 case 'N_a':
                     # Check to see if it is a class name
                     if MMclass.exists(cname=c.name, domain=domain):
                         # An encountered class name on the RHS is the source of a multiple instance flow
                         # We create that and set it as the current RHS input flow
-                        Transaction.open(mmdb)
-                        cls.input_instance_flow = Iflow(id=Flow.populate_instance_flow(
-                            mmdb, cname=c.name, activity=anum, domain=domain, label=None), cname=c.name)
+                        Transaction.open(mmdb)  # Multiple instance flow from class
+                        class_flow_id = Flow.populate_instance_flow(mmdb, cname=c.name, activity=anum,
+                                                                    domain=domain, label=None)
+                        cls.component_flow = InstanceFlow_ap(fid=class_flow_id, ctype=c.name, max_mult=MaxMult.MANY)
                         Transaction.execute()
+                        _logger.info(f"INSERT Class instance flow (assignment): ["
+                                     f"{domain}:{c.name}:{activity_path.split(':')[-1]}:{class_flow_id}]")
                     else:
                         # Look for a labeled instance flow
                         R = f"Name:<{c.name}>, Activity:<{anum}>, Domain:<{domain}>"
-                        result = Relation.restrict3(mmdb, relation='Label', restriction=R)
-                        if result.body:
-                            # Labeled flow found
-                            cls.input_instance_flow = result.body[0]['Flow']
+                        label_result = Relation.restrict3(mmdb, relation='Label', restriction=R)
+                        if label_result.body:
+                            # It's a labeled flow, but it must be an instance flow to support selection
+                            fid = label_result.body[0]['Flow']
+                            R = f"ID:<{fid}>, Activity:<{anum}>, Domain:<{domain}>"
+                            if_result = Relation.restrict3(mmdb, relation='Instance_Flow', restriction=R)
+                            if if_result.body:
+                                # Okay, it's an instance flow. Now we need the multiplicity on that flow
+                                ctype = if_result.body[0]['Class']
+                                many_if_result = Relation.restrict3(mmdb, relation='Multiple_Instance_Flow', restriction=R)
+                                m = MaxMult.MANY if many_if_result.body else MaxMult.ONE
+                                cls.component_flow = InstanceFlow_ap(fid=fid, ctype=ctype, max_mult=m)
+                            else:
+                                # It's either a table or scalar flow. Scalar's don't support selection.
+                                # Selection on tables will be supported, but not yet
+                                # TODO: Support labeled table flow selection
+                                raise SelectionOnNonInstanceFlow(path=activity_path, text=scrall_text, x=iset_parse.X)
                         else:
                             raise NoClassOrInstanceFlowForInstanceSetName(path=activity_path, text=scrall_text,
                                                                           x=iset_parse.X)
                 case 'Selection_a':
                     # Process to populate a select action, the output type does not change
                     # since we are selecting on a known class
-                    cls.input_instance_flow, cls.input_instance_ctype, cls.max_mult = SelectAction.populate(
-                        mmdb, input_instance_flow=cls.input_instance_flow, anum=anum, select_agroup=c, domain=domain,
+                    cls.component_flow = SelectAction.populate(
+                        mmdb, input_instance_flow=cls.component_flow, anum=anum, select_agroup=c, domain=domain,
                         activity_path=activity_path, scrall_text=scrall_text)
 
-        pass
+        return cls.component_flow

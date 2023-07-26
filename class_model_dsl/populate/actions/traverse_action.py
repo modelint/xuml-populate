@@ -38,8 +38,7 @@ class TraverseAction:
     path_index = 0
     path = None
     name = None
-    source_class = None
-    source_flow = None
+    input_instance_flow = None
     id = None
     dest_class = None  # End of path
     class_cursor = None
@@ -72,7 +71,7 @@ class TraverseAction:
                      f":{cls.dest_flow}]")
         Relvar.insert(relvar='Traverse_Action', tuples=[
             Traverse_Action_i(ID=cls.action_id, Activity=cls.anum, Domain=cls.domain, Path=cls.name,
-                              Source_flow=cls.source_flow.fid, Destination_flow=cls.dest_flow)
+                              Source_flow=cls.input_instance_flow.fid, Destination_flow=cls.dest_flow)
         ])
         Relvar.insert(relvar='Path', tuples=[
             Path_i(Name=cls.name, Domain=cls.domain, Dest_class=cls.dest_class)
@@ -437,7 +436,7 @@ class TraverseAction:
             return True  # Non-reflexive hop to a participating class
 
     @classmethod
-    def build_path(cls, mmdb: 'Tk', anum: str, source_class: str, source_flow: str, domain: str,
+    def build_path(cls, mmdb: 'Tk', anum: str, input_instance_flow: InstanceFlow_ap, domain: str,
                    path: PATH_a, activity_path: str, scrall_text: str) -> InstanceFlow_ap:
         """
         Step through a path populating it along the way.
@@ -446,22 +445,21 @@ class TraverseAction:
         :param activity_path:
         :param anum:
         :param mmdb: THe metamodel db
-        :param source_class: This is the Class Type of the Instance Flow feeding the Traverse Statement on R929
-        :param source_flow: The flow id feeding into the Traverse Action
         :param domain: The Statement's Domain
+        :param input_instance_flow: This is the source instance flow where the path begins
         :param path: Parsed Scrall representing a Path
         :return: The output instance flow id, its Class Type name and its maximum instance multiplicity, 1 or M
         """
         cls.mmdb = mmdb
         cls.path = path
         cls.anum = anum
-        cls.source_class = source_class
-        cls.source_flow = source_flow
-        cls.class_cursor = source_class  # Validation cursor is on this class now
+        cls.input_instance_flow = input_instance_flow
+        cls.class_cursor = input_instance_flow.ctype  # Validation cursor is on this class now
         cls.domain = domain
         cls.name = "/"  # The path text forms path name value
         cls.activity_path = activity_path
         cls.scrall_text = scrall_text
+        cls.mult = input_instance_flow.max_mult
 
         # Verify adequate path length
         if len(path.hops) < 2:

@@ -4,23 +4,16 @@ instance_assignment.py – Break an instance set generator into one or more comp
 
 import logging
 from typing import TYPE_CHECKING, Set, Dict, List, Optional
-from class_model_dsl.populate.actions.traverse_action import TraverseAction
-from class_model_dsl.populate.actions.select_action import SelectAction
-from class_model_dsl.populate.mm_class import MMclass
 from class_model_dsl.populate.flow import Flow
+from class_model_dsl.populate.actions.expressions.instance_set import InstanceSet
 from class_model_dsl.exceptions.action_exceptions import AssignZeroOneInstanceHasMultiple
-from class_model_dsl.populate.actions.aparse_types import InstanceFlow_ap
+from class_model_dsl.populate.actions.aparse_types import InstanceFlow_ap, MaxMult
 
 from pyral.relvar import Relvar
 from pyral.relation import Relation
 from pyral.transaction import Transaction
 
 from collections import namedtuple
-
-Iflow = namedtuple("Iflow", "id cname")
-"""Instance flow descriptor"""
-Tflow = namedtuple("Tflow", "id table_type")
-"""Table flow descriptor"""
 
 if TYPE_CHECKING:
     from tkinter import Tk
@@ -54,8 +47,6 @@ class InstanceAssignment:
     """
 
     input_instance_flow = None  # The instance flow feeding the next component on the RHS
-    input_instance_ctype = None  # The class type of the input instance flow
-    max_mult = None  # The maximum multiplicity of the input instance flow, 1 or M
     assign_zero_one = None  # Does assignment operator limit to a zero or one instance selection?
 
     @classmethod
@@ -79,56 +70,30 @@ class InstanceAssignment:
         :param scrall_text: The parsed scrall text for error reporting
         """
         lhs = inst_assign_parse.lhs
-        cls.assign_zero_one = True if inst_assign_parse.card == '1' else False
+        assign_zero_one = True if inst_assign_parse.card == '1' else False
         rhs = inst_assign_parse.rhs
-        ctype = cname  # Initialize with the instance/ee class
-        cls.input_instance_flow = InstanceFlow_ap(fid=xi_flow_id, ctype=cname, max_mult='1')
+        # The executing instance is by nature a single instance flow
+        xi_instance_flow = InstanceFlow_ap(fid=xi_flow_id, ctype=cname, max_mult=MaxMult.ONE)
 
-        for c in rhs.components:
-            match type(c).__name__:
-                case 'PATH_a':
-                    # Process the path to create the traverse action and obtain the resultant Class Type name
-                    cls.input_instance_flow, cls.input_instance_ctype, cls.max_mult = TraverseAction.build_path(
-                        mmdb, anum=anum, source_class=ctype, source_flow=cls.input_instance_flow,
-                        domain=domain, path=c, activity_path=activity_path, scrall_text=scrall_text)
-                case 'N_a':
-                    # Check to see if it is a class name
-                    if MMclass.exists(cname=c.name, domain=domain):
-                        # An encountered class name on the RHS is the source of a multiple instance flow
-                        # We create that and set it as the current RHS input flow
-                        Transaction.open(mmdb)
-                        cls.input_instance_flow = Iflow(id=Flow.populate_instance_flow(
-                            mmdb, cname=c.name, activity=anum, domain=domain, label=None), cname=c.name)
-                        Transaction.execute()
-                    else:
-                        # Look for a labeled instance flow
-                        R = f"Name:<{c.name}>, Activity:<{anum}>, Domain:<{domain}>"
-                        result = Relation.restrict3(mmdb, relation='Label', restriction=R)
-                        if result.body:
-                            # Labeled flow found
-                            cls.input_instance_flow = result.body[0]['Flow']
-                        else:
-                            pass
-                case 'Selection_a':
-                    # Process to populate a select action, the output type does not change
-                    # since we are selecting on a known class
-                    cls.input_instance_flow, cls.input_instance_ctype, cls.max_mult = SelectAction.populate(
-                        mmdb, input_instance_flow=cls.input_instance_flow, anum=anum, select_agroup=c, domain=domain,
-                        activity_path=activity_path, scrall_text=scrall_text)
+        # Process the instance set expression in the RHS and obtain the generated instance flow
+        iset_instance_flow = InstanceSet.process(mmdb, anum=anum, input_instance_flow=xi_instance_flow,
+                                                 iset_parse=rhs.components, domain=domain,
+                                                 activity_path=activity_path, scrall_text=scrall_text)
 
         # Process LHS after all components have been processed
-        if cls.assign_zero_one and cls.max_mult != 1:
+        if assign_zero_one and iset_instance_flow.max_mult == MaxMult.ONE:
             raise AssignZeroOneInstanceHasMultiple(path=activity_path, text=scrall_text, x=inst_assign_parse.X)
         output_flow_label = lhs.name.name
-        if lhs.exp_type and lhs.exp_type != cls.input_instance_ctype:
+        if lhs.exp_type and lhs.exp_type != iset_instance_flow.ctype:
             # Raise assignment type mismatch exception
             pass
-        Transaction.open(mmdb)
-        assigned_flow = Flow.populate_instance_flow(mmdb, cname=cls.input_instance_ctype, activity=anum, domain=domain,
-                                                    label=output_flow_label, single=cls.assign_zero_one)
+
+        # Populate the LHS assignment labeled flow
+        Transaction.open(mmdb)  # LHS labeled instance flow
+        assigned_flow = Flow.populate_instance_flow(mmdb, cname=iset_instance_flow.ctype, activity=anum,
+                                                    domain=domain, label=output_flow_label, single=assign_zero_one)
 
         _logger.info(f"INSERT Instance Flow (assignment): ["
-                     f"{domain}:{cls.input_instance_ctype}:{activity_path.split(':')[-1]}"
+                     f"{domain}:{iset_instance_flow.ctype}:{activity_path.split(':')[-1]}"
                      f":{output_flow_label}:{assigned_flow}]")
-        Transaction.execute()
-        pass
+        Transaction.execute()  # LHS labeled instance flow
