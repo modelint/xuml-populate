@@ -32,6 +32,7 @@ Method Name : string
 NT Response : string
 One Many : string
 Operation Name : string
+Operator Symbol : string
 Parameter Name : string
 Path Name : string
 Phrase Name : string

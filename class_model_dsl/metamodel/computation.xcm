@@ -1,0 +1,60 @@
+metadata
+    Title : Computation Subsystem / Shlaer-Mellor Metamodel
+    Author : Leon Starr
+    Document ID : mint.sm-meta.action.td.13
+    Version : 0.2.3
+    /// Creation date : August 13, 2022
+    Modification date : July 28, 2023
+    Organization : Model Integration, LLC / www.modelint.com
+    Copyright notice > MIT
+    Organization logo > mint
+domain Metamodel, META
+subsystem Computation, COMP 1100-1124
+class Computation
+attributes
+    ID : Action ID {I, R901}
+    Activity : Activity Number {I, R901}
+    Domain : Domain Name {I, R901}
+    Operator : Operator Symbol
+--
+class Data Flow <import:Flow>
+attributes
+    ID {I}
+    Activity {I}
+    Domain {I}
+--
+class Operand
+attributes
+    Flow : Flow ID {I, R1102}
+    Activity : Activity Number {I, R1100, R1102}
+    Domain : Domain Name {I, R1100, R1102}
+    Computation : Action ID {R1100}
+--
+class Computed Result
+attributes
+    Computation : Action ID {I, R1101}
+    Activity : Activity Number {I, I2, R1101, R1103}
+    Domain : Domain Name {I, I2, R1101, R1103}
+    Flow : Flow ID {I2, R1103}
+--
+relationships
+    R1100
+    processes, M Operand
+    is processed by, 1 Computation
+    Operand.(Computation, Activity, Domain) -> Computation.(ID, Activity, Domain)
+--
+    R1101
+    yields, 1 Computed Result
+    is yielded by, 1 Computation
+    Computed Result.(Computation, Activity, Domain) -> Computation.(ID, Activity, Domain)
+--
+    R1102
+    is input from, 1 Data Flow
+    provides input as, 1c Operand
+    Operand.(Flow, Activity, Domain) -> Data Flow.(ID, Activity, Domain)
+--
+    R1103
+    is output as, 1 Data Flow
+    provides output as, 1c Computed Result
+    Computed Result.(Flow, Activity, Domain) -> Data Flow.(ID, Activity, Domain)
+--
