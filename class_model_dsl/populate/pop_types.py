@@ -2,7 +2,6 @@
 pop_types.py - Named tuples corresponding to each MM type
 """
 
-# TODO Generate these from the metamodel parse
 
 from collections import namedtuple
 from pyral.rtypes import Mult as DBMult
@@ -13,6 +12,13 @@ mult_tclral = {
     'Mc': DBMult.ZERO_ONE_OR_MANY,
     '1c': DBMult.ZERO_OR_ONE
 }
+
+# Each tuple below defines the name of a class and its attributes that must
+# be filled in to insert an instance of that class
+# the _i part means "instance"
+# The list of attributes of each tuple must match the corresponding .xcm file in
+# the metamodel directory. Creating these by hand for now
+# TODO Generate these automatically by processing the metamodel file
 
 # Domain subsystem
 Domain_i = namedtuple('Domain_i', 'Name Alias')
@@ -174,3 +180,8 @@ Zero_One_Cardinality_Select_i = namedtuple('Zero_One_Cardinality_Select_i', 'ID 
 Projected_Attribute_i = namedtuple('Projected_Attribute_i', 'Attribute Class Select_action Activity Domain')
 Restriction_i = namedtuple('Restriction_i', 'Select_action Activity Class Domain Expression')
 Select_Action_i = namedtuple('Select_Action_i', 'ID Activity Class Domain Input_flow Selection_cardinality')
+
+# Computation (action)
+Computation_i = namedtuple('Computation_i', 'ID Activity Domain Operator')
+Operand_i = namedtuple('Operand_i', 'Flow Activity Domain Computation')
+Computed_Result_i = namedtuple('Computed_Result_i', 'Computation Activity Domain Flow')
