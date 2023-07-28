@@ -77,7 +77,7 @@ class InstanceAssignment:
 
         # Process the instance set expression in the RHS and obtain the generated instance flow
         iset_instance_flow = InstanceSet.process(mmdb, anum=anum, input_instance_flow=xi_instance_flow,
-                                                 iset_parse=rhs.components, domain=domain,
+                                                 iset_components=rhs.components, domain=domain,
                                                  activity_path=activity_path, scrall_text=scrall_text)
 
         # Process LHS after all components have been processed

@@ -6,6 +6,7 @@ import logging
 from typing import TYPE_CHECKING, Set, Dict, List, Optional
 from class_model_dsl.populate.actions.expressions.table_expr import TableExpr
 from class_model_dsl.populate.flow import Flow
+from class_model_dsl.populate.actions.aparse_types import InstanceFlow_ap, MaxMult
 
 from pyral.relvar import Relvar
 from pyral.relation import Relation
@@ -57,7 +58,11 @@ class TableAssignment:
         rhs = table_assign_parse.rhs
         cls.input_instance_flow = xi_flow_id
 
-        output_flow = TableExpr.process(mmdb, operator=rhs.op, operands=rhs.operands, anum=anum, domain=domain,
+        # The executing instance is by nature a single instance flow
+        xi_instance_flow = InstanceFlow_ap(fid=xi_flow_id, ctype=cname, max_mult=MaxMult.ONE)
+
+        output_flow = TableExpr.process(mmdb, operator=rhs.op, operands=rhs.operands, anum=anum,
+                                        input_instance_flow=xi_instance_flow, domain=domain,
                                         activity_path=activity_path, scrall_text=scrall_text)
 
         output_flow_label = lhs.name.name

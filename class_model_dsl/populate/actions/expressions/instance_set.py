@@ -26,21 +26,21 @@ class InstanceSet:
     component_flow = None
 
     @classmethod
-    def process(cls, mmdb: 'Tk', anum: str, input_instance_flow: InstanceFlow_ap, iset_parse, domain: str,
+    def process(cls, mmdb: 'Tk', anum: str, input_instance_flow: InstanceFlow_ap, iset_components, domain: str,
                 activity_path: str, scrall_text: str) -> InstanceFlow_ap:
         """
 
         :param input_instance_flow:
         :param mmdb:
         :param anum:
-        :param iset_parse:
+        :param iset_components:
         :param domain:
         :param activity_path:
         :param scrall_text:
         :return:
         """
         cls.component_flow = input_instance_flow  # This will be input to the first component
-        for c in iset_parse:
+        for c in iset_components:
             match type(c).__name__:
                 case 'PATH_a':
                     # Process the path to create the traverse action and obtain the resultant Class Type name
@@ -78,10 +78,10 @@ class InstanceSet:
                                 # It's either a table or scalar flow. Scalar's don't support selection.
                                 # Selection on tables will be supported, but not yet
                                 # TODO: Support labeled table flow selection
-                                raise SelectionOnNonInstanceFlow(path=activity_path, text=scrall_text, x=iset_parse.X)
+                                raise SelectionOnNonInstanceFlow(path=activity_path, text=scrall_text, x=iset_components.X)
                         else:
                             raise NoClassOrInstanceFlowForInstanceSetName(path=activity_path, text=scrall_text,
-                                                                          x=iset_parse.X)
+                                                                          x=iset_components.X)
                 case 'Selection_a':
                     # Process to populate a select action, the output type does not change
                     # since we are selecting on a known class
