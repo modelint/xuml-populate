@@ -6,7 +6,6 @@ Ascending Descending : string
 Attribute Name : string
 Boolean : boolean
 Cardinality : string
-Class Name : string
 Class Number : string
 Comp Op : string
 Constrained Loop Number : string

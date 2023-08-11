@@ -2,42 +2,19 @@ metadata
     Title : Select Action Subsystem / Shlaer-Mellor Metamodel
     Author : Leon Starr
     Document ID : mint.sm-meta.action.td.3
-    Version : 1.1.0
+    Version : 1.4.1
     /// Creation date : September 11, 2021
-    Modification date : July 19, 2023
+    Modification date : August 11, 2023
     Organization : Model Integration, LLC / www.modelint.com
     Copyright notice > MIT
     Organization logo > mint
 domain Metamodel, META
 subsystem Select Action, SEL 875-899
-class Attribute <import:Class And Attribute>
+class Class Restriction Condition <import:Relational Action>
 attributes
-    Name {I}
-    Class {I}
-    Domain {I}
---
-class Comparison Criterion
-attributes
-    ID : Criterion ID {I, R884}
-    Select action : Action ID {I, R884}
-    Activity : Activity Number {I, R884, R881}
-    Attribute : Attribute Name {I, R884}
-    Class : Class Name {I, R884}
-    Domain : Domain Name {I, R884, R881}
-    Compared input : Flow ID {R881}
-    Comparison : Comp Op
---
-class Equivalence Criterion
-attributes
-    ID : Criterion ID {I, R884}
-    Select action : Action ID {I, R884}
-    Activity : Activity Number {I, R884}
-    Attribute : Attribute Name {I, R884}
-    Class : Class Name {I, R884}
-    Domain : Domain Name {I, R884, R885}
-    Equal : Boolean
-    Value : Value Representation
-    Scalar type : Type Name {R885}
+    Select action {I, R1152}
+    Activity {I, R1152}
+    Domain {I, R1152}
 --
 class Identifier <import:Class And Attribute>
 attributes
@@ -53,12 +30,6 @@ attributes
     Identifier : ID Number {R878}
     Class : Class Name {R878c}
 --
-class Instance Flow <import:Flow>
-attributes
-    Flow {I}
-    Activity {I}
-    Domain {I}
---
 class Many Select
 attributes
     ID : Action ID {I, R875}
@@ -72,55 +43,18 @@ attributes
     Activity {I}
     Domain {I}
 --
-class Projected Attribute
+class Non Scalar Flow <import:Flow>
 attributes
-    Attribute : Attribute Name {I, R886}
-    Class : Class Name {I, R886}
-    Select action : Action ID {I, R886}
-    Activity : Activity Number {I, R886}
-    Domain : Domain Name {I, R886}
---
-class Ranking Criterion
-attributes
-    ID : Criterion ID {I, R884}
-    Select action : Action ID {I, R884}
-    Activity : Activity Number {I, R884}
-    Attribute : Attribute Name {I, R884}
-    Class : Class Name {I, R884}
-    Domain : Domain Name {I, R884}
-    Order : Ascending Descending
---
-class Restriction
-attributes
-    Select action : Action ID {I, R883}
-    Activity : Activity Number {I, R883}
-    Class : Class Name {I, R883}
-    Domain : Domain Name {I, R883}
-    Expression : Restriction Expression
---
-class Restriction Criterion
-attributes
-    ID : Criterion ID {I}
-    Select action : Action ID {I, R887}
-    Activity : Activity Number {I, R887}
-    Attribute : Attribute Name {I, R877}
-    Class : Class Name {I, R877}
-    Domain : Domain Name {I, R877}
---
-class Scalar Flow <import:Flow>
-attributes
-    Flow {I}
+    ID {I}
     Activity {I}
     Domain {I}
 --
 class Select Action
 attributes
-    ID : Action ID {I, R901}
-    Activity : Activity Number {I, R901, R876}
-    Class : Class Name {I, R876}
-    Domain : Domain Name {I, R901, R876}
+    Action : Action ID {I, R901, R877}
+    Activity : Activity Number {I, R901, R876, R877}
+    Domain : Domain Name {I, R901, R876, R877}
     Input flow : Flow ID {R876}
-    Selection cardinality : Cardinality
 --
 class Single Instance Flow <import:Flow>
 attributes
@@ -134,11 +68,6 @@ attributes
     Activity : Activity Number {I, R875, R879}
     Domain : Domain Name {I, R875, R879}
     Output flow : Flow ID {R879}
---
-class Scalar Type <import:Type>
-attributes
-    Name {I}
-    Domain {I}
 --
 class Zero One Cardinality Select
 attributes
@@ -154,16 +83,14 @@ relationships
     <subclass>.(ID, Activity, Domain) -> Select Action.(ID, Activity, Domain)
 --
     R876
-    specifies instances in, 1 Instance Flow
-    is source of instances for, Mc Select Action
+    takes input from, 1 Non Scalar Flow
+    provides input to, Mc Select Action
     Select Action.(Input flow, Activity, Domain) -> Instance Flow.(ID, Activity, Domain)
 --
     R877
-    compares, M Attribute
-    is compared in, Mc Restriction
-    M Restriction Criterion
-    Restriction Criterion.(Select action, Activity, Class, Domain) -> Restriction.(Select action, Activity, Class, Domain)
-    Restriction Criterion.(Attribute, Class, Domain) -> Attribute.(Name, Class, Domain)
+    applies, 1c Class Restriction Condition
+    is applied by, 1 Select Action
+    Select Action.(Action, Activity, Domain) -> Class Restriction Condition.(Select action, Activity, Domain)
 --
     R878
     criteria is defined by, 1 Identifier
@@ -180,39 +107,10 @@ relationships
     is yielded by, 1c Many Select
     Many Select.(Output flow, Activity, Domain) -> Multiple Instance Flow.(ID, Activity, Domain)
 --
-    R881
-    compares value from, 1 Scalar Flow
-    has value compared in, Mc Comparison Criterion
-    Copmarision Criterion.(Compared input, Activity, Domain) -> Scalar Flow.(ID, Activity, Domain)
---
     R882
     Single Select +
         Identifier Select
         Zero One Cardinality Select
         Criterion One Select
     <subclass>.(ID, Activity, Domain) -> Single Select.(ID, Activity, Domain)
---
-    R883
-    has instances selected by, 1c Restriction
-    seleects instances for, 1 Select Action
-    Restriction.(Select action, Activity, Class, Domain) -> Select Action.(ID, Activity, Class, Domain)
---
-    R884
-    Restriction Criterion +
-        Ranking Criterion
-        Comparison Criterion
-        Equivalence Criterion
-    <subclass>.(ID, Select action, Activity, Attribute, Class, Domain) -> Restriction Criterion.(ID, Select action, Activity, Attribute, Class, Domain)
---
-    R885
-    specifies type of value in, Mc Equivalence Criterion
-    has value type specified by, 1 Scalar Type
-    Equivalence Criterion.(Scalar type, Domain) -> Scalar Type.(Name, Domain)
---
-    R886
-    is projected in, Mc Select Action
-    projects on, Mc Attribute
-    1 Projected Attribute
-    Projected Attribute.(Attribute, Class, Domain) -> Attribute.(Name, Class, Domain)
-    Projected Attribute.(Select action, Activity, Class, Domain) -> Select Action.(ID, Activity, Class, Domain)
 --
