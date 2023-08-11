@@ -2,7 +2,7 @@
 <project version="4">
   <component name="DataSourceManagerImpl" format="xml" multifile-model="true">
     <data-source source="LOCAL" name="sm_meta" uuid="d3b0a0d7-9f85-4a80-b5e0-132401034c3b">
-      <driver-ref>sqlite.xerial</driver-ref>
+      <driver-ref>2cd9300e-516c-4776-8328-8af62afdbea0</driver-ref>
       <synchronize>true</synchronize>
       <jdbc-driver>org.sqlite.JDBC</jdbc-driver>
       <jdbc-url>jdbc:sqlite:$PROJECT_DIR$/class_model_dsl/database/sm_meta.db</jdbc-url>
