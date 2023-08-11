@@ -24,7 +24,7 @@ attributes
 class Model Attribute
 attributes
     Name : Attribute Name {I}
-    Non Scalar Type : Type Name {I}
+    Non scalar type : Type Name {I}
     Domain : Domain Name {I}
 --
 class Scalar
@@ -71,6 +71,6 @@ relationships
     Model Attribute +
         Attribute
         Table Attribute
-    Attribute.(Name, Class, Domain) -> Model Attribute.(Name, Non Scalar Type, Domain)
-    Table Attribute.(Name, Table, Domain) -> Model Attribute.(Name, Non Scalar Type, Domain)
+    Attribute.(Name, Class, Domain) -> Model Attribute.(Name, Non scalar type, Domain)
+    Table Attribute.(Name, Table, Domain) -> Model Attribute.(Name, Non scalar type, Domain)
 --

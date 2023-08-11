@@ -35,9 +35,11 @@ Operator Symbol : string
 Parameter Name : string
 Path Name : string
 Phrase Name : string
+Predicate : string
 Reference Type : string
 Relationship Number : string
 Restriction Expression : string
+Set Operation Name : string
 Spanning Element Label : string
 Side : string
 Signature Number : string
