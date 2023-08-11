@@ -35,7 +35,7 @@ class Method
 attributes
     Anum : Activity Number {I, R826, R832}
     Name : Method Name {I2}
-    Class : Class Name {I2, R827}
+    Class : Type Name {I2, R827}
     Domain : Domain Name {I, I2, R826, R827, R832}
     Executing instance flow : Flow ID {R832}
 --
@@ -43,7 +43,7 @@ class Method Signature
 attributes
     SIGnum : Signature Number {I, R837}
     Method : Method Name {I2, R835}
-    Class : Class Name {I2, R835}
+    Class : Type Name {I2, R835}
     Domain : Domain Name {I, I2, R837, R835}
 --
 class Operation <import:External Entity>

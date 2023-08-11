@@ -18,7 +18,7 @@ attributes
 class Association Class
 attributes
     Rnum : Relationship Number {I, R120c, R151}
-    Class : Class Name {I2, R120, R151}
+    Class : Type Name {I2, R120, R151}
     Domain : Domain Name {I, I2, R120, R151}
     Multiplicity : One Many
 --
@@ -40,7 +40,7 @@ attributes
 --
 class Class In Lineage
 attributes
-    Class : Class Name {I, R131}
+    Class : Type Name {I, R131}
     Lnum : Lineage Number {I, R131}
     Domain : Domain Name {I, R131}
 --
@@ -52,26 +52,26 @@ attributes
 class Facet
 attributes
     Rnum : Relationship Number {I, R101}
-    Class : Class Name {I, R101}
+    Class : Type Name {I, R101}
     Domain : Domain Name {I, R101}
 --
 class Generalization
 attributes
     Rnum : Relationship Number {I, R100, R103}
     Domain : Domain Name {I, R100, R103}
-    Superclass : Class Name {R103}
+    Superclass : Type Name {R103}
 --
 class Identifier <import:Class And Attribute>
 attributes
     Number {I}
-    Class : Class Name {I}
+    Class : Type Name {I}
     Domain : Domain Name {I}
 --
 class Identifier Attribute <import:Class And Attribute>
 attributes
     Identifier {I}
     Attribute {I}
-    Class : Class Name {I}
+    Class : Type Name {I}
     Domain : Domain Name {I}
 --
 class Lineage
@@ -89,14 +89,14 @@ class Minimal Partition
 attributes
     Rnum : Relationship Number {I, R116, R117, R118}
     Domain : Domain Name {I, R116, R117, R118}
-    A subclass : Class Name {R117}
-    B subclass : Class Name {R118c}
+    A subclass : Type Name {R117}
+    B subclass : Type Name {R118c}
 --
 class Ordinal Relationship
 attributes
     Rnum : Relationship Number {I, R100}
     Domain : Domain Name {I, R100, R104, R106, R107}
-    Ranked class : Class Name {R104, R106, R107}
+    Ranked class : Type Name {R104, R106, R107}
     Ranking attribute : Attribute Name {R106}
     Ranking identifier : ID Number {R107, R106}
     Ascending perspective : Phrase Name
@@ -113,7 +113,7 @@ attributes
     Side : Side {I}
     Rnum : Relationship Number {I, I2}
     Domain : Domain Name {I, I2, R110}
-    Viewed class : Class Name {R110}
+    Viewed class : Type Name {R110}
     Phrase : Phrase Name {I2}
     Conditional : Boolean
     Multiplicity : One Many
@@ -126,14 +126,14 @@ attributes
 class Subclass
 attributes
     Rnum : Relationship Number {I, R102, R151}
-    Class : Class Name {I, R102, R151}
+    Class : Type Name {I, R102, R151}
     Domain : Domain Name {I, R102, R151}
 --
 class Superclass
 attributes
     Rnum : Relationship Number {I, R102}
     Domain : Domain Name {I, R102}
-    Class : Class Name {R102}
+    Class : Type Name {R102}
 --
 class Symmetric Perspective
 attributes

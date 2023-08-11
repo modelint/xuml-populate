@@ -13,13 +13,13 @@ subsystem Class And Attribute, CA 25-49
 class Alias
 attributes
     Name : Alias Name {I}
-    Class : Class Name {I2, R29}
+    Class : Type Name {I2, R29}
     Domain : Domain Name {I, I2, R29}
 --
 class Attribute
 attributes
     Name : Attribute Name {I}
-    Class : Class Name {I, R20}
+    Class : Type Name {I, R20}
     Domain : Domain Name {I, R20, R34}
     Type : Type Name {R34}
 --
@@ -31,17 +31,17 @@ attributes
 class Attribute In Derivation
 attributes
     Source attribute : Attribute Name {I, R26c}
-    Source class : Class Name {I, R26c}
+    Source class : Type Name {I, R26c}
     Target attribute : Attribute Name {I, R26}
-    Target class : Class Name {I, R26}
+    Target class : Type Name {I, R26}
     Domain : Domain Name {I, R26}
 --
 class Attribute Reference
 attributes
     From attribute : Attribute Name {I, I2, R21}
-    From class : Class Name {I, I2, R21, R23}
+    From class : Type Name {I, I2, R21, R23}
     To attribute : Attribute Name {I, R21c}
-    To class : Class Name {I, R21c, R23}
+    To class : Type Name {I, R21c, R23}
     Domain : Domain Name {I, R21, R23}
     To identifier : ID Number {R21}
     Ref : Reference Type {I2, R23}
@@ -56,7 +56,7 @@ attributes
 class Classifier Attribute
 attributes
     Type : Type Name
-    Superclass : Class Name {I, I2, R32}
+    Superclass : Type Name {I, I2, R32}
     Generalization : Relationship Number {I, R32}
     Identifier : ID Number {I2, R32}
     Attribute : Attribute Name {I2, R32}
@@ -65,26 +65,26 @@ attributes
 class Derived Attribute
 attributes
     Name : Attribute Name {I, R25}
-    Class : Class Name {I, R25}
+    Class : Type Name {I, R25}
     Domain : Domain Name {I, R25}
 --
 class Identifier
 attributes
     Number : ID Number {I}
-    Class : Class Name {I, R27}
+    Class : Type Name {I, R27}
     Domain : Domain Name {I, R27}
 --
 class Identifier Attribute
 attributes
     Identifier : ID Number {I, R22}
     Attribute : Attribute Name {I, R22}
-    Class : Class Name {I, R22}
+    Class : Type Name {I, R22}
     Domain : Domain Name {I, R22}
 --
 class Irreducible Identifier
 attributes
     Number : ID Number {I, R30}
-    Class : Class Name {I, R30, R31}
+    Class : Type Name {I, R30, R31}
     Domain : Domain Name {I, R30, R31}
 --
 class Method <import:Activity>
@@ -97,14 +97,14 @@ attributes
 class Non Derived Attribute
 attributes
     Name : Attribute Name {I, R25}
-    Class : Class Name {I, R25}
+    Class : Type Name {I, R25}
     Domain : Domain Name {I, R25}
 --
 class Reference <import:Formalization>
 attributes
     Ref : Reference Type {I}
-    From class : Class Name {I}
-    To class : Class Name {I}
+    From class : Type Name {I}
+    To class : Type Name {I}
     Rnum : Relationship Number {I}
     Domain : Domain Name {I}
 --
@@ -115,28 +115,28 @@ attributes
 --
 class Subclass <import:Relationship>
 attributes
-    Name : Class Name {I}
+    Name : Type Name {I}
     Rnum : Relationship Number {I}
     Domain : Domain Name {I}
 --
 class Subclass Classification Value
 attributes
     Value : Enumeration Value {I}
-    Superclass : Class Name {I, R33}
-    Subclass : Class Name {I, R33}
+    Superclass : Type Name {I, R33}
+    Subclass : Type Name {I, R33}
     Generalization : Relationship Number {I, R33}
     Domain : Domain Name {I, R33}
 --
 class Superclass <import:Relationship>
 attributes
     Rnum : Relationship Number {I}
-    Class : Class Name {I}
+    Class : Type Name {I}
     Domain : Domain Name {I}
 --
 class Super Identifier
 attributes
     Number : ID Number {I, R30}
-    Class : Class Name {I, R30}
+    Class : Type Name {I, R30}
     Domain : Domain Name {I, R30}
 --
 relationships

@@ -33,7 +33,7 @@ attributes
 class Deletion State
 attributes
     Name : State Name {I, R511}
-    Class : Class Name {I, R513, R511}
+    Class : Type Name {I, R513, R511}
     Domain : Domain Name {I, R513, R511}
 --
 class Effective Event <import:Event>
@@ -52,19 +52,19 @@ attributes
 class Initial Pseudo State
 attributes
     Name : State Name {I, R510, R508} /// ID necessary to support R509 -> Transition
-    Class : Class Name {I, R510, R508}
+    Class : Type Name {I, R510, R508}
     Domain : Domain Name {I, R510, R508}
 --
 class Initial Transition
 attributes
     From state : State Name {I, R509}
-    Class : Class Name {I, R509}
+    Class : Type Name {I, R509}
     Domain : Domain Name {I, R509}
     Event : Event Name {I, R509}
 --
 class Lifecycle
 attributes
-    Class : Class Name {I, R500, R502}
+    Class : Type Name {I, R500, R502}
     Domain : Domain Name {I, R500, R502}
 --
 class Multiple Assigner
@@ -72,7 +72,7 @@ attributes
     Rnum : Relationship Number {I, R514}
     Domain : Domain Name {I, R514, R517, R518}
     Loop : Constrained Loop Number {R517c}
-    Partitioning class : Class Name {R518c}
+    Partitioning class : Type Name {R518c}
 --
 class Non Deletion State
 attributes

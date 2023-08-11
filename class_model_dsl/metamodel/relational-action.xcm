@@ -133,7 +133,7 @@ attributes
 --
 class Restriction Condition
 attributes
-    ID : Action ID {I}
+    Action : Action ID {I}
     Activity : Activity Number {I}
     Domain : Domain Name {I}
     Expression : Predicate
@@ -170,8 +170,8 @@ attributes
 class Table Action
 attributes
     ID : Action ID {I, R1166}
-    Activity : Activity Number {I, R1166, R1158, R1157 }
-    Domain : Domain Name {I, R1166, R1158, R1157 }
+    Activity : Activity Number {I, R1166, R1158, R1157}
+    Domain : Domain Name {I, R1166, R1158, R1157}
     Input a flow : Flow ID {R1157}
     Output flow : Flow ID {R1158}
 --
@@ -221,13 +221,13 @@ relationships
     is projected in, Mc Project
     projects on, M Model Attribute
     1 Projected Attribute
-    Projected Attribute.(Attribute, Non scalar type, Domain) -> Model Attribute(Name, Non scalar type, Domain)
+    Projected Attribute.(Attribute, Non scalar type, Domain) -> Model Attribute.(Name, Non scalar type, Domain)
     Projected Attribute.(Project action, Activity, Domain) -> Project Action.(ID, Activity, Domain)
 --
     R1154
     applies, 1 Table Restriction Condition
     is applied by, 1 Restrict Action
-    Table Restriction Condition.(Restrict action, Activity, Domain) -> Restrict Action.(ID, Activity, Domain)
+    Table Restriction Condition.(Restrict action, Activity, Domain) -> Restrict Action.(Action, Activity, Domain)
 --
     R1155
     renames, 1 Model Attribute
@@ -275,7 +275,7 @@ relationships
     accesses value of, Mc Model Attribute
     is accessed in, Mc Extend Action
     1 Source Tuple Attribute Access
-    Source Tuple Attribute Access.(Extend Action, Activity, Domain) -> Extend Action.(ID, Activity, Domain)
+    Source Tuple Attribute Access.(Extend action, Activity, Domain) -> Extend Action.(ID, Activity, Domain)
     Source Tuple Attribute Access.(Model attribute, Non scalar type, Domain) -> Model Attribute.(Name, Non scalar type, Domain)
 --
     R1164

@@ -49,7 +49,7 @@ attributes
     ID : Flow ID {I, R802}
     Activity : Activity Number {I, R802}
     Domain : Domain Name {I, R802, R803}
-    Class : Class Name {R803}
+    Class : Type Name {R803}
 --
 class Label
 attributes

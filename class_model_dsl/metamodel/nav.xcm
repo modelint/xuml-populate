@@ -64,7 +64,7 @@ attributes
     Path : Path Name {I, R926}
     Domain : Domain Name {I, R926, R940}
     Rnum : Relationship Number {R940}
-    Class step : Class Name {R933}
+    Class step : Type Name {R933}
 --
 class Instance Flow <import:Flow>
 attributes
@@ -83,7 +83,7 @@ class Path
 attributes
     Name : Path Name {I}
     Domain : Domain Name {I, R925}
-    Dest class : Class Name {R925}
+    Dest class : Type Name {R925}
 --
 class Perspective <import:Relationship>
 attributes

@@ -28,7 +28,7 @@ attributes
     Activity : Activity Number {I, R882}
     Domain : Domain Name {I, R882, R878}
     Identifier : ID Number {R878}
-    Class : Class Name {R878c}
+    Class : Type Name {R878c}
 --
 class Many Select
 attributes
@@ -51,7 +51,7 @@ attributes
 --
 class Select Action
 attributes
-    Action : Action ID {I, R901, R877}
+    ID : Action ID {I, R901, R877}
     Activity : Activity Number {I, R901, R876, R877}
     Domain : Domain Name {I, R901, R876, R877}
     Input flow : Flow ID {R876}
@@ -90,7 +90,7 @@ relationships
     R877
     applies, 1c Class Restriction Condition
     is applied by, 1 Select Action
-    Select Action.(Action, Activity, Domain) -> Class Restriction Condition.(Select action, Activity, Domain)
+    Select Action.(ID, Activity, Domain) -> Class Restriction Condition.(Select action, Activity, Domain)
 --
     R878
     criteria is defined by, 1 Identifier

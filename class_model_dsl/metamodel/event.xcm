@@ -18,13 +18,13 @@ attributes
 class Delegated Event
 attributes
     Name : Event Name {I, R560}
-    Class : Class Name {I, R560}
+    Class : Type Name {I, R560}
     Domain : Domain Name {I, R560}
 --
 class Delegation On Generalization
 attributes
     Delegated event : Event Name {I, R569}
-    Superclass : Class Name {I, R569}
+    Superclass : Type Name {I, R569}
     Domain : Domain Name {I, R569}
     Generalization : Relationship Number {I, R569c}
 --
@@ -55,21 +55,21 @@ attributes
 class Forwarded Delegated Event
 attributes
     Name : Event Name {I, R561, R552}
-    Class : Class Name {I, R561, R552}
+    Class : Type Name {I, R561, R552}
     Domain : Domain Name {I, R561, R552}
 --
 class Forwarded Effective Event
 attributes
     Name : Event Name {I, R554, R552}
-    Class : Class Name {I, R554, R552}
+    Class : Type Name {I, R554, R552}
     Domain : Domain Name {I, R554, R552}
 --
 class Forwarded Event
 attributes
     Name : Event Name {I, R553}
-    Subclass : Class Name {I, R553}
+    Subclass : Type Name {I, R553}
     Domain : Domain Name {I, R553}
-    Superclass : Class Name {R553}
+    Superclass : Type Name {R553}
     Generalization : Relationship Number {R553}
 --
 class Monomorphic Event
@@ -87,13 +87,13 @@ attributes
 class Polymorphic Event Specification
 attributes
     Name : Event Name {I, R550, R558}
-    Class : Class Name {I, R551c, R550, R558}
+    Class : Type Name {I, R551c, R550, R558}
     Domain : Domain Name {I, R551, R550, R558}
 --
 class Root Delegated Event
 attributes
     Name : Event Name {I, R561, R558}
-    Class : Class Name {I, R561, R558}
+    Class : Type Name {I, R561, R558}
     Domain : Domain Name {I, R561, R558}
 --
 class State Model <import:State>
