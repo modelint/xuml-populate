@@ -6,7 +6,7 @@
       <excludeFolder url="file://$MODULE_DIR$/venv/SDEV/Environments" />
       <excludeFolder url="file://$MODULE_DIR$/venv311" />
     </content>
-    <orderEntry type="jdk" jdkName="Python 3.11 (class-model-dsl)" jdkType="Python SDK" />
+    <orderEntry type="jdk" jdkName="Python 3.11 (xuml-populate)" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
   </component>
 </module>
