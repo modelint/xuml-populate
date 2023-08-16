@@ -8,7 +8,6 @@ import sys
 import argparse
 from pathlib import Path
 from class_model_dsl.xuml.user_model import UserModel
-from class_model_dsl.xuml.metamodel import Metamodel
 from class_model_dsl import version
 
 _logpath = Path("mp.log")
@@ -26,8 +25,6 @@ def parse(cl_input):
     parser = argparse.ArgumentParser(description='xUML model parser')
     parser.add_argument('-d', '--domain', action='store',
                         help='Name of the domain package')
-    parser.add_argument('-R', '--rebuild', action='store_true',
-                        help='Rebuild the metamodel database.'),
     parser.add_argument('-D', '--debug', action='store_true',
                         help='Debug mode'),
     parser.add_argument('-V', '--version', action='store_true',
