@@ -1,5 +1,5 @@
 """
-model_exceptions.py – Exceptions encountered when loading a model
+exceptions.py – Exceptions encountered when loading a model
 """
 
 # Every error should have the same format
@@ -9,9 +9,6 @@ post = " --"
 
 # ---
 # ---
-
-class Metamodel(Exception):
-    pass
 
 class UserModel(Exception):
     pass

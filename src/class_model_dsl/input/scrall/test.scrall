@@ -1,8 +1,0 @@
-icall in progress .= xfer/R49/Floor Service( Direction: cabin in shaft.Travel direction(a:b) )
-
-TRAN.Goto floor( // here's a comment
-    floor : Height,
-    direction
-)
-
-Cabin at destination( floor : Height, direction ) -> /R53/Transfer

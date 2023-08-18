@@ -7,10 +7,11 @@ import logging.config
 import sys
 import argparse
 from pathlib import Path
-from class_model_dsl.xuml.user_model import UserModel
-from class_model_dsl import version
+from xuml_populate.user_model import UserModel
+from xuml_populate import version
 
-_logpath = Path("mp.log")
+_logpath = Path("model_pop.log")
+_progname = 'xUML repository populator'
 
 
 def get_logger():
@@ -22,7 +23,7 @@ def get_logger():
 
 # Configure the expected parameters and actions for the argparse module
 def parse(cl_input):
-    parser = argparse.ArgumentParser(description='xUML model parser')
+    parser = argparse.ArgumentParser(description=_progname)
     parser.add_argument('-d', '--domain', action='store',
                         help='Name of the domain package')
     parser.add_argument('-D', '--debug', action='store_true',
@@ -35,21 +36,15 @@ def parse(cl_input):
 def main():
     # Start logging
     logger = get_logger()
-    logger.info(f'xUML domain parser version: {version}')
+    logger.info(f'{_progname} version: {version}')
 
     # Parse the command line args
     args = parse(sys.argv[1:])
 
     if args.version:
         # Just print the version and quit
-        print(f'xUML domain parser version: {version}')
+        print(f'{_progname} version: {version}')
         sys.exit(0)
-
-    # If requested, rebuild the metamodel tclral
-    if args.rebuild:
-        Metamodel.create_db()
-    else:
-        Metamodel.load_db()
 
     # User model domain package specified?
     if args.domain:

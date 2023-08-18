@@ -19,7 +19,7 @@ class MethodParser:
 
     # Useful paths within the project
     project_path = Path(__file__).parent.parent.parent
-    module_path = project_path / 'class_model_dsl'
+    module_path = project_path / 'xuml_populate'
     grammar_path = module_path / 'grammar' # The grammar files are all here
     diagnostics_path = module_path / 'diagnostics' # All parser diagnostic output goes here
 
