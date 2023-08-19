@@ -12,7 +12,7 @@ import logging
 from pathlib import Path
 from xcm_parser.class_model_parser import ClassModelParser
 from xsm_parser.state_model_parser import StateModelParser
-# from xuml_populate.parse.method_parser import MethodParser
+from mtd_parser.method_parser import MethodParser
 # from xuml_populate.mp_exceptions import MultipleDomainsException
 # from xuml_populate.populate.domain import Domain
 # from xuml_populate.populate.mmclass_nt import Domain_i
@@ -68,11 +68,11 @@ class UserModel:
             cls.parse_cm(cm_path=subsys_cm_file)
 
             # Load and parse all the methods
-            # method_path = subsystems / s.name / "methods"
-            # for class_dir in method_path.iterdir():
-            #     for method_file in class_dir.glob("*.mtd"):
-            #         method_name = method_file.stem
-            #         cls.methods[method_name] = MethodParser.parse(method_file, debug=False)
+            method_path = subsystems / s.name / "methods"
+            for class_dir in method_path.iterdir():
+                for method_file in class_dir.glob("*.mtd"):
+                    method_name = method_file.stem
+                    cls.methods[method_name] = MethodParser.parse_file(method_file, debug=False)
 
             # Load and parse the subsystem state machines
             sm_path = s / "state-machines"
@@ -80,8 +80,7 @@ class UserModel:
                 cls._logger.info(f"Processing user subsystem state model file: [{sm_file}]")
                 cls.parse_sm(sm_path=sm_file)
 
-        pass
-        # cls.populate()
+        cls.populate()
 
     @classmethod
     def parse_sm(cls, sm_path: Path):
@@ -103,17 +102,17 @@ class UserModel:
         cls.model_subsystem[sname] = ClassModelParser.parse_file(file_input=cm_path, debug=False)
         return cls.model_subsystem[sname]
 
-    # @classmethod
-    # def populate(cls):
-    #     """Populate the database from the parsed input"""
-    #
-    #     cls._logger.info("Populating the model")
-    #     from pyral.database import Database  # Metamodel load or creates has already initialized the DB session
-    #     cls.db = Database.init()
-    #     Database.load(cls.mmdb_path)
-    #     # For now there is only one db so the db returned from the init() call
-    #     # is the same as the one stored in the Database singleton (no need to pass in db to the load method)
-    #     # TODO: Update PyRAL to manage multiple db's, or at least pretend to
+    @classmethod
+    def populate(cls):
+        """Populate the database from the parsed input"""
+
+        cls._logger.info("Populating the model")
+        from pyral.database import Database  # Metamodel load or creates has already initialized the DB session
+        cls.db = Database.init()
+        Database.load(cls.mmdb_path)
+        # For now there is only one db so the db returned from the init() call
+        # is the same as the one stored in the Database singleton (no need to pass in db to the load method)
+        # TODO: Update PyRAL to manage multiple db's, or at least pretend to
     #
     #     # Verify that only one domain_name has been specified
     #     # For now we are processing only a single domain_name.
