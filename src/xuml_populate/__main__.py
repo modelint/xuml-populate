@@ -1,5 +1,5 @@
 """
-xUML domain parser
+Blueprint Model Repository Populator
 
 """
 import logging
@@ -7,11 +7,11 @@ import logging.config
 import sys
 import argparse
 from pathlib import Path
-from xuml_populate.user_model import UserModel
+from xuml_populate.system import System
 from xuml_populate import version
 
 _logpath = Path("model_pop.log")
-_progname = 'xUML repository populator'
+_progname = 'Blueprint model repository populator'
 
 
 def get_logger():
@@ -24,8 +24,8 @@ def get_logger():
 # Configure the expected parameters and actions for the argparse module
 def parse(cl_input):
     parser = argparse.ArgumentParser(description=_progname)
-    parser.add_argument('-d', '--domain', action='store',
-                        help='Name of the domain package')
+    parser.add_argument('-s', '--system', action='store',
+                        help='Name of the system package')
     parser.add_argument('-D', '--debug', action='store_true',
                         help='Debug mode'),
     parser.add_argument('-V', '--version', action='store_true',
@@ -46,10 +46,10 @@ def main():
         print(f'{_progname} version: {version}')
         sys.exit(0)
 
-    # User model domain package specified?
-    if args.domain:
-        domain_pkg_path = Path(args.domain)
-        UserModel.load(domain_pkg_path)
+    # System package specified
+    if args.system:
+        system_pkg_path = Path(args.system)
+        System.load(system_pkg_path)
 
     logger.info("No problemo")  # We didn't die on an exception, basically
     print("\nNo problemo")

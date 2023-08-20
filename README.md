@@ -1,4 +1,4 @@
-# xuml-populate
+# Blueprint MBSE Repository Populator
 
 This package transforms human readable text files describing an Executable UML model of a system into
 a populated metamodel database. With your models loaded into this database it is now possible to produce
@@ -12,26 +12,53 @@ Here we support the Shlaer-Mellor variant of Executable UML exclusively.
 
 ## Input to the populator
 
-Each modeled domain is in its own folder further broken down into one or more subsystem folders.
-Each subsystem folder has the following structure using the elevator case study as an example system:
+Each system is defined in a single package broken down into standard hierarchy of folders like so:
 
-    elevator-management
-        Elevator
-            external
-                CABIN
-                    arrived-at-floor.op
-                    goto-floor.op
-            methods
-                Cabin
-                    Ping.mtd
+    system
+        domain
+            subsystem
+                classmodel.xcm
+                types.yaml
+                methods
+                    m1.mtd
+                    m2.mtd
                     ...
-                ...
-            state-machines
-                cabin.xsm
-                transfer.xsm
-                ...
-            Elevator.xcm
-        types.yaml
+                state-machines
+                    s1.xsm
+                    ...
+                external
+                    EE
+                        op1.op
+                        ...
+            subsystem2
+            ...
+        domain2
+        ...
+   
+Here is a partial layout for The Elevator Case Study as an example:
+
+
+    elevator-case-study // system
+        elevator-management // application domain
+            elevator // All defined in one subsystem
+                elevator.xcm // the class model
+                methods // methods for all classes in subsystem
+                    cabin // methods on 'cabin' class
+                        ping.mtd // the ping method
+                        ...
+                    ...
+                state-machines // lifecycles and assigners for this subsystem
+                    cabin.xsm // lifecycles named by class, assigners by association
+                    transfer.xsm
+                    R53.xsm // assigner state machine on association R53
+                    ...
+                external // external entities, each a proxy for some class
+                    CABIN // proxy for 'cabin' class
+                        arrived-at-floor.op // two ee operations
+                        goto-floor.op
+            types.yaml // data types for all subsystems in domain
+        transport // two more domains (not broken down yet)
+        signal io
 
 Each modeled domain has its own folder. Above we just see one for the Elevator Managment domain.
 

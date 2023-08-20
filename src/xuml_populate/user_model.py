@@ -5,7 +5,7 @@ What we call the 'user model' is what the Object Management Group refers to as a
 to distinguish it from an M2 level model (metamododel) or an M0 level model which we just call a
 user model or M1 population
 
-For our purposes we will use the Elevator Management domain_name as one of our user / M1 test cases
+For our purposes we will use the elevator Management domain_name as one of our user / M1 test cases
 """
 
 import logging
@@ -35,8 +35,8 @@ class UserModel:
     model_subsystem = {}  # Parsed subsystems, keyed by subsystem file name
     subsystem = None
     method = None
-    methods = {} # Parsed methods, keyed by class
-    statemodels = {} # Parsed state models, keyed by name (class or rnum)
+    methods = {}  # Parsed methods, keyed by class
+    statemodels = {}  # Parsed state models, keyed by name (class or rnum)
     statemodel = None
     model = None
     domain = None
@@ -58,27 +58,28 @@ class UserModel:
         cls._logger.info(f"Processing user class models in : [{domain_pkg_path}]")
         cls.domain_path = domain_pkg_path
 
-        # Load the class model subsystems
-        # TODO: Process multiple user model doamins, for now we assume only one
-        subsystems = cls.domain_path / "subsystems"
-        for s in subsystems.iterdir():
-            cm_file_name = s.stem + ".xcm"
-            subsys_cm_file = s / cm_file_name
-            cls._logger.info(f"Processing user subsystem class model file: [{subsys_cm_file}]")
-            cls.parse_cm(cm_path=subsys_cm_file)
+        for d in cls.domain_path.iterdir():
+            # Populate each subsystem
+            subsys_folders = [s for s in d.iterdir() if s.is_dir()]
+            for s in subsys_folders:
+                cm_file_name = s.stem + ".xcm"
+                cm_file = s / cm_file_name
+                cls._logger.info(f"Processing class model file: [{cm_file}]")
+                cls.parse_cm(cm_path=cm_file)
 
-            # Load and parse all the methods
-            method_path = subsystems / s.name / "methods"
-            for class_dir in method_path.iterdir():
-                for method_file in class_dir.glob("*.mtd"):
-                    method_name = method_file.stem
-                    cls.methods[method_name] = MethodParser.parse_file(method_file, debug=False)
+                # Load and parse all the methods
+                method_path = s / "methods"
+                for class_dir in method_path.iterdir():
+                    for method_file in class_dir.glob("*.mtd"):
+                        method_name = method_file.stem
+                        cls._logger.info(f"Processing state model file: [{method_file}]")
+                        cls.methods[method_name] = MethodParser.parse_file(method_file, debug=False)
 
-            # Load and parse the subsystem state machines
-            sm_path = s / "state-machines"
-            for sm_file in sm_path.glob("*.xsm"):
-                cls._logger.info(f"Processing user subsystem state model file: [{sm_file}]")
-                cls.parse_sm(sm_path=sm_file)
+                # Load and parse the subsystem state machines
+                sm_path = s / "state-machines"
+                for sm_file in sm_path.glob("*.xsm"):
+                    cls._logger.info(f"Processing method file: [{sm_file}]")
+                    cls.parse_sm(sm_path=sm_file)
 
         cls.populate()
 
@@ -113,18 +114,15 @@ class UserModel:
         # For now there is only one db so the db returned from the init() call
         # is the same as the one stored in the Database singleton (no need to pass in db to the load method)
         # TODO: Update PyRAL to manage multiple db's, or at least pretend to
-    #
-    #     # Verify that only one domain_name has been specified
-    #     # For now we are processing only a single domain_name.
-    #     # Therefore each subsystem should specify the same domain_name. If not, we exit with an error.
-    #     for sname, subsys in cls.model_subsystem.items():
-    #         if not cls.domain:
-    #             cls.domain = subsys.domain
-    #         elif cls.domain != subsys.domain:
-    #             cls._logger.error(f"Multiple domains: {cls.domain}, {subsys.domain}]")
-    #             raise MultipleDomainsException
-    #
-    #     # Populate the domain_name
-    #     Domain.populate(mmdb=Database.tclRAL, domain_path=cls.domain_path,
-    #                     domain=Domain_i(Name=cls.domain['name'], Alias=cls.domain['alias']),
-    #                     subsystems=cls.model_subsystem, statemodels=cls.statemodels)
+
+        for sname, subsys in cls.model_subsystem.items():
+            if not cls.domain:
+                cls.domain = subsys.domain
+            elif cls.domain != subsys.domain:
+                cls._logger.error(f"Multiple domains: {cls.domain}, {subsys.domain}]")
+                raise MultipleDomainsException
+
+        # Populate the domain_name
+        Domain.populate(mmdb=Database.tclRAL, domain_path=cls.domain_path,
+                        domain=Domain_i(Name=cls.domain['name'], Alias=cls.domain['alias']),
+                        subsystems=cls.model_subsystem, statemodels=cls.statemodels)
