@@ -10,7 +10,7 @@ from pathlib import Path
 from xuml_populate.system import System
 from xuml_populate import version
 
-_logpath = Path("model_pop.log")
+_logpath = Path("repo_pop.log")
 _progname = 'Blueprint model repository populator'
 
 
@@ -29,7 +29,7 @@ def parse(cl_input):
     parser.add_argument('-D', '--debug', action='store_true',
                         help='Debug mode'),
     parser.add_argument('-V', '--version', action='store_true',
-                        help='Print the current version of parser')
+                        help='Print the current version of the repo populator')
     return parser.parse_args(cl_input)
 
 
