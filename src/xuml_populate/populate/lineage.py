@@ -4,8 +4,8 @@ lineage.py – Compute all lineage instances and populate them
 
 import logging
 from typing import List, Set, Optional, TYPE_CHECKING
-from class_model_dsl.tree.tree import extract
-from class_model_dsl.populate.pop_types import Element_i, Spanning_Element_i, Lineage_i, Class_In_Lineage_i
+from xuml_populate.tree.tree import extract
+from xuml_populate.populate.mmclass_nt import Element_i, Spanning_Element_i, Lineage_i, Class_In_Lineage_i
 from pyral.transaction import Transaction
 from pyral.relvar import Relvar
 from pyral.relation import Relation

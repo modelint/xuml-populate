@@ -6,11 +6,11 @@ import logging
 from pyral.relvar import Relvar
 from pyral.relation import Relation
 from pyral.transaction import Transaction
-from class_model_dsl.populate.actions.traverse_action import TraverseAction
-from class_model_dsl.populate.flow import Flow
-from class_model_dsl.populate.actions.instance_assignment import InstanceAssignment
-from class_model_dsl.populate.actions.table_assignment import TableAssignment
-from class_model_dsl.populate.pop_types import Action_i, Traverse_Action_i
+from xuml_populate.populate.actions.traverse_action import TraverseAction
+from xuml_populate.populate.flow import Flow
+from xuml_populate.populate.actions.instance_assignment import InstanceAssignment
+from xuml_populate.populate.actions.table_assignment import TableAssignment
+from xuml_populate.populate.mmclass_nt import Action_i, Traverse_Action_i
 from typing import TYPE_CHECKING
 from enum import Enum
 

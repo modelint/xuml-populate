@@ -4,17 +4,17 @@ traverse_action.py – Populate a traverse action instance in PyRAL
 
 import logging
 from typing import TYPE_CHECKING, Set, Dict, List, Optional
-from class_model_dsl.exceptions.action_exceptions import UndefinedRelationship, IncompletePath, \
+from xuml_populate.exceptions.action_exceptions import UndefinedRelationship, IncompletePath, \
     NoDestinationInPath, UndefinedClass, RelationshipUnreachableFromClass, HopToUnreachableClass, \
     MissingTorPrefInAssociativeRel, NoSubclassInHop, SubclassNotInGeneralization, PerspectiveNotDefined, \
     UndefinedAssociation, NeedPerspectiveOrClassToHop, NeedPerspectiveToHop, UnexpectedClassOrPerspectiveInPath
 from scrall.parse.visitor import PATH_a
-from class_model_dsl.populate.actions.action import Action
-from class_model_dsl.populate.flow import Flow
-from class_model_dsl.populate.actions.aparse_types import InstanceFlow_ap, MaxMult
-from class_model_dsl.populate.pop_types import Action_i, Traverse_Action_i, Path_i, Hop_i, Association_Class_Hop_i, \
+from xuml_populate.populate.actions.action import Action
+from xuml_populate.populate.flow import Flow
+from xuml_populate.populate.actions.aparse_types import InstanceFlow_ap, MaxMult
+from xuml_populate.populate.mmclass_nt import Action_i, Traverse_Action_i, Path_i, Hop_i, Association_Class_Hop_i, \
     Circular_Hop_i, Symmetric_Hop_i, Asymmetric_Circular_Hop_i, Ordinal_Hop_i, Straight_Hop_i, \
-    From_Asymmetric_Assocation_Class_Hop_i, From_Symmetric_Assocation_Class_Hop_i, To_Assocation_Class_Hop_i, \
+    From_Asymmetric_Association_Class_Hop_i, From_Symmetric_Association_Class_Hop_i, To_Association_Class_Hop_i, \
     Perspective_Hop_i, Generalization_Hop_i, To_Subclass_Hop_i, To_Superclass_Hop_i, Association_Hop_i
 from pyral.relvar import Relvar
 from pyral.relation import Relation
@@ -119,7 +119,7 @@ class TraverseAction:
     def to_association_class(cls, number: int, rnum: str, to_class: str, attrs: Optional[Dict]):
         _logger.info("ACTION:Traverse - Populating a to association class hop")
         Relvar.insert(relvar='To_Association_Class_Hop', tuples=[
-            To_Assocation_Class_Hop_i(Number=number, Path=cls.name, Domain=cls.domain)
+            To_Association_Class_Hop_i(Number=number, Path=cls.name, Domain=cls.domain)
         ])
         Relvar.insert(relvar='Association_Class_Hop', tuples=[
             Association_Class_Hop_i(Number=number, Path=cls.name, Domain=cls.domain)

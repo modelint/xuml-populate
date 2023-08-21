@@ -2,9 +2,9 @@
 
 import logging
 from typing import TYPE_CHECKING, List, NamedTuple
-from class_model_dsl.populate.actions.expressions.instance_set import InstanceSet
-from class_model_dsl.populate.actions.aparse_types import TableFlow_ap
-from class_model_dsl.populate.actions.aparse_types import InstanceFlow_ap, MaxMult
+from xuml_populate.populate.actions.expressions.instance_set import InstanceSet
+from xuml_populate.populate.actions.aparse_types import TableFlow_ap
+from xuml_populate.populate.actions.aparse_types import InstanceFlow_ap, MaxMult
 from pyral.relvar import Relvar
 from pyral.relation import Relation
 from pyral.transaction import Transaction

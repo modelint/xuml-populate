@@ -4,11 +4,11 @@ activity.py – Populate an activity instance in PyRAL
 
 import logging
 from pyral.relvar import Relvar
-from class_model_dsl.populate.element import Element
+from xuml_populate.populate.element import Element
 from scrall.parse.parser import ScrallParser
-from class_model_dsl.populate.statement import Statement
+from xuml_populate.populate.statement import Statement
 from typing import TYPE_CHECKING
-from class_model_dsl.populate.pop_types import Activity_i, Asynchronous_Activity_i,\
+from xuml_populate.populate.mmclass_nt import Activity_i, Asynchronous_Activity_i,\
     State_Activity_i, Synchronous_Activity_i
 
 if TYPE_CHECKING:
@@ -109,7 +109,7 @@ class Activity:
         """
 
         # Parse scrall in this state and add it to temporary sm dictionary
-        action_text = '\n'.join(actions)+'\n'
+        action_text = ''.join(actions) + '\n'
         if state_model not in cls.sm:
             cls.sm[state_model] = {}
         parsed_activity = ScrallParser.parse_text(scrall_text=action_text, debug=False)

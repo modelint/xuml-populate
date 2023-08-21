@@ -6,7 +6,7 @@ import logging
 from pyral.relvar import Relvar
 from pyral.relation import Relation
 from typing import TYPE_CHECKING, Optional
-from class_model_dsl.populate.pop_types import Data_Flow_i, Flow_i, \
+from xuml_populate.populate.mmclass_nt import Data_Flow_i, Flow_i, \
     Multiple_Instance_Flow_i, Single_Instance_Flow_i, Instance_Flow_i, \
     Control_Flow_i, Non_Scalar_Flow_i, Scalar_Flow_i, Table_Flow_i, Label_i
 
@@ -46,7 +46,7 @@ class Flow:
         # For now we distinguish only between class and scalar types
         # Is the type a Class Type?
         R = f"Name:<{mm_type}>, Domain:<{domain}>"
-        r_result = Relation.restrict3(cls.mmdb, relation='Class_Type', restriction=R)
+        r_result = Relation.restrict3(cls.mmdb, relation='Class', restriction=R)
         if r_result.body:
             # It's a class type, create a multiple instance flow
             flow_id = cls.populate_instance_flow(mmdb, cname=mm_type, activity=activity, domain=domain, label=label)

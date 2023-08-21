@@ -6,8 +6,7 @@ import logging
 from pyral.relvar import Relvar
 from typing import TYPE_CHECKING
 
-from class_model_dsl.populate.pop_types import mult_tclral,\
-    Association_i, Binary_Association_i, Association_Class_i, \
+from xuml_populate.populate.mmclass_nt import Association_i, Binary_Association_i, Association_Class_i, \
     Perspective_i, Asymmetric_Perspective_i, T_Perspective_i, P_Perspective_i,\
     Reference_i, Formalizing_Class_Role_i,\
     Association_Reference_i, Simple_Association_Reference_i, Referring_Class_i,\

@@ -4,12 +4,12 @@ select_action.py – Populate a selection action instance in PyRAL
 
 import logging
 from typing import TYPE_CHECKING, Set, Dict, List, Optional
-from class_model_dsl.populate.actions.aparse_types import InstanceFlow_ap, MaxMult
-from class_model_dsl.exceptions.action_exceptions import ComparingNonAttributeInSelection, NoInputInstanceFlow
-from class_model_dsl.populate.actions.action import Action
-from class_model_dsl.populate.flow import Flow
-from class_model_dsl.populate.pop_types import Select_Action_i, Single_Select_i, Identifer_Select_i, \
-    Zero_One_Cardinality_Select_i, Many_Select_i, Restriction_i, Restriction_Criterion_i, \
+from xuml_populate.populate.actions.aparse_types import InstanceFlow_ap, MaxMult
+from xuml_populate.exceptions.action_exceptions import ComparingNonAttributeInSelection, NoInputInstanceFlow
+from xuml_populate.populate.actions.action import Action
+from xuml_populate.populate.flow import Flow
+from xuml_populate.populate.mmclass_nt import Select_Action_i, Single_Select_i, Identifier_Select_i, \
+    Zero_One_Cardinality_Select_i, Many_Select_i, Restrict_Action_i, Restriction_Condition_i, \
     Equivalence_Criterion_i, Comparison_Criterion_i, Ranking_Criterion_i, Projected_Attribute_i
 from pyral.relvar import Relvar
 from pyral.relation import Relation
@@ -240,7 +240,7 @@ class SelectAction:
             if selection_idnum:
                 # Populate an Identifier Select subclass
                 Relvar.insert(relvar='Identifier_Select', tuples=[
-                    Identifer_Select_i(ID=cls.action_id, Activity=cls.anum, Domain=cls.domain,
+                    Identifier_Select_i(ID=cls.action_id, Activity=cls.anum, Domain=cls.domain,
                                        Identifier=selection_idnum, Class=cls.input_instance_flow.ctype)
                 ])
             else:

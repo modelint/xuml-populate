@@ -3,15 +3,15 @@ state_model.py – Populate a lifecycle instance into the metamodel
 """
 
 import logging
-from class_model_dsl.mp_exceptions import MismatchedStateSignature
+from xuml_populate.mp_exceptions import MismatchedStateSignature
 from pyral.relvar import Relvar
 from pyral.transaction import Transaction
 from typing import TYPE_CHECKING
-from class_model_dsl.populate.flow import Flow
-from class_model_dsl.populate.signature import Signature
-from class_model_dsl.populate.activity import Activity
-from class_model_dsl.populate.mm_type import MMtype
-from class_model_dsl.populate.pop_types import State_Model_i, Lifecycle_i,\
+from xuml_populate.populate.flow import Flow
+from xuml_populate.populate.signature import Signature
+from xuml_populate.populate.activity import Activity
+from xuml_populate.populate.mm_type import MMtype
+from xuml_populate.populate.mmclass_nt import State_Model_i, Lifecycle_i,\
     Non_Deletion_State_i, State_i, Real_State_i, Deletion_State_i, Initial_Pseudo_State_i,\
     State_Signature_i, Initial_Transition_i,\
     Event_Response_i, Transition_i, Non_Transition_i,\
@@ -40,11 +40,11 @@ class StateModel:
         signatures = {}
 
         # Populate
-        Transaction.open(mmdb) # It is easiest to create all events and states at once before checking constraints
+        Transaction.open(mmdb)  # It is easiest to create all events and states at once before checking constraints
         Relvar.insert(relvar='State_Model', tuples=[
             State_Model_i(Name=sm_name, Domain=sm.domain)
         ])
-        if cname: # Lifecycle state model
+        if cname:  # Lifecycle state model
             cls._logger.info(f"Populating Lifecycle [{cname}]")
             Relvar.insert(relvar='Lifecycle', tuples=[
                 Lifecycle_i(Class=cname, Domain=sm.domain)
@@ -157,7 +157,7 @@ class StateModel:
 
         for s in sm.states:
             if s.state.deletion:
-                break;  # There are no transitions out of a deletion state
+                break  # There are no transitions out of a deletion state
             for t in s.transitions:
                 if t.to_state:
                     # Insert or check event spec signature

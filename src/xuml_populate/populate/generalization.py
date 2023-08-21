@@ -5,9 +5,9 @@ generalization.py – Convert parsed relationship to a relation
 import logging
 from pyral.relvar import Relvar
 from typing import TYPE_CHECKING
-from class_model_dsl.mp_exceptions import LessThanTwoSubclassesInGeneralization
+from xuml_populate.mp_exceptions import LessThanTwoSubclassesInGeneralization
 
-from class_model_dsl.populate.pop_types import \
+from xuml_populate.populate.mmclass_nt import \
     Generalization_i, Facet_i, Superclass_i, Subclass_i, Minimal_Partition_i,\
     Reference_i, Generalization_Reference_i, Formalizing_Class_Role_i, Attribute_Reference_i
 

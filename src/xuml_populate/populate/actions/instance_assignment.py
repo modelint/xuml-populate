@@ -4,10 +4,10 @@ instance_assignment.py – Break an instance set generator into one or more comp
 
 import logging
 from typing import TYPE_CHECKING, Set, Dict, List, Optional
-from class_model_dsl.populate.flow import Flow
-from class_model_dsl.populate.actions.expressions.instance_set import InstanceSet
-from class_model_dsl.exceptions.action_exceptions import AssignZeroOneInstanceHasMultiple
-from class_model_dsl.populate.actions.aparse_types import InstanceFlow_ap, MaxMult
+from xuml_populate.populate.flow import Flow
+from xuml_populate.populate.actions.expressions.instance_set import InstanceSet
+from xuml_populate.exceptions.action_exceptions import AssignZeroOneInstanceHasMultiple
+from xuml_populate.populate.actions.aparse_types import InstanceFlow_ap, MaxMult
 
 from pyral.relvar import Relvar
 from pyral.relation import Relation

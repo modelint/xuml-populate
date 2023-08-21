@@ -8,7 +8,7 @@ from scrall.parse.visitor import PATH_a
 from pyral.relvar import Relvar
 from pyral.relation import Relation
 from pyral.transaction import Transaction
-from class_model_dsl.populate.pop_types import Action_i
+from xuml_populate.populate.mmclass_nt import Action_i
 from collections import namedtuple
 
 

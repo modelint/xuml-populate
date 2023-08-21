@@ -3,15 +3,15 @@ relationship.py – Convert parsed relationship to a relation
 """
 
 import logging
-from class_model_dsl.populate.element import Element
-from class_model_dsl.populate.generalization import Generalization
-from class_model_dsl.populate.binary_association import BinaryAssociation
-from class_model_dsl.populate.ordinal import Ordinal
+from xuml_populate.populate.element import Element
+from xuml_populate.populate.generalization import Generalization
+from xuml_populate.populate.binary_association import BinaryAssociation
+from xuml_populate.populate.ordinal import Ordinal
 from pyral.transaction import Transaction
 from pyral.relvar import Relvar
-from class_model_dsl.mp_exceptions import UnknownRelationshipType
+from xuml_populate.mp_exceptions import UnknownRelationshipType
 from typing import TYPE_CHECKING
-from class_model_dsl.populate.pop_types import Rel_i
+from xuml_populate.populate.mmclass_nt import Relationship_i
 
 if TYPE_CHECKING:
     from tkinter import Tk
@@ -38,7 +38,7 @@ class Relationship:
 
         Element.populate_labeled_subys_element(mmdb, label=cls.rnum, subsystem_name=subsystem.name, domain_name=domain)
         Relvar.insert(relvar='Relationship', tuples=[
-            Rel_i(Rnum=cls.rnum, Domain=domain)
+            Relationship_i(Rnum=cls.rnum, Domain=domain)
         ])
 
         # Populate based on relationship type

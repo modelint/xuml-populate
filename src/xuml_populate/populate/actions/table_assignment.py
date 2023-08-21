@@ -4,9 +4,9 @@ table_assignment.py – Populate elements of a table assignment
 
 import logging
 from typing import TYPE_CHECKING, Set, Dict, List, Optional
-from class_model_dsl.populate.actions.expressions.table_expr import TableExpr
-from class_model_dsl.populate.flow import Flow
-from class_model_dsl.populate.actions.aparse_types import InstanceFlow_ap, MaxMult
+from xuml_populate.populate.actions.expressions.table_expr import TableExpr
+from xuml_populate.populate.flow import Flow
+from xuml_populate.populate.actions.aparse_types import InstanceFlow_ap, MaxMult
 
 from pyral.relvar import Relvar
 from pyral.relation import Relation

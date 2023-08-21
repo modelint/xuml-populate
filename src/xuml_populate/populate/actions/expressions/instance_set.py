@@ -2,14 +2,14 @@
 
 import logging
 from typing import TYPE_CHECKING, Set, Dict, List, Optional
-from class_model_dsl.populate.actions.traverse_action import TraverseAction
-from class_model_dsl.populate.mm_class import MMclass
-from class_model_dsl.populate.flow import Flow
-from class_model_dsl.populate.actions.select_action import SelectAction
-from class_model_dsl.populate.actions.aparse_types import InstanceFlow_ap, MaxMult
+from xuml_populate.populate.actions.traverse_action import TraverseAction
+from xuml_populate.populate.mm_class import MMclass
+from xuml_populate.populate.flow import Flow
+from xuml_populate.populate.actions.select_action import SelectAction
+from xuml_populate.populate.actions.aparse_types import InstanceFlow_ap, MaxMult
 from pyral.relation import Relation
 from pyral.transaction import Transaction
-from class_model_dsl.exceptions.action_exceptions import NoClassOrInstanceFlowForInstanceSetName,\
+from xuml_populate.exceptions.action_exceptions import NoClassOrInstanceFlowForInstanceSetName,\
     SelectionOnNonInstanceFlow
 
 if TYPE_CHECKING:
