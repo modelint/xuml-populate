@@ -4,9 +4,7 @@ mm_type.py – Pouplate (metamodel) Type instance
 
 import logging
 from typing import TYPE_CHECKING
-from class_model_dsl.populate.element import Element
-from class_model_dsl.populate.pop_types import Element_i, Spanning_Element_i, Type_i,\
-    Class_Type_i, Scalar_Type_i, Table_Type_i, Table_Attribute_i
+from xuml_populate.populate.mmclass_nt import Type_i, Scalar_i, Table_i, Table_Attribute_i
 from pyral.relvar import Relvar
 from pyral.relation import Relation
 from pyral.transaction import Transaction
@@ -25,12 +23,9 @@ class MMtype:
     mmdb = None
     scalar_types = {}
     class_names = set()
-    unresolved_tnum = None
-
-    tnums = 0
 
     @classmethod
-    def populate_unknown(cls, mmdb:'Tk', name:str, domain:str):
+    def populate_unknown(cls, mmdb: 'Tk', name: str, domain: str):
         """
         Populate a type that may be Class, Table, or Scalar
 
@@ -43,7 +38,7 @@ class MMtype:
             cls.populate_scalar(mmdb, name, domain)
 
     @classmethod
-    def populate_scalar(cls, mmdb:'Tk', name:str, domain:str):
+    def populate_scalar(cls, mmdb: 'Tk', name: str, domain: str):
         """
         Populate a class type given a class name and domain
 
@@ -66,15 +61,17 @@ class MMtype:
         # Add it to the set of defined scalar types so that we don't populated it more than once
         cls.scalar_types[domain].add(name)
 
-        cls._logger.info(f"Populating Type <scalar> [{cls.name}]")
+        cls._logger.info(f"Populating Type for scalar [{cls.name}]")
 
-        cls.populate_type()
-        Relvar.insert(relvar='Scalar_Type', tuples=[
-            Scalar_Type_i(Name=cls.name, Domain=cls.domain)
+        Relvar.insert(relvar='Type', tuples=[
+            Type_i(Name=cls.name, Domain=cls.domain)
+        ])
+        Relvar.insert(relvar='Scalar', tuples=[
+            Scalar_i(Name=cls.name, Domain=cls.domain)
         ])
 
     @classmethod
-    def populate_class(cls, mmdb:'Tk', cname:str, domain:str):
+    def populate_class(cls, mmdb: 'Tk', cname: str, domain: str):
         """
         Populate a class type given a class name and domain
 
@@ -88,27 +85,9 @@ class MMtype:
 
         cls.class_names.add(cname)
 
-        cls._logger.info(f"Populating Type <class> [{cls.name}]")
-        cls.populate_type()
-        Relvar.insert(relvar='Class_Type', tuples=[
-            Class_Type_i(Name=cls.name, Domain=cls.domain)
-        ])
-
-    @classmethod
-    def populate_type(cls):
-        """
-        Obtain a Tnum and populate the Type superclass
-        """
-        cls.tnums += 1
-        Tnum =  'T' + (str(cls.tnums))
-        Relvar.insert(relvar='Element', tuples=[
-            Element_i(Label=Tnum, Domain=cls.domain)
-        ])
-        Relvar.insert(relvar='Spanning_Element', tuples=[
-            Spanning_Element_i(Label=Tnum, Domain=cls.domain)
-        ])
+        cls._logger.info(f"Populating Type for class [{cls.name}]")
         Relvar.insert(relvar='Type', tuples=[
-            Type_i(Name=cls.name, Tnum=Tnum, Domain=cls.domain)
+            Type_i(Name=cls.name, Domain=cls.domain)
         ])
 
     @classmethod
@@ -116,7 +95,7 @@ class MMtype:
         """
         Remove the specified type from the database.
 
-        The only use case for this currently is the removal of the dummy UNRESOLVED Scalar Type
+        The only use case for this currently is the removal of the dummy UNRESOLVED Scalar
         :param mmdb:
         :param name:
         :param domain:
@@ -127,11 +106,9 @@ class MMtype:
         result = Relation.restrict3(mmdb, restriction=R, relation="Type").body
         if not result:
             cls._logger.error("Unresolved attr type not found during depopulate")
-        tnum = result[0]['Tnum']
         Transaction.open(mmdb)
-        Element.depopulate_spanning_element(mmdb, label=tnum, domain=domain)
         Relvar.deleteone(mmdb, 'Type', {'Name': name, 'Domain': domain}, defer=True)
-        Relvar.deleteone(mmdb, 'Scalar_Type', {'Name': name, 'Domain': domain}, defer=True)
+        Relvar.deleteone(mmdb, 'Scalar', {'Name': name, 'Domain': domain}, defer=True)
         # Depopulate element
         Transaction.execute()
         # Relation.print(mmdb)

@@ -5,13 +5,13 @@ element.py – Populate an element instance in PyRAL
 import logging
 from pyral.relvar import Relvar
 from typing import TYPE_CHECKING
-from class_model_dsl.populate.pop_types import Element_i, Spanning_Element_i, Subsystem_Element_i
+from xuml_populate.populate.mmclass_nt import Element_i, Spanning_Element_i, Subsystem_Element_i
 # TODO: Add spanning element support
 
 if TYPE_CHECKING:
     from tkinter import Tk
 
-_signum_counters = {} # A separate counter per domain_name
+_signum_counters = {}  # A separate counter per domain_name
 
 class Element:
     """

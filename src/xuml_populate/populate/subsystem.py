@@ -3,7 +3,7 @@ subsystem.py – Manage assignment of subsystem class and relationship numbers
 """
 
 import logging
-from class_model_dsl.mp_exceptions import CnumsExceeded
+from xuml_populate.mp_exceptions import CnumsExceeded
 
 
 class Subsystem:
@@ -14,13 +14,13 @@ class Subsystem:
     assigned to any given class may vary each time the model is populated.
     """
 
-    def __init__(self, record):
+    def __init__(self, subsys_parse):
         """Constructor to initialize the cnum counter"""
 
         self._logger = logging.getLogger(__name__)
 
-        self.name = record.subsystem['name']  # Name of the subsystem
-        self.range = record.subsystem['range']  # Numbering range as a two element tuple
+        self.name = subsys_parse['name']  # Name of the subsystem
+        self.range = subsys_parse['range']  # Numbering range as a two element tuple
         self.cnum = self.range[0]  # Lowest assignable value in the range, we start counting here
 
     def next_cnum(self):

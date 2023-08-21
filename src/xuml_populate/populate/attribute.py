@@ -6,9 +6,9 @@ import logging
 from pyral.relvar import Relvar
 from pyral.relation import Relation
 from typing import Set
-from class_model_dsl.populate.mm_type import MMtype
-from class_model_dsl.populate.pop_types import \
-    Attribute_i, Non_Derived_Attribute_i,\
+from xuml_populate.populate.mm_type import MMtype
+from xuml_populate.populate.mmclass_nt import \
+    Attribute_i, Non_Derived_Attribute_i, Model_Attribute_i,\
     Identifier_i, Irreducible_Identifier_i, Super_Identifier_i, Identifier_Attribute_i
 from typing import TYPE_CHECKING
 
@@ -31,7 +31,6 @@ class Attribute:
     def populate(cls, mmdb, domain: str, cname: str, class_identifiers: Set[int], record):
         """Constructor"""
 
-
         cls.record = record
         cls.dtype = record.get('type', UNRESOLVED)
         participating_ids = cls.record.get('I', [])  # This attr might not participate in any identifier
@@ -39,6 +38,9 @@ class Attribute:
         MMtype.populate_unknown(mmdb, name=cls.dtype, domain=domain)
         Relvar.insert(relvar='Attribute', tuples=[
             Attribute_i(Name=record['name'], Class=cname, Domain=domain, Type=cls.dtype)
+        ])
+        Relvar.insert(relvar='Model_Attribute', tuples=[
+            Model_Attribute_i(Name=record['name'], Domain=domain, Non_scalar_type=cname)
         ])
         # TODO: Check for derived or non-derived, for now assume the latter
         Relvar.insert(relvar='Non_Derived_Attribute', tuples=[

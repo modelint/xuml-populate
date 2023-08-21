@@ -40,14 +40,13 @@ class System:
             # For example, the domain name `Elevator Management` may have the file name `elevator-management`
             # The domain name will be in the parsed content, but it is convenient to use the file names as keys
             # to organize our content dictionary since we these are immediately available
-            domain_fname = domain_path.stem  # Domain file name as opposed to the actual domain name
             domain_name = None  # Domain name is unknown until the class model is parsed
+            domain_alias = None
             cls._logger.info(f"Processing domain: [{domain_path}]")
 
             # Populate each subsystem of this domain
             subsys_folders = [f for f in domain_path.iterdir() if f.is_dir()]
             for subsys_path in subsys_folders:
-                subsys_fname = subsys_path.stem
 
                 # Process the class model for this subsystem
                 # The class file name must match the subsystem folder name
@@ -61,9 +60,10 @@ class System:
                 # If this is the first subsystem in the domain, get the domain name from the cm parse
                 # domain will be None on the first subsystem
                 if not domain_name:
-                    domain_name = cm_parse[0].domain['name']
+                    domain_name = cm_parse.domain['name']
+                    domain_alias = cm_parse.domain['alias']
                     # Create dictionary key for domain content
-                    cls.content[domain_name] = {'subsystems': {} }
+                    cls.content[domain_name] = {'alias': domain_alias, 'subsystems': {} }
 
                     # Parse the domain's types.yaml file with all of the domain specific types (data types)
                     # Load domain_name specific types
@@ -74,7 +74,7 @@ class System:
                         cls._logger.error(f"No types.yaml file found for domain at: {domain_path}")
 
                 # Get this subsystem name from the parse
-                subsys_name = cm_parse[0].subsystem['name']
+                subsys_name = cm_parse.subsystem['name']
 
                 # We add the subsystem dictionary to the system content for the current domain file name
                 # inserting the class model parse
@@ -91,7 +91,7 @@ class System:
                     for method_file in class_folder.glob("*.mtd"):
                         method_name = method_file.stem
                         cls._logger.info(f"Processing method: [{method_file}]")
-                        # Parse the method file and insert it in the subsystem record
+                        # Parse the method file and insert it in the subsystem subsys_parse
                         mtd_parse = MethodParser.parse_file(method_file, debug=False)
                         cls.content[domain_name]['subsystems'][subsys_name]['methods'][method_name] = mtd_parse
 
@@ -124,5 +124,5 @@ class System:
         Database.load(cls.mmdb_path)
 
         # Populate each domain into the metamodel db
-        for domain_fname, domain_parse in cls.content.items():
+        for domain_name, domain_parse in cls.content.items():
             Domain.populate(mmdb, domain_name, domain_parse)

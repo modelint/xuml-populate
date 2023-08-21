@@ -6,13 +6,13 @@ import logging
 from typing import TYPE_CHECKING, Dict
 from pathlib import Path
 # from class_model_dsl.populate.attribute import Attribute
-# from class_model_dsl.populate.mm_class import MMclass
+from xuml_populate.populate.mm_class import MMclass
 # from class_model_dsl.populate.method import Method
 # from class_model_dsl.populate.relationship import Relationship
 # from class_model_dsl.populate.ee import EE
 # from class_model_dsl.populate.method import Method
 # from class_model_dsl.populate.lineage import Lineage
-# from class_model_dsl.populate.subsystem import Subsystem
+from xuml_populate.populate.subsystem import Subsystem
 # from class_model_dsl.populate.state_model import StateModel
 # from class_model_dsl.populate.activity import Activity
 from pyral.transaction import Transaction
@@ -40,40 +40,39 @@ class Domain:
         :param content:  The parsed content of the domain
         """
         cls._logger.info(f"Populating modeled domain_name [{domain}]")
+        cls._logger.info(f"Transaction open: domain and subsystems [{domain}]")
         Transaction.open(tclral=mmdb)  # Modeled domain
-        # """
-        #
-        #
-        # :param mmdb:  Metamodel database
-        # """
-        #
-        # Relvar.insert(relvar='Domain', tuples=[ domain,])
-        # # # TODO: For now assume this is always a modeled domain_name, but need a way to specify a realized domain_name
-        # Relvar.insert(relvar='Modeled_Domain', tuples=[
-        #     Modeled_Domain_i(Name=domain.Name),
-        #     ])
-        # for s in subsystems.values():
-        #     Relvar.insert(relvar='Subsystem', tuples=[
-        #         Subsystem_i(Name=s.subsystem['name'], First_element_number=s.subsystem['range'][0],
-        #                     Domain=domain.Name, Alias=s.subsystem['alias']),
-        #     ])
-        #     Relvar.insert(relvar='Domain_Partition', tuples=[
-        #         Domain_Partition_i(Number=s.subsystem['range'][0], Domain=domain.Name)
-        #     ])
-        # Transaction.execute() # Modeled domain
-        #
-        # # Insert classes
-        # for s in subsystems.values():
-        #     subsys = Subsystem(record=s)
-        #     # Set paths for this subsystem
-        #     Method.subsys_method_path = domain_path / "subsystems" / subsys.name / "methods"
-        #     EE.subsys_ee_path = domain_path / "subsystems" / subsys.name / "external"
-        #     cls._logger.info("Populating classes")
-        #     for c in s.classes:
-        #         MMclass.populate(mmdb=mmdb, domain=domain.Name, subsystem=subsys, record=c)
-        #     cls._logger.info("Populating relationships")
+
+        Relvar.insert(relvar='Domain', tuples=[
+            Domain_i(Name=domain, Alias=content['alias']),
+        ])
+        # TODO: For now assume this is always a modeled domain_name, but need a way to specify a realized domain_name
+        Relvar.insert(relvar='Modeled_Domain', tuples=[
+            Modeled_Domain_i(Name=domain),
+            ])
+        pass
+        for cm_parse in content['subsystems'].values():
+            subsys = cm_parse['class_model'].subsystem
+            Relvar.insert(relvar='Subsystem', tuples=[
+                Subsystem_i(Name=subsys['name'], First_element_number=subsys['range'][0],
+                            Domain=domain, Alias=subsys['alias']),
+            ])
+            Relvar.insert(relvar='Domain_Partition', tuples=[
+                Domain_Partition_i(Number=subsys['range'][0], Domain=domain)
+            ])
+        Transaction.execute()  # Modeled domain
+        cls._logger.info(f"Transaction closed: domain and subsystems [{domain}]")
+        pass
+
+        # Insert classes
+        for cm_parse in content['subsystems'].values():
+            subsys = Subsystem(subsys_parse=cm_parse['class_model'].subsystem)
+            cls._logger.info("Populating classes")
+            for c in cm_parse['class_model'].classes:
+                MMclass.populate(mmdb=mmdb, domain=domain, subsystem=subsys, record=c)
+            cls._logger.info("Populating relationships")
         #     for r in s.rels:
-        #         Relationship.populate(mmdb=mmdb, domain=domain.Name, subsystem=subsys, record=r)
+        #         Relationship.populate(mmdb=mmdb, domain=domain.Name, subsystem=subsys, subsys_parse=r)
         #     cls._logger.info("Populating methods and operations")
         #     for c in s.classes:
         #         # All classes must be populated first, so that parameter types in signatures can be resolved

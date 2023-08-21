@@ -113,7 +113,7 @@ class Activity:
         if state_model not in cls.sm:
             cls.sm[state_model] = {}
         parsed_activity = ScrallParser.parse_text(scrall_text=action_text, debug=False)
-        cls.sm[state_model][state] = parsed_activity # To record parsed actions for debugging
+        cls.sm[state_model][state] = parsed_activity # To subsys_parse parsed actions for debugging
         # cls.populate_activity(text=action_text, pa=parsed_activity)
 
         # Create the Susbystem Element and obtain a unique Anum

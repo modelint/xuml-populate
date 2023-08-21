@@ -5,10 +5,10 @@ mm_class.py – Convert parsed class to a relation
 import logging
 from pyral.transaction import Transaction
 from pyral.relvar import Relvar
-from class_model_dsl.populate.element import Element
-from class_model_dsl.populate.attribute import Attribute
-from class_model_dsl.populate.mm_type import MMtype
-from class_model_dsl.populate.pop_types import Class_i, Alias_i
+from xuml_populate.populate.element import Element
+from xuml_populate.populate.attribute import Attribute
+from xuml_populate.populate.mm_type import MMtype
+from xuml_populate.populate.mmclass_nt import Class_i, Alias_i
 
 from pyral.relation import Relation
 
@@ -68,9 +68,9 @@ class MMclass:
         # Populate class
         cls._logger.info(f"Populating class [{cls.name}]")
         cls._logger.info("Transaction open: Populate class")
-        Transaction.open(tclral=mmdb) # Class, Class Type and Attributes
+        Transaction.open(tclral=mmdb)  # Class, Class Type and Attributes
 
-        # Populate the required Class Type
+        # Populate the corresponding Type superclass
         MMtype.populate_class(mmdb, cname=cls.name, domain=domain)
 
         Element.populate_labeled_subys_element(mmdb, label=cls.cnum, subsystem_name=subsystem.name, domain_name=domain)
@@ -88,5 +88,5 @@ class MMclass:
             Attribute.populate(mmdb=mmdb, domain=domain, cname=cls.name,
                                class_identifiers=cls.identifiers, record=a)
 
-        Transaction.execute() # Class, Class Type, and Attributes
+        Transaction.execute()  # Class, Class Type, and Attributes
         cls._logger.info("Transaction closed: Populate class")
