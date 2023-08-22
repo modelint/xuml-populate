@@ -82,11 +82,10 @@ class Domain:
                 Method.populate(mmdb, domain_name=domain, subsys_name=subsys.name, m_parse=m_parse)
 
             # Insert external entities and operations
-            # cls._logger.info("Populating operations")
-            # for op_parse in subsys_parse['operations'].values():
-            #     # TODO: Update EE.populate
-            #     EE.populate(mmdb, ee_name=ee_name, class_name=c['name'], subsys_name=subsys.name,
-            #                 domain_name=domain)
+            cls._logger.info("Populating operations")
+            for ee_name, op_parse in subsys_parse['external'].items():
+                EE.populate(mmdb, ee_name=ee_name, subsys_name=subsys.name,
+                            domain_name=domain, op_parse=op_parse)
 
             # Insert state machines
             cls._logger.info("Populating state models")

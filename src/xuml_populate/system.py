@@ -5,6 +5,7 @@ from pathlib import Path
 import yaml
 from xcm_parser.class_model_parser import ClassModelParser
 from xsm_parser.state_model_parser import StateModelParser
+from op2_parser.op_parser import OpParser
 from mtd_parser.method_parser import MethodParser
 from xuml_populate.populate.domain import Domain
 
@@ -112,7 +113,7 @@ class System:
                     for op_file in ee_path.glob("*.op"):
                         op_name = op_file.stem
                         cls._logger.info(f"Processing ee operation: [{op_file}]")
-                        op_parse = "Not parsed yet"  # TODO: call op parser and assign result
+                        op_parse = OpParser.parse_file(file_input=op_file, debug=False)
                         cls.content[domain_name]['subsystems'][subsys_name]['external'][ee_name][op_name] = op_parse
 
         cls.populate()

@@ -25,7 +25,7 @@ class EE:
     record = None
 
     @classmethod
-    def populate(cls, mmdb: 'Tk', ee_name: str, class_name:str, subsys_name: str, domain_name: str):
+    def populate(cls, mmdb: 'Tk', ee_name: str, subsys_name: str, domain_name: str, op_parse):
         """
         :param mmdb:
         :param ee_name:
@@ -34,6 +34,8 @@ class EE:
         :param domain_name:
         :return:
         """
+        # Class name can be obtained from the parse of any operation
+        cname = next(iter(op_parse.values())).cname
         # Populate ee
         cls._logger.info(f"Populating ee [{ee_name}]")
         cls._logger.info(f"Transaction open: Populate EE")
@@ -42,13 +44,15 @@ class EE:
                                                          prefix='EE',
                                                          subsystem_name=subsys_name, domain_name=domain_name)
         Relvar.insert(relvar='External_Entity', tuples=[
-            External_Entity_i(EEnum=EEnum, Name=ee_name, Class=class_name, Domain=domain_name)
+            External_Entity_i(EEnum=EEnum, Name=ee_name, Class=cname, Domain=domain_name)
         ])
 
         # Add operations
         first_op = True
-        for opfile in (cls.subsys_ee_path / ee_name).glob("*.op"):
-            Operation.populate(mmdb=mmdb, domain_name=domain_name,
-                               subsys_name=subsys_name, opfile=opfile, first_op=first_op)
+        for op in op_parse.values():
+            Operation.populate(mmdb=mmdb, domain_name=domain_name, subsys_name=subsys_name, parsed_op=op,
+                               first_op=first_op)
             if first_op:
                 first_op = False
+
+
