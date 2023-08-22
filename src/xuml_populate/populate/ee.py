@@ -5,9 +5,9 @@ ee.py – Convert external entity to a relation
 import logging
 from pyral.transaction import Transaction
 from pyral.relvar import Relvar
-from class_model_dsl.populate.element import Element
-from class_model_dsl.populate.operation import Operation
-from class_model_dsl.populate.pop_types import EE_i
+from xuml_populate.populate.element import Element
+from xuml_populate.populate.operation import Operation
+from xuml_populate.populate.mmclass_nt import External_Entity_i
 
 from typing import TYPE_CHECKING
 
@@ -37,12 +37,12 @@ class EE:
         # Populate ee
         cls._logger.info(f"Populating ee [{ee_name}]")
         cls._logger.info(f"Transaction open: Populate EE")
-        Transaction.open(tclral=mmdb) # Create an EE with at least one Operation
+        Transaction.open(tclral=mmdb)  # Create an EE with at least one Operation
         EEnum = Element.populate_unlabeled_subsys_element(mmdb,
                                                          prefix='EE',
                                                          subsystem_name=subsys_name, domain_name=domain_name)
         Relvar.insert(relvar='External_Entity', tuples=[
-            EE_i(EEnum=EEnum, Name=ee_name, Class=class_name, Domain=domain_name)
+            External_Entity_i(EEnum=EEnum, Name=ee_name, Class=class_name, Domain=domain_name)
         ])
 
         # Add operations

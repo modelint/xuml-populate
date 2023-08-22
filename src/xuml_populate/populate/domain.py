@@ -4,16 +4,15 @@ domain_name.py – Convert parsed domain_name to a relation
 
 import logging
 from typing import TYPE_CHECKING, Dict
-from pathlib import Path
 from xuml_populate.populate.attribute import Attribute
 from xuml_populate.populate.mm_class import MMclass
 from xuml_populate.populate.method import Method
 from xuml_populate.populate.relationship import Relationship
-# from class_model_dsl.populate.ee import EE
+from xuml_populate.populate.ee import EE
 from xuml_populate.populate.lineage import Lineage
 from xuml_populate.populate.subsystem import Subsystem
 from xuml_populate.populate.state_model import StateModel
-# from class_model_dsl.populate.activity import Activity
+from xuml_populate.populate.activity import Activity
 from pyral.transaction import Transaction
 from pyral.relvar import Relvar
 from xuml_populate.populate.mmclass_nt import Domain_i, Modeled_Domain_i, Domain_Partition_i, Subsystem_i
@@ -63,27 +62,34 @@ class Domain:
         cls._logger.info(f"Transaction closed: domain and subsystems [{domain}]")
         pass
 
-        # Insert classes
+        # Process all subsystem elements
         for subsys_parse in content['subsystems'].values():
             subsys = Subsystem(subsys_parse=subsys_parse['class_model'].subsystem)
             cls._logger.info("Populating classes")
+
+            # Insert classes
             for c in subsys_parse['class_model'].classes:
                 MMclass.populate(mmdb=mmdb, domain=domain, subsystem=subsys, record=c)
             cls._logger.info("Populating relationships")
             for r in subsys_parse['class_model'].rels:
                 Relationship.populate(mmdb=mmdb, domain=domain, subsystem=subsys, record=r)
-            cls._logger.info("Populating methods and operations")
 
             # Insert methods
+            cls._logger.info("Populating methods")
             for m_parse in subsys_parse['methods'].values():
                 # All classes must be populated first, so that parameter types in signatures can be resolved
                 # as class or non-class types
                 Method.populate(mmdb, domain_name=domain, subsys_name=subsys.name, m_parse=m_parse)
-        #         # TODO: Add EE and ops in system.py parse and then pass the ee_parse in here
-        #         if ee_name := c.get('ee'):
-        #             EE.populate(mmdb, ee_name=ee_name, class_name=c['name'], subsys_name=subsys.name,
-        #                         domain_name=domain.Name)
-        #     cls._logger.info("Populating state models")
+
+            # Insert external entities and operations
+            # cls._logger.info("Populating operations")
+            # for op_parse in subsys_parse['operations'].values():
+            #     # TODO: Update EE.populate
+            #     EE.populate(mmdb, ee_name=ee_name, class_name=c['name'], subsys_name=subsys.name,
+            #                 domain_name=domain)
+
+            # Insert state machines
+            cls._logger.info("Populating state models")
             for sm in subsys_parse['state_models'].values():
                 StateModel.populate(mmdb, subsys=subsys.name, sm=sm)
 
@@ -97,6 +103,6 @@ class Domain:
         Relvar.printall(mmdb)
         #
         # Populate actions for all Activities
-        # Activity.process_statements(mmdb)
+        Activity.process_statements(mmdb)
         pass
         #

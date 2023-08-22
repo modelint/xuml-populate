@@ -79,7 +79,7 @@ class System:
                 # We add the subsystem dictionary to the system content for the current domain file name
                 # inserting the class model parse
                 cls.content[domain_name]['subsystems'][subsys_name] = {
-                    'class_model': cm_parse, 'methods': {}, 'state_models': {}
+                    'class_model': cm_parse, 'methods': {}, 'state_models': {}, 'external': {}
                 }
 
                 # Load and parse all the methods for the current subsystem folder
@@ -104,7 +104,16 @@ class System:
                     sm_parse = StateModelParser.parse_file(file_input=sm_file, debug=False)
                     cls.content[domain_name]['subsystems'][subsys_name]['state_models'][sm_name] = sm_parse
 
-                # TODO load the external entity operations
+                # Load and parse the external entity operations
+                ext_path = subsys_path / "external"
+                for ee_path in ext_path.iterdir():
+                    ee_name = ee_path.name
+                    cls.content[domain_name]['subsystems'][subsys_name]['external'][ee_name] = {}
+                    for op_file in ee_path.glob("*.op"):
+                        op_name = op_file.stem
+                        cls._logger.info(f"Processing ee operation: [{op_file}]")
+                        op_parse = "Not parsed yet"  # TODO: call op parser and assign result
+                        cls.content[domain_name]['subsystems'][subsys_name]['external'][ee_name][op_name] = op_parse
 
         cls.populate()
 
