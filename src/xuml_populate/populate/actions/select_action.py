@@ -10,7 +10,8 @@ from xuml_populate.populate.actions.action import Action
 from xuml_populate.populate.flow import Flow
 from xuml_populate.populate.mmclass_nt import Select_Action_i, Single_Select_i, Identifier_Select_i, \
     Zero_One_Cardinality_Select_i, Many_Select_i, Restrict_Action_i, Restriction_Condition_i, \
-    Equivalence_Criterion_i, Comparison_Criterion_i, Ranking_Criterion_i, Projected_Attribute_i
+    Equivalence_Criterion_i, Comparison_Criterion_i, Ranking_Criterion_i, Projected_Attribute_i, \
+    Class_Restriction_Condition_i, Criterion_i
 from pyral.relvar import Relvar
 from pyral.relation import Relation
 from pyral.transaction import Transaction
@@ -47,9 +48,9 @@ class SelectAction:
     def pop_restriction_criterion(cls, attr: str) -> int:
         cls.criterion_ctr += 1
         criterion_id = cls.criterion_ctr
-        Relvar.insert(relvar='Restriction_Criterion', tuples=[
-            Restriction_Criterion_i(ID=criterion_id, Select_action=cls.action_id, Activity=cls.anum, Attribute=attr,
-                                    Class=cls.input_instance_flow.ctype, Domain=cls.domain)
+        Relvar.insert(relvar='Criterion', tuples=[
+            Criterion_i(ID=criterion_id, Action=cls.action_id, Activity=cls.anum, Attribute=attr,
+                        Non_scalar_type=cls.input_instance_flow.ctype, Domain=cls.domain)
         ])
         return criterion_id
 
@@ -115,10 +116,9 @@ class SelectAction:
         criterion_id = cls.pop_restriction_criterion(attr=attr)
         # Populate the Equivalence Criterion
         Relvar.insert(relvar='Equivalence_Criterion', tuples=[
-            Equivalence_Criterion_i(ID=criterion_id, Select_action=cls.action_id, Activity=cls.anum,
-                                    Class=cls.input_instance_flow.ctype,
-                                    Attribute=attr, Domain=cls.domain, Equal="true" if op == "==" else "false",
-                                    Value="true" if setting else "false", Scalar_type="Boolean")
+            Equivalence_Criterion_i(ID=criterion_id, Action=cls.action_id, Activity=cls.anum,
+                                    Attribute=attr, Domain=cls.domain, Operation="true" if op == "==" else "false",
+                                    Value="true" if setting else "false", Scalar="Boolean")
         ])
 
     @classmethod
@@ -213,10 +213,14 @@ class SelectAction:
             criteria = BOOL_a(op='==', operands=[criteria, N_a(name='true')])
         # Walk the parse tree and save all attributes, ops, values, and input scalar flows
         cls.expression = cls.walk_criteria(criteria.op, criteria.operands)
-        # Populate the Restriction class
-        Relvar.insert(relvar='Restriction', tuples=[
-            Restriction_i(Select_action=cls.action_id, Activity=cls.anum, Class=cls.input_instance_flow.ctype,
-                          Domain=cls.domain, Expression=cls.expression)
+        # Populate the Restriction Condition class
+        Relvar.insert(relvar='Class_Restriction_Condition', tuples=[
+            Class_Restriction_Condition_i(Select_action=cls.action_id, Activity=cls.anum, Domain=cls.domain)
+        ])
+        Relvar.insert(relvar='Restriction_Condition', tuples=[
+            Restriction_Condition_i(Action=cls.action_id, Activity=cls.anum, Domain=cls.domain,
+                                    Expression=cls.expression, Selection_cardinality=cls.cardinality
+                                    )
         ])
 
         # Determine if this should be an Identifier Select subclass that yields at most one instance
@@ -297,8 +301,7 @@ class SelectAction:
         # Populate the Action superclass instance and obtain its action_id
         cls.action_id = Action.populate(mmdb, anum, domain)  # Transaction open
         Relvar.insert(relvar='Select_Action', tuples=[
-            Select_Action_i(ID=cls.action_id, Activity=anum, Class=input_instance_flow.ctype, Domain=domain,
-                            Input_flow=input_instance_flow.fid, Selection_cardinality=cls.cardinality)
+            Select_Action_i(ID=cls.action_id, Activity=anum, Domain=domain, Input_flow=input_instance_flow.fid)
         ])
         cls.select_agroup = select_agroup
         # Walk through the critieria parse tree storing any attributes or input flows

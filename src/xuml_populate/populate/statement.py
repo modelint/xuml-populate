@@ -74,7 +74,6 @@ class Statement:
         activity_path = f"{domain}:{cname}:{method}.mtd"
         cls.populate(mmdb, anum, domain, aparse, activity_path, scrall_text)
 
-
     @classmethod
     def populate(cls, mmdb: 'Tk', anum: str, domain: str, aparse, activity_path:str, scrall_text:str):
         """
