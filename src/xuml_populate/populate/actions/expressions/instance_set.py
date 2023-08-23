@@ -62,10 +62,10 @@ class InstanceSet:
                     else:
                         # Look for a labeled instance flow
                         R = f"Name:<{c.name}>, Activity:<{anum}>, Domain:<{domain}>"
-                        label_result = Relation.restrict3(mmdb, relation='Label', restriction=R)
+                        label_result = Relation.restrict3(mmdb, relation='Labeled_Flow', restriction=R)
                         if label_result.body:
                             # It's a labeled flow, but it must be an instance flow to support selection
-                            fid = label_result.body[0]['Flow']
+                            fid = label_result.body[0]['ID']
                             R = f"ID:<{fid}>, Activity:<{anum}>, Domain:<{domain}>"
                             if_result = Relation.restrict3(mmdb, relation='Instance_Flow', restriction=R)
                             if if_result.body:

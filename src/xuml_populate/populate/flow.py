@@ -8,7 +8,8 @@ from pyral.relation import Relation
 from typing import TYPE_CHECKING, Optional
 from xuml_populate.populate.mmclass_nt import Data_Flow_i, Flow_i, \
     Multiple_Instance_Flow_i, Single_Instance_Flow_i, Instance_Flow_i, \
-    Control_Flow_i, Non_Scalar_Flow_i, Scalar_Flow_i, Table_Flow_i, Label_i
+    Control_Flow_i, Non_Scalar_Flow_i, Scalar_Flow_i, Table_Flow_i, Labeled_Flow_i, Unlabeled_Flow_i, \
+    Tuple_Flow_i, Relation_Flow_i
 
 if TYPE_CHECKING:
     from tkinter import Tk
@@ -141,8 +142,16 @@ class Flow:
                             is_tuple: bool = False) -> str:
         flow_id = cls.populate_flow()
         Relvar.insert(relvar='Table_Flow', tuples=[
-            Table_Flow_i(ID=flow_id, Activity=cls.activity, Domain=cls.domain, Type=tname, Tuple=is_tuple)
+            Table_Flow_i(ID=flow_id, Activity=cls.activity, Domain=cls.domain, Type=tname)
         ])
+        if not is_tuple:
+            Relvar.insert(relvar='Relation_Flow', tuples=[
+                Relation_Flow_i(ID=flow_id, Activity=cls.activity, Domain=cls.domain)
+            ])
+        else:
+            Relvar.insert(relvar='Tuple_Flow', tuples=[
+                Tuple_Flow_i(ID=flow_id, Activity=cls.activity, Domain=cls.domain)
+            ])
         return flow_id
 
     @classmethod
@@ -164,8 +173,12 @@ class Flow:
 
         # If a label has been defined, populate it
         if cls.label:
-            Relvar.insert(relvar='Label', tuples=[
-                Label_i(Name=cls.label, Flow=flow_id, Activity=cls.activity, Domain=cls.domain)
+            Relvar.insert(relvar='Labeled_Flow', tuples=[
+                Labeled_Flow_i(Name=cls.label, ID=flow_id, Activity=cls.activity, Domain=cls.domain)
+            ])
+        else:
+            Relvar.insert(relvar='Unlabeled_Flow', tuples=[
+                Unlabeled_Flow_i(ID=flow_id, Activity=cls.activity, Domain=cls.domain)
             ])
 
         return flow_id

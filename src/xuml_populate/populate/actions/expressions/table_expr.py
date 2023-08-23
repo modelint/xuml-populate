@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING, List, NamedTuple
 from xuml_populate.populate.actions.expressions.instance_set import InstanceSet
 from xuml_populate.populate.actions.aparse_types import TableFlow_ap
 from xuml_populate.populate.actions.aparse_types import InstanceFlow_ap, MaxMult
+from scrall.parse.visitor import TOP_a
 from pyral.relvar import Relvar
 from pyral.relation import Relation
 from pyral.transaction import Transaction
@@ -65,7 +66,8 @@ class TableExpr:
         # Two cases: TOP_a or TEXPR_a (operation or expression)
         # If it's just an expression, there is no nesting and we can break it down here
         # Most likely it is an operation, and we need to walk the tree
-        cls.walk(texpr=rhs)
+        x = cls.walk(texpr=rhs)
+        pass
 
         # TODO: Populate output table flow
 
@@ -73,7 +75,7 @@ class TableExpr:
     def walk(cls, texpr) -> str:
         """
 
-        :param texpr: Either a nested operation or a terminal table expression
+        :param texpr: Parsed table operation
         :return: Text representation of THIS invocation of walk
         """
         match type(texpr).__name__:
@@ -97,12 +99,12 @@ class TableExpr:
                             print()
                             # Flow already exists as variable or input param
                             # Add operand
-            case 'TEXPR_a':
-                cls.walk(texpr.table)
-                # Process h, s, and p if any
-                # If p, we have a table flow.
-                # Insert table type and then pass it to table flow population
-                print()
+                        case 'TEXPR_a':
+                            cls.walk(texpr.table)
+                            # Process h, s, and p if any
+                            # If p, we have a table flow.
+                            # Insert table type and then pass it to table flow population
+                            print()
 
             # TODO: Convert instance flow to table flow
 

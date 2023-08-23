@@ -38,12 +38,12 @@ class TableAssignment:
     def process(cls, mmdb: 'Tk', anum: str, cname: str, domain: str, table_assign_parse,
                 xi_flow_id: str, activity_path: str, scrall_text: str):
         """
-        Given a parsed instance set expression, populate each component action
-        and return the resultant Class Type name
+        Given a parsed table assignment consisting of an LHS and an RHS, populate each component action
+        and return the resultant table flow
 
         We'll need an initial flow and we'll need to create intermediate instance flows to connect the components.
-        The final output flow must be an instance flow. The associated Class Type determines the type of the
-        assignment which must match any explicit type.
+        The final output flow must be a table flow. The associated Table determines the type of the
+        assignment. If the LHS spcifies an explicit Table, the resultant Table which must match.
 
         :param mmdb: The metamodel db
         :param cname: The class (for an operation it is the proxy class)
