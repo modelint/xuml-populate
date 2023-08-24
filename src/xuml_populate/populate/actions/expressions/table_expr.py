@@ -5,7 +5,8 @@ from typing import TYPE_CHECKING, List, NamedTuple
 from xuml_populate.populate.actions.expressions.instance_set import InstanceSet
 from xuml_populate.populate.actions.aparse_types import TableFlow_ap
 from xuml_populate.populate.actions.aparse_types import InstanceFlow_ap, MaxMult
-from scrall.parse.visitor import TOP_a
+from xuml_populate.populate.actions.select_action import SelectAction
+from scrall.parse.visitor import TOP_a, TEXPR_a
 from pyral.relvar import Relvar
 from pyral.relation import Relation
 from pyral.transaction import Transaction
@@ -43,7 +44,7 @@ class TableExpr:
     component_flow = None
 
     @classmethod
-    def process(cls, mmdb: 'Tk', rhs: NamedTuple, anum: str, input_instance_flow: InstanceFlow_ap,
+    def process(cls, mmdb: 'Tk', rhs: TOP_a | TEXPR_a, anum: str, input_instance_flow: InstanceFlow_ap,
                 domain: str, activity_path: str, scrall_text: str) -> TableFlow_ap:
         """
 
@@ -84,27 +85,41 @@ class TableExpr:
                 # We need to process each operand
                 text = f" {texpr.op} "  # Flatten operator into temporary string
                 # insert Computation and set its operator attribute with texpr.op
+                operand_flows = []
                 for o in texpr.operands:
-                    match type(o.table).__name__:
-                        case 'INST_a':
-                            op_flow = InstanceSet.process(mmdb=cls.mmdb, anum=cls.anum,
-                                                          input_instance_flow=cls.component_flow,
-                                                          iset_components=o.table.components, domain=cls.domain,
-                                                          activity_path=cls.activity_path,
-                                                          scrall_text=cls.scrall_text)
+                    match type(o).__name__:
+                        case 'TEXPR_a':
+                            op_inst_flow = None
+                            if type(o.table).__name__ == 'INST_a':
+                                op_inst_flow = InstanceSet.process(mmdb=cls.mmdb, anum=cls.anum,
+                                                                   input_instance_flow=cls.component_flow,
+                                                                   iset_components=o.table.components,
+                                                                   domain=cls.domain,
+                                                                   activity_path=cls.activity_path,
+                                                                   scrall_text=cls.scrall_text)
+                                operand_flows.append(op_inst_flow)
+                            else:
+                                # TODO: Deal with this case (nested expression)
+                                pass
+                            if o.hexpr:
+                                pass
+                            if o.selection:
+                                select_iflow = cls.component_flow = SelectAction.populate(
+                                    cls.mmdb, input_instance_flow=op_inst_flow, anum=cls.anum, select_agroup=o.selection,
+                                    domain=cls.domain,
+                                    activity_path=cls.activity_path, scrall_text=cls.scrall_text)
+                                pass
+                            if o.projection:
+                                pass
                             pass
-                            # Add operand
-                            # Insert instance flow for op_flow
+
+                            # Process h, s, and p if any
+                            # If p, we have a table flow.
+                            # Insert table type and then pass it to table flow population
                         case 'N_a', 'IN_a':
                             print()
                             # Flow already exists as variable or input param
                             # Add operand
-                        case 'TEXPR_a':
-                            cls.walk(texpr.table)
-                            # Process h, s, and p if any
-                            # If p, we have a table flow.
-                            # Insert table type and then pass it to table flow population
-                            print()
 
             # TODO: Convert instance flow to table flow
 

@@ -3,9 +3,11 @@
 from collections import namedtuple
 from enum import Enum
 
+
 class MaxMult(Enum):
     ONE = 1
     MANY = 2
+
 
 InstanceFlow_ap = namedtuple("InstanceFlow_ap", "fid ctype max_mult")
 """ Describes a generated instance flow with: Flow ID, Class Type, Max multiplicity (1,M) in this flow"""
