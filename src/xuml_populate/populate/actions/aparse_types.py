@@ -13,4 +13,4 @@ InstanceFlow_ap = namedtuple("InstanceFlow_ap", "fid ctype max_mult")
 """ Describes a generated instance flow with: Flow ID, Class Type, Max multiplicity (1,M) in this flow"""
 
 TableFlow_ap = namedtuple("TableFlow_ap", "fid ttype")
-""" Describes a generated table flow with: Flow ID, Table Type"""
+""" Describes a generated table flow with: Flow ID, Table"""

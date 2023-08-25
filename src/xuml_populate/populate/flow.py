@@ -140,7 +140,7 @@ class Flow:
     @classmethod
     def populate_table_flow(cls, mmdb: 'Tk', activity: str, domain: str, tname: str, label: Optional[str],
                             is_tuple: bool = False) -> str:
-        flow_id = cls.populate_flow()
+        flow_id = cls.populate_non_scalar_flow()
         Relvar.insert(relvar='Table_Flow', tuples=[
             Table_Flow_i(ID=flow_id, Activity=cls.activity, Domain=cls.domain, Type=tname)
         ])

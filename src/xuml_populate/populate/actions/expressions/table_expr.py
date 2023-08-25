@@ -6,6 +6,8 @@ from xuml_populate.populate.actions.expressions.instance_set import InstanceSet
 from xuml_populate.populate.actions.aparse_types import TableFlow_ap
 from xuml_populate.populate.actions.aparse_types import InstanceFlow_ap, MaxMult
 from xuml_populate.populate.actions.select_action import SelectAction
+from xuml_populate.populate.actions.project_action import ProjectAction
+from xuml_populate.exceptions.action_exceptions import TableOperationOrExpressionExpected
 from scrall.parse.visitor import TOP_a, TEXPR_a
 from pyral.relvar import Relvar
 from pyral.relation import Relation
@@ -73,13 +75,37 @@ class TableExpr:
         # TODO: Populate output table flow
 
     @classmethod
-    def walk(cls, texpr) -> str:
+    def walk(cls, texpr: TOP_a | TEXPR_a) -> str:
         """
 
-        :param texpr: Parsed table operation
+        :param texpr: Parsed table operation or table expression
         :return: Text representation of THIS invocation of walk
         """
         match type(texpr).__name__:
+            case '_':
+                _logger.error(f"Expected TOP or TEXPR, but received {type(texpr).__name__} during table expr walk")
+                raise TableOperationOrExpressionExpected
+            case 'TEXPR_a':
+                iset_flow = InstanceSet.process(mmdb=cls.mmdb, anum=cls.anum,
+                                                input_instance_flow=cls.component_flow,
+                                                iset_components=texpr.table.components,
+                                                domain=cls.domain,
+                                                activity_path=cls.activity_path,
+                                                scrall_text=cls.scrall_text)
+                if texpr.hexpr:
+                    pass
+                if texpr.selection:
+                    select_iflow = cls.component_flow = SelectAction.populate(
+                        cls.mmdb, input_instance_flow=iset_flow, anum=cls.anum,
+                        select_agroup=texpr.selection,
+                        domain=cls.domain,
+                        activity_path=cls.activity_path, scrall_text=cls.scrall_text)
+                    pass
+                if texpr.projection:
+                    table_flow = ProjectAction.populate(cls.mmdb, input_nsflow=iset_flow, projection=texpr.projection,
+                                                        anum=cls.anum, domain=cls.domain, activity_path=cls.activity_path,
+                                                        scrall_text=cls.scrall_text)
+                    pass
             case 'TOP_a':
                 # The table is an operation on one or more operands
                 # We need to process each operand
@@ -105,7 +131,8 @@ class TableExpr:
                                 pass
                             if o.selection:
                                 select_iflow = cls.component_flow = SelectAction.populate(
-                                    cls.mmdb, input_instance_flow=op_inst_flow, anum=cls.anum, select_agroup=o.selection,
+                                    cls.mmdb, input_instance_flow=op_inst_flow, anum=cls.anum,
+                                    select_agroup=o.selection,
                                     domain=cls.domain,
                                     activity_path=cls.activity_path, scrall_text=cls.scrall_text)
                                 pass

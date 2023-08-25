@@ -11,6 +11,9 @@ post = " --"
 class ActionException(Exception):
     pass
 
+class TableExpressionException(ActionException):
+    pass
+
 class TraversalActionException(ActionException):
     pass
 
@@ -18,6 +21,12 @@ class SelectActionException(ActionException):
     pass
 
 class NoInputInstanceFlow(SelectActionException):
+    pass
+
+class ProjectedAttributeNotDefined(TableExpressionException):
+    pass
+
+class TableOperationOrExpressionExpected(TableExpressionException):
     pass
 
 class SelectionOnNonInstanceFlow(ActionException):

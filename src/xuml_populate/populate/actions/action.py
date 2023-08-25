@@ -42,6 +42,7 @@ class Action:
         actn_id = f'ACTN{cls.next_action_id[activity_key]}'
 
         # Now populate an instance of Action
+        _logger.info("Transaction open: Action")
         Transaction.open(mmdb)  # Action of some type
 
         # Populate the Statement superclass
