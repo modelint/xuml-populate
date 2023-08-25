@@ -38,7 +38,7 @@ class ProjectAction:
 
     @classmethod
     def populate(cls, mmdb: 'Tk', input_nsflow: InstanceFlow_ap | TableFlow_ap, projection: Projection_a, anum: str,
-                 domain: str, activity_path: str, scrall_text: str) -> TableFlow_ap:
+                 domain: str, activity_path: str, scrall_text: str) -> str:
         """
         Populate the Project Action
 
@@ -98,4 +98,4 @@ class ProjectAction:
                                       Activity=anum, Domain=domain)
             ])
         Transaction.execute()
-        pass
+        return output_tflow_id

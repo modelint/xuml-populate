@@ -4,6 +4,7 @@ table_assignment.py – Populate elements of a table assignment
 
 import logging
 from typing import TYPE_CHECKING, Set, Dict, List, Optional
+from xuml_populate.populate.mmclass_nt import Labeled_Flow_i
 from xuml_populate.populate.actions.expressions.table_expr import TableExpr
 from xuml_populate.populate.flow import Flow
 from xuml_populate.populate.actions.aparse_types import InstanceFlow_ap, MaxMult
@@ -66,11 +67,16 @@ class TableAssignment:
                                         activity_path=activity_path, scrall_text=scrall_text)
 
         output_flow_label = lhs
-        Transaction.open(mmdb)
-        assigned_flow = Flow.populate_table_flow(mmdb, tname=output_flow.ttype, activity=anum, domain=domain,
-                                                 label=output_flow_label)
+        # TODO: handle case where lhs is an explicit table assignment
 
-        _logger.info(f"INSERT Table Flow (assignment): ["
-                     f"{domain}:{cls.input_instance_ctype}:{activity_path.split(':')[-1]}"
-                     f":{output_flow_label}:{assigned_flow}]")
+        # Migrate the output_flow to a labeled flow
+        _logger.info(f"Labeling output of table expression to [{lhs}]")
+        Transaction.open(mmdb)
+        # Delete the Unlabeled flow
+        Relvar.deleteone(mmdb, "Unlabeled_Flow",
+                         tid={"ID": output_flow, "Activity": anum, "Domain": domain}, defer=True)
+        # Insert the labeled flow
+        Relvar.insert(relvar='Labeled_Flow', tuples=[
+            Labeled_Flow_i(ID=output_flow, Activity=anum, Domain=domain, Name=output_flow_label)
+        ])
         Transaction.execute()

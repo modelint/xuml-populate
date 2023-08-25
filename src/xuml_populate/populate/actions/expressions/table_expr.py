@@ -44,10 +44,11 @@ class TableExpr:
     scrall_text = None
     activity_path = None
     component_flow = None
+    output_tflow_id = None
 
     @classmethod
     def process(cls, mmdb: 'Tk', rhs: TOP_a | TEXPR_a, anum: str, input_instance_flow: InstanceFlow_ap,
-                domain: str, activity_path: str, scrall_text: str) -> TableFlow_ap:
+                domain: str, activity_path: str, scrall_text: str) -> str:
         """
 
         :param rhs: The right hand side of a table assignment
@@ -69,85 +70,83 @@ class TableExpr:
         # Two cases: TOP_a or TEXPR_a (operation or expression)
         # If it's just an expression, there is no nesting and we can break it down here
         # Most likely it is an operation, and we need to walk the tree
-        x = cls.walk(texpr=rhs)
-        pass
-
-        # TODO: Populate output table flow
+        cls.walk(texpr=rhs)
+        return cls.output_tflow_id
 
     @classmethod
-    def walk(cls, texpr: TOP_a | TEXPR_a) -> str:
+    def walk(cls, texpr: TOP_a | TEXPR_a):
         """
 
         :param texpr: Parsed table operation or table expression
-        :return: Text representation of THIS invocation of walk
         """
         match type(texpr).__name__:
             case '_':
                 _logger.error(f"Expected TOP or TEXPR, but received {type(texpr).__name__} during table expr walk")
                 raise TableOperationOrExpressionExpected
             case 'TEXPR_a':
-                iset_flow = InstanceSet.process(mmdb=cls.mmdb, anum=cls.anum,
-                                                input_instance_flow=cls.component_flow,
-                                                iset_components=texpr.table.components,
-                                                domain=cls.domain,
-                                                activity_path=cls.activity_path,
-                                                scrall_text=cls.scrall_text)
+                # Process the instance set and obtain its flow id
+                cls.output_tflow_id = InstanceSet.process(mmdb=cls.mmdb, anum=cls.anum,
+                                                          input_instance_flow=cls.component_flow,
+                                                          iset_components=texpr.table.components,
+                                                          domain=cls.domain,
+                                                          activity_path=cls.activity_path,
+                                                          scrall_text=cls.scrall_text)
                 if texpr.hexpr:
+                    # TODO: Implement this case
                     pass
                 if texpr.selection:
-                    select_iflow = cls.component_flow = SelectAction.populate(
-                        cls.mmdb, input_instance_flow=iset_flow, anum=cls.anum,
+                    # If there is a selection on the instance set, create the action and obtain its flow id
+                    cls.output_tflow_id = cls.component_flow = SelectAction.populate(
+                        cls.mmdb, input_instance_flow=cls.output_tflow_id, anum=cls.anum,
                         select_agroup=texpr.selection,
                         domain=cls.domain,
                         activity_path=cls.activity_path, scrall_text=cls.scrall_text)
-                    pass
                 if texpr.projection:
-                    table_flow = ProjectAction.populate(cls.mmdb, input_nsflow=iset_flow, projection=texpr.projection,
-                                                        anum=cls.anum, domain=cls.domain, activity_path=cls.activity_path,
-                                                        scrall_text=cls.scrall_text)
-                    pass
+                    # If there is a projection, create the action and obtain its flow id
+                    cls.output_tflow_id = ProjectAction.populate(cls.mmdb, input_nsflow=cls.output_tflow_id,
+                                                                 projection=texpr.projection,
+                                                                 anum=cls.anum, domain=cls.domain,
+                                                                 activity_path=cls.activity_path,
+                                                                 scrall_text=cls.scrall_text)
             case 'TOP_a':
+                print()
                 # The table is an operation on one or more operands
                 # We need to process each operand
-                text = f" {texpr.op} "  # Flatten operator into temporary string
-                # insert Computation and set its operator attribute with texpr.op
-                operand_flows = []
-                for o in texpr.operands:
-                    match type(o).__name__:
-                        case 'TEXPR_a':
-                            op_inst_flow = None
-                            if type(o.table).__name__ == 'INST_a':
-                                op_inst_flow = InstanceSet.process(mmdb=cls.mmdb, anum=cls.anum,
-                                                                   input_instance_flow=cls.component_flow,
-                                                                   iset_components=o.table.components,
-                                                                   domain=cls.domain,
-                                                                   activity_path=cls.activity_path,
-                                                                   scrall_text=cls.scrall_text)
-                                operand_flows.append(op_inst_flow)
-                            else:
-                                # TODO: Deal with this case (nested expression)
-                                pass
-                            if o.hexpr:
-                                pass
-                            if o.selection:
-                                select_iflow = cls.component_flow = SelectAction.populate(
-                                    cls.mmdb, input_instance_flow=op_inst_flow, anum=cls.anum,
-                                    select_agroup=o.selection,
-                                    domain=cls.domain,
-                                    activity_path=cls.activity_path, scrall_text=cls.scrall_text)
-                                pass
-                            if o.projection:
-                                pass
-                            pass
-
-                            # Process h, s, and p if any
-                            # If p, we have a table flow.
-                            # Insert table type and then pass it to table flow population
-                        case 'N_a', 'IN_a':
-                            print()
-                            # Flow already exists as variable or input param
-                            # Add operand
-
-            # TODO: Convert instance flow to table flow
-
-        return text
+                # text = f" {texpr.op} "  # Flatten operator into temporary string
+                # # insert Computation and set its operator attribute with texpr.op
+                # operand_flows = []
+                # for o in texpr.operands:
+                #     match type(o).__name__:
+                #         case 'TEXPR_a':
+                #             op_inst_flow = None
+                #             if type(o.table).__name__ == 'INST_a':
+                #                 op_inst_flow = InstanceSet.process(mmdb=cls.mmdb, anum=cls.anum,
+                #                                                    input_instance_flow=cls.component_flow,
+                #                                                    iset_components=o.table.components,
+                #                                                    domain=cls.domain,
+                #                                                    activity_path=cls.activity_path,
+                #                                                    scrall_text=cls.scrall_text)
+                #                 operand_flows.append(op_inst_flow)
+                #             else:
+                #                 # TODO: Deal with this case (nested expression)
+                #                 pass
+                #             if o.hexpr:
+                #                 pass
+                #             if o.selection:
+                #                 select_iflow = cls.component_flow = SelectAction.populate(
+                #                     cls.mmdb, input_instance_flow=op_inst_flow, anum=cls.anum,
+                #                     select_agroup=o.selection,
+                #                     domain=cls.domain,
+                #                     activity_path=cls.activity_path, scrall_text=cls.scrall_text)
+                #                 pass
+                #             if o.projection:
+                #                 pass
+                #             pass
+                #
+                #             # Process h, s, and p if any
+                #             # If p, we have a table flow.
+                #             # Insert table type and then pass it to table flow population
+                #         case 'N_a', 'IN_a':
+                #             print()
+                #             # Flow already exists as variable or input param
+                #             # Add operand
