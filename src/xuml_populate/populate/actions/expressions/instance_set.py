@@ -55,7 +55,7 @@ class InstanceSet:
                         Transaction.open(mmdb)  # Multiple instance flow from class
                         class_flow_id = Flow.populate_instance_flow(mmdb, cname=c.name, activity=anum,
                                                                     domain=domain, label=None)
-                        cls.component_flow = Flow_ap(fid=class_flow_id, content=Content.CLASS,
+                        cls.component_flow = Flow_ap(fid=class_flow_id, content=Content.INSTANCE,
                                                      tname=c.name, max_mult=MaxMult.MANY)
                         Transaction.execute()
                         _logger.info(f"INSERT Class instance flow (assignment): ["
@@ -74,7 +74,7 @@ class InstanceSet:
                                 ctype = if_result.body[0]['Class']
                                 many_if_result = Relation.restrict3(mmdb, relation='Multiple_Instance_Flow', restriction=R)
                                 m = MaxMult.MANY if many_if_result.body else MaxMult.ONE
-                                cls.component_flow = Flow_ap(fid=fid, content=Content.CLASS, tname=ctype, max_mult=m)
+                                cls.component_flow = Flow_ap(fid=fid, content=Content.INSTANCE, tname=ctype, max_mult=m)
                             else:
                                 # It's either a table or scalar flow. Scalar's don't support selection.
                                 # Selection on tables will be supported, but not yet

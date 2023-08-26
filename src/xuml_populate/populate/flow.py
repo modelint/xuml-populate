@@ -51,16 +51,16 @@ class Flow:
         r_result = Relation.restrict3(cls.mmdb, relation='Class', restriction=R)
         if r_result.body:
             # It's a class type, create a multiple instance flow
-            content = Content.CLASS
+            content = Content.INSTANCE
             max_mult = MaxMult.MANY
-            flow_id = cls.populate_instance_flow(mmdb, cname=mm_type, activity=activity, domain=domain, label=label)
+            flow = cls.populate_instance_flow(mmdb, cname=mm_type, activity=activity, domain=domain, label=label)
         else:
             # It's a scalar type
             content = Content.SCALAR
             max_mult = None
-            flow_id = cls.populate_scalar_flow(mmdb, scalar_type=mm_type, activity=activity, domain=domain,
+            flow = cls.populate_scalar_flow(mmdb, scalar_type=mm_type, activity=activity, domain=domain,
                                                label=label)
-        return Flow_ap(fid=flow_id, content=content, tname=mm_type, max_mult=max_mult)
+        return flow
 
     @classmethod
     def populate_scalar_flow(cls, mmdb: 'Tk', label: Optional[str], scalar_type: str, activity: str,
@@ -121,7 +121,7 @@ class Flow:
             Relvar.insert(relvar='Multiple_Instance_Flow', tuples=[
                 Multiple_Instance_Flow_i(ID=flow_id, Activity=activity, Domain=domain)
             ])
-        return Flow_ap(fid=flow_id, content=Content.CLASS, tname=cname, max_mult=max_mult)
+        return Flow_ap(fid=flow_id, content=Content.INSTANCE, tname=cname, max_mult=max_mult)
 
     @classmethod
     def populate_non_scalar_flow(cls) -> str:

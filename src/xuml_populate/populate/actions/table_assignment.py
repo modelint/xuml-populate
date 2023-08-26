@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING, Set, Dict, List, Optional
 from xuml_populate.populate.mmclass_nt import Labeled_Flow_i
 from xuml_populate.populate.actions.expressions.table_expr import TableExpr
 from xuml_populate.populate.flow import Flow
-from xuml_populate.populate.actions.aparse_types import InstanceFlow_ap, MaxMult
+from xuml_populate.populate.actions.aparse_types import Flow_ap, MaxMult, Content
 
 from pyral.relvar import Relvar
 from pyral.relation import Relation
@@ -60,7 +60,7 @@ class TableAssignment:
         cls.input_instance_flow = xi_flow_id
 
         # The executing instance is by nature a single instance flow
-        xi_instance_flow = InstanceFlow_ap(fid=xi_flow_id, ctype=cname, max_mult=MaxMult.ONE)
+        xi_instance_flow = Flow_ap(fid=xi_flow_id, content=Content.INSTANCE, tname=cname, max_mult=MaxMult.ONE)
 
         output_flow = TableExpr.process(mmdb, rhs=rhs, anum=anum,
                                         input_instance_flow=xi_instance_flow, domain=domain,
@@ -74,9 +74,9 @@ class TableAssignment:
         Transaction.open(mmdb)
         # Delete the Unlabeled flow
         Relvar.deleteone(mmdb, "Unlabeled_Flow",
-                         tid={"ID": output_flow, "Activity": anum, "Domain": domain}, defer=True)
+                         tid={"ID": output_flow.fid, "Activity": anum, "Domain": domain}, defer=True)
         # Insert the labeled flow
         Relvar.insert(relvar='Labeled_Flow', tuples=[
-            Labeled_Flow_i(ID=output_flow, Activity=anum, Domain=domain, Name=output_flow_label)
+            Labeled_Flow_i(ID=output_flow.fid, Activity=anum, Domain=domain, Name=output_flow_label)
         ])
         Transaction.execute()

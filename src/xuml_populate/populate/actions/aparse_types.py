@@ -10,7 +10,7 @@ class MaxMult(Enum):
 
 class Content(Enum):
     SCALAR = 1
-    CLASS = 2
+    INSTANCE = 2
     TABLE = 3
 
 

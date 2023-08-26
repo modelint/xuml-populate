@@ -47,7 +47,7 @@ class TableExpr:
 
     @classmethod
     def process(cls, mmdb: 'Tk', rhs: TEXPR_a, anum: str, input_instance_flow: Flow_ap,
-                domain: str, activity_path: str, scrall_text: str) -> str:
+                domain: str, activity_path: str, scrall_text: str) -> Flow_ap:
         """
 
         :param rhs: The right hand side of a table assignment
@@ -66,20 +66,17 @@ class TableExpr:
         cls.scrall_text = scrall_text
         cls.component_flow = input_instance_flow
 
-        # Two cases: TOP_a or TEXPR_a (operation or expression)
-        # If it's just an expression, there is no nesting and we can break it down here
-        # Most likely it is an operation, and we need to walk the tree
         return cls.walk(texpr=rhs)
 
     @classmethod
-    def walk(cls, texpr: TEXPR_a) -> str:
+    def walk(cls, texpr: TEXPR_a) -> Flow_ap:
         """
 
         :param texpr: Parsed table expression
         """
         # Process the table component
         # It is either an instance set, name, or a nested table operation
-        output_fid = cls.component_flow
+        output_flow = cls.component_flow
         match type(texpr.table).__name__:
             case 'N_a' | 'IN_a':
                 R = f"Name:<{texpr.table.name}>, Activity:<{cls.anum}>, Domain:<{cls.domain}>"
@@ -90,8 +87,8 @@ class TableExpr:
                     pass
             case 'INST_a':
                 # Process the instance set and obtain its flow id
-                output_fid = InstanceSet.process(mmdb=cls.mmdb, anum=cls.anum,
-                                                 input_instance_flow=output_fid,
+                output_flow = InstanceSet.process(mmdb=cls.mmdb, anum=cls.anum,
+                                                 input_instance_flow=output_flow,
                                                  iset_components=texpr.table.components,
                                                  domain=cls.domain,
                                                  activity_path=cls.activity_path,
@@ -116,16 +113,16 @@ class TableExpr:
             pass
         if texpr.selection:
             # If there is a selection on the instance set, create the action and obtain its flow id
-            output_fid = cls.component_flow = SelectAction.populate(
-                cls.mmdb, input_instance_flow=output_fid, anum=cls.anum,
+            output_flow = SelectAction.populate(
+                cls.mmdb, input_instance_flow=output_flow, anum=cls.anum,
                 select_agroup=texpr.selection,
                 domain=cls.domain,
                 activity_path=cls.activity_path, scrall_text=cls.scrall_text)
         if texpr.projection:
             # If there is a projection, create the action and obtain its flow id
-            output_fid = ProjectAction.populate(cls.mmdb, input_nsflow=output_fid,
+            output_flow = ProjectAction.populate(cls.mmdb, input_nsflow=output_flow,
                                                          projection=texpr.projection,
                                                          anum=cls.anum, domain=cls.domain,
                                                          activity_path=cls.activity_path,
                                                          scrall_text=cls.scrall_text)
-        return output_fid
+        return output_flow

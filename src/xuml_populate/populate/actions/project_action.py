@@ -7,7 +7,7 @@ from xuml_populate.exceptions.action_exceptions import ProjectedAttributeNotDefi
 from scrall.parse.visitor import Projection_a
 from xuml_populate.populate.actions.table import Table
 from typing import TYPE_CHECKING, Set, Dict, List, Optional
-from xuml_populate.populate.actions.aparse_types import TableFlow_ap, InstanceFlow_ap, MaxMult
+from xuml_populate.populate.actions.aparse_types import Flow_ap, MaxMult, Content
 from xuml_populate.exceptions.action_exceptions import ComparingNonAttributeInSelection, NoInputInstanceFlow
 from xuml_populate.populate.actions.action import Action
 from xuml_populate.populate.flow import Flow
@@ -37,8 +37,8 @@ class ProjectAction:
     ns_type = None
 
     @classmethod
-    def populate(cls, mmdb: 'Tk', input_nsflow: InstanceFlow_ap | TableFlow_ap, projection: Projection_a, anum: str,
-                 domain: str, activity_path: str, scrall_text: str) -> str:
+    def populate(cls, mmdb: 'Tk', input_nsflow: Flow_ap, projection: Projection_a, anum: str,
+                 domain: str, activity_path: str, scrall_text: str) -> Flow_ap:
         """
         Populate the Project Action
 
@@ -61,24 +61,24 @@ class ProjectAction:
 
         _logger.info("")
         table_header = {}
-        match type(input_nsflow).__name__:
-            case 'InstanceFlow_ap':
-                cls.ns_type = input_nsflow.ctype
+        match input_nsflow.content:
+            case Content.INSTANCE:
+                cls.ns_type = input_nsflow.tname
                 # Get type of each attribute
                 for pattr in projection.attrs:
-                    R = f"Name:<{pattr.name}>, Class:<{input_nsflow.ctype}>, Domain:<{cls.domain}>"
+                    R = f"Name:<{pattr.name}>, Class:<{input_nsflow.tname}>, Domain:<{cls.domain}>"
                     result = Relation.restrict3(cls.mmdb, relation='Attribute', restriction=R)
                     if not result.body:
-                        _logger.error(f"Attribute [{pattr.name}] in projection not defined on class [{input_nsflow.ctype}]")
+                        _logger.error(f"Attribute [{pattr.name}] in projection not defined on class [{input_nsflow.tname}]")
                         raise ProjectedAttributeNotDefined
                     table_header[pattr.name] = result.body[0]['Type']
-            case 'TableFlow_ap':
-                cls.ns_type = input_nsflow.ttype
+            case Content.TABLE:
+                cls.ns_type = input_nsflow.tname
                 # TODO: Add this case for projecting on a table input
                 print()
 
         # Populate the output Table Flow and Table (transaction open/close)
-        output_tflow_id = Table.populate(mmdb, table_header=table_header, anum=anum, domain=domain)
+        output_tflow = Table.populate(mmdb, table_header=table_header, anum=anum, domain=domain)
 
         # Create the action (trannsaction open)
         cls.action_id = Action.populate(mmdb, anum, domain)
@@ -87,7 +87,7 @@ class ProjectAction:
         ])
         Relvar.insert(relvar='Table_Action', tuples=[
             Table_Action_i(ID=cls.action_id, Activity=anum, Domain=domain, Input_a_flow=input_nsflow.fid,
-                           Output_flow=output_tflow_id)
+                           Output_flow=output_tflow.fid)
         ])
         Relvar.insert(relvar='Project_Action', tuples=[
             Relational_Action_i(ID=cls.action_id, Activity=anum, Domain=domain)
@@ -98,4 +98,4 @@ class ProjectAction:
                                       Activity=anum, Domain=domain)
             ])
         Transaction.execute()
-        return output_tflow_id
+        return output_tflow

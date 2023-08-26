@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING, Set, Dict, List, Optional
 from xuml_populate.populate.flow import Flow
 from xuml_populate.populate.actions.expressions.instance_set import InstanceSet
 from xuml_populate.exceptions.action_exceptions import AssignZeroOneInstanceHasMultiple
-from xuml_populate.populate.actions.aparse_types import InstanceFlow_ap, MaxMult
+from xuml_populate.populate.actions.aparse_types import Flow_ap, MaxMult, Content
 
 from pyral.relvar import Relvar
 from pyral.relation import Relation
@@ -73,7 +73,7 @@ class InstanceAssignment:
         assign_zero_one = True if inst_assign_parse.card == '1' else False
         rhs = inst_assign_parse.rhs
         # The executing instance is by nature a single instance flow
-        xi_instance_flow = InstanceFlow_ap(fid=xi_flow_id, ctype=cname, max_mult=MaxMult.ONE)
+        xi_instance_flow = Flow_ap(fid=xi_flow_id, content=Content.INSTANCE, tname=cname, max_mult=MaxMult.ONE)
 
         # Process the instance set expression in the RHS and obtain the generated instance flow
         iset_instance_flow = InstanceSet.process(mmdb, anum=anum, input_instance_flow=xi_instance_flow,
@@ -84,16 +84,16 @@ class InstanceAssignment:
         if assign_zero_one and iset_instance_flow.max_mult == MaxMult.ONE:
             raise AssignZeroOneInstanceHasMultiple(path=activity_path, text=scrall_text, x=inst_assign_parse.X)
         output_flow_label = lhs.name.name
-        if lhs.exp_type and lhs.exp_type != iset_instance_flow.ctype:
+        if lhs.exp_type and lhs.exp_type != iset_instance_flow.tname:
             # Raise assignment type mismatch exception
             pass
 
         # Populate the LHS assignment labeled flow
         Transaction.open(mmdb)  # LHS labeled instance flow
-        assigned_flow = Flow.populate_instance_flow(mmdb, cname=iset_instance_flow.ctype, activity=anum,
+        assigned_flow = Flow.populate_instance_flow(mmdb, cname=iset_instance_flow.tname, activity=anum,
                                                     domain=domain, label=output_flow_label, single=assign_zero_one)
 
         _logger.info(f"INSERT Instance Flow (assignment): ["
-                     f"{domain}:{iset_instance_flow.ctype}:{activity_path.split(':')[-1]}"
+                     f"{domain}:{iset_instance_flow.tname}:{activity_path.split(':')[-1]}"
                      f":{output_flow_label}:{assigned_flow}]")
         Transaction.execute()  # LHS labeled instance flow

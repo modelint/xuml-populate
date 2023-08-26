@@ -231,7 +231,7 @@ class SelectAction:
             output_fid = Flow.populate_instance_flow(cls.mmdb, cname=cls.input_instance_flow.tname,
                                                      activity=cls.anum, domain=cls.domain,
                                                      label=None, single=True)
-            cls.output_instance_flow = Flow_ap(fid=output_fid, content=Content.CLASS,
+            cls.output_instance_flow = Flow_ap(fid=output_fid, content=Content.INSTANCE,
                                                tname=cls.input_instance_flow.tname, max_mult=cls.max_mult)
             _logger.info(f"INSERT Select action output single instance Flow: ["
                          f"{cls.domain}:{cls.input_instance_flow.tname}:{cls.activity_path.split(':')[-1]}"
@@ -256,10 +256,8 @@ class SelectAction:
         else:
             # Many select with Multiple Instance Flow output
             cls.max_mult = MaxMult.MANY
-            output_fid = Flow.populate_instance_flow(cls.mmdb, cname=cls.input_instance_flow.tname, activity=cls.anum,
+            cls.output_instance_flow = Flow.populate_instance_flow(cls.mmdb, cname=cls.input_instance_flow.tname, activity=cls.anum,
                                                      domain=cls.domain, label=None, single=False)
-            cls.output_instance_flow = Flow_ap(fid=output_fid, content=Content.CLASS,
-                                               tname=cls.input_instance_flow.tname, max_mult=cls.max_mult)
             _logger.info(f"INSERT Select action output multiple instance Flow: ["
                          f"{cls.domain}:{cls.input_instance_flow.tname}:{cls.activity_path.split(':')[-1]}"
                          f":{cls.output_instance_flow}]")

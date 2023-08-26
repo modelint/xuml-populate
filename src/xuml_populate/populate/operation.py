@@ -31,7 +31,7 @@ class Operation:
         :param mmdb:
         :param subsys_name:
         :param domain_name:
-        :param op_parse:
+        :param parsed_op:
         :param first_op:
         :return:
         """
@@ -72,11 +72,11 @@ class Operation:
             Transaction.open(tclral=mmdb) # Operation parameter
             # Populate the Parameter's type if it hasn't already been populated
             MMtype.populate_unknown(mmdb, name=p['type'], domain=domain_name)
-            input_flow = Flow.populate_data_flow_by_type(mmdb, mm_type=p['type'], activity=anum,
-                                                         domain=domain_name, label=None)
+            input_fid = Flow.populate_data_flow_by_type(mmdb, mm_type=p['type'], activity=anum,
+                                                         domain=domain_name, label=None).fid
             Relvar.insert(relvar='Parameter', tuples=[
                 Parameter_i(Name=p['name'], Signature=signum, Domain=domain_name,
-                            Input_flow=input_flow, Activity=anum, Type=p['type'])
+                            Input_flow=input_fid, Activity=anum, Type=p['type'])
             ])
             Transaction.execute() # Operation parameter
             logging.info("Transaction closed: Parameter")
@@ -86,7 +86,7 @@ class Operation:
             # Populate Synchronous Output and an associated output Data Flow
             Transaction.open(mmdb)
             of_id = Flow.populate_data_flow_by_type(mmdb, label=None, mm_type=parsed_op.flow_out,
-                                                    activity=anum, domain=domain_name)
+                                                    activity=anum, domain=domain_name).fid
             Relvar.insert(relvar='Synchronous_Output', tuples=[
                 Synchronous_Output_i(Anum=anum, Domain=domain_name,
                                      Output_flow=of_id, Type=parsed_op.flow_out)

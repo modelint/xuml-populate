@@ -3,6 +3,7 @@
 import logging
 from typing import TYPE_CHECKING, Dict
 from xuml_populate.populate.flow import Flow
+from xuml_populate.populate.actions.aparse_types import Flow_ap
 from pyral.transaction import Transaction
 from pyral.relvar import Relvar
 from pyral.relation import Relation
@@ -22,7 +23,7 @@ class Table:
 
 
     @classmethod
-    def populate(cls, mmdb: 'Tk', table_header: Dict[str, str], anum: str, domain: str) -> str:
+    def populate(cls, mmdb: 'Tk', table_header: Dict[str, str], anum: str, domain: str) -> Flow_ap:
         """
 
         :param mmdb:

@@ -49,7 +49,7 @@ class TraverseAction:
     anum = None
     action_id = None
     mult = None  # Max mult of the current hop
-    dest_flow = None
+    dest_fid = None
     activity_path = None
     scrall_text = None
 
@@ -62,16 +62,16 @@ class TraverseAction:
         # Create a Traverse Action and Path
         cls.action_id = Action.populate(cls.mmdb, cls.anum, cls.domain)
         # Create the Traverse action destination flow (the output for R930)
-        cls.dest_flow = Flow.populate_instance_flow(cls.mmdb, cname=cls.dest_class, activity=cls.anum,
-                                                    domain=cls.domain, label=None,
-                                                    single=True if cls.mult == MaxMult.ONE else False)
+        cls.dest_fid = Flow.populate_instance_flow(cls.mmdb, cname=cls.dest_class, activity=cls.anum,
+                                                   domain=cls.domain, label=None,
+                                                   single=True if cls.mult == MaxMult.ONE else False).fid
 
         _logger.info(f"INSERT Traverse action output Flow: ["
                      f"{cls.domain}:{cls.dest_class}:{cls.activity_path.split(':')[-1]}"
-                     f":{cls.dest_flow}]")
+                     f":{cls.dest_fid}]")
         Relvar.insert(relvar='Traverse_Action', tuples=[
             Traverse_Action_i(ID=cls.action_id, Activity=cls.anum, Domain=cls.domain, Path=cls.name,
-                              Source_flow=cls.input_instance_flow.fid, Destination_flow=cls.dest_flow)
+                              Source_flow=cls.input_instance_flow.fid, Destination_flow=cls.dest_fid)
         ])
         Relvar.insert(relvar='Path', tuples=[
             Path_i(Name=cls.name, Domain=cls.domain, Dest_class=cls.dest_class)
@@ -527,4 +527,4 @@ class TraverseAction:
         Transaction.execute()
         # Relvar.printall(mmdb)
 
-        return Flow_ap(fid=cls.dest_flow, content=Content.CLASS, tname=cls.dest_class, max_mult=cls.mult)
+        return Flow_ap(fid=cls.dest_fid, content=Content.INSTANCE, tname=cls.dest_class, max_mult=cls.mult)
