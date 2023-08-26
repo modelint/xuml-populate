@@ -11,6 +11,9 @@ post = " --"
 class ActionException(Exception):
     pass
 
+class FlowException(ActionException):
+    pass
+
 class TableExpressionException(ActionException):
     pass
 
