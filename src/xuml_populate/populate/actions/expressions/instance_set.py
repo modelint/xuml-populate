@@ -6,7 +6,7 @@ from xuml_populate.populate.actions.traverse_action import TraverseAction
 from xuml_populate.populate.mm_class import MMclass
 from xuml_populate.populate.flow import Flow
 from xuml_populate.populate.actions.select_action import SelectAction
-from xuml_populate.populate.actions.aparse_types import InstanceFlow_ap, MaxMult
+from xuml_populate.populate.actions.aparse_types import Flow_ap, MaxMult, Content
 from pyral.relation import Relation
 from pyral.transaction import Transaction
 from xuml_populate.exceptions.action_exceptions import NoClassOrInstanceFlowForInstanceSetName,\
@@ -26,8 +26,8 @@ class InstanceSet:
     component_flow = None
 
     @classmethod
-    def process(cls, mmdb: 'Tk', anum: str, input_instance_flow: InstanceFlow_ap, iset_components, domain: str,
-                activity_path: str, scrall_text: str) -> InstanceFlow_ap:
+    def process(cls, mmdb: 'Tk', anum: str, input_instance_flow: Flow_ap, iset_components, domain: str,
+                activity_path: str, scrall_text: str) -> Flow_ap:
         """
 
         :param input_instance_flow:
@@ -55,7 +55,8 @@ class InstanceSet:
                         Transaction.open(mmdb)  # Multiple instance flow from class
                         class_flow_id = Flow.populate_instance_flow(mmdb, cname=c.name, activity=anum,
                                                                     domain=domain, label=None)
-                        cls.component_flow = InstanceFlow_ap(fid=class_flow_id, ctype=c.name, max_mult=MaxMult.MANY)
+                        cls.component_flow = Flow_ap(fid=class_flow_id, content=Content.CLASS,
+                                                     tname=c.name, max_mult=MaxMult.MANY)
                         Transaction.execute()
                         _logger.info(f"INSERT Class instance flow (assignment): ["
                                      f"{domain}:{c.name}:{activity_path.split(':')[-1]}:{class_flow_id}]")
@@ -73,7 +74,7 @@ class InstanceSet:
                                 ctype = if_result.body[0]['Class']
                                 many_if_result = Relation.restrict3(mmdb, relation='Multiple_Instance_Flow', restriction=R)
                                 m = MaxMult.MANY if many_if_result.body else MaxMult.ONE
-                                cls.component_flow = InstanceFlow_ap(fid=fid, ctype=ctype, max_mult=m)
+                                cls.component_flow = Flow_ap(fid=fid, content=Content.CLASS, tname=ctype, max_mult=m)
                             else:
                                 # It's either a table or scalar flow. Scalar's don't support selection.
                                 # Selection on tables will be supported, but not yet

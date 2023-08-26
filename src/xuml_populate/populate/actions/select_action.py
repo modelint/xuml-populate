@@ -4,7 +4,7 @@ select_action.py – Populate a selection action instance in PyRAL
 
 import logging
 from typing import TYPE_CHECKING, Set, Dict, List, Optional
-from xuml_populate.populate.actions.aparse_types import InstanceFlow_ap, MaxMult
+from xuml_populate.populate.actions.aparse_types import Flow_ap, MaxMult, Content
 from xuml_populate.exceptions.action_exceptions import ComparingNonAttributeInSelection, NoInputInstanceFlow
 from xuml_populate.populate.actions.action import Action
 from xuml_populate.populate.flow import Flow
@@ -50,7 +50,7 @@ class SelectAction:
         criterion_id = cls.criterion_ctr
         Relvar.insert(relvar='Criterion', tuples=[
             Criterion_i(ID=criterion_id, Action=cls.action_id, Activity=cls.anum, Attribute=attr,
-                        Non_scalar_type=cls.input_instance_flow.ctype, Domain=cls.domain)
+                        Non_scalar_type=cls.input_instance_flow.tname, Domain=cls.domain)
         ])
         return criterion_id
 
@@ -77,7 +77,7 @@ class SelectAction:
          :returns: An identifier number 1,2, ... or 0 if none found
         """
         idcheck = {c['attr'] for c in cls.comparison_criteria if c['op'] == '=='}
-        R = f"Class:<{cls.input_instance_flow.ctype}>, Domain:<{cls.domain}>"
+        R = f"Class:<{cls.input_instance_flow.tname}>, Domain:<{cls.domain}>"
         Relation.restrict3(cls.mmdb, relation='Identifier_Attribute', restriction=R)
         Relation.project2(cls.mmdb, attributes=('Identifier', 'Attribute',), svar_name='all_id_attrs')
         # We have created a named relation with a projection of each id_attr and its id_num
@@ -138,11 +138,11 @@ class SelectAction:
         :param name:
         :return:
         """
-        R = f"Name:<{name}>, Class:<{cls.input_instance_flow.ctype}>, Domain:<{cls.domain}>"
+        R = f"Name:<{name}>, Class:<{cls.input_instance_flow.tname}>, Domain:<{cls.domain}>"
         result = Relation.restrict3(cls.mmdb, relation='Attribute', restriction=R)
         if not result.body:
             raise ComparingNonAttributeInSelection(f"select action restriction on class"
-                                                   f"[{cls.input_instance_flow.ctype}] is "
+                                                   f"[{cls.input_instance_flow.tname}] is "
                                                    f"comparing on name [{name}] that is not an attribute of that class")
         cls.comparison_criteria.append({'attr': name, 'op': op})
         cls.attr_set = True
@@ -228,13 +228,13 @@ class SelectAction:
         if selection_idnum or cls.cardinality == 'ONE':
             cls.max_mult = MaxMult.ONE
             # Populate a single instance flow for the selection output
-            output_fid = Flow.populate_instance_flow(cls.mmdb, cname=cls.input_instance_flow.ctype,
+            output_fid = Flow.populate_instance_flow(cls.mmdb, cname=cls.input_instance_flow.tname,
                                                      activity=cls.anum, domain=cls.domain,
                                                      label=None, single=True)
-            cls.output_instance_flow = InstanceFlow_ap(fid=output_fid, ctype=cls.input_instance_flow.ctype,
-                                                       max_mult=cls.max_mult)
+            cls.output_instance_flow = Flow_ap(fid=output_fid, content=Content.CLASS,
+                                               tname=cls.input_instance_flow.tname, max_mult=cls.max_mult)
             _logger.info(f"INSERT Select action output single instance Flow: ["
-                         f"{cls.domain}:{cls.input_instance_flow.ctype}:{cls.activity_path.split(':')[-1]}"
+                         f"{cls.domain}:{cls.input_instance_flow.tname}:{cls.activity_path.split(':')[-1]}"
                          f":{cls.output_instance_flow}]")
             # Populate the Single Select subclass
             Relvar.insert(relvar='Single_Select', tuples=[
@@ -245,7 +245,7 @@ class SelectAction:
                 # Populate an Identifier Select subclass
                 Relvar.insert(relvar='Identifier_Select', tuples=[
                     Identifier_Select_i(ID=cls.action_id, Activity=cls.anum, Domain=cls.domain,
-                                       Identifier=selection_idnum, Class=cls.input_instance_flow.ctype)
+                                       Identifier=selection_idnum, Class=cls.input_instance_flow.tname)
                 ])
             else:
                 # Populate an Identifier Select subclass
@@ -256,12 +256,12 @@ class SelectAction:
         else:
             # Many select with Multiple Instance Flow output
             cls.max_mult = MaxMult.MANY
-            output_fid = Flow.populate_instance_flow(cls.mmdb, cname=cls.input_instance_flow.ctype, activity=cls.anum,
+            output_fid = Flow.populate_instance_flow(cls.mmdb, cname=cls.input_instance_flow.tname, activity=cls.anum,
                                                      domain=cls.domain, label=None, single=False)
-            cls.output_instance_flow = InstanceFlow_ap(fid=output_fid, ctype=cls.input_instance_flow.ctype,
-                                                       max_mult=cls.max_mult)
+            cls.output_instance_flow = Flow_ap(fid=output_fid, content=Content.CLASS,
+                                               tname=cls.input_instance_flow.tname, max_mult=cls.max_mult)
             _logger.info(f"INSERT Select action output multiple instance Flow: ["
-                         f"{cls.domain}:{cls.input_instance_flow.ctype}:{cls.activity_path.split(':')[-1]}"
+                         f"{cls.domain}:{cls.input_instance_flow.tname}:{cls.activity_path.split(':')[-1]}"
                          f":{cls.output_instance_flow}]")
             # Populate the Many Select subclass
             Relvar.insert(relvar='Many_Select', tuples=[
@@ -270,7 +270,7 @@ class SelectAction:
             ])
 
     @classmethod
-    def populate(cls, mmdb: 'Tk', input_instance_flow: InstanceFlow_ap, anum: str, select_agroup, domain: str,
+    def populate(cls, mmdb: 'Tk', input_instance_flow: Flow_ap, anum: str, select_agroup, domain: str,
                  activity_path: str, scrall_text: str) -> str:
         """
         Populate the Select Statement

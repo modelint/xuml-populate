@@ -11,7 +11,7 @@ from xuml_populate.exceptions.action_exceptions import UndefinedRelationship, In
 from scrall.parse.visitor import PATH_a
 from xuml_populate.populate.actions.action import Action
 from xuml_populate.populate.flow import Flow
-from xuml_populate.populate.actions.aparse_types import InstanceFlow_ap, MaxMult
+from xuml_populate.populate.actions.aparse_types import Flow_ap, MaxMult, Content
 from xuml_populate.populate.mmclass_nt import Action_i, Traverse_Action_i, Path_i, Hop_i, Association_Class_Hop_i, \
     Circular_Hop_i, Symmetric_Hop_i, Asymmetric_Circular_Hop_i, Ordinal_Hop_i, Straight_Hop_i, \
     From_Asymmetric_Association_Class_Hop_i, From_Symmetric_Association_Class_Hop_i, To_Association_Class_Hop_i, \
@@ -436,8 +436,8 @@ class TraverseAction:
             return True  # Non-reflexive hop to a participating class
 
     @classmethod
-    def build_path(cls, mmdb: 'Tk', anum: str, input_instance_flow: InstanceFlow_ap, domain: str,
-                   path: PATH_a, activity_path: str, scrall_text: str) -> InstanceFlow_ap:
+    def build_path(cls, mmdb: 'Tk', anum: str, input_instance_flow: Flow_ap, domain: str,
+                   path: PATH_a, activity_path: str, scrall_text: str) -> Flow_ap:
         """
         Step through a path populating it along the way.
 
@@ -454,7 +454,7 @@ class TraverseAction:
         cls.path = path
         cls.anum = anum
         cls.input_instance_flow = input_instance_flow
-        cls.class_cursor = input_instance_flow.ctype  # Validation cursor is on this class now
+        cls.class_cursor = input_instance_flow.tname  # Validation cursor is on this class now
         cls.domain = domain
         cls.name = "/"  # The path text forms path name value
         cls.activity_path = activity_path
@@ -527,4 +527,4 @@ class TraverseAction:
         Transaction.execute()
         # Relvar.printall(mmdb)
 
-        return InstanceFlow_ap(fid=cls.dest_flow, ctype=cls.dest_class, max_mult=cls.mult)
+        return Flow_ap(fid=cls.dest_flow, content=Content.CLASS, tname=cls.dest_class, max_mult=cls.mult)

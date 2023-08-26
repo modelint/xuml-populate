@@ -3,8 +3,7 @@
 import logging
 from typing import TYPE_CHECKING, List, NamedTuple
 from xuml_populate.populate.actions.expressions.instance_set import InstanceSet
-from xuml_populate.populate.actions.aparse_types import TableFlow_ap
-from xuml_populate.populate.actions.aparse_types import InstanceFlow_ap, MaxMult
+from xuml_populate.populate.actions.aparse_types import Flow_ap, MaxMult, Content
 from xuml_populate.populate.actions.select_action import SelectAction
 from xuml_populate.populate.actions.project_action import ProjectAction
 from xuml_populate.exceptions.action_exceptions import TableOperationOrExpressionExpected, FlowException
@@ -47,7 +46,7 @@ class TableExpr:
     output_tflow_id = None
 
     @classmethod
-    def process(cls, mmdb: 'Tk', rhs: TEXPR_a, anum: str, input_instance_flow: InstanceFlow_ap,
+    def process(cls, mmdb: 'Tk', rhs: TEXPR_a, anum: str, input_instance_flow: Flow_ap,
                 domain: str, activity_path: str, scrall_text: str) -> str:
         """
 
