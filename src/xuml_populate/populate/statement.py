@@ -58,7 +58,7 @@ class Statement:
 
         # Look up signature
         R = f"Method:<{method}>, Class:<{cname}>, Domain:<{domain}>"
-        result = Relation.restrict3(mmdb, relation='Method_Signature', restriction=R)
+        result = Relation.restrict(mmdb, relation='Method_Signature', restriction=R)
         if not result.body:
             # TODO: raise exception here
             pass
@@ -66,7 +66,7 @@ class Statement:
 
         # Look up xi flow
         R = f"Name:<{method}>, Class:<{cname}>, Domain:<{domain}>"
-        result = Relation.restrict3(mmdb, relation='Method', restriction=R)
+        result = Relation.restrict(mmdb, relation='Method', restriction=R)
         if not result.body:
             # TODO: raise exception here
             pass

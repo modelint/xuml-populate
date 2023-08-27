@@ -86,8 +86,8 @@ class TraverseAction:
 
     @classmethod
     def validate_rel(cls, rnum: str):
-        rel = f"Rnum:[{rnum}], Domain:[{cls.domain}]"
-        if not Relation.restrict2(tclral=cls.mmdb, restriction=rel, relation="Relationship").body:
+        rel = f"Rnum:<{rnum}>, Domain:<{cls.domain}>"
+        if not Relation.restrict(tclral=cls.mmdb, restriction=rel, relation="Relationship").body:
             _logger.error(f"Undefined Rnum {rnum} in Domain {cls.domain}")
             raise UndefinedRelationship(rnum, cls.domain)
 
@@ -169,7 +169,7 @@ class TraverseAction:
         :return: True of the class is an association class formalizing the specified association
         """
         r = f"Class:<{cname}>, Rnum:<{rnum}>, Domain:<{cls.domain}>"
-        return bool(Relation.restrict3(tclral=cls.mmdb, restriction=r, relation="Association_Class").body)
+        return bool(Relation.restrict(tclral=cls.mmdb, restriction=r, relation="Association_Class").body)
 
     @classmethod
     def is_reflexive(cls, rnum: str) -> int:
@@ -183,11 +183,11 @@ class TraverseAction:
         """
         # Get all perspectives defined on rnum
         R = f"Rnum:<{rnum}>, Domain:<{cls.domain}>"
-        perspectives = Relation.restrict3(tclral=cls.mmdb, restriction=R, relation="Perspective")
+        perspectives = Relation.restrict(tclral=cls.mmdb, restriction=R, relation="Perspective")
         if not perspectives.body:
             # Every association relationship defines at least one perspective
             raise UndefinedAssociation(rnum, cls.domain)
-        vclasses = Relation.project2(tclral=cls.mmdb, attributes=('Viewed_class',)).body
+        vclasses = Relation.project(tclral=cls.mmdb, attributes=('Viewed_class',)).body
         # Reflexive if there is both viewed classes are the same (only 1)
         # So, if reflexive, return 1 (S - Symmetric) or 2 (T,P - Assymetric), otherwise 0, non-reflexive
         return len(perspectives.body) if len(vclasses) == 1 else 0
@@ -202,7 +202,7 @@ class TraverseAction:
         """
         reachable_classes = set()
         R = f"Rnum:<{rnum}>, Domain:<{cls.domain}>"
-        refs = Relation.restrict3(tclral=cls.mmdb, restriction=R, relation="Reference").body
+        refs = Relation.restrict(tclral=cls.mmdb, restriction=R, relation="Reference").body
         for ref in refs:
             reachable_classes.add(ref['To_class'])
             reachable_classes.add(ref['From_class'])
@@ -214,7 +214,7 @@ class TraverseAction:
         # TODO: Update metamodel with two additional identifiers
         R = f"Ranked_class:<{cls.class_cursor}>, Domain:<{cls.domain}>, " \
             f"(Ascending_perspective:<{perspective}> OR Descending_perspective:<{perspective}>)"
-        orel = Relation.restrict3(tclral=cls.mmdb, restriction=R, relation="Ordinal_Relationship").body[0]
+        orel = Relation.restrict(tclral=cls.mmdb, restriction=R, relation="Ordinal_Relationship").body[0]
         if not orel:
             return False
         cls.rel_cursor = orel['Rnum']
@@ -236,7 +236,7 @@ class TraverseAction:
         if len(refs) > 1:
             # We are hopping from the super_class to a subclass
             P = ("From_class",)
-            sub_tuples = Relation.project2(cls.mmdb, attributes=P, relation="rhop").body
+            sub_tuples = Relation.project(cls.mmdb, attributes=P, relation="rhop").body
             subclasses = {s['From_class'] for s in sub_tuples}
             # The subclass must be specified in the next hop
             cls.path_index += 1
@@ -281,7 +281,7 @@ class TraverseAction:
                     # rnum, domain, and viewed class which will be the updated class cursor
                     cls.class_cursor = to_class if to_class != cls.class_cursor else from_class
                     R = f"Rnum:<{cls.rel_cursor}>, Domain:<{cls.domain}>, Viewed_class:<{cls.class_cursor}>"
-                    result = Relation.restrict3(cls.mmdb, relation='Perspective', restriction=R)
+                    result = Relation.restrict(cls.mmdb, relation='Perspective', restriction=R)
                     if not result.body:
                         # TODO: raise exception
                         return False
@@ -310,7 +310,7 @@ class TraverseAction:
                     # Update multiplicty
                     # First check multiplicity on to_class perspective (same as ref)
                     R = f"Rnum:<{cls.rel_cursor}>, Domain:<{cls.domain}>, Side:<{ref}>"
-                    result = Relation.restrict3(cls.mmdb, relation='Perspective', restriction=R)
+                    result = Relation.restrict(cls.mmdb, relation='Perspective', restriction=R)
                     if not result.body:
                         # TODO: raise exception
                         return False
@@ -318,7 +318,7 @@ class TraverseAction:
                     cls.mult = MaxMult.ONE if result.body[0]['Multiplicity'] == '1' else MaxMult.MANY
                     # If multiplicity has been set to 1, but associative multiplicty is M, we need to set it as M
                     R = f"Rnum:<{cls.rel_cursor}>, Domain:<{cls.domain}>, Class:<{cls.class_cursor}>"
-                    result = Relation.restrict3(cls.mmdb, relation='Association_Class', restriction=R)
+                    result = Relation.restrict(cls.mmdb, relation='Association_Class', restriction=R)
                     if not result.body:
                         # TODO: raise exception
                         return False
@@ -339,7 +339,7 @@ class TraverseAction:
                     # Get the To class of the other (T or P) reference
                     other_ref_name = 'P' if ref == 'T' else 'T'
                     R = f"Ref:<{other_ref_name}>, Rnum:<{cls.rel_cursor}>, Domain:<{cls.domain}>"
-                    other_ref = Relation.restrict3(tclral=cls.mmdb, restriction=R, relation="Reference").body
+                    other_ref = Relation.restrict(tclral=cls.mmdb, restriction=R, relation="Reference").body
                     if not other_ref:
                         # The model must be currupted somehow
                         raise MissingTorPrefInAssociativeRel(rnum=cls.rel_cursor, domain=cls.domain)
@@ -364,9 +364,9 @@ class TraverseAction:
                 # The particpating class is explicitly named
                 cls.class_cursor = next_hop.name
                 R = f"Viewed_class:<{cls.class_cursor}>, Rnum:<{cls.rel_cursor}>, Domain:<{cls.domain}>"
-                Relation.restrict3(cls.mmdb, relation='Perspective', restriction=R)
+                Relation.restrict(cls.mmdb, relation='Perspective', restriction=R)
                 P = ('Side',)
-                side = Relation.project2(cls.mmdb, attributes=P).body[0]['Side']
+                side = Relation.project(cls.mmdb, attributes=P).body[0]['Side']
                 cls.from_asymmetric_association_class(side=side)
                 return
             else:
@@ -383,11 +383,11 @@ class TraverseAction:
         """
         # Find phrase and ensure that it is on an association that involves the class cursor
         R = f"Phrase:<{phrase}>, Domain:<{cls.domain}>"
-        r_result = Relation.restrict3(cls.mmdb, relation='Perspective', restriction=R)
+        r_result = Relation.restrict(cls.mmdb, relation='Perspective', restriction=R)
         if not r_result.body:
             return False
         P = ('Side', 'Rnum', 'Viewed_class')
-        p_result = Relation.project2(cls.mmdb, attributes=P)
+        p_result = Relation.project(cls.mmdb, attributes=P)
         side, rnum, viewed_class = map(p_result.body[0].get, P)
         cls.rel_cursor = rnum
 
@@ -502,9 +502,9 @@ class TraverseAction:
                 # First we look for any References to or from the class cursor
                 R = f"(From_class:<{cls.class_cursor}> OR To_class:<{cls.class_cursor}>), Rnum:<{hop.rnum}>, " \
                     f"Domain:<{cls.domain}>"
-                if Relation.restrict3(tclral=cls.mmdb, restriction=R, relation="Reference").body:
+                if Relation.restrict(tclral=cls.mmdb, restriction=R, relation="Reference").body:
                     P = ('Ref', 'From_class', 'To_class')
-                    refs = Relation.project2(cls.mmdb, attributes=P, svar_name='rhop').body
+                    refs = Relation.project(cls.mmdb, attributes=P, svar_name='rhop').body
 
                     # Generalization
                     if refs[0]['Ref'] == 'G':

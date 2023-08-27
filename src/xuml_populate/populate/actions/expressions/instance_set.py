@@ -63,16 +63,16 @@ class InstanceSet:
                     else:
                         # Look for a labeled instance flow
                         R = f"Name:<{c.name}>, Activity:<{anum}>, Domain:<{domain}>"
-                        label_result = Relation.restrict3(mmdb, relation='Labeled_Flow', restriction=R)
+                        label_result = Relation.restrict(mmdb, relation='Labeled_Flow', restriction=R)
                         if label_result.body:
                             # It's a labeled flow, but it must be an instance flow to support selection
                             fid = label_result.body[0]['ID']
                             R = f"ID:<{fid}>, Activity:<{anum}>, Domain:<{domain}>"
-                            if_result = Relation.restrict3(mmdb, relation='Instance_Flow', restriction=R)
+                            if_result = Relation.restrict(mmdb, relation='Instance_Flow', restriction=R)
                             if if_result.body:
                                 # Okay, it's an instance flow. Now we need the multiplicity on that flow
                                 ctype = if_result.body[0]['Class']
-                                many_if_result = Relation.restrict3(mmdb, relation='Multiple_Instance_Flow', restriction=R)
+                                many_if_result = Relation.restrict(mmdb, relation='Multiple_Instance_Flow', restriction=R)
                                 m = MaxMult.MANY if many_if_result.body else MaxMult.ONE
                                 cls.component_flow = Flow_ap(fid=fid, content=Content.INSTANCE, tname=ctype, max_mult=m)
                             else:

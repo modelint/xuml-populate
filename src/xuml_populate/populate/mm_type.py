@@ -103,7 +103,7 @@ class MMtype:
         """
         # Get the element label
         R = f"Name:<{name}>, Domain:<{domain}>"
-        result = Relation.restrict3(mmdb, restriction=R, relation="Type").body
+        result = Relation.restrict(mmdb, restriction=R, relation="Type").body
         if not result:
             cls._logger.error("Unresolved attr type not found during depopulate")
         Transaction.open(mmdb)

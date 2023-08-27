@@ -44,7 +44,7 @@ class MMclass:
         :return: True if the class has been populated into this domain
         """
         R = f"Name:<{cname}>, Domain:<{domain}>"
-        result = Relation.restrict3(cls.mmdb, relation='Class', restriction=R)
+        result = Relation.restrict(cls.mmdb, relation='Class', restriction=R)
         return bool(result.body)
 
 

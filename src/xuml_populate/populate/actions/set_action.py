@@ -66,51 +66,40 @@ class ProjectAction:
                 # This means that there must be at least one attribute/type pair in common
                 if a_input.content == Content.INSTANCE:
                     R = f"Class:<{a_input.tname}>, Domain:<{cls.domain}>"
-                    Relation.restrict3(cls.mmdb, relation='Attribute', restriction=R)
+                    Relation.restrict(cls.mmdb, relation='Attribute', restriction=R)
                 else:
                     R = f"Table:<{a_input.tname}>, Domain:<{cls.domain}>"
-                    Relation.restrict3(cls.mmdb, relation='Table_Attribute', restriction=R)
-                Relation.project2(cls.mmdb, attributes=('Name', 'Scalar'), svar_name='a_nt')
-                Relation.project2(cls.mmdb, attributes=('Name',), relation='a_nt', svar_name='a_n')
+                    Relation.restrict(cls.mmdb, relation='Table_Attribute', restriction=R)
+                Relation.project(cls.mmdb, attributes=('Name', 'Scalar'), svar_name='a_nt')
+                Relation.project(cls.mmdb, attributes=('Name',), relation='a_nt', svar_name='a_n')
                 if b_input.content == Content.INSTANCE:
                     R = f"Class:<{b_input.tname}>, Domain:<{cls.domain}>"
-                    Relation.restrict3(cls.mmdb, relation='Attribute', restriction=R)
+                    Relation.restrict(cls.mmdb, relation='Attribute', restriction=R)
                 else:
                     R = f"Table:<{b_input.tname}>, Domain:<{cls.domain}>"
-                    Relation.restrict3(cls.mmdb, relation='Table_Attribute', restriction=R)
-                Relation.project2(cls.mmdb, attributes=('Name', 'Scalar'), svar_name='b_nt')
-                Relation.project2(cls.mmdb, attributes=('Name',), relation='b_nt', svar_name='b_n')
+                    Relation.restrict(cls.mmdb, relation='Table_Attribute', restriction=R)
+                Relation.project(cls.mmdb, attributes=('Name', 'Scalar'), svar_name='b_nt')
+                Relation.project(cls.mmdb, attributes=('Name',), relation='b_nt', svar_name='b_n')
                 # TODO: Take the intersection of the a_n, b_n -> common_names
                 # TODO: if a_nt, b_nt each restricted on common_names are equal, success
                 # TODO: update metamodel so that Attribute.Type is renamed to .Scalar
                 # TODO: implement intersection and is (equality) in PyRAL
+                # TODO: Table header is the union of a_nt and b_nt (if joinable)
             case 'UNION' | 'INTERSECT' | 'MINUS':
                 # produce a_nt and b_nt and test equality
                 # a/b Types must match (same table or same class)
+                # TODO: Take the set of attributes in a_nt as the table header
                 print()
             case 'TIMES':
                 # produce a_nt and b_nt and take the intersection
                 # if empty, success
+                # TODO: Table header is the union of a_nt and b_nt
                 print()
 
-        match a_input.content:
-            case Content.INSTANCE:
-                if Flow.
-                cls.ns_type = input_nsflow.tname
-                # Get type of each attribute
-                for pattr in projection.attrs:
-                    R = f"Name:<{pattr.name}>, Class:<{input_nsflow.tname}>, Domain:<{cls.domain}>"
-                    result = Relation.restrict3(cls.mmdb, relation='Attribute', restriction=R)
-                    if not result.body:
-                        _logger.error(f"Attribute [{pattr.name}] in projection not defined on class [{input_nsflow.tname}]")
-                        raise ProjectedAttributeNotDefined
-                    table_header[pattr.name] = result.body[0]['Type']
-            case Content.TABLE:
-                cls.ns_type = input_nsflow.tname
-                # TODO: Add this case for projecting on a table input
-                print()
+        # Inputs are compatible with the operation
 
         # Populate the output Table Flow and Table (transaction open/close)
+
         output_tflow = Table.populate(mmdb, table_header=table_header, anum=anum, domain=domain)
 
         # Create the action (trannsaction open)

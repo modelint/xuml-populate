@@ -40,7 +40,7 @@ class Table:
         # Check to see if the table already exists, if so, just create the table flow
         # using the existing Table instance (name)
         R = f"Name:<{table_name}>, Domain:<{domain}>"
-        result = Relation.restrict3(mmdb, relation='Table', restriction=R)
+        result = Relation.restrict(mmdb, relation='Table', restriction=R)
         if result.body:
             _logger.info(f"Populating flow on existing Table: [{table_name}]")
             Transaction.open(mmdb)  # Table type

@@ -78,8 +78,8 @@ class SelectAction:
         """
         idcheck = {c['attr'] for c in cls.comparison_criteria if c['op'] == '=='}
         R = f"Class:<{cls.input_instance_flow.tname}>, Domain:<{cls.domain}>"
-        Relation.restrict3(cls.mmdb, relation='Identifier_Attribute', restriction=R)
-        Relation.project2(cls.mmdb, attributes=('Identifier', 'Attribute',), svar_name='all_id_attrs')
+        Relation.restrict(cls.mmdb, relation='Identifier_Attribute', restriction=R)
+        Relation.project(cls.mmdb, attributes=('Identifier', 'Attribute',), svar_name='all_id_attrs')
         # We have created a named relation with a projection of each id_attr and its id_num
         # Now we must step through each id_num to see if we are selecting on any of them
         i = 1  # Start with inum 1 {I}, (identifier 1). Every class has at least this identifier
@@ -87,11 +87,11 @@ class SelectAction:
             # Step through every identifier of the class and see if there is a set of equivalence
             # comparisons that forms a superset of this identifier. If we are selecting at most one instance
             R = f"Identifier:<{str(i)}>"
-            t_id_n_attrs = Relation.restrict3(cls.mmdb, relation='all_id_attrs', restriction=R)
+            t_id_n_attrs = Relation.restrict(cls.mmdb, relation='all_id_attrs', restriction=R)
             if not t_id_n_attrs.body:
                 # This i num is not defined on the class, no more i nums to check
                 break
-            t_id_n_attr_names = Relation.project2(cls.mmdb, attributes=('Attribute',))
+            t_id_n_attr_names = Relation.project(cls.mmdb, attributes=('Attribute',))
             id_n_attr_names = {t['Attribute'] for t in t_id_n_attr_names.body}
             if not id_n_attr_names - idcheck:
                 # The set of identifier attributes for the current id number
@@ -139,7 +139,7 @@ class SelectAction:
         :return:
         """
         R = f"Name:<{name}>, Class:<{cls.input_instance_flow.tname}>, Domain:<{cls.domain}>"
-        result = Relation.restrict3(cls.mmdb, relation='Attribute', restriction=R)
+        result = Relation.restrict(cls.mmdb, relation='Attribute', restriction=R)
         if not result.body:
             raise ComparingNonAttributeInSelection(f"select action restriction on class"
                                                    f"[{cls.input_instance_flow.tname}] is "

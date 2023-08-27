@@ -67,7 +67,7 @@ class ProjectAction:
                 # Get type of each attribute
                 for pattr in projection.attrs:
                     R = f"Name:<{pattr.name}>, Class:<{input_nsflow.tname}>, Domain:<{cls.domain}>"
-                    result = Relation.restrict3(cls.mmdb, relation='Attribute', restriction=R)
+                    result = Relation.restrict(cls.mmdb, relation='Attribute', restriction=R)
                     if not result.body:
                         _logger.error(f"Attribute [{pattr.name}] in projection not defined on class [{input_nsflow.tname}]")
                         raise ProjectedAttributeNotDefined

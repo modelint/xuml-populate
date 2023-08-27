@@ -82,7 +82,7 @@ class TableExpr:
         match type(texpr.table).__name__:
             case 'N_a' | 'IN_a':
                 R = f"Name:<{texpr.table.name}>, Activity:<{cls.anum}>, Domain:<{cls.domain}>"
-                result = Relation.restrict3(cls.mmdb, relation='Labeled_Flow', restriction=R)
+                result = Relation.restrict(cls.mmdb, relation='Labeled_Flow', restriction=R)
                 if result.body:
                     # Name corresponds to some Labled Flow instance
                     label_fid = result.body[0]['ID']
