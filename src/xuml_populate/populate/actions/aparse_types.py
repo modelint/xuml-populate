@@ -13,7 +13,6 @@ class Content(Enum):
     INSTANCE = 2
     TABLE = 3
 
-
 Flow_ap = namedtuple("Flow_ap", "fid content tname max_mult")
 """ Describes a generated flow with: Flow ID, content(scalar/table/class), type name, Max multiplicity (1,M) """
 

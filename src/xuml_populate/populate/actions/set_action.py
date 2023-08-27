@@ -1,18 +1,17 @@
 """
-project_action.py – Populate a Project Action instance in PyRAL
+set_action.py – Populate a Set Action instance in PyRAL
 """
 
 import logging
-from xuml_populate.exceptions.action_exceptions import ProjectedAttributeNotDefined
 from scrall.parse.visitor import Projection_a
 from xuml_populate.populate.actions.table import Table
 from typing import TYPE_CHECKING, Set, Dict, List, Optional
 from xuml_populate.populate.actions.aparse_types import Flow_ap, MaxMult, Content
-from xuml_populate.exceptions.action_exceptions import ComparingNonAttributeInSelection, NoInputInstanceFlow
+from xuml_populate.exceptions.action_exceptions import (ProductForbidsCommonAttributes, UnjoinableHeaders,
+                                                        SetOpRequiresSameHeaders)
 from xuml_populate.populate.actions.action import Action
 from xuml_populate.populate.flow import Flow
-from xuml_populate.populate.mmclass_nt import Relational_Action_i, Table_Action_i, Project_Action_i,\
-    Projected_Attribute_i
+from xuml_populate.populate.mmclass_nt import Relational_Action_i, Table_Action_i, Set_Action_i
 from pyral.relvar import Relvar
 from pyral.relation import Relation
 from pyral.transaction import Transaction
@@ -37,19 +36,20 @@ class ProjectAction:
     ns_type = None
 
     @classmethod
-    def populate(cls, mmdb: 'Tk', input_nsflow: Flow_ap, projection: Projection_a, anum: str,
+    def populate(cls, mmdb: 'Tk', a_input: Flow_ap, b_input: Flow_ap, setop: str, anum: str,
                  domain: str, activity_path: str, scrall_text: str) -> Flow_ap:
         """
-        Populate the Project Action
+        Populate the Set Action
 
-        :param mmdb:
-        :param anum:
-        :param domain:
-        :param input_nsflow: The input Non Scalar Flow that is being projected
-        :param projection:  A list of attr names to be projected and optional expansion (ALL, EMPTY)
+        :param mmdb: The metamodel database
+        :param a_input: The a input Non Scalar Flow
+        :param b_input: The b input Non Scalar Flow
+        :param setop: The set operation name
+        :param anum: Activity number
+        :param domain: Domain
         :param scrall_text:
         :param activity_path:
-        :return: Projected table flow
+        :return: Set action output table flow
         """
         # Save attribute values that we will need when creating the various select subsystem
         # classes
@@ -59,10 +59,43 @@ class ProjectAction:
         cls.activity_path = activity_path
         cls.scrall_text = scrall_text
 
-        _logger.info("")
         table_header = {}
-        match input_nsflow.content:
+        match setop:
+            case 'JOIN':
+                # Reject if inputs a and b are not joinable
+                # This means that there must be at least one attribute/type pair in common
+                if a_input.content == Content.INSTANCE:
+                    R = f"Class:<{a_input.tname}>, Domain:<{cls.domain}>"
+                    Relation.restrict3(cls.mmdb, relation='Attribute', restriction=R)
+                else:
+                    R = f"Table:<{a_input.tname}>, Domain:<{cls.domain}>"
+                    Relation.restrict3(cls.mmdb, relation='Table_Attribute', restriction=R)
+                Relation.project2(cls.mmdb, attributes=('Name', 'Scalar'), svar_name='a_nt')
+                Relation.project2(cls.mmdb, attributes=('Name',), relation='a_nt', svar_name='a_n')
+                if b_input.content == Content.INSTANCE:
+                    R = f"Class:<{b_input.tname}>, Domain:<{cls.domain}>"
+                    Relation.restrict3(cls.mmdb, relation='Attribute', restriction=R)
+                else:
+                    R = f"Table:<{b_input.tname}>, Domain:<{cls.domain}>"
+                    Relation.restrict3(cls.mmdb, relation='Table_Attribute', restriction=R)
+                Relation.project2(cls.mmdb, attributes=('Name', 'Scalar'), svar_name='b_nt')
+                Relation.project2(cls.mmdb, attributes=('Name',), relation='b_nt', svar_name='b_n')
+                # TODO: Take the intersection of the a_n, b_n -> common_names
+                # TODO: if a_nt, b_nt each restricted on common_names are equal, success
+                # TODO: update metamodel so that Attribute.Type is renamed to .Scalar
+                # TODO: implement intersection and is (equality) in PyRAL
+            case 'UNION' | 'INTERSECT' | 'MINUS':
+                # produce a_nt and b_nt and test equality
+                # a/b Types must match (same table or same class)
+                print()
+            case 'TIMES':
+                # produce a_nt and b_nt and take the intersection
+                # if empty, success
+                print()
+
+        match a_input.content:
             case Content.INSTANCE:
+                if Flow.
                 cls.ns_type = input_nsflow.tname
                 # Get type of each attribute
                 for pattr in projection.attrs:

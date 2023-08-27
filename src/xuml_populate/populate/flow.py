@@ -6,6 +6,7 @@ import logging
 from pyral.relvar import Relvar
 from pyral.relation import Relation
 from typing import TYPE_CHECKING, Optional
+from xuml_populate.exceptions.action_exceptions import FlowException
 from xuml_populate.populate.mmclass_nt import Data_Flow_i, Flow_i, \
     Multiple_Instance_Flow_i, Single_Instance_Flow_i, Instance_Flow_i, \
     Control_Flow_i, Non_Scalar_Flow_i, Scalar_Flow_i, Table_Flow_i, Labeled_Flow_i, Unlabeled_Flow_i, \
@@ -29,6 +30,56 @@ class Flow:
     activity = None
     label = None
     mmdb = None
+
+    @classmethod
+    def lookup_data(cls, fid: str, anum: str, domain: str) -> Flow_ap:
+        """
+        Given a Data Flow identifier (fid, anum, domain), determine the flow content, tname, and maxmult
+
+        Raise exception if no such Data Flow
+
+        :param domain:
+        :param anum:
+        :param mmdb:
+        :param fid:
+        :return: A flow descriptor for the supplied ID
+        """
+        # First verify that the fid corresponds to some Data Flow instance
+        R = f"ID:<{fid}>, Activity:<{anum}>, Domain:<{domain}>"
+        result = Relation.restrict3(cls.mmdb, relation='Data_Flow', restriction=R)
+        if not result.body:
+            # Either fid not defined or it is a Control Flow
+            raise FlowException
+
+        # Is Non Scalar or Scalar Flow?
+        R = f"ID:<{fid}>, Activity:<{anum}>, Domain:<{domain}>"
+        result = Relation.restrict3(cls.mmdb, relation='Non_Scalar_Flow', restriction=R)
+        if result.body:
+            # It is a Non Scalar Flow
+            R = f"ID:<{fid}>, Activity:<{anum}>, Domain:<{domain}>"
+            result = Relation.restrict3(cls.mmdb, relation='Instance_Flow', restriction=R)
+            if result.body:
+                # It's an Instance Flow
+                tname = result.body[0]['Type']
+                R = f"ID:<{fid}>, Activity:<{anum}>, Domain:<{domain}>"
+                result = Relation.restrict3(cls.mmdb, relation='Multiple_Instance_Flow', restriction=R)
+                max_mult = MaxMult.MANY if result.body else MaxMult.ONE
+                return Flow_ap(fid=fid, content=Content.INSTANCE, tname=tname, max_mult=max_mult)
+            else:
+                # Must be a Table Flow
+                R = f"ID:<{fid}>, Activity:<{anum}>, Domain:<{domain}>"
+                result = Relation.restrict3(cls.mmdb, relation='Table_Flow', restriction=R)
+                tname = result.body[0]['Type']
+                R = f"ID:<{fid}>, Activity:<{anum}>, Domain:<{domain}>"
+                result = Relation.restrict3(cls.mmdb, relation='Relation_Flow', restriction=R)
+                max_mult = MaxMult.MANY if result.body else MaxMult.ONE
+                return Flow_ap(fid=fid, content=Content.TABLE, tname=tname, max_mult=max_mult)
+        else:
+            # It's a Scalar Flow
+            R = f"ID:<{fid}>, Activity:<{anum}>, Domain:<{domain}>"
+            result = Relation.restrict3(cls.mmdb, relation='Scalar_Flow', restriction=R)
+            tname = result.body[0]['Type']
+            return Flow_ap(fid=fid, content=Content.SCALAR, tname=tname, max_mult=None)
 
     @classmethod
     def populate_data_flow_by_type(cls, mmdb: 'Tk', label: Optional[str], mm_type: str, activity: str,

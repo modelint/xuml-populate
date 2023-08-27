@@ -3,6 +3,7 @@
 import logging
 from typing import TYPE_CHECKING, List, NamedTuple
 from xuml_populate.populate.actions.expressions.instance_set import InstanceSet
+from xuml_populate.populate.flow import Flow
 from xuml_populate.populate.actions.aparse_types import Flow_ap, MaxMult, Content
 from xuml_populate.populate.actions.select_action import SelectAction
 from xuml_populate.populate.actions.project_action import ProjectAction
@@ -64,31 +65,38 @@ class TableExpr:
         cls.anum = anum
         cls.activity_path = activity_path
         cls.scrall_text = scrall_text
-        cls.component_flow = input_instance_flow
+        # cls.component_flow = input_instance_flow
 
-        return cls.walk(texpr=rhs)
+        return cls.walk(texpr=rhs, input_flow=input_instance_flow)
 
     @classmethod
-    def walk(cls, texpr: TEXPR_a) -> Flow_ap:
+    def walk(cls, texpr: TEXPR_a, input_flow: Flow_ap) -> Flow_ap:
         """
 
+        :param input_flow:
         :param texpr: Parsed table expression
         """
         # Process the table component
         # It is either an instance set, name, or a nested table operation
-        output_flow = cls.component_flow
+        component_flow = input_flow
         match type(texpr.table).__name__:
             case 'N_a' | 'IN_a':
                 R = f"Name:<{texpr.table.name}>, Activity:<{cls.anum}>, Domain:<{cls.domain}>"
                 result = Relation.restrict3(cls.mmdb, relation='Labeled_Flow', restriction=R)
                 if result.body:
-                    output_fid = result.body[0]['ID']
+                    # Name corresponds to some Labled Flow instance
+                    label_fid = result.body[0]['ID']
+                    component_flow = Flow.lookup_data(fid=label_fid, anum=cls.anum, domain=cls.domain)
                 else:
-                    pass
+                    # Not a Labled Flow instance
+                    # Could be an attribute of some class
+                    _logger.error(f"Name [{texpr.table.name}] does not label any flow")
+                    raise FlowException
+
             case 'INST_a':
                 # Process the instance set and obtain its flow id
-                output_flow = InstanceSet.process(mmdb=cls.mmdb, anum=cls.anum,
-                                                 input_instance_flow=output_flow,
+                component_flow = InstanceSet.process(mmdb=cls.mmdb, anum=cls.anum,
+                                                 input_instance_flow=component_flow,
                                                  iset_components=texpr.table.components,
                                                  domain=cls.domain,
                                                  activity_path=cls.activity_path,
@@ -101,8 +109,11 @@ class TableExpr:
                 # insert Computation and set its operator attribute with texpr.op
                 operand_flows = []
                 for o in texpr.table.operands:
-                    operand_flows.append(cls.walk(o))
-                pass  # Process the operation
+                    operand_flows.append(cls.walk(texpr=o, input_flow=component_flow))
+                op_name = texpr.table.op
+                # TODO: # Process the operation by creating a Set Action and an Ouput Table Flow
+                pass
+
             case _:
                 _logger.error(
                     f"Expected INST, N, IN or TOP, but received {type(texpr).__name__} during table_expr walk")
@@ -113,16 +124,16 @@ class TableExpr:
             pass
         if texpr.selection:
             # If there is a selection on the instance set, create the action and obtain its flow id
-            output_flow = SelectAction.populate(
-                cls.mmdb, input_instance_flow=output_flow, anum=cls.anum,
+            component_flow = SelectAction.populate(
+                cls.mmdb, input_instance_flow=component_flow, anum=cls.anum,
                 select_agroup=texpr.selection,
                 domain=cls.domain,
                 activity_path=cls.activity_path, scrall_text=cls.scrall_text)
         if texpr.projection:
             # If there is a projection, create the action and obtain its flow id
-            output_flow = ProjectAction.populate(cls.mmdb, input_nsflow=output_flow,
+            component_flow = ProjectAction.populate(cls.mmdb, input_nsflow=component_flow,
                                                          projection=texpr.projection,
                                                          anum=cls.anum, domain=cls.domain,
                                                          activity_path=cls.activity_path,
                                                          scrall_text=cls.scrall_text)
-        return output_flow
+        return component_flow

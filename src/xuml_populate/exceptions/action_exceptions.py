@@ -17,6 +17,15 @@ class FlowException(ActionException):
 class TableExpressionException(ActionException):
     pass
 
+class ProductForbidsCommonAttributes(TableExpressionException):
+    pass
+
+class SetOpRequiresSameHeaders(TableExpressionException):
+    pass
+
+class UnjoinableHeaders(TableExpressionException):
+    pass
+
 class TraversalActionException(ActionException):
     pass
 
