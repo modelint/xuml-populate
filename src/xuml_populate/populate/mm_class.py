@@ -12,7 +12,7 @@ from xuml_populate.populate.mmclass_nt import Class_i, Alias_i
 
 from pyral.relation import Relation
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Tuple
 
 if TYPE_CHECKING:
     from tkinter import Tk
@@ -36,7 +36,22 @@ class MMclass:
     ee_ops = None
 
     @classmethod
-    def exists(cls, cname:str, domain:str) -> bool:
+    def header(cls, mmdb: 'Tk', cname: str, domain: str) -> Tuple:
+        """
+        Returns the header for a table reprsentation of this class
+
+        :param mmdb:
+        :param cname:   Class name
+        :param domain:  Domain name
+        :return:
+        """
+        R = f"Class:<{cname}>, Domain:<{domain}>"
+        attrs = Relation.restrict(cls.mmdb, relation='Attribute', restriction=R)
+        h = tuple((a['Name'], a['Type']) for a in attrs.body)
+        return h
+
+    @classmethod
+    def exists(cls, cname: str, domain: str) -> bool:
         """
 
         :param cname:  Name of the class

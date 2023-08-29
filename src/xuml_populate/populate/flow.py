@@ -5,6 +5,7 @@ flow.py – Populate a Flow in PyRAL
 import logging
 from pyral.relvar import Relvar
 from pyral.relation import Relation
+from pyral.transaction import Transaction
 from typing import TYPE_CHECKING, Optional
 from xuml_populate.exceptions.action_exceptions import FlowException
 from xuml_populate.populate.mmclass_nt import Data_Flow_i, Flow_i, \
@@ -140,7 +141,7 @@ class Flow:
 
     @classmethod
     def populate_instance_flow(cls, mmdb: 'Tk', cname: str, activity: str, domain: str, label: Optional[str],
-                               single: bool = False) -> Flow_ap:
+                               single: bool = False, pop: bool = False) -> Flow_ap:
         """
         Populate an instance of Scalar flow
 
@@ -148,6 +149,7 @@ class Flow:
         :param label:
         :param cname:
         :param activity:
+        :param pop:  Populate immediately, useful for flowing directly from a class into some action such as rename
         :param domain:
         :param single: If true, single otherwise multiple instance flow
         :return: The generated flow id
@@ -157,6 +159,9 @@ class Flow:
         cls.domain = domain
         cls.activity = activity
         cls.mmdb = mmdb
+
+        if pop:
+            Transaction.open(mmdb)
 
         flow_id = cls.populate_non_scalar_flow()
         Relvar.insert(relvar='Instance_Flow', tuples=[
@@ -172,6 +177,9 @@ class Flow:
             Relvar.insert(relvar='Multiple_Instance_Flow', tuples=[
                 Multiple_Instance_Flow_i(ID=flow_id, Activity=activity, Domain=domain)
             ])
+
+        if pop:
+            Transaction.execute()
         return Flow_ap(fid=flow_id, content=Content.INSTANCE, tname=cname, max_mult=max_mult)
 
     @classmethod

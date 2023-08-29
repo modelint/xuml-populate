@@ -3,19 +3,19 @@ set_action.py – Populate a Set Action instance in PyRAL
 """
 
 import logging
-from scrall.parse.visitor import Projection_a
 from xuml_populate.populate.actions.table import Table
 from typing import TYPE_CHECKING, Set, Dict, List, Optional
 from xuml_populate.populate.actions.aparse_types import Flow_ap, MaxMult, Content
 from xuml_populate.exceptions.action_exceptions import (ProductForbidsCommonAttributes, UnjoinableHeaders,
                                                         SetOpRequiresSameHeaders)
 from xuml_populate.populate.actions.action import Action
+from xuml_populate.populate.mm_class import MMclass
+from xuml_populate.populate.ns_flow import NonScalarFlow
 from xuml_populate.populate.flow import Flow
 from xuml_populate.populate.mmclass_nt import Relational_Action_i, Table_Action_i, Set_Action_i
 from pyral.relvar import Relvar
 from pyral.relation import Relation
 from pyral.transaction import Transaction
-from scrall.parse.visitor import N_a, BOOL_a, Op_a
 
 if TYPE_CHECKING:
     from tkinter import Tk
@@ -23,7 +23,7 @@ if TYPE_CHECKING:
 _logger = logging.getLogger(__name__)
 
 
-class ProjectAction:
+class SetAction:
     """
     Create all relations for a ProjectAction
     """
@@ -59,7 +59,7 @@ class ProjectAction:
         cls.activity_path = activity_path
         cls.scrall_text = scrall_text
 
-        table_header = {}
+        table_header = None
         match setop:
             case 'JOIN':
                 # Reject if inputs a and b are not joinable
@@ -86,13 +86,18 @@ class ProjectAction:
                 # TODO: implement intersection and is (equality) in PyRAL
                 # TODO: Table header is the union of a_nt and b_nt (if joinable)
             case 'UNION' | 'INTERSECT' | 'MINUS':
-                # produce a_nt and b_nt and test equality
                 # a/b Types must match (same table or same class)
-                # TODO: Take the set of attributes in a_nt as the table header
-                print()
+                if not NonScalarFlow.same_headers(mmdb, a_input, b_input, domain=cls.domain):
+                    raise SetOpRequiresSameHeaders
+                # Table header can be taken from a or b since they are the same
+                if a_input.content == Content.INSTANCE:
+                    table_header = MMclass.header(mmdb, cname=a_input.tname, domain=domain)
+                else:
+                    table_header = Table.header(mmdb, tname=a_input.tname, domain=domain)
             case 'TIMES':
-                # produce a_nt and b_nt and take the intersection
-                # if empty, success
+                if not NonScalarFlow.headers_disjoint(mmdb, a_input, b_input, domain=cls.domain):
+                    raise ProductForbidsCommonAttributes
+                pass
                 # TODO: Table header is the union of a_nt and b_nt
                 print()
 
@@ -108,16 +113,11 @@ class ProjectAction:
             Relational_Action_i(ID=cls.action_id, Activity=anum, Domain=domain)
         ])
         Relvar.insert(relvar='Table_Action', tuples=[
-            Table_Action_i(ID=cls.action_id, Activity=anum, Domain=domain, Input_a_flow=input_nsflow.fid,
+            Table_Action_i(ID=cls.action_id, Activity=anum, Domain=domain, Input_a_flow=a_input.fid,
                            Output_flow=output_tflow.fid)
         ])
-        Relvar.insert(relvar='Project_Action', tuples=[
-            Relational_Action_i(ID=cls.action_id, Activity=anum, Domain=domain)
+        Relvar.insert(relvar='Set_Action', tuples=[
+            Set_Action_i(ID=cls.action_id, Operation=setop, Activity=anum, Domain=domain, Input_b_flow=b_input.fid)
         ])
-        for pattr in projection.attrs:
-            Relvar.insert(relvar='Projected_Attribute', tuples=[
-                Projected_Attribute_i(Attribute=pattr.name, Non_scalar_type=cls.ns_type, Project_action=cls.action_id,
-                                      Activity=anum, Domain=domain)
-            ])
         Transaction.execute()
         return output_tflow

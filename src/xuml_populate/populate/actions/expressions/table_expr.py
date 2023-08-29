@@ -7,6 +7,7 @@ from xuml_populate.populate.flow import Flow
 from xuml_populate.populate.actions.aparse_types import Flow_ap, MaxMult, Content
 from xuml_populate.populate.actions.select_action import SelectAction
 from xuml_populate.populate.actions.project_action import ProjectAction
+from xuml_populate.populate.actions.set_action import SetAction
 from xuml_populate.exceptions.action_exceptions import TableOperationOrExpressionExpected, FlowException
 from scrall.parse.visitor import TOP_a, TEXPR_a
 from pyral.relvar import Relvar
@@ -81,6 +82,7 @@ class TableExpr:
         component_flow = input_flow
         match type(texpr.table).__name__:
             case 'N_a' | 'IN_a':
+                # Is the name an existing Labeled Flow?
                 R = f"Name:<{texpr.table.name}>, Activity:<{cls.anum}>, Domain:<{cls.domain}>"
                 result = Relation.restrict(cls.mmdb, relation='Labeled_Flow', restriction=R)
                 if result.body:
@@ -89,18 +91,26 @@ class TableExpr:
                     component_flow = Flow.lookup_data(fid=label_fid, anum=cls.anum, domain=cls.domain)
                 else:
                     # Not a Labled Flow instance
-                    # Could be an attribute of some class
-                    _logger.error(f"Name [{texpr.table.name}] does not label any flow")
-                    raise FlowException
+                    # Is it a class name? If so, create a multiple instance flow and set component flow
+                    R = f"Name:<{texpr.table.name}>, Domain:<{cls.domain}>"
+                    result = Relation.restrict(cls.mmdb, relation='Class', restriction=R)
+                    if result.body:
+                        component_flow = Flow.populate_instance_flow(cls.mmdb, cname=texpr.table.name,
+                                                                     activity=cls.anum, domain=cls.domain,
+                                                                     label=None, pop=True)
+                    else:
+                        # Neither labeled flow or class
+                        # TODO: check for other possible cases
+                        _logger.error(f"Name [{texpr.table.name}] does not label any flow")
+                        raise FlowException
 
             case 'INST_a':
                 # Process the instance set and obtain its flow id
                 component_flow = InstanceSet.process(mmdb=cls.mmdb, anum=cls.anum,
-                                                 input_instance_flow=component_flow,
-                                                 iset_components=texpr.table.components,
-                                                 domain=cls.domain,
-                                                 activity_path=cls.activity_path,
-                                                 scrall_text=cls.scrall_text)
+                                                     input_instance_flow=component_flow,
+                                                     iset_components=texpr.table.components,
+                                                     domain=cls.domain, activity_path=cls.activity_path,
+                                                     scrall_text=cls.scrall_text)
             case 'TOP_a':
                 print()
                 # The table is an operation on one or more operands
@@ -111,9 +121,9 @@ class TableExpr:
                 for o in texpr.table.operands:
                     operand_flows.append(cls.walk(texpr=o, input_flow=component_flow))
                 op_name = texpr.table.op
-                # TODO: # Process the operation by creating a Set Action and an Ouput Table Flow
-                pass
-
+                component_flow = SetAction.populate(cls.mmdb, a_input=operand_flows[0], b_input=operand_flows[1],
+                                                    setop=op_name, anum=cls.anum, domain=cls.domain,
+                                                    activity_path=cls.activity_path, scrall_text=cls.scrall_text)
             case _:
                 _logger.error(
                     f"Expected INST, N, IN or TOP, but received {type(texpr).__name__} during table_expr walk")
@@ -132,8 +142,8 @@ class TableExpr:
         if texpr.projection:
             # If there is a projection, create the action and obtain its flow id
             component_flow = ProjectAction.populate(cls.mmdb, input_nsflow=component_flow,
-                                                         projection=texpr.projection,
-                                                         anum=cls.anum, domain=cls.domain,
-                                                         activity_path=cls.activity_path,
-                                                         scrall_text=cls.scrall_text)
+                                                    projection=texpr.projection,
+                                                    anum=cls.anum, domain=cls.domain,
+                                                    activity_path=cls.activity_path,
+                                                    scrall_text=cls.scrall_text)
         return component_flow

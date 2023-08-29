@@ -1,7 +1,7 @@
 """ table.py - Define a table """
 
 import logging
-from typing import TYPE_CHECKING, Dict
+from typing import TYPE_CHECKING, Tuple, Dict
 from xuml_populate.populate.flow import Flow
 from xuml_populate.populate.actions.aparse_types import Flow_ap
 from pyral.transaction import Transaction
@@ -21,6 +21,20 @@ class Table:
     This includes Table Attribute, Model Attribute and Table Flow
     """
 
+    @classmethod
+    def header(cls, mmdb: 'Tk', tname: str, domain: str) -> Dict[str, str]:
+        """
+        Returns the header for this table type
+
+        :param mmdb:
+        :param tname:   Class name
+        :param domain:  Domain name
+        :return:  Dictionary of attr_name:scalar (type) values
+        """
+        R = f"Table:<{tname}>, Domain:<{domain}>"
+        attrs = Relation.restrict(mmdb, relation='Table_Attribute', restriction=R)
+        h = {a['Name']: a['Scalar'] for a in attrs.body}
+        return h
 
     @classmethod
     def populate(cls, mmdb: 'Tk', table_header: Dict[str, str], anum: str, domain: str) -> Flow_ap:

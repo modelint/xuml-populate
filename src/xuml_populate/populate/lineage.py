@@ -46,9 +46,7 @@ class Lineage:
 
         Relation.project(mmdb, attributes=('Class', 'Domain'), relation='Subclass', svar_name='subs')
         Relation.project(mmdb, attributes=('Class', 'Domain'), relation='Superclass', svar_name='supers')
-        # TODO: update PyRAL so we don't need make_pyrel
-        r = Relation.subtract(mmdb, rname1='subs', rname2='supers')
-        leaf_tuples = Relation.make_pyrel(relation=r, name='leaf tuples')
+        leaf_tuples = Relation.subtract(mmdb, rname1='subs', rname2='supers')
         leaf_classes = [t['Class'] for t in leaf_tuples.body]
 
         # Now we walk (step) through each generalization to build trees of one or more lineages
