@@ -3,24 +3,22 @@ statement.py – Populate all actions in a Scrall statement
 """
 
 import logging
-from pyral.relvar import Relvar
 from pyral.relation import Relation
-from pyral.transaction import Transaction
-from xuml_populate.populate.actions.traverse_action import TraverseAction
-from xuml_populate.populate.flow import Flow
 from xuml_populate.populate.actions.instance_assignment import InstanceAssignment
 from xuml_populate.populate.actions.table_assignment import TableAssignment
-from xuml_populate.populate.mmclass_nt import Action_i, Traverse_Action_i
+from xuml_populate.populate.actions.scalar_assignment import ScalarAssignment
 from typing import TYPE_CHECKING
 from enum import Enum
 
 if TYPE_CHECKING:
     from tkinter import Tk
 
+
 class ActivityType(Enum):
     METHOD = 1
     STATE = 2
     OPERATION = 3
+
 
 class Statement:
     """
@@ -28,16 +26,16 @@ class Statement:
     """
     _logger = logging.getLogger(__name__)
     next_action_id = {}
-    activity_type = None # enum: state, ee, method
-    state = None # state name
-    operation = None # operation name
+    activity_type = None  # enum: state, ee, method
+    state = None  # state name
+    operation = None  # operation name
     method = None  # method name
     cname = None
     signum = None
     xi_flow_id = None
 
     @classmethod
-    def populate_method(cls, mmdb: 'Tk', cname: str, method:str, anum: str, domain: str, aparse, scrall_text:str):
+    def populate_method(cls, mmdb: 'Tk', cname: str, method: str, anum: str, domain: str, aparse, scrall_text: str):
         """
         When we populate a method we need to know the class and method name so that we can
         later look up its inputs (executing class and parameter inputs).
@@ -75,7 +73,7 @@ class Statement:
         cls.populate(mmdb, anum, domain, aparse, activity_path, scrall_text)
 
     @classmethod
-    def populate(cls, mmdb: 'Tk', anum: str, domain: str, aparse, activity_path:str, scrall_text:str):
+    def populate(cls, mmdb: 'Tk', anum: str, domain: str, aparse, activity_path: str, scrall_text: str):
         """
         Populate a Statement
         """
@@ -91,4 +89,10 @@ class Statement:
                 TableAssignment.process(mmdb, anum=anum, cname=cls.cname, domain=domain,
                                         table_assign_parse=aparse.action_group, xi_flow_id=cls.xi_flow_id,
                                         activity_path=activity_path, scrall_text=scrall_text)
-
+            case 'Scalar_Assignment_a':
+                ScalarAssignment.process(mmdb, anum=anum, cname=cls.cname, domain=domain,
+                                         scalar_assign_parse=aparse.action_group, xi_flow_id=cls.xi_flow_id,
+                                         activity_path=activity_path, scrall_text=scrall_text)
+                print()
+            case _:
+                print()

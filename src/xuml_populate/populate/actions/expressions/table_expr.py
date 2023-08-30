@@ -24,7 +24,7 @@ _logger = logging.getLogger(__name__)
 
 class TableExpr:
     """
-    For reference, a table exrpression is defined in the scrall grammar as:
+    For reference, a table expression is defined in the scrall grammar as:
 
     table_expr = table_operation
     table_operation = table_term (TOP table_term)*
@@ -35,7 +35,7 @@ class TableExpr:
     (whitespace tokens removed in the above extract)
 
     So we need to walk through the parse tree through the nested operations, possibly
-    building instance sets adn then handling various header expressions (rename, etc),
+    building instance sets and then handling various header expressions (rename, etc),
     selections, and projections. These are all delegated elsewhere.
 
     Here we focus on unnesting all those table ops and operands.

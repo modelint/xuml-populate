@@ -20,6 +20,13 @@ class NonScalarFlowRequired(FlowException):
 class TableExpressionException(ActionException):
     pass
 
+class ScalarExpressionException(ActionException):
+    pass
+
+class ScalarOperationOrExpressionExpected(ScalarExpressionException):
+    pass
+
+
 class UndefinedHeaderExpressionOp(TableExpressionException):
     pass
 

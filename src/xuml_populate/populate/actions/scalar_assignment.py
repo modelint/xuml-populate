@@ -1,13 +1,13 @@
 """
-table_assignment.py – Populate elements of a table assignment
+scalar_assignment.py – Populate elements of a scalar assignment
 """
 
 import logging
 from typing import TYPE_CHECKING, Set, Dict, List, Optional
 from xuml_populate.populate.mmclass_nt import Labeled_Flow_i
-from xuml_populate.populate.actions.expressions.table_expr import TableExpr
 from xuml_populate.populate.flow import Flow
 from xuml_populate.populate.actions.aparse_types import Flow_ap, MaxMult, Content
+from xuml_populate.populate.actions.expressions.scalar_expr import ScalarExpr
 
 from pyral.relvar import Relvar
 from pyral.relation import Relation
@@ -21,9 +21,9 @@ if TYPE_CHECKING:
 _logger = logging.getLogger(__name__)
 
 
-class TableAssignment:
+class ScalarAssignment:
     """
-    Break down a table assignment statement into action semantics and populate them
+    Break down a scalar assignment statement into action semantics and populate them
 
     """
 
@@ -36,7 +36,7 @@ class TableAssignment:
     scrall_text = None
 
     @classmethod
-    def process(cls, mmdb: 'Tk', anum: str, cname: str, domain: str, table_assign_parse,
+    def process(cls, mmdb: 'Tk', anum: str, cname: str, domain: str, scalar_assign_parse,
                 xi_flow_id: str, activity_path: str, scrall_text: str):
         """
         Given a parsed table assignment consisting of an LHS and an RHS, populate each component action
@@ -50,19 +50,19 @@ class TableAssignment:
         :param cname: The class (for an operation it is the proxy class)
         :param domain: In this domain
         :param anum: The Activity Number
-        :param table_assign_parse: A parsed table assignment
+        :param scalar_assign_parse: A parsed scalar assignment
         :param xi_flow_id: The ID of the executing instance flow (the instance executing this anum)
         :param activity_path: Human readable path to the anum for error reporting
         :param scrall_text: The parsed scrall text for error reporting
         """
-        lhs = table_assign_parse.lhs
-        rhs = table_assign_parse.rhs
+        lhs = scalar_assign_parse.lhs
+        rhs = scalar_assign_parse.rhs
         cls.input_instance_flow = xi_flow_id
 
         # The executing instance is by nature a single instance flow
         xi_instance_flow = Flow_ap(fid=xi_flow_id, content=Content.INSTANCE, tname=cname, max_mult=MaxMult.ONE)
 
-        output_flow = TableExpr.process(mmdb, rhs=rhs, anum=anum,
+        output_flow = ScalarExpr.process(mmdb, rhs=rhs, anum=anum,
                                         input_instance_flow=xi_instance_flow, domain=domain,
                                         activity_path=activity_path, scrall_text=scrall_text)
 
