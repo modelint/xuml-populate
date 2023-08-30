@@ -37,7 +37,7 @@ class Attribute:
         # Populate the Attribute's type if it hasn't already been populated
         MMtype.populate_unknown(mmdb, name=cls.dtype, domain=domain)
         Relvar.insert(relvar='Attribute', tuples=[
-            Attribute_i(Name=record['name'], Class=cname, Domain=domain, Type=cls.dtype)
+            Attribute_i(Name=record['name'], Class=cname, Domain=domain, Scalar=cls.dtype)
         ])
         Relvar.insert(relvar='Model_Attribute', tuples=[
             Model_Attribute_i(Name=record['name'], Domain=domain, Non_scalar_type=cname)
@@ -74,7 +74,7 @@ class Attribute:
         Determine an update type of each unresolved (referential) attribute
         """
         # TODO: Make this first part work and deprecate second
-        R = f"Type:<{UNRESOLVED}>, Domain:<{domain}>"
+        R = f"Scalar:<{UNRESOLVED}>, Domain:<{domain}>"
         Relation.restrict(tclral=mmdb, relation='Attribute', restriction=R)
         uattrs = Relation.project(tclral=mmdb, attributes=('Name', 'Class'))
 
@@ -87,7 +87,7 @@ class Attribute:
             Relvar.updateone(tclral=mmdb,
                              relvar_name='Attribute',
                              id={'Name':a['Name'], 'Class':a['Class'], 'Domain':domain},
-                             update={'Type': assign_type})
+                             update={'Scalar': assign_type})
 
         # All attr types resolved, so delete the dummy UNRESOLVED type
         MMtype.depopulate_scalar_type(mmdb, name=UNRESOLVED, domain=domain)
@@ -121,7 +121,7 @@ class Attribute:
 
         # The same attribute could participate in multiple References, so we just pick one arbitrarily
         aref = from_attrs.body[0]
-        to_name, to_class, to_type = aref['Name'], aref['Class'], aref['Type']
+        to_name, to_class, to_type = aref['Name'], aref['Class'], aref['Scalar']
 
         if to_type != UNRESOLVED:
             return to_type  # The To_attribute has a type

@@ -71,7 +71,7 @@ class ProjectAction:
                     if not result.body:
                         _logger.error(f"Attribute [{pattr.name}] in projection not defined on class [{input_nsflow.tname}]")
                         raise ProjectedAttributeNotDefined
-                    table_header[pattr.name] = result.body[0]['Type']
+                    table_header[pattr.name] = result.body[0]['Scalar']
             case Content.TABLE:
                 cls.ns_type = input_nsflow.tname
                 # TODO: Add this case for projecting on a table input

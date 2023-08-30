@@ -47,7 +47,7 @@ class MMclass:
         """
         R = f"Class:<{cname}>, Domain:<{domain}>"
         attrs = Relation.restrict(cls.mmdb, relation='Attribute', restriction=R)
-        h = {a['Name']: a['Type'] for a in attrs.body}
+        h = {a['Name']: a['Scalar'] for a in attrs.body}
         return h
 
     @classmethod

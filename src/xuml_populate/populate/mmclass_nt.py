@@ -25,7 +25,7 @@ Computed_Result_i = namedtuple('Computed_Result_i', 'Computation Activity Domain
 
 # Class And Attribute subsystem
 Alias_i = namedtuple('Alias_i', 'Name Class Domain')
-Attribute_i = namedtuple('Attribute_i', 'Name Class Domain Type')
+Attribute_i = namedtuple('Attribute_i', 'Name Class Domain Scalar')
 Attribute_In_Derivation_i = namedtuple('Attribute_In_Derivation_i', 'Source_attribute Source_class Target_attribute Target_class Domain')
 Attribute_Reference_i = namedtuple('Attribute_Reference_i', 'From_attribute From_class To_attribute To_class Domain To_identifier Ref Rnum')
 Class_i = namedtuple('Class_i', 'Name Cnum Domain')
