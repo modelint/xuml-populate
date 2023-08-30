@@ -144,7 +144,6 @@ class TableExpr:
                                                                domain=cls.domain,
                                                                activity_path=cls.activity_path,
                                                                scrall_text=cls.scrall_text)
-                        pass
                     case 'Extend':
                         print()
                     case _:

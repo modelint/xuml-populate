@@ -29,6 +29,22 @@ class NonScalarFlow:
     mmdb = None
 
     @classmethod
+    def header_union(cls, mmdb: 'Tk', a_flow: Flow_ap, b_flow: Flow_ap, domain: str) -> Dict[str, str]:
+        # Create a list of headers, one per ns_flow
+        headers = []
+        for f in [a_flow, b_flow]:
+            if f.content == Content.INSTANCE:
+                headers.append(MMclass.header(mmdb, cname=f.tname, domain=domain))
+            else:
+                headers.append(Table.header(mmdb, tname=f.tname, domain=domain))
+        # Convert the two headers from a list of dictionaries to a pair of tuples
+        h = [(tuple(h.items())) for h in headers]
+        # Union is formed by stepping through each attribute and adding it to a set
+        u = {e for i in h for e in i}
+        # Now convert back to a dictionary
+        return {t[0]: t[1] for t in u}
+
+    @classmethod
     def header(cls, mmdb: 'Tk', ns_flow: Flow_ap, domain:str) -> Dict[str, str]:
         """
         Given a Non Scalar Flow, obtain its header
@@ -61,14 +77,13 @@ class NonScalarFlow:
         headers = []
         for f in [a_flow, b_flow]:
             if f.content == Content.INSTANCE:
-                hdict = MMclass.header(mmdb, cname=f.tname, domain=domain)
+                headers.append(MMclass.header(mmdb, cname=f.tname, domain=domain))
             else:
-                hdict = Table.header(mmdb, tname=f.tname, domain=domain)
-                pass
-        # Convert headers from a list of dictionaries to a list of tuples
-        headers = [(tuple(a.items())) for a in headers]
+                headers.append(Table.header(mmdb, tname=f.tname, domain=domain))
+        # Convert the two headers from a list of dictionaries to a pair of tuples
+        a_header, b_header = [(tuple(h.items())) for h in headers]
         # Check to see that the a and b headers in the list are disjoint
-        return set(headers[0]).isdisjoint(headers[1])
+        return set(a_header).isdisjoint(b_header)
 
     @classmethod
     def same_headers(cls, mmdb: 'Tk', a_flow: Flow_ap, b_flow: Flow_ap, domain: str) -> bool:

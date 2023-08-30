@@ -62,29 +62,11 @@ class SetAction:
         table_header = None
         match setop:
             case 'JOIN':
-                # Reject if inputs a and b are not joinable
-                # This means that there must be at least one attribute/type pair in common
-                if a_input.content == Content.INSTANCE:
-                    R = f"Class:<{a_input.tname}>, Domain:<{cls.domain}>"
-                    Relation.restrict(cls.mmdb, relation='Attribute', restriction=R)
-                else:
-                    R = f"Table:<{a_input.tname}>, Domain:<{cls.domain}>"
-                    Relation.restrict(cls.mmdb, relation='Table_Attribute', restriction=R)
-                Relation.project(cls.mmdb, attributes=('Name', 'Scalar'), svar_name='a_nt')
-                Relation.project(cls.mmdb, attributes=('Name',), relation='a_nt', svar_name='a_n')
-                if b_input.content == Content.INSTANCE:
-                    R = f"Class:<{b_input.tname}>, Domain:<{cls.domain}>"
-                    Relation.restrict(cls.mmdb, relation='Attribute', restriction=R)
-                else:
-                    R = f"Table:<{b_input.tname}>, Domain:<{cls.domain}>"
-                    Relation.restrict(cls.mmdb, relation='Table_Attribute', restriction=R)
-                Relation.project(cls.mmdb, attributes=('Name', 'Scalar'), svar_name='b_nt')
-                Relation.project(cls.mmdb, attributes=('Name',), relation='b_nt', svar_name='b_n')
-                # TODO: Take the intersection of the a_n, b_n -> common_names
-                # TODO: if a_nt, b_nt each restricted on common_names are equal, success
-                # TODO: update metamodel so that Attribute.Type is renamed to .Scalar
-                # TODO: implement intersection and is (equality) in PyRAL
-                # TODO: Table header is the union of a_nt and b_nt (if joinable)
+                # The a/b flows are not joinable if the headers share no common attributes
+                if NonScalarFlow.headers_disjoint(cls.mmdb, a_flow=a_input, b_flow=b_input, domain=cls.domain):
+                    raise UnjoinableHeaders
+                # There is at least one attribute:type in common, so let's take the union to form the new header
+                table_header = NonScalarFlow.header_union(cls.mmdb, a_flow=a_input, b_flow=b_input, domain=cls.domain)
             case 'UNION' | 'INTERSECT' | 'MINUS':
                 # a/b Types must match (same table or same class)
                 if not NonScalarFlow.same_headers(mmdb, a_input, b_input, domain=cls.domain):
