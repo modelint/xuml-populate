@@ -5,8 +5,8 @@ ns_flow.py – Process a Non Scalar Flow
 import logging
 from pyral.relvar import Relvar
 from pyral.relation import Relation
-from typing import TYPE_CHECKING, Optional, List
-from xuml_populate.exceptions.action_exceptions import FlowException
+from typing import TYPE_CHECKING, Optional, List, Dict
+from xuml_populate.exceptions.action_exceptions import FlowException, NonScalarFlowRequired
 from xuml_populate.populate.actions.aparse_types import Flow_ap, MaxMult, Content
 from xuml_populate.populate.mm_class import MMclass
 from xuml_populate.populate.actions.table import Table
@@ -27,6 +27,24 @@ class NonScalarFlow:
     activity = None
     label = None
     mmdb = None
+
+    @classmethod
+    def header(cls, mmdb: 'Tk', ns_flow: Flow_ap, domain:str) -> Dict[str, str]:
+        """
+        Given a Non Scalar Flow, obtain its header
+
+        :param mmdb:
+        :param ns_flow:
+        :param domain:
+        :return: Header as a dictionary of attr:scalar (type) pairs
+        """
+        match ns_flow.content:
+            case Content.INSTANCE:
+                return MMclass.header(mmdb, ns_flow.tname, domain)
+            case Content.TABLE:
+                return Table.header(mmdb, ns_flow.tname, domain)
+            case _:
+                raise NonScalarFlowRequired
 
     @classmethod
     def headers_disjoint(cls, mmdb: 'Tk', a_flow: Flow_ap, b_flow: Flow_ap, domain: str) -> bool:

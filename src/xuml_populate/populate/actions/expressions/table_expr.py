@@ -4,11 +4,13 @@ import logging
 from typing import TYPE_CHECKING, List, NamedTuple
 from xuml_populate.populate.actions.expressions.instance_set import InstanceSet
 from xuml_populate.populate.flow import Flow
+from xuml_populate.populate.actions.rename_action import RenameAction
 from xuml_populate.populate.actions.aparse_types import Flow_ap, MaxMult, Content
 from xuml_populate.populate.actions.select_action import SelectAction
 from xuml_populate.populate.actions.project_action import ProjectAction
 from xuml_populate.populate.actions.set_action import SetAction
-from xuml_populate.exceptions.action_exceptions import TableOperationOrExpressionExpected, FlowException
+from xuml_populate.exceptions.action_exceptions import (TableOperationOrExpressionExpected, FlowException,
+                                                        UndefinedHeaderExpressionOp)
 from scrall.parse.visitor import TOP_a, TEXPR_a
 from pyral.relvar import Relvar
 from pyral.relation import Relation
@@ -130,8 +132,24 @@ class TableExpr:
                 raise TableOperationOrExpressionExpected
         # Process optional header, selection, and projection actions for the TEXPR
         if texpr.hexpr:
-            # TODO: Implement this case
-            pass
+            for header_op in texpr.hexpr:
+                # Process each header operation
+                match type(header_op).__name__:
+                    case 'Rename_a':
+                        # Populate a rename relational action
+                        component_flow = RenameAction.populate(cls.mmdb, input_nsflow=component_flow,
+                                                               from_attr=header_op.from_name,
+                                                               to_attr=header_op.to_name,
+                                                               anum=cls.anum,
+                                                               domain=cls.domain,
+                                                               activity_path=cls.activity_path,
+                                                               scrall_text=cls.scrall_text)
+                        pass
+                    case 'Extend':
+                        print()
+                    case _:
+                        raise UndefinedHeaderExpressionOp
+                pass
         if texpr.selection:
             # If there is a selection on the instance set, create the action and obtain its flow id
             component_flow = SelectAction.populate(

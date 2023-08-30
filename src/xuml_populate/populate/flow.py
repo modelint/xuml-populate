@@ -32,6 +32,15 @@ class Flow:
     label = None
     mmdb = None
 
+
+    @classmethod
+    def populate_table_flow_from_class(cls, cname: str, anum: str, domain: str) -> Flow_ap:
+        """
+
+        :return:
+        """
+        pass
+
     @classmethod
     def lookup_data(cls, fid: str, anum: str, domain: str) -> Flow_ap:
         """
@@ -226,13 +235,13 @@ class Flow:
         """
         Populate Flow instance and optional Label
         """
-        # Each activity requires a new flow id counter
+        # Each anum requires a new flow id counter
         activity_id = f'{cls.domain}:{cls.activity}'  # combine attributes to get id
         if activity_id not in cls.flow_id_ctr.keys():
             cls.flow_id_ctr[activity_id] = 0
 
         # Populate Flow instance
-        cls.flow_id_ctr[activity_id] += 1  # Increment the flow id counter for this activity
+        cls.flow_id_ctr[activity_id] += 1  # Increment the flow id counter for this anum
         flow_id = f"F{cls.flow_id_ctr[activity_id]}"
         Relvar.insert(relvar='Flow', tuples=[
             Flow_i(ID=flow_id, Activity=cls.activity, Domain=cls.domain)

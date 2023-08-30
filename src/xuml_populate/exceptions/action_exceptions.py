@@ -14,7 +14,13 @@ class ActionException(Exception):
 class FlowException(ActionException):
     pass
 
+class NonScalarFlowRequired(FlowException):
+    pass
+
 class TableExpressionException(ActionException):
+    pass
+
+class UndefinedHeaderExpressionOp(TableExpressionException):
     pass
 
 class ProductForbidsCommonAttributes(TableExpressionException):

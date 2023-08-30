@@ -90,7 +90,7 @@ class ProjectAction:
                            Output_flow=output_tflow.fid)
         ])
         Relvar.insert(relvar='Project_Action', tuples=[
-            Relational_Action_i(ID=cls.action_id, Activity=anum, Domain=domain)
+            Project_Action_i(ID=cls.action_id, Activity=anum, Domain=domain)
         ])
         for pattr in projection.attrs:
             Relvar.insert(relvar='Projected_Attribute', tuples=[

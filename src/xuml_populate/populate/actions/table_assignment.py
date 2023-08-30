@@ -51,8 +51,8 @@ class TableAssignment:
         :param domain: In this domain
         :param anum: The Activity Number
         :param table_assign_parse: A parsed instance assignment
-        :param xi_flow_id: The ID of the executing instance flow (the instance executing this activity)
-        :param activity_path: Human readable path to the activity for error reporting
+        :param xi_flow_id: The ID of the executing instance flow (the instance executing this anum)
+        :param activity_path: Human readable path to the anum for error reporting
         :param scrall_text: The parsed scrall text for error reporting
         """
         lhs = table_assign_parse.lhs
