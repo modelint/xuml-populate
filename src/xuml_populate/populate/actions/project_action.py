@@ -59,23 +59,21 @@ class ProjectAction:
         cls.activity_path = activity_path
         cls.scrall_text = scrall_text
 
-        _logger.info("")
+        _logger.info("Populating projection action")
         table_header = {}
-        match input_nsflow.content:
-            case Content.INSTANCE:
-                cls.ns_type = input_nsflow.tname
-                # Get type of each attribute
-                for pattr in projection.attrs:
-                    R = f"Name:<{pattr.name}>, Class:<{input_nsflow.tname}>, Domain:<{cls.domain}>"
-                    result = Relation.restrict(cls.mmdb, relation='Attribute', restriction=R)
-                    if not result.body:
-                        _logger.error(f"Attribute [{pattr.name}] in projection not defined on class [{input_nsflow.tname}]")
-                        raise ProjectedAttributeNotDefined
-                    table_header[pattr.name] = result.body[0]['Scalar']
-            case Content.TABLE:
-                cls.ns_type = input_nsflow.tname
-                # TODO: Add this case for projecting on a table input
-                print()
+        cls.ns_type = input_nsflow.tname
+        # Get type of each attribute
+        for pattr in projection.attrs:
+            if input_nsflow.content == Content.INSTANCE:
+                R = f"Name:<{pattr.name}>, Class:<{input_nsflow.tname}>, Domain:<{cls.domain}>"
+                result = Relation.restrict(cls.mmdb, relation='Attribute', restriction=R)
+            else:
+                R = f"Name:<{pattr.name}>, Table:<{input_nsflow.tname}>, Domain:<{cls.domain}>"
+                result = Relation.restrict(cls.mmdb, relation='Table_Attribute', restriction=R)
+            if not result.body:
+                _logger.error(f"Attribute [{pattr.name}] in projection not defined on class [{input_nsflow.tname}]")
+                raise ProjectedAttributeNotDefined
+            table_header[pattr.name] = result.body[0]['Scalar']
 
         # Populate the output Table Flow and Table (transaction open/close)
         output_tflow = Table.populate(mmdb, table_header=table_header, anum=anum, domain=domain)

@@ -62,12 +62,14 @@ class SetAction:
         table_header = None
         match setop:
             case 'JOIN':
+                _logger.info("Populating JOIN action")
                 # The a/b flows are not joinable if the headers share no common attributes
                 if NonScalarFlow.headers_disjoint(cls.mmdb, a_flow=a_input, b_flow=b_input, domain=cls.domain):
                     raise UnjoinableHeaders
                 # There is at least one attribute:type in common, so let's take the union to form the new header
                 table_header = NonScalarFlow.header_union(cls.mmdb, a_flow=a_input, b_flow=b_input, domain=cls.domain)
             case 'UNION' | 'INTERSECT' | 'MINUS':
+                _logger.info(f"Populating {setop} action")
                 # a/b Types must match (same table or same class)
                 if not NonScalarFlow.same_headers(mmdb, a_input, b_input, domain=cls.domain):
                     raise SetOpRequiresSameHeaders
@@ -77,16 +79,15 @@ class SetAction:
                 else:
                     table_header = Table.header(mmdb, tname=a_input.tname, domain=domain)
             case 'TIMES':
+                _logger.info("Populating TIMES action")
+                # Verify that there are no attributes in common among the a/b flow
                 if not NonScalarFlow.headers_disjoint(mmdb, a_input, b_input, domain=cls.domain):
                     raise ProductForbidsCommonAttributes
-                pass
-                # TODO: Table header is the union of a_nt and b_nt
-                print()
+                # Now take the union of the disjoint headers as the output
+                table_header = NonScalarFlow.header_union(cls.mmdb, a_flow=a_input, b_flow=b_input, domain=cls.domain)
 
-        # Inputs are compatible with the operation
-
+        # a/b flow inputs are compatible with the spedified operation
         # Populate the output Table Flow and Table (transaction open/close)
-
         output_tflow = Table.populate(mmdb, table_header=table_header, anum=anum, domain=domain)
 
         # Create the action (trannsaction open)
