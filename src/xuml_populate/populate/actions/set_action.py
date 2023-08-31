@@ -60,6 +60,7 @@ class SetAction:
         cls.scrall_text = scrall_text
 
         table_header = None
+        max_mult = MaxMult.ONE if a_input.max_mult == b_input.max_mult == MaxMult.ONE else MaxMult.MANY
         match setop:
             case 'JOIN':
                 _logger.info("Populating JOIN action")
@@ -88,7 +89,7 @@ class SetAction:
 
         # a/b flow inputs are compatible with the spedified operation
         # Populate the output Table Flow and Table (transaction open/close)
-        output_tflow = Table.populate(mmdb, table_header=table_header, anum=anum, domain=domain)
+        output_tflow = Table.populate(mmdb, table_header=table_header, maxmult=max_mult, anum=anum, domain=domain)
 
         # Create the action (trannsaction open)
         cls.action_id = Action.populate(mmdb, anum, domain)

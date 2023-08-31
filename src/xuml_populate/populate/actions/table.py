@@ -8,6 +8,7 @@ from pyral.transaction import Transaction
 from pyral.relvar import Relvar
 from pyral.relation import Relation
 from xuml_populate.populate.mmclass_nt import Table_i, Type_i, Table_Attribute_i, Model_Attribute_i
+from xuml_populate.populate.actions.aparse_types import MaxMult
 
 if TYPE_CHECKING:
     from tkinter import Tk
@@ -37,11 +38,12 @@ class Table:
         return h
 
     @classmethod
-    def populate(cls, mmdb: 'Tk', table_header: Dict[str, str], anum: str, domain: str) -> Flow_ap:
+    def populate(cls, mmdb: 'Tk', table_header: Dict[str, str], maxmult: MaxMult, anum: str, domain: str) -> Flow_ap:
         """
 
         :param mmdb:
         :param table_header:
+        :param maxmult:  The multplicity of the source flow
         :param anum:
         :param domain:
         :return:
@@ -58,14 +60,16 @@ class Table:
         if result.body:
             _logger.info(f"Populating flow on existing Table: [{table_name}]")
             Transaction.open(mmdb)  # Table type
-            table_flow = Flow.populate_table_flow(mmdb, activity=anum, tname=table_name, domain=domain, label=None)
+            table_flow = Flow.populate_table_flow(mmdb, activity=anum, tname=table_name, domain=domain,
+                                                  is_tuple=True if maxmult == MaxMult.ONE else False, label=None)
             Transaction.execute()
             return table_flow
 
         _logger.info(f"Populating Table flow on existing Table: [{table_name}]")
         Transaction.open(mmdb)  # Table type
         # A Table can't exist without a flow
-        table_flow = Flow.populate_table_flow(mmdb, activity=anum, tname=table_name, domain=domain, label=None)
+        table_flow = Flow.populate_table_flow(mmdb, activity=anum, tname=table_name, domain=domain,
+                                              is_tuple=True if maxmult == MaxMult.ONE else False, label=None)
         Relvar.insert(relvar='Table', tuples=[
             Table_i(table_name, domain)
         ])

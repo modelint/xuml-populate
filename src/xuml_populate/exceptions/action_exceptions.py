@@ -26,6 +26,10 @@ class ScalarExpressionException(ActionException):
 class ScalarOperationOrExpressionExpected(ScalarExpressionException):
     pass
 
+class ScalarAssignmentfromMultipleTuples(ScalarExpressionException):
+    pass
+class ScalarAssignmentFlowMismatch(ScalarExpressionException):
+    pass
 
 class UndefinedHeaderExpressionOp(TableExpressionException):
     pass

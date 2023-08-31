@@ -76,7 +76,8 @@ class ProjectAction:
             table_header[pattr.name] = result.body[0]['Scalar']
 
         # Populate the output Table Flow and Table (transaction open/close)
-        output_tflow = Table.populate(mmdb, table_header=table_header, anum=anum, domain=domain)
+        output_tflow = Table.populate(mmdb, table_header=table_header, maxmult=input_nsflow.max_mult,
+                                      anum=anum, domain=domain)
 
         # Create the action (trannsaction open)
         cls.action_id = Action.populate(mmdb, anum, domain)

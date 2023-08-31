@@ -43,8 +43,12 @@ class ScalarExpr:
 
     @classmethod
     def process(cls, mmdb: 'Tk', rhs: Scalar_RHS_a, anum: str, input_instance_flow: Flow_ap,
-                domain: str, activity_path: str, scrall_text: str) -> Flow_ap:
+                domain: str, activity_path: str, scrall_text: str) -> (Flow_ap, List[str]):
         """
+        Walks through a scalar expression on the right hand side of a scalar assignment to
+        obtain a tuple flow with one or more attributes. Each attribute value will be assigned.
+        The order in which attributes are specified in the action language is returned along with
+        the tuple flow.
 
         :param rhs: The right hand side of a table assignment
         :param mmdb:
@@ -53,25 +57,25 @@ class ScalarExpr:
         :param domain:
         :param activity_path:
         :param scrall_text:
-        :return:
+        :return:  The output tuple flow and the attribute names as ordered in the RHS text expression
         """
         cls.mmdb = mmdb
         cls.domain = domain
         cls.anum = anum
         cls.activity_path = activity_path
         cls.scrall_text = scrall_text
-        # cls.component_flow = input_instance_flow
 
         return cls.walk(scalar_expr=rhs, input_flow=input_instance_flow)
 
     @classmethod
-    def walk(cls, scalar_expr: Scalar_RHS_a, input_flow: Flow_ap) -> Flow_ap:
+    def walk(cls, scalar_expr: Scalar_RHS_a, input_flow: Flow_ap) -> (Flow_ap, List[str]):
         """
 
         :param scalar_expr:  Parsed scalar expression
         :param input_flow:
         """
         component_flow = input_flow
+        attr_list = []
         for term in scalar_expr.expr:
             match type(term).__name__:
                 case 'INST_a':
@@ -86,17 +90,19 @@ class ScalarExpr:
                                                             input_nsflow=component_flow,
                                                             domain = cls.domain, activity_path = cls.activity_path,
                                                             scrall_text = cls.scrall_text)
-                    pass
+                    # For a projection, the order is found in the parenthesized projection phrase, thus
+                    # 'myaircraft.(Alitude, Airspeed)' in the action language would yield ["Altitude", "Airspeed"]
+                    attr_list = [a.name for a in term.attrs]
                 case _:
                     _logger.error(
                         f"Expected .... but received {type(scalar_expr.expr).__name__} during scalar_expr walk")
                     raise ScalarOperationOrExpressionExpected
         # Process optional header, selection, and projection actions for the TEXPR
         if scalar_expr.attrs:
+            pass
             # If there is a projection, create the action and obtain its flow id
-            component_flow = ProjectAction.populate(cls.mmdb, input_nsflow=component_flow,
-                                                    projection=texpr.projection,
-                                                    anum=cls.anum, domain=cls.domain,
-                                                    activity_path=cls.activity_path,
-                                                    scrall_text=cls.scrall_text)
-        return component_flow
+            # component_flow = ProjectAction.populate(mmdb=cls.mmdb, projection=term, anum=cls.anum,
+            #                                         input_nsflow=component_flow,
+            #                                         domain=cls.domain, activity_path=cls.activity_path,
+            #                                         scrall_text=cls.scrall_text)
+        return component_flow, attr_list

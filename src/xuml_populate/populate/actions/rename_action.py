@@ -62,7 +62,8 @@ class RenameAction:
         del table_header[from_attr]
         table_header[to_attr] = from_scalar
         # Create output table flow
-        output_tflow = Table.populate(mmdb, table_header=table_header, anum=anum, domain=domain)
+        output_tflow = Table.populate(mmdb, table_header=table_header, maxmult=input_nsflow.max_mult,
+                                      anum=anum, domain=domain)
 
         # Create the action (trannsaction open)
         cls.action_id = Action.populate(mmdb, anum, domain)
