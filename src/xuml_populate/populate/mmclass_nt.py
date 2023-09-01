@@ -135,6 +135,12 @@ Table_Flow_i = namedtuple('Table_Flow_i', 'ID Activity Domain Type')
 Tuple_Flow_i = namedtuple('Tuple_Flow_i', 'ID Activity Domain')
 Unlabeled_Flow_i = namedtuple('Unlabeled_Flow_i', 'ID Activity Domain')
 
+# Attribute Access subsystem
+Attribute_Read_Access_i = namedtuple('Attribute_Read_Access_i', 'Attribute Class Read_action Activity Domain Output_flow')
+Attribute_Write_Access_i = namedtuple('Attribute_Write_Access_i', 'Attribute Class Write_action Activity Domain Input_flow')
+Read_Action_i = namedtuple('Read_Action_i', 'ID Activity Domain Instance_flow')
+Write_Action_i = namedtuple('Write_Action_i', 'ID Activity Domain Instance_flow')
+
 # Formalization subsystem
 Association_Class_Reference_i = namedtuple('Association_Class_Reference_i', 'Ref_type Association_class Participating_class Rnum Domain')
 Association_Reference_i = namedtuple('Association_Reference_i', 'Ref_type From_class To_class Rnum Domain Perspective')
