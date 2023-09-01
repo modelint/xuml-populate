@@ -3,6 +3,7 @@
 import logging
 from typing import TYPE_CHECKING, List, NamedTuple
 from xuml_populate.populate.actions.expressions.instance_set import InstanceSet
+from xuml_populate.populate.actions.read_action import ReadAction
 from xuml_populate.exceptions.action_exceptions import ScalarOperationOrExpressionExpected
 from xuml_populate.populate.flow import Flow
 from xuml_populate.populate.actions.aparse_types import Flow_ap, MaxMult, Content
@@ -86,10 +87,23 @@ class ScalarExpr:
                                                          domain=cls.domain, activity_path=cls.activity_path,
                                                          scrall_text=cls.scrall_text)
                 case 'Projection_a':
-                    component_flow = ProjectAction.populate(mmdb=cls.mmdb, projection=term, anum=cls.anum,
-                                                            input_nsflow=component_flow,
-                                                            domain = cls.domain, activity_path = cls.activity_path,
-                                                            scrall_text = cls.scrall_text)
+                    # In the context of a scalar expression, projection is populated as either an attribute Read
+                    # Action on a Single Instance Flow or a Projection on a Table Flow. So we will populate a
+                    # Read Action.
+                    if component_flow.content == Content.INSTANCE and component_flow.max_mult == MaxMult.ONE:
+                        # Single instance flow input means that we are simply reading attribute values of an instance
+                        ReadAction.populate(cls.mmdb, input_single_instance_flow=component_flow, projection=term,
+                                            anum=cls.anum, domain=cls.domain, activity_path=cls.activity_path,
+                                            scrall_text=cls.scrall_text)
+                        component_flow = None
+                        attr_list = None
+                    else:
+                        # With a Multiple Instance Flow or a Table Flow input, we are producing a projection table.
+                        # Consequently, we must populate a Project Action
+                        component_flow = ProjectAction.populate(mmdb=cls.mmdb, projection=term, anum=cls.anum,
+                                                                input_nsflow=component_flow,
+                                                                domain=cls.domain, activity_path=cls.activity_path,
+                                                                scrall_text=cls.scrall_text)
                     # For a projection, the order is found in the parenthesized projection phrase, thus
                     # 'myaircraft.(Alitude, Airspeed)' in the action language would yield ["Altitude", "Airspeed"]
                     attr_list = [a.name for a in term.attrs]
