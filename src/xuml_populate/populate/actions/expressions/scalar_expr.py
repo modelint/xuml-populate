@@ -92,11 +92,10 @@ class ScalarExpr:
                     # Read Action.
                     if component_flow.content == Content.INSTANCE and component_flow.max_mult == MaxMult.ONE:
                         # Single instance flow input means that we are simply reading attribute values of an instance
-                        ReadAction.populate(cls.mmdb, input_single_instance_flow=component_flow, projection=term,
+                        sflows = ReadAction.populate(cls.mmdb, input_single_instance_flow=component_flow, projection=term,
                                             anum=cls.anum, domain=cls.domain, activity_path=cls.activity_path,
                                             scrall_text=cls.scrall_text)
                         component_flow = None
-                        attr_list = None
                     else:
                         # With a Multiple Instance Flow or a Table Flow input, we are producing a projection table.
                         # Consequently, we must populate a Project Action

@@ -6,6 +6,7 @@ import logging
 from typing import TYPE_CHECKING, Set, Dict, List, Optional
 from xuml_populate.populate.actions.aparse_types import Flow_ap, MaxMult, Content
 from xuml_populate.populate.actions.action import Action
+from xuml_populate.populate.mm_class import MMclass
 from scrall.parse.visitor import Projection_a
 from xuml_populate.populate.flow import Flow
 from xuml_populate.populate.mmclass_nt import Read_Action_i, Attribute_Read_Access_i
@@ -43,7 +44,7 @@ class ReadAction:
 
     @classmethod
     def populate(cls, mmdb: 'Tk', input_single_instance_flow: Flow_ap, projection: Projection_a, anum: str,
-                 domain: str, activity_path: str, scrall_text: str):
+                 domain: str, activity_path: str, scrall_text: str) -> Dict[str, Flow_ap]:
         """
         Populate the Read Action
 
@@ -57,31 +58,25 @@ class ReadAction:
         :param scrall_text:
         :param activity_path:
         """
-        # Save attribute values that we will need when creating the various select subsystem
-        # classes
-        cls.mmdb = mmdb
-        cls.domain = domain
-        cls.anum = anum
-        cls.activity_path = activity_path
-        cls.scrall_text = scrall_text
-        # Here we convert from scrall parse '1', 'M' notation to user friendly 'ONE', 'ALL'
-        # If 1, user wants at most one arbitrary instance, even if many are selected
-        # If M, get them all.
-        # TODO: Update scrall parser to yield these values
-        cls.cardinality = 'ONE' if select_agroup.card == '1' else 'ALL'
+        si_flow = input_single_instance_flow  # Short name for convenience
 
-        cls.input_instance_flow = input_instance_flow
+        # Get the class header
+        class_attrs = MMclass.header(mmdb, cname=si_flow.tname, domain=domain)
 
         # Populate the Action superclass instance and obtain its action_id
-        cls.action_id = Action.populate(mmdb, anum, domain)  # Transaction open
-        Relvar.insert(relvar='Select_Action', tuples=[
-            Select_Action_i(ID=cls.action_id, Activity=anum, Domain=domain, Input_flow=input_instance_flow.fid)
+        action_id = Action.populate(mmdb, anum, domain)  # Transaction open
+        Relvar.insert(relvar='Read_Action', tuples=[
+            Read_Action_i(ID=action_id, Activity=anum, Domain=domain, Instance_flow=input_single_instance_flow.fid)
         ])
-        cls.select_agroup = select_agroup
-        # Walk through the critieria parse tree storing any attributes or input flows
-        # Also check to see if we are selecting on an identifier
-        cls.process_criteria(criteria=select_agroup.criteria)
-
+        output_flows = {}
+        proj_attrs = [n.name for n in projection.attrs] if projection.expand != 'ALL' else list(class_attrs.keys())
+        for pa in proj_attrs:
+            of = Flow.populate_scalar_flow(mmdb, scalar_type=class_attrs[pa], activity=anum, domain=domain, label=None)
+            Relvar.insert(relvar='Attribute_Read_Access', tuples=[
+                Attribute_Read_Access_i(Attribute=pa, Class=si_flow.tname, Read_action=action_id, Activity=anum,
+                                        Domain=domain, Output_flow=of.fid)
+            ])
+            output_flows[pa] = of
         # We now have a transaction with all select-action instances, enter into the metamodel db
         Transaction.execute()  # Select Action
-        return cls.output_instance_flow
+        return output_flows
