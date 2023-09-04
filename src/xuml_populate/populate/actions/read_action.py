@@ -44,7 +44,7 @@ class ReadAction:
 
     @classmethod
     def populate(cls, mmdb: 'Tk', input_single_instance_flow: Flow_ap, projection: Projection_a, anum: str,
-                 domain: str, activity_path: str, scrall_text: str) -> Dict[str, Flow_ap]:
+                 domain: str, activity_path: str, scrall_text: str) -> List[Flow_ap]:
         """
         Populate the Read Action
 
@@ -57,6 +57,7 @@ class ReadAction:
         :param select_agroup:  The parsed Scrall select action group
         :param scrall_text:
         :param activity_path:
+        :return: A list of scalar flows in the order of the project statement
         """
         si_flow = input_single_instance_flow  # Short name for convenience
 
@@ -68,7 +69,7 @@ class ReadAction:
         Relvar.insert(relvar='Read_Action', tuples=[
             Read_Action_i(ID=action_id, Activity=anum, Domain=domain, Instance_flow=input_single_instance_flow.fid)
         ])
-        output_flows = {}
+        scalar_flows = []
         proj_attrs = [n.name for n in projection.attrs] if projection.expand != 'ALL' else list(class_attrs.keys())
         for pa in proj_attrs:
             of = Flow.populate_scalar_flow(mmdb, scalar_type=class_attrs[pa], activity=anum, domain=domain, label=None)
@@ -76,7 +77,9 @@ class ReadAction:
                 Attribute_Read_Access_i(Attribute=pa, Class=si_flow.tname, Read_action=action_id, Activity=anum,
                                         Domain=domain, Output_flow=of.fid)
             ])
-            output_flows[pa] = of
+            scalar_flows.append(of)
+
+            # output_flows[pa] = of
         # We now have a transaction with all select-action instances, enter into the metamodel db
         Transaction.execute()  # Select Action
-        return output_flows
+        return scalar_flows
