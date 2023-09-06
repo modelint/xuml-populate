@@ -10,8 +10,8 @@ from typing import TYPE_CHECKING, Optional
 from xuml_populate.exceptions.action_exceptions import FlowException
 from xuml_populate.populate.mmclass_nt import Data_Flow_i, Flow_i, \
     Multiple_Instance_Flow_i, Single_Instance_Flow_i, Instance_Flow_i, \
-    Control_Flow_i, Non_Scalar_Flow_i, Scalar_Flow_i, Table_Flow_i, Labeled_Flow_i, Unlabeled_Flow_i, \
-    Tuple_Flow_i, Relation_Flow_i
+    Control_Flow_i, Non_Scalar_Flow_i, Scalar_Flow_i, Relation_Flow_i, Labeled_Flow_i, Unlabeled_Flow_i, \
+    Tuple_Flow_i, Table_Flow_i
 from xuml_populate.populate.actions.aparse_types import Flow_ap, MaxMult, Content
 
 if TYPE_CHECKING:
@@ -78,10 +78,10 @@ class Flow:
             else:
                 # Must be a Table Flow
                 R = f"ID:<{fid}>, Activity:<{anum}>, Domain:<{domain}>"
-                result = Relation.restrict(cls.mmdb, relation='Table_Flow', restriction=R)
+                result = Relation.restrict(cls.mmdb, relation='Relation_Flow', restriction=R)
                 tname = result.body[0]['Type']
                 R = f"ID:<{fid}>, Activity:<{anum}>, Domain:<{domain}>"
-                result = Relation.restrict(cls.mmdb, relation='Relation_Flow', restriction=R)
+                result = Relation.restrict(cls.mmdb, relation='Table_Flow', restriction=R)
                 max_mult = MaxMult.MANY if result.body else MaxMult.ONE
                 return Flow_ap(fid=fid, content=Content.TABLE, tname=tname, max_mult=max_mult)
         else:
@@ -216,12 +216,12 @@ class Flow:
     def populate_table_flow(cls, mmdb: 'Tk', activity: str, domain: str, tname: str, label: Optional[str],
                             is_tuple: bool = False) -> Flow_ap:
         flow_id = cls.populate_non_scalar_flow()
-        Relvar.insert(relvar='Table_Flow', tuples=[
-            Table_Flow_i(ID=flow_id, Activity=cls.activity, Domain=cls.domain, Type=tname)
+        Relvar.insert(relvar='Relation_Flow', tuples=[
+            Relation_Flow_i(ID=flow_id, Activity=cls.activity, Domain=cls.domain, Type=tname)
         ])
         if not is_tuple:
-            Relvar.insert(relvar='Relation_Flow', tuples=[
-                Relation_Flow_i(ID=flow_id, Activity=cls.activity, Domain=cls.domain)
+            Relvar.insert(relvar='Table_Flow', tuples=[
+                Table_Flow_i(ID=flow_id, Activity=cls.activity, Domain=cls.domain)
             ])
         else:
             Relvar.insert(relvar='Tuple_Flow', tuples=[
