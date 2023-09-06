@@ -6,7 +6,8 @@ import logging
 from pyral.relvar import Relvar
 from xuml_populate.populate.element import Element
 from scrall.parse.parser import ScrallParser
-from xuml_populate.populate.statement import Statement
+from xuml_populate.populate.exec_unit import ExecutionUnit
+# from xuml_populate.populate.statement import Statement
 from typing import TYPE_CHECKING
 from xuml_populate.populate.mmclass_nt import Activity_i, Asynchronous_Activity_i,\
     State_Activity_i, Synchronous_Activity_i
@@ -26,7 +27,7 @@ class Activity:
     operations = {}
 
     @classmethod
-    def populate_method(cls, mmdb: 'Tk', action_text:str, class_name: str, method_name: str, subsys_name: str, domain_name: str) -> str:
+    def populate_method(cls, mmdb: 'Tk', action_text: str, class_name: str, method_name: str, subsys_name: str, domain_name: str) -> str:
         """
         Populate Synchronous Activity for Method
         :param method_name:
@@ -124,19 +125,35 @@ class Activity:
         return Anum
 
     @classmethod
-    def process_statements(cls, mmdb: 'Tk'):
+    def process_execution_units(cls, mmdb: 'Tk'):
         """
-        Process each Scrall statement in the Method
+        Process each Scrall Execution Unit in the Method
         """
         # Populate all method activities
         for class_name, method_data in cls.methods.items():
             for method_name, activity_data in method_data.items():
                 cls._logger.info(f"Populating anum for method: {class_name}.{method_name}")
                 aparse = activity_data['parse']
-                for a in aparse[0]:
-                    Statement.populate_method(mmdb=mmdb, cname=class_name, method=method_name, anum=activity_data['anum'],
-                                              domain=activity_data['domain'], aparse=a, scrall_text=aparse[1])
-
+                for xunit in aparse[0]:
+                    ExecutionUnit.process_method(mmdb=mmdb, cname=class_name, method=method_name,
+                                                 anum=activity_data['anum'], xunit=xunit,
+                                                 domain=activity_data['domain'], scrall_text=aparse[1])
         pass
+
+    # @classmethod
+    # def process_statements(cls, mmdb: 'Tk'):
+    #     """
+    #     Process each Scrall statement in the Method
+    #     """
+    #     # Populate all method activities
+    #     for class_name, method_data in cls.methods.items():
+    #         for method_name, activity_data in method_data.items():
+    #             cls._logger.info(f"Populating anum for method: {class_name}.{method_name}")
+    #             aparse = activity_data['parse']
+    #             for a in aparse[0]:
+    #                 Statement.populate_method(mmdb=mmdb, cname=class_name, method=method_name, anum=activity_data['anum'],
+    #                                           domain=activity_data['domain'], aparse=a, scrall_text=aparse[1])
+    #
+    #     pass
         # Populate all state activities
         # Populate all operation activities

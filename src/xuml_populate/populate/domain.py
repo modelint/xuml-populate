@@ -102,6 +102,6 @@ class Domain:
         Relvar.printall(mmdb)
         #
         # Populate actions for all Activities
-        Activity.process_statements(mmdb)
+        Activity.process_execution_units(mmdb)
         pass
         #
