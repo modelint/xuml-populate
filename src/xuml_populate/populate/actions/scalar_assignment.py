@@ -94,7 +94,6 @@ class ScalarAssignment:
                 Labeled_Flow_i(ID=sflow.fid, Activity=anum, Domain=domain, Name=label)
             ])
             Transaction.execute()
-            pass
 
 
 

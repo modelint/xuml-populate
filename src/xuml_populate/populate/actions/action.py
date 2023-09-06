@@ -33,7 +33,7 @@ class Action:
         :param domain:
         :return:
         """
-        activity_key = f'{domain}:{anum}' # combine attributes to get id
+        activity_key = f'{domain}:{anum}'  # combine attributes to get id
         if activity_key not in cls.next_action_id.keys():
             # Initialize the Action ID counter for a new Activity (anum)
             cls.next_action_id[activity_key] = 0

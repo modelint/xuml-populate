@@ -7,6 +7,7 @@ from pyral.relation import Relation
 from xuml_populate.populate.actions.instance_assignment import InstanceAssignment
 from xuml_populate.populate.actions.table_assignment import TableAssignment
 from xuml_populate.populate.actions.scalar_assignment import ScalarAssignment
+from xuml_populate.populate.actions.switch_action import SwitchAction
 from typing import TYPE_CHECKING
 from enum import Enum
 
@@ -93,6 +94,8 @@ class Statement:
                 ScalarAssignment.process(mmdb, anum=anum, cname=cls.cname, domain=domain,
                                          scalar_assign_parse=aparse.action_group, xi_flow_id=cls.xi_flow_id,
                                          activity_path=activity_path, scrall_text=scrall_text)
-                print()
+            case 'Switch_a':
+                SwitchAction.populate(mmdb,  sw_parse=aparse.action_group, anum=anum, domain=domain,
+                                      activity_path=activity_path, scrall_text=scrall_text)
             case _:
                 print()
