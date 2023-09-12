@@ -68,7 +68,7 @@ class Activity:
         return Anum
 
     @classmethod
-    def populate(cls, mmdb: 'Tk', action_text:str, subsys_name: str, domain_name: str,
+    def populate(cls, mmdb: 'Tk', action_text: str, subsys_name: str, domain_name: str,
                  synchronous: bool) -> str:
         """
         Populate an Activity Operation
@@ -134,10 +134,25 @@ class Activity:
             for method_name, activity_data in method_data.items():
                 cls._logger.info(f"Populating anum for method: {class_name}.{method_name}")
                 aparse = activity_data['parse']
+                seq_flows = {}
+                seq_labels = set()
                 for xunit in aparse[0]:
-                    ExecutionUnit.process_method(mmdb=mmdb, cname=class_name, method=method_name,
-                                                 anum=activity_data['anum'], xunit=xunit,
-                                                 domain=activity_data['domain'], scrall_text=aparse[1])
+                    if xunit.statement_set:
+                        actions_in, actions_out = ExecutionUnit.process_method_statement_set(
+                            mmdb=mmdb, cname=class_name, method=method_name, anum=activity_data['anum'],
+                            xunit=xunit, domain=activity_data['domain'], scrall_text=aparse[1])
+                        pass
+                    elif xunit.ouput_flow:
+                        pass
+                    # Obtain set of initial and terminal action ids
+
+                    # Process any input or output tokens
+                    # if output_tk not in seq_flows:
+                        # Get a set of terminal actions
+                        # seq_flows[output_tk] = {'from': [terminal_actions], 'to': []}
+                    pass
+
+
         pass
 
     # @classmethod
