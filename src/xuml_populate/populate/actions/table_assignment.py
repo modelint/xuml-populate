@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING
 from xuml_populate.populate.mmclass_nt import Labeled_Flow_i
 from xuml_populate.populate.actions.expressions.table_expr import TableExpr
 from xuml_populate.populate.actions.aparse_types import Flow_ap, MaxMult, Content, Activity_ap
+from scrall.parse.visitor import Table_Assignment_a
 
 from pyral.relvar import Relvar
 from pyral.transaction import Transaction
@@ -32,7 +33,7 @@ class TableAssignment:
     scrall_text = None
 
     @classmethod
-    def process(cls, mmdb: 'Tk', activity_data: Activity_ap, table_assign_parse):
+    def process(cls, mmdb: 'Tk', activity_data: Activity_ap, table_assign_parse: Table_Assignment_a):
         """
         Given a parsed table assignment consisting of an LHS and an RHS, populate each component action
         and return the resultant table flow

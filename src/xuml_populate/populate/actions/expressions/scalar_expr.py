@@ -1,17 +1,14 @@
 """ sexpr.py -- Walk through a scalar expression and populate elements """
 
 import logging
-from typing import TYPE_CHECKING, List, NamedTuple
+from typing import TYPE_CHECKING, List
 from xuml_populate.populate.actions.expressions.instance_set import InstanceSet
 from xuml_populate.populate.actions.read_action import ReadAction
 from xuml_populate.exceptions.action_exceptions import ScalarOperationOrExpressionExpected
 from xuml_populate.populate.flow import Flow
-from xuml_populate.populate.actions.aparse_types import Flow_ap, MaxMult, Content
+from xuml_populate.populate.actions.aparse_types import Flow_ap, MaxMult, Content, Activity_ap
 from scrall.parse.visitor import Scalar_RHS_a, MATH_a, BOOL_a, INST_a, N_a, Projection_a, Op_chain_a, INST_PROJ_a
 from xuml_populate.populate.actions.project_action import ProjectAction
-from pyral.relvar import Relvar
-from pyral.relation import Relation
-from pyral.transaction import Transaction
 
 if TYPE_CHECKING:
     from tkinter import Tk
@@ -35,16 +32,13 @@ class ScalarExpr:
     """
     text = None  # A text representation of the expression
     mmdb = None
-    domain = None
-    anum = None
-    scrall_text = None
-    activity_path = None
+    activity_data = None
     component_flow = None
     output_tflow_id = None
 
     @classmethod
-    def process(cls, mmdb: 'Tk', rhs: Scalar_RHS_a, anum: str, input_instance_flow: Flow_ap,
-                domain: str, activity_path: str, scrall_text: str) -> List[Flow_ap]:
+    def process(cls, mmdb: 'Tk', rhs: Scalar_RHS_a, input_instance_flow: Flow_ap,
+                activity_data: Activity_ap) -> List[Flow_ap]:
         """
         Walks through a scalar expression on the right hand side of a scalar assignment to
         obtain a tuple flow with one or more attributes. Each attribute value will be assigned.
@@ -53,18 +47,12 @@ class ScalarExpr:
 
         :param mmdb:
         :param rhs: The right hand side of a table assignment
-        :param anum:
         :param input_instance_flow:
-        :param domain:
-        :param activity_path:
-        :param scrall_text:
+        :param activity_data:
         :return:  The output tuple flow and the attribute names as ordered in the RHS text expression
         """
         cls.mmdb = mmdb
-        cls.domain = domain
-        cls.anum = anum
-        cls.activity_path = activity_path
-        cls.scrall_text = scrall_text
+        cls.activity_data = activity_data
 
         rhs = cls.walk(sexpr=rhs.expr, input_flow=input_instance_flow)
         return rhs
@@ -84,14 +72,11 @@ class ScalarExpr:
         component_flow = input_flow
         match type(sexpr).__name__:
             case 'INST_PROJ_a':
-                component_flow = InstanceSet.process(mmdb=cls.mmdb, anum=cls.anum,
-                                                     input_instance_flow=component_flow,
+                component_flow = InstanceSet.process(mmdb=cls.mmdb, input_instance_flow=component_flow,
                                                      iset_components=sexpr.iset.components,
-                                                     domain=cls.domain, activity_path=cls.activity_path,
-                                                     scrall_text=cls.scrall_text)
+                                                     activity_data=cls.activity_data)
                 sflows = ReadAction.populate(cls.mmdb, input_single_instance_flow=component_flow,
-                                             projection=sexpr.projection, anum=cls.anum, domain=cls.domain,
-                                             activity_path=cls.activity_path, scrall_text=cls.scrall_text)
+                                             projection=sexpr.projection, activity_data=cls.activity_data)
                 return sflows
             case 'N_a':
                 pass
@@ -103,20 +88,15 @@ class ScalarExpr:
                 for o in sexpr.operands:
                     match type(o).__name__:
                         case 'INST_PROJ_a':
-                            component_flow = InstanceSet.process(mmdb=cls.mmdb, anum=cls.anum,
-                                                                 input_instance_flow=component_flow,
+                            component_flow = InstanceSet.process(mmdb=cls.mmdb, input_instance_flow=component_flow,
                                                                  iset_components=o.iset.components,
-                                                                 domain=cls.domain, activity_path=cls.activity_path,
-                                                                 scrall_text=cls.scrall_text)
+                                                                 activity_data=cls.activity_data)
                             if o.iset.select:
                                 pass
                             if o.projection:
                                 tflow = ProjectAction.populate(mmdb=cls.mmdb, projection=o.projection,
-                                                               anum=cls.anum,
                                                                input_nsflow=component_flow,
-                                                               domain=cls.domain,
-                                                               activity_path=cls.activity_path,
-                                                               scrall_text=cls.scrall_text)
+                                                               activity_data=cls.activity_data)
                                 pass
                             pass
                         case _:

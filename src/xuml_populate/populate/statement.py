@@ -43,9 +43,7 @@ class Statement:
             case 'Table_Assignment_a':
                 TableAssignment.process(mmdb, activity_data=activity_data, table_assign_parse=statement_parse)
             case 'Scalar_Assignment_a':
-                ScalarAssignment.process(mmdb, anum=anum, cname=cls.cname, domain=domain,
-                                         scalar_assign_parse=aparse.action_group, xi_flow_id=cls.xi_flow_id,
-                                         activity_path=activity_path, scrall_text=scrall_text)
+                ScalarAssignment.process(mmdb, activity_data=activity_data, scalar_assign_parse=statement_parse)
             case 'Switch_a':
                 SwitchAction.populate(mmdb,  sw_parse=aparse.action_group, anum=anum, domain=domain,
                                       activity_path=activity_path, scrall_text=scrall_text)

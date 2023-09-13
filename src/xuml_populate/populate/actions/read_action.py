@@ -3,15 +3,14 @@ read_action.py – Populate a read action instance in PyRAL
 """
 
 import logging
-from typing import TYPE_CHECKING, Set, Dict, List, Optional
-from xuml_populate.populate.actions.aparse_types import Flow_ap, MaxMult, Content
+from typing import TYPE_CHECKING, List
+from xuml_populate.populate.actions.aparse_types import Flow_ap, MaxMult, Content, Activity_ap
 from xuml_populate.populate.actions.action import Action
 from xuml_populate.populate.mm_class import MMclass
 from scrall.parse.visitor import Projection_a
 from xuml_populate.populate.flow import Flow
 from xuml_populate.populate.mmclass_nt import Read_Action_i, Attribute_Read_Access_i
 from pyral.relvar import Relvar
-from pyral.relation import Relation
 from pyral.transaction import Transaction
 
 if TYPE_CHECKING:
@@ -27,24 +26,18 @@ class ReadAction:
 
     input_instance_flow = None  # We are selecting instances from this instance flow
     output_instance_flow = None
-    anum = None
     expression = None
     comparison_criteria = []
     equivalence_criteria = []
     restriction_text = ""
     cardinality = None
     action_id = None
-    domain = None  # in this domain
-    mmdb = None  # The database
     criterion_ctr = 0
-    activity_path = None
-    scrall_text = None
     max_mult = None
 
-
     @classmethod
-    def populate(cls, mmdb: 'Tk', input_single_instance_flow: Flow_ap, projection: Projection_a, anum: str,
-                 domain: str, activity_path: str, scrall_text: str) -> List[Flow_ap]:
+    def populate(cls, mmdb: 'Tk', input_single_instance_flow: Flow_ap, projection: Projection_a,
+                 activity_data: Activity_ap) -> List[Flow_ap]:
         """
         Populate the Read Action
 
@@ -52,13 +45,11 @@ class ReadAction:
         :param input_single_instance_flow: The source flow into this selection
         :param projection:
         :param input_single_instance_flow:
-        :param anum:
-        :param domain:
-        :param select_agroup:  The parsed Scrall select action group
-        :param scrall_text:
-        :param activity_path:
+        :param activity_data:
         :return: A list of scalar flows in the order of the project statement
         """
+        anum = activity_data.anum
+        domain = activity_data.domain
         si_flow = input_single_instance_flow  # Short name for convenience
 
         # Get the class header
