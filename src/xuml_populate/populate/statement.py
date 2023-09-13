@@ -41,9 +41,7 @@ class Statement:
             case 'Inst_Assignment_a':
                 InstanceAssignment.process(mmdb, activity_data=activity_data, inst_assign=statement_parse)
             case 'Table_Assignment_a':
-                TableAssignment.process(mmdb, anum=anum, cname=cls.cname, domain=domain,
-                                        table_assign_parse=aparse.action_group, xi_flow_id=cls.xi_flow_id,
-                                        activity_path=activity_path, scrall_text=scrall_text)
+                TableAssignment.process(mmdb, activity_data=activity_data, table_assign_parse=statement_parse)
             case 'Scalar_Assignment_a':
                 ScalarAssignment.process(mmdb, anum=anum, cname=cls.cname, domain=domain,
                                          scalar_assign_parse=aparse.action_group, xi_flow_id=cls.xi_flow_id,

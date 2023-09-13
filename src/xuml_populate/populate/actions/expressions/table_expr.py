@@ -1,20 +1,18 @@
 """ table_expr.py -- Walk through a table expression and populate elements """
 
 import logging
-from typing import TYPE_CHECKING, List, NamedTuple
+from typing import TYPE_CHECKING
 from xuml_populate.populate.actions.expressions.instance_set import InstanceSet
 from xuml_populate.populate.flow import Flow
 from xuml_populate.populate.actions.rename_action import RenameAction
-from xuml_populate.populate.actions.aparse_types import Flow_ap, MaxMult, Content
+from xuml_populate.populate.actions.aparse_types import Flow_ap, MaxMult, Content, Activity_ap
 from xuml_populate.populate.actions.select_action import SelectAction
 from xuml_populate.populate.actions.project_action import ProjectAction
 from xuml_populate.populate.actions.set_action import SetAction
 from xuml_populate.exceptions.action_exceptions import (TableOperationOrExpressionExpected, FlowException,
                                                         UndefinedHeaderExpressionOp)
-from scrall.parse.visitor import TOP_a, TEXPR_a
-from pyral.relvar import Relvar
+from scrall.parse.visitor import TEXPR_a
 from pyral.relation import Relation
-from pyral.transaction import Transaction
 
 if TYPE_CHECKING:
     from tkinter import Tk
@@ -48,27 +46,24 @@ class TableExpr:
     activity_path = None
     component_flow = None
     output_tflow_id = None
+    activity_data = None
 
     @classmethod
-    def process(cls, mmdb: 'Tk', rhs: TEXPR_a, anum: str, input_instance_flow: Flow_ap,
-                domain: str, activity_path: str, scrall_text: str) -> Flow_ap:
+    def process(cls, mmdb: 'Tk', activity_data: Activity_ap, rhs: TEXPR_a, input_instance_flow: Flow_ap) -> Flow_ap:
         """
 
-        :param rhs: The right hand side of a table assignment
         :param mmdb:
-        :param anum:
+        :param activity_data:
+        :param rhs: The right hand side of a table assignment
         :param input_instance_flow:
-        :param domain:
-        :param activity_path:
-        :param scrall_text:
         :return:
         """
         cls.mmdb = mmdb
-        cls.domain = domain
-        cls.anum = anum
-        cls.activity_path = activity_path
-        cls.scrall_text = scrall_text
-        # cls.component_flow = input_instance_flow
+        cls.activity_data = activity_data
+        cls.domain = activity_data.domain
+        cls.anum = activity_data.anum
+        cls.activity_path = activity_data.activity_path
+        cls.scrall_text = activity_data.scrall_text
 
         return cls.walk(texpr=rhs, input_flow=input_instance_flow)
 
@@ -108,13 +103,10 @@ class TableExpr:
 
             case 'INST_a':
                 # Process the instance set and obtain its flow id
-                component_flow = InstanceSet.process(mmdb=cls.mmdb, anum=cls.anum,
-                                                     input_instance_flow=component_flow,
+                component_flow = InstanceSet.process(mmdb=cls.mmdb, input_instance_flow=component_flow,
                                                      iset_components=texpr.table.components,
-                                                     domain=cls.domain, activity_path=cls.activity_path,
-                                                     scrall_text=cls.scrall_text)
+                                                     activity_data=cls.activity_data)
             case 'TOP_a':
-                print()
                 # The table is an operation on one or more operands
                 # We need to process each operand
                 # text = f" {texpr.op} "  # Flatten operator into temporary string
@@ -124,8 +116,7 @@ class TableExpr:
                     operand_flows.append(cls.walk(texpr=o, input_flow=component_flow))
                 op_name = texpr.table.op
                 component_flow = SetAction.populate(cls.mmdb, a_input=operand_flows[0], b_input=operand_flows[1],
-                                                    setop=op_name, anum=cls.anum, domain=cls.domain,
-                                                    activity_path=cls.activity_path, scrall_text=cls.scrall_text)
+                                                    setop=op_name, activity_data=cls.activity_data)
             case _:
                 _logger.error(
                     f"Expected INST, N, IN or TOP, but received {type(texpr).__name__} during table_expr walk")
