@@ -7,13 +7,10 @@ from typing import TYPE_CHECKING, Set, Dict, List, Optional
 from xuml_populate.populate.flow import Flow
 from xuml_populate.populate.actions.expressions.instance_set import InstanceSet
 from xuml_populate.exceptions.action_exceptions import AssignZeroOneInstanceHasMultiple
-from xuml_populate.populate.actions.aparse_types import Flow_ap, MaxMult, Content
+from xuml_populate.populate.actions.aparse_types import Flow_ap, MaxMult, Content, Activity_ap
+from scrall.parse.visitor import Inst_Assignment_a
 
-from pyral.relvar import Relvar
-from pyral.relation import Relation
 from pyral.transaction import Transaction
-
-from collections import namedtuple
 
 if TYPE_CHECKING:
     from tkinter import Tk
@@ -50,8 +47,7 @@ class InstanceAssignment:
     assign_zero_one = None  # Does assignment operator limit to a zero or one instance selection?
 
     @classmethod
-    def process(cls, mmdb: 'Tk', anum: str, cname: str, domain: str, inst_assign_parse,
-                xi_flow_id: str, activity_path: str, scrall_text: str):
+    def process(cls, mmdb: 'Tk', activity_data: Activity_ap, inst_assign: Inst_Assignment_a):
         """
         Given a parsed instance set expression, populate each component action
         and return the resultant Class Type name
@@ -61,28 +57,24 @@ class InstanceAssignment:
         assignment which must match any explicit type.
 
         :param mmdb: The metamodel db
-        :param cname: The class (for an operation it is the proxy class)
-        :param domain: In this domain
-        :param anum: The Activity Number
-        :param inst_assign_parse: A parsed instance assignment
-        :param xi_flow_id: The ID of the executing instance flow (the instance executing this anum)
-        :param activity_path: Human readable path to the anum for error reporting
-        :param scrall_text: The parsed scrall text for error reporting
+        :param inst_assign: The instance assignment statement parse
+        :param activity_data: The enveloping activity
         """
-        lhs = inst_assign_parse.lhs
-        assign_zero_one = True if inst_assign_parse.card == '1' else False
-        rhs = inst_assign_parse.rhs
+        lhs = inst_assign.lhs
+        assign_zero_one = True if inst_assign.card == '1' else False
+        rhs = inst_assign.rhs
         # The executing instance is by nature a single instance flow
-        xi_instance_flow = Flow_ap(fid=xi_flow_id, content=Content.INSTANCE, tname=cname, max_mult=MaxMult.ONE)
+        xi_instance_flow = Flow_ap(fid=activity_data.xiflow, content=Content.INSTANCE, tname=activity_data.cname,
+                                   max_mult=MaxMult.ONE)
 
         # Process the instance set expression in the RHS and obtain the generated instance flow
-        iset_instance_flow = InstanceSet.process(mmdb, anum=anum, input_instance_flow=xi_instance_flow,
-                                                 iset_components=rhs.components, domain=domain,
-                                                 activity_path=activity_path, scrall_text=scrall_text)
+        iset_instance_flow = InstanceSet.process(mmdb, input_instance_flow=xi_instance_flow,
+                                                 iset_components=rhs.components, activity_data=activity_data)
 
         # Process LHS after all components have been processed
         if assign_zero_one and iset_instance_flow.max_mult == MaxMult.ONE:
-            raise AssignZeroOneInstanceHasMultiple(path=activity_path, text=scrall_text, x=inst_assign_parse.X)
+            raise AssignZeroOneInstanceHasMultiple(path=activity_data.activity_path, text=activity_data.scrall_text,
+                                                   x=inst_assign.X)
         output_flow_label = lhs.name.name
         if lhs.exp_type and lhs.exp_type != iset_instance_flow.tname:
             # Raise assignment type mismatch exception
@@ -90,10 +82,11 @@ class InstanceAssignment:
 
         # Populate the LHS assignment labeled flow
         Transaction.open(mmdb)  # LHS labeled instance flow
-        assigned_flow = Flow.populate_instance_flow(mmdb, cname=iset_instance_flow.tname, activity=anum,
-                                                    domain=domain, label=output_flow_label, single=assign_zero_one)
+        assigned_flow = Flow.populate_instance_flow(mmdb, cname=iset_instance_flow.tname, activity=activity_data.anum,
+                                                    domain=activity_data.domain, label=output_flow_label,
+                                                    single=assign_zero_one)
 
         _logger.info(f"INSERT Instance Flow (assignment): ["
-                     f"{domain}:{iset_instance_flow.tname}:{activity_path.split(':')[-1]}"
+                     f"{activity_data.domain}:{iset_instance_flow.tname}:{activity_data.activity_path.split(':')[-1]}"
                      f":{output_flow_label}:{assigned_flow}]")
         Transaction.execute()  # LHS labeled instance flow

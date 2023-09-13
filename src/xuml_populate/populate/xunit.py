@@ -1,8 +1,9 @@
-""" exec_unit.py - Process a Scrall Execution Unit"""
+""" xunit.py - Process a Scrall Execution Unit"""
 
 import logging
 from scrall.parse.visitor import Execution_Unit_a, Seq_Statement_Set_a, Comp_Statement_Set_a
 from xuml_populate.populate.statement import Statement
+from xuml_populate.populate.actions.aparse_types import Activity_ap
 from typing import TYPE_CHECKING, List
 
 if TYPE_CHECKING:
@@ -13,6 +14,10 @@ class ExecutionUnit:
     Process an Execution Unit
     """
     _logger = logging.getLogger(__name__)
+
+    @classmethod
+    def process(cls):
+        pass
 
     @classmethod
     def process_statement_set(cls) -> (List[str], List[str]):
@@ -39,8 +44,7 @@ class ExecutionUnit:
         pass
 
     @classmethod
-    def process_method_statement_set(cls, mmdb: 'Tk', cname: str, method: str, anum: str, xunit: Execution_Unit_a,
-                       domain: str, scrall_text: str) -> (List[str], List[str]):
+    def process_method_statement_set(cls, mmdb: 'Tk', activity_data: Activity_ap, statement_set) -> (List[str], List[str]):
         """
         Initiates the population of all elements derived from a set of statements in a method.
 
@@ -52,16 +56,12 @@ class ExecutionUnit:
         to any other action in the execution unit. These are terminal actions.
 
         :param mmdb:
-        :param cname:
-        :param method:
-        :param anum:
-        :param xunit:
-        :param domain:
-        :param scrall_text:
+        :param activity_data:
+        :param statements:
         :return: Tuple with a list of initial and terminal actions
         """
-        single_statement = xunit.statement_set.statement
-        block = xunit.statement_set.block
+        single_statement = statement_set.statement
+        block = statement_set.block
 
         # Mutually exclusive options
         if block and single_statement:
@@ -69,7 +69,7 @@ class ExecutionUnit:
             raise Exception
 
         if single_statement:
-            Statement.populate(mmdb, anum, domain, aparse=single_statement, scrall_text=scrall_text)
+            Statement.populate(mmdb, activity_data, statement_parse=single_statement)
 
             pass
         elif block:

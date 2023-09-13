@@ -11,7 +11,7 @@ from xuml_populate.exceptions.action_exceptions import UndefinedRelationship, In
 from scrall.parse.visitor import PATH_a
 from xuml_populate.populate.actions.action import Action
 from xuml_populate.populate.flow import Flow
-from xuml_populate.populate.actions.aparse_types import Flow_ap, MaxMult, Content
+from xuml_populate.populate.actions.aparse_types import Flow_ap, MaxMult, Content, Activity_ap
 from xuml_populate.populate.mmclass_nt import Action_i, Traverse_Action_i, Path_i, Hop_i, Association_Class_Hop_i, \
     Circular_Hop_i, Symmetric_Hop_i, Asymmetric_Circular_Hop_i, Ordinal_Hop_i, Straight_Hop_i, \
     From_Asymmetric_Association_Class_Hop_i, From_Symmetric_Association_Class_Hop_i, To_Association_Class_Hop_i, \
@@ -436,29 +436,26 @@ class TraverseAction:
             return True  # Non-reflexive hop to a participating class
 
     @classmethod
-    def build_path(cls, mmdb: 'Tk', anum: str, input_instance_flow: Flow_ap, domain: str,
-                   path: PATH_a, activity_path: str, scrall_text: str) -> Flow_ap:
+    def build_path(cls, mmdb: 'Tk', input_instance_flow: Flow_ap, path: PATH_a,
+                   activity_data: Activity_ap) -> Flow_ap:
         """
         Step through a path populating it along the way.
 
-        :param scrall_text:
-        :param activity_path:
-        :param anum:
         :param mmdb: THe metamodel db
-        :param domain: The Statement's Domain
         :param input_instance_flow: This is the source instance flow where the path begins
         :param path: Parsed Scrall representing a Path
+        :param activity_data:
         :return: The output instance flow id, its Class Type name and its maximum instance multiplicity, 1 or M
         """
         cls.mmdb = mmdb
         cls.path = path
-        cls.anum = anum
+        cls.anum = activity_data.anum
         cls.input_instance_flow = input_instance_flow
         cls.class_cursor = input_instance_flow.tname  # Validation cursor is on this class now
-        cls.domain = domain
+        cls.domain = activity_data.domain
         cls.name = "/"  # The path text forms path name value
-        cls.activity_path = activity_path
-        cls.scrall_text = scrall_text
+        cls.activity_path = activity_data.activity_path
+        cls.scrall_text = activity_data.scrall_text
         cls.mult = input_instance_flow.max_mult
 
         # Verify adequate path length
@@ -502,7 +499,7 @@ class TraverseAction:
                 # First we look for any References to or from the class cursor
                 R = f"(From_class:<{cls.class_cursor}> OR To_class:<{cls.class_cursor}>), Rnum:<{hop.rnum}>, " \
                     f"Domain:<{cls.domain}>"
-                if Relation.restrict(tclral=cls.mmdb, restriction=R, relation="Reference").body:
+                if Relation.restrict(cls.mmdb, restriction=R, relation="Reference").body:
                     P = ('Ref', 'From_class', 'To_class')
                     refs = Relation.project(cls.mmdb, attributes=P, svar_name='rhop').body
 

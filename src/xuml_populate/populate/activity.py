@@ -1,13 +1,14 @@
 """
-anum.py – Populate an anum instance in PyRAL
+activity.py – Populate an Activity
 """
 
 import logging
 from pyral.relvar import Relvar
+from pyral.relation import Relation
 from xuml_populate.populate.element import Element
 from scrall.parse.parser import ScrallParser
-from xuml_populate.populate.exec_unit import ExecutionUnit
-# from xuml_populate.populate.statement import Statement
+from xuml_populate.populate.actions.aparse_types import Activity_ap
+from xuml_populate.populate.xunit import ExecutionUnit
 from typing import TYPE_CHECKING
 from xuml_populate.populate.mmclass_nt import Activity_i, Asynchronous_Activity_i,\
     State_Activity_i, Synchronous_Activity_i
@@ -25,6 +26,7 @@ class Activity:
     sm = {}
     methods = {}
     operations = {}
+    domain = None
 
     @classmethod
     def populate_method(cls, mmdb: 'Tk', action_text: str, class_name: str, method_name: str, subsys_name: str, domain_name: str) -> str:
@@ -38,6 +40,7 @@ class Activity:
         :param domain_name:
         :return: Anum
         """
+        cls.domain = domain_name
         Anum = cls.populate(mmdb, action_text, subsys_name, domain_name, synchronous=True)
         if class_name not in cls.methods:
             cls.methods[class_name] = {method_name: {'anum': Anum, 'domain': domain_name, 'text': action_text, 'parse': None}}
@@ -50,7 +53,7 @@ class Activity:
         return Anum
 
     @classmethod
-    def populate_operation(cls, mmdb: 'Tk', action_text:str, ee_name: str, subsys_name: str, domain_name: str,
+    def populate_operation(cls, mmdb: 'Tk', action_text: str, ee_name: str, subsys_name: str, domain_name: str,
                            synchronous: bool) -> str:
         """
         Populate Operation Activity
@@ -127,20 +130,39 @@ class Activity:
     @classmethod
     def process_execution_units(cls, mmdb: 'Tk'):
         """
-        Process each Scrall Execution Unit in the Method
+        Process each Scrall Execution Unit for all Activities (Method, State, and Synchronous Operation)
         """
-        # Populate all method activities
+        # Populate each (Method) Activity
         for class_name, method_data in cls.methods.items():
             for method_name, activity_data in method_data.items():
-                cls._logger.info(f"Populating anum for method: {class_name}.{method_name}")
+
+                cls._logger.info(f"Populating method execution units: {class_name}.{method_name}")
+                # Look up signature
+                R = f"Method:<{method_name}>, Class:<{class_name}>, Domain:<{cls.domain}>"
+                result = Relation.restrict(mmdb, relation='Method_Signature', restriction=R)
+                if not result.body:
+                    # TODO: raise exception here
+                    pass
+                signum = result.body[0]['SIGnum']
+
+                # Look up xi flow
+                R = f"Name:<{method_name}>, Class:<{class_name}>, Domain:<{cls.domain}>"
+                result = Relation.restrict(mmdb, relation='Method', restriction=R)
+                if not result.body:
+                    # TODO: raise exception here
+                    pass
+                xi_flow_id = result.body[0]['Executing_instance_flow']
+                method_path = f"{cls.domain}:{class_name}:{method_name}.mtd"
+
                 aparse = activity_data['parse']
+                activity_data = Activity_ap(anum=activity_data['anum'], domain=cls.domain, cname=class_name, sname=None, eename=None,
+                                            xiflow=xi_flow_id, activity_path=method_path, scrall_text=aparse[1])
                 seq_flows = {}
                 seq_labels = set()
                 for xunit in aparse[0]:
                     if xunit.statement_set:
                         actions_in, actions_out = ExecutionUnit.process_method_statement_set(
-                            mmdb=mmdb, cname=class_name, method=method_name, anum=activity_data['anum'],
-                            xunit=xunit, domain=activity_data['domain'], scrall_text=aparse[1])
+                            mmdb=mmdb, activity_data=activity_data, statement_set=xunit.statement_set)
                         pass
                     elif xunit.ouput_flow:
                         pass

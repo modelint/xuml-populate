@@ -8,17 +8,12 @@ from xuml_populate.populate.actions.instance_assignment import InstanceAssignmen
 from xuml_populate.populate.actions.table_assignment import TableAssignment
 from xuml_populate.populate.actions.scalar_assignment import ScalarAssignment
 from xuml_populate.populate.actions.switch_action import SwitchAction
+from xuml_populate.populate.actions.aparse_types import Activity_ap
+from collections import namedtuple
 from typing import TYPE_CHECKING
-from enum import Enum
 
 if TYPE_CHECKING:
     from tkinter import Tk
-
-
-class ActivityType(Enum):
-    METHOD = 1
-    STATE = 2
-    OPERATION = 3
 
 
 class Statement:
@@ -32,60 +27,19 @@ class Statement:
     operation = None  # operation name
     method = None  # method name
     cname = None
-    signum = None
     xi_flow_id = None
 
     @classmethod
-    def populate_method(cls, mmdb: 'Tk', cname: str, method: str, anum: str, domain: str, aparse, scrall_text: str):
-        """
-        When we populate a method we need to know the class and method name so that we can
-        later look up its inputs (executing class and parameter inputs).
-
-        Set the method specific attributes and then passing the remaining parameters along
-
-        :param method:
-        :param mmdb:
-        :param cname:
-        :param anum:
-        :param domain:
-        :param aparse:
-        :param scrall_text:
-        """
-        cls.activity_type = ActivityType.METHOD
-        cls.cname = cname
-        cls.method = method
-
-        # Look up signature
-        R = f"Method:<{method}>, Class:<{cname}>, Domain:<{domain}>"
-        result = Relation.restrict(mmdb, relation='Method_Signature', restriction=R)
-        if not result.body:
-            # TODO: raise exception here
-            pass
-        cls.signum = result.body[0]['SIGnum']
-
-        # Look up xi flow
-        R = f"Name:<{method}>, Class:<{cname}>, Domain:<{domain}>"
-        result = Relation.restrict(mmdb, relation='Method', restriction=R)
-        if not result.body:
-            # TODO: raise exception here
-            pass
-        cls.xi_flow_id = result.body[0]['Executing_instance_flow']
-        activity_path = f"{domain}:{cname}:{method}.mtd"
-        cls.populate(mmdb, anum, domain, aparse, activity_path, scrall_text)
-
-    @classmethod
-    def populate(cls, mmdb: 'Tk', anum: str, domain: str, aparse, activity_path: str, scrall_text: str):
+    def populate(cls, mmdb: 'Tk', activity_data: Activity_ap, statement_parse: namedtuple):
         """
         Populate a Statement
         """
-        agroup_name = type(aparse.action_group).__name__
+        statement_type = type(statement_parse).__name__
         # For now we'll just switch on the action_group name and later wrap all this up
         # into a dictionary of functions of some sort
-        match agroup_name:
+        match statement_type:
             case 'Inst_Assignment_a':
-                InstanceAssignment.process(mmdb, anum=anum, cname=cls.cname, domain=domain,
-                                           inst_assign_parse=aparse.action_group, xi_flow_id=cls.xi_flow_id,
-                                           activity_path=activity_path, scrall_text=scrall_text)
+                InstanceAssignment.process(mmdb, activity_data=activity_data, inst_assign=statement_parse)
             case 'Table_Assignment_a':
                 TableAssignment.process(mmdb, anum=anum, cname=cls.cname, domain=domain,
                                         table_assign_parse=aparse.action_group, xi_flow_id=cls.xi_flow_id,

@@ -10,7 +10,6 @@ from xuml_populate.populate.signature import Signature
 from xuml_populate.populate.activity import Activity
 from xuml_populate.populate.mm_type import MMtype
 from xuml_populate.populate.mmclass_nt import Method_Signature_i, Method_i, Parameter_i, Synchronous_Output_i
-from pathlib import Path
 
 from typing import TYPE_CHECKING
 

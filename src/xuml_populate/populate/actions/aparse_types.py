@@ -15,5 +15,7 @@ class Content(Enum):
     TABLE = 3
 
 
+Activity_ap = namedtuple("Method_Activity_ap", "anum domain cname sname eename xiflow activity_path scrall_text")
+
 Flow_ap = namedtuple("Flow_ap", "fid content tname max_mult")
 """ Describes a generated flow with: Flow ID, content(scalar/table/class), type name, Max multiplicity (1,M) """
