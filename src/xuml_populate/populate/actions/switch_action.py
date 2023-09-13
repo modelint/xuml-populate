@@ -3,8 +3,8 @@ switch_action.py – Populate a switch action instance in PyRAL
 """
 
 import logging
-from typing import TYPE_CHECKING, Set, Dict, List, Optional
-from xuml_populate.populate.actions.aparse_types import Flow_ap, MaxMult, Content
+from typing import TYPE_CHECKING
+from xuml_populate.populate.actions.aparse_types import Flow_ap, MaxMult, Content, Activity_ap
 from xuml_populate.populate.actions.action import Action
 from xuml_populate.populate.mm_class import MMclass
 from scrall.parse.visitor import Switch_a
@@ -33,17 +33,13 @@ class SwitchAction:
     scrall_text = None
 
     @classmethod
-    def populate(cls, mmdb: 'Tk', sw_parse: Switch_a, anum: str,
-                 domain: str, activity_path: str, scrall_text: str):
+    def populate(cls, mmdb: 'Tk', sw_parse: Switch_a, activity_data: Activity_ap):
         """
         Populate the Switch Action
 
         :param mmdb:
         :param sw_parse:  The parsed switch action group
-        :param anum:
-        :param domain:
-        :param scrall_text:
-        :param activity_path:
+        :param activity_data:
         """
         # For each case, create actions (open/close transaction) and create list of action ids
         cactions = {}

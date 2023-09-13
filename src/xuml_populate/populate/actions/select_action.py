@@ -3,8 +3,8 @@ select_action.py – Populate a selection action instance in PyRAL
 """
 
 import logging
-from typing import TYPE_CHECKING, Set, Dict, List, Optional
-from xuml_populate.populate.actions.aparse_types import Flow_ap, MaxMult, Content
+from typing import TYPE_CHECKING, Optional
+from xuml_populate.populate.actions.aparse_types import Flow_ap, MaxMult, Content, Activity_ap
 from xuml_populate.exceptions.action_exceptions import ComparingNonAttributeInSelection, NoInputInstanceFlow
 from xuml_populate.populate.actions.action import Action
 from xuml_populate.populate.flow import Flow
@@ -40,9 +40,8 @@ class SelectAction:
     domain = None  # in this domain
     mmdb = None  # The database
     criterion_ctr = 0
-    activity_path = None
-    scrall_text = None
     max_mult = None
+    activity_data = None
 
     @classmethod
     def pop_restriction_criterion(cls, attr: str) -> int:
@@ -233,8 +232,8 @@ class SelectAction:
                                                      label=None, single=True)
             cls.output_instance_flow = Flow_ap(fid=output_fid, content=Content.INSTANCE,
                                                tname=cls.input_instance_flow.tname, max_mult=cls.max_mult)
-            _logger.info(f"INSERT Select action output single instance Flow: ["
-                         f"{cls.domain}:{cls.input_instance_flow.tname}:{cls.activity_path.split(':')[-1]}"
+            _logger.info(f"INSERT Select action output single instance Flow: [{cls.domain}:"
+                         f"{cls.input_instance_flow.tname}:{cls.activity_data.activity_path.split(':')[-1]}"
                          f":{cls.output_instance_flow}]")
             # Populate the Single Select subclass
             Relvar.insert(relvar='Single_Select', tuples=[
@@ -245,7 +244,7 @@ class SelectAction:
                 # Populate an Identifier Select subclass
                 Relvar.insert(relvar='Identifier_Select', tuples=[
                     Identifier_Select_i(ID=cls.action_id, Activity=cls.anum, Domain=cls.domain,
-                                       Identifier=selection_idnum, Class=cls.input_instance_flow.tname)
+                                        Identifier=selection_idnum, Class=cls.input_instance_flow.tname)
                 ])
             else:
                 # Populate an Identifier Select subclass
@@ -256,10 +255,11 @@ class SelectAction:
         else:
             # Many select with Multiple Instance Flow output
             cls.max_mult = MaxMult.MANY
-            cls.output_instance_flow = Flow.populate_instance_flow(cls.mmdb, cname=cls.input_instance_flow.tname, activity=cls.anum,
-                                                     domain=cls.domain, label=None, single=False)
-            _logger.info(f"INSERT Select action output multiple instance Flow: ["
-                         f"{cls.domain}:{cls.input_instance_flow.tname}:{cls.activity_path.split(':')[-1]}"
+            cls.output_instance_flow = Flow.populate_instance_flow(cls.mmdb, cname=cls.input_instance_flow.tname,
+                                                                   activity=cls.anum,
+                                                                   domain=cls.domain, label=None, single=False)
+            _logger.info(f"INSERT Select action output multiple instance Flow: [{cls.domain}:"
+                         f"{cls.input_instance_flow.tname}:{cls.activity_data.activity_path.split(':')[-1]}"
                          f":{cls.output_instance_flow}]")
             # Populate the Many Select subclass
             Relvar.insert(relvar='Many_Select', tuples=[
@@ -268,26 +268,23 @@ class SelectAction:
             ])
 
     @classmethod
-    def populate(cls, mmdb: 'Tk', input_instance_flow: Flow_ap, anum: str, select_agroup, domain: str,
-                 activity_path: str, scrall_text: str) -> str:
+    def populate(cls, mmdb: 'Tk', input_instance_flow: Flow_ap, select_agroup, activity_data: Activity_ap) -> str:
         """
         Populate the Select Statement
 
         :param mmdb:
         :param input_instance_flow: The source flow into this selection
-        :param anum:
-        :param domain:
         :param select_agroup:  The parsed Scrall select action group
-        :param scrall_text:
-        :param activity_path:
+        :param activity_data:
+        :return: string representation of the select critieria expression
         """
         # Save attribute values that we will need when creating the various select subsystem
         # classes
         cls.mmdb = mmdb
-        cls.domain = domain
-        cls.anum = anum
-        cls.activity_path = activity_path
-        cls.scrall_text = scrall_text
+        cls.domain = activity_data.domain
+        cls.anum = activity_data.anum
+        cls.activity_data = activity_data
+
         # Here we convert from scrall parse '1', 'M' notation to user friendly 'ONE', 'ALL'
         # If 1, user wants at most one arbitrary instance, even if many are selected
         # If M, get them all.
@@ -297,9 +294,9 @@ class SelectAction:
         cls.input_instance_flow = input_instance_flow
 
         # Populate the Action superclass instance and obtain its action_id
-        cls.action_id = Action.populate(mmdb, anum, domain)  # Transaction open
+        cls.action_id = Action.populate(cls.mmdb, cls.anum, cls.domain)  # Transaction open
         Relvar.insert(relvar='Select_Action', tuples=[
-            Select_Action_i(ID=cls.action_id, Activity=anum, Domain=domain, Input_flow=input_instance_flow.fid)
+            Select_Action_i(ID=cls.action_id, Activity=cls.anum, Domain=cls.domain, Input_flow=input_instance_flow.fid)
         ])
         cls.select_agroup = select_agroup
         # Walk through the critieria parse tree storing any attributes or input flows

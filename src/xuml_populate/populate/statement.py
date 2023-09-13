@@ -45,7 +45,6 @@ class Statement:
             case 'Scalar_Assignment_a':
                 ScalarAssignment.process(mmdb, activity_data=activity_data, scalar_assign_parse=statement_parse)
             case 'Switch_a':
-                SwitchAction.populate(mmdb,  sw_parse=aparse.action_group, anum=anum, domain=domain,
-                                      activity_path=activity_path, scrall_text=scrall_text)
+                SwitchAction.populate(mmdb, activity_data=activity_data, sw_parse=statement_parse)
             case _:
                 print()

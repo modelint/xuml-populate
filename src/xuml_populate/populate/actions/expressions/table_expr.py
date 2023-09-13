@@ -131,10 +131,7 @@ class TableExpr:
                         component_flow = RenameAction.populate(cls.mmdb, input_nsflow=component_flow,
                                                                from_attr=header_op.from_name,
                                                                to_attr=header_op.to_name,
-                                                               anum=cls.anum,
-                                                               domain=cls.domain,
-                                                               activity_path=cls.activity_path,
-                                                               scrall_text=cls.scrall_text)
+                                                               activity_data=cls.activity_data)
                     case 'Extend':
                         print()
                     case _:
@@ -142,16 +139,10 @@ class TableExpr:
                 pass
         if texpr.selection:
             # If there is a selection on the instance set, create the action and obtain its flow id
-            component_flow = SelectAction.populate(
-                cls.mmdb, input_instance_flow=component_flow, anum=cls.anum,
-                select_agroup=texpr.selection,
-                domain=cls.domain,
-                activity_path=cls.activity_path, scrall_text=cls.scrall_text)
+            component_flow = SelectAction.populate(cls.mmdb, input_instance_flow=component_flow,
+                                                   select_agroup=texpr.selection, activity_data=cls.activity_data)
         if texpr.projection:
             # If there is a projection, create the action and obtain its flow id
             component_flow = ProjectAction.populate(cls.mmdb, input_nsflow=component_flow,
-                                                    projection=texpr.projection,
-                                                    anum=cls.anum, domain=cls.domain,
-                                                    activity_path=cls.activity_path,
-                                                    scrall_text=cls.scrall_text)
+                                                    projection=texpr.projection, activity_data=cls.activity_data)
         return component_flow

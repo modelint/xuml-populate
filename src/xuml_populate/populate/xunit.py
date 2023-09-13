@@ -81,3 +81,5 @@ class ExecutionUnit:
 
         # aid = Statement.populate()
         pass
+        return [], []
+
