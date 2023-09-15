@@ -62,6 +62,7 @@ class ExecutionUnit:
         """
         single_statement = statement_set.statement
         block = statement_set.block
+        boundary_actions = None
 
         # Mutually exclusive options
         if block and single_statement:
@@ -69,7 +70,7 @@ class ExecutionUnit:
             raise Exception
 
         if single_statement:
-            Statement.populate(mmdb, activity_data, statement_parse=single_statement)
+            boundary_actions = Statement.populate(mmdb, activity_data, statement_parse=single_statement)
 
             pass
         elif block:
@@ -81,5 +82,5 @@ class ExecutionUnit:
 
         # aid = Statement.populate()
         pass
-        return [], []
+        return boundary_actions
 

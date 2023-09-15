@@ -437,15 +437,16 @@ class TraverseAction:
 
     @classmethod
     def build_path(cls, mmdb: 'Tk', input_instance_flow: Flow_ap, path: PATH_a,
-                   activity_data: Activity_ap) -> Flow_ap:
+                   activity_data: Activity_ap) -> (str, Flow_ap):
         """
         Step through a path populating it along the way.
 
-        :param mmdb: THe metamodel db
+        :param mmdb: The metamodel db
         :param input_instance_flow: This is the source instance flow where the path begins
         :param path: Parsed Scrall representing a Path
         :param activity_data:
-        :return: The output instance flow id, its Class Type name and its maximum instance multiplicity, 1 or M
+        :return: The Traverse Action ID and the output instance flow id, its Class Type name and its maximum instance
+        multiplicity, 1 or M
         """
         cls.mmdb = mmdb
         cls.path = path
@@ -524,4 +525,5 @@ class TraverseAction:
         Transaction.execute()
         # Relvar.printall(mmdb)
 
-        return Flow_ap(fid=cls.dest_fid, content=Content.INSTANCE, tname=cls.dest_class, max_mult=cls.mult)
+        return cls.action_id, Flow_ap(fid=cls.dest_fid, content=Content.INSTANCE, tname=cls.dest_class,
+                                      max_mult=cls.mult)

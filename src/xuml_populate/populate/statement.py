@@ -8,7 +8,7 @@ from xuml_populate.populate.actions.instance_assignment import InstanceAssignmen
 from xuml_populate.populate.actions.table_assignment import TableAssignment
 from xuml_populate.populate.actions.scalar_assignment import ScalarAssignment
 from xuml_populate.populate.actions.switch_action import SwitchAction
-from xuml_populate.populate.actions.aparse_types import Activity_ap
+from xuml_populate.populate.actions.aparse_types import Activity_ap, Boundary_Actions
 from collections import namedtuple
 from typing import TYPE_CHECKING
 
@@ -30,21 +30,28 @@ class Statement:
     xi_flow_id = None
 
     @classmethod
-    def populate(cls, mmdb: 'Tk', activity_data: Activity_ap, statement_parse: namedtuple):
+    def populate(cls, mmdb: 'Tk', activity_data: Activity_ap, statement_parse: namedtuple) -> Boundary_Actions:
         """
         Populate a Statement
         """
         statement_type = type(statement_parse).__name__
         # For now we'll just switch on the action_group name and later wrap all this up
         # into a dictionary of functions of some sort
+        boundary_actions = Boundary_Actions(ain=[], aout=[])
         match statement_type:
             case 'Inst_Assignment_a':
-                InstanceAssignment.process(mmdb, activity_data=activity_data, inst_assign=statement_parse)
+                boundary_actions = InstanceAssignment.process(mmdb, activity_data=activity_data,
+                                                              inst_assign=statement_parse)
+                pass
             case 'Table_Assignment_a':
-                TableAssignment.process(mmdb, activity_data=activity_data, table_assign_parse=statement_parse)
+                boundary_actions = TableAssignment.process(mmdb, activity_data=activity_data, table_assign_parse=statement_parse)
+                pass
             case 'Scalar_Assignment_a':
                 ScalarAssignment.process(mmdb, activity_data=activity_data, scalar_assign_parse=statement_parse)
             case 'Switch_a':
                 SwitchAction.populate(mmdb, activity_data=activity_data, sw_parse=statement_parse)
             case _:
+                boundary_actions = None
                 print()
+
+        return boundary_actions

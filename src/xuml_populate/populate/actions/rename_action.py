@@ -25,7 +25,7 @@ class RenameAction:
 
     @classmethod
     def populate(cls, mmdb: 'Tk', input_nsflow: Flow_ap, from_attr: str, to_attr: str,
-                 activity_data: Activity_ap) -> Flow_ap:
+                 activity_data: Activity_ap) -> (str, Flow_ap):
         """
 
         :param mmdb:
@@ -62,4 +62,4 @@ class RenameAction:
                             From_non_scalar_type=input_nsflow.tname, To_attribute=to_attr, To_table=output_tflow.tname)
         ])
         Transaction.execute()
-        return output_tflow
+        return action_id, output_tflow

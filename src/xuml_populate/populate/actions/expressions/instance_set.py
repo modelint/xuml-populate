@@ -1,15 +1,15 @@
 """ instance_set.py """
 
 import logging
-from typing import TYPE_CHECKING, Set, Dict, List, Optional
+from typing import TYPE_CHECKING
 from xuml_populate.populate.actions.traverse_action import TraverseAction
 from xuml_populate.populate.mm_class import MMclass
 from xuml_populate.populate.flow import Flow
 from xuml_populate.populate.actions.select_action import SelectAction
-from xuml_populate.populate.actions.aparse_types import Flow_ap, MaxMult, Content, Activity_ap
+from xuml_populate.populate.actions.aparse_types import Flow_ap, MaxMult, Content, Activity_ap, Boundary_Actions
 from pyral.relation import Relation
 from pyral.transaction import Transaction
-from xuml_populate.exceptions.action_exceptions import NoClassOrInstanceFlowForInstanceSetName,\
+from xuml_populate.exceptions.action_exceptions import NoClassOrInstanceFlowForInstanceSetName, \
     SelectionOnNonInstanceFlow
 
 if TYPE_CHECKING:
@@ -24,42 +24,54 @@ class InstanceSet:
     """
 
     component_flow = None
+    initial_action = None
+    final_action = None
 
     @classmethod
-    def process(cls, mmdb: 'Tk', input_instance_flow: Flow_ap, iset_components, activity_data: Activity_ap) -> Flow_ap:
+    def process(cls, mmdb: 'Tk', input_instance_flow: Flow_ap, iset_components, activity_data: Activity_ap) -> (
+            str, str, Flow_ap):
         """
 
         :param mmdb:
         :param input_instance_flow:
         :param iset_components:
         :param activity_data:
-        :return:
+        :return: The initial action id, the final action id and the output instance flow
         """
+        cls.initial_action = None
+        cls.final_action = None
         cls.component_flow = input_instance_flow  # This will be input to the first component
         domain = activity_data.domain
         anum = activity_data.anum
-        for c in iset_components:
-            match type(c).__name__:
+        for count, comp in enumerate(iset_components):
+            match type(comp).__name__:
                 case 'PATH_a':
-                    # Process the path to create the traverse action and obtain the resultant Class Type name
-                    cls.component_flow = TraverseAction.build_path(mmdb, input_instance_flow=cls.component_flow,
-                                                                   path=c, activity_data=activity_data)
+                    # Process the path to create the traverse action and obtain the resultant output instance flow
+                    aid, cls.component_flow = TraverseAction.build_path(mmdb, input_instance_flow=cls.component_flow,
+                                                                        path=comp, activity_data=activity_data)
+                    # Data flow to/from actions within the instance_set
+                    if count == 0:
+                        # For the first component, there can be dflow input from another action
+                        cls.initial_action = aid
+                    if count == len(iset_components)-1:
+                        # For the last component, there can be no dflow output to another action
+                        cls.final_action = aid
                 case 'N_a':
                     # Check to see if it is a class name
-                    if MMclass.exists(cname=c.name, domain=domain):
+                    if MMclass.exists(cname=comp.name, domain=domain):
                         # An encountered class name on the RHS is the source of a multiple instance flow
                         # We create that and set it as the current RHS input flow
                         Transaction.open(mmdb)  # Multiple instance flow from class
-                        class_flow_id = Flow.populate_instance_flow(mmdb, cname=c.name, activity=anum,
+                        class_flow_id = Flow.populate_instance_flow(mmdb, cname=comp.name, activity=anum,
                                                                     domain=domain, label=None)
                         cls.component_flow = Flow_ap(fid=class_flow_id, content=Content.INSTANCE,
-                                                     tname=c.name, max_mult=MaxMult.MANY)
+                                                     tname=comp.name, max_mult=MaxMult.MANY)
                         Transaction.execute()
                         _logger.info(f"INSERT Class instance flow (assignment): ["
-                                     f"{domain}:{c.name}:{activity_data.activity_path.split(':')[-1]}:{class_flow_id}]")
+                                     f"{domain}:{comp.name}:{activity_data.activity_path.split(':')[-1]}:{class_flow_id}]")
                     else:
                         # Look for a labeled instance flow
-                        R = f"Name:<{c.name}>, Activity:<{anum}>, Domain:<{domain}>"
+                        R = f"Name:<{comp.name}>, Activity:<{anum}>, Domain:<{domain}>"
                         label_result = Relation.restrict(mmdb, relation='Labeled_Flow', restriction=R)
                         if label_result.body:
                             # It's a labeled flow, but it must be an instance flow to support selection
@@ -69,7 +81,8 @@ class InstanceSet:
                             if if_result.body:
                                 # Okay, it's an instance flow. Now we need the multiplicity on that flow
                                 ctype = if_result.body[0]['Class']
-                                many_if_result = Relation.restrict(mmdb, relation='Multiple_Instance_Flow', restriction=R)
+                                many_if_result = Relation.restrict(mmdb, relation='Multiple_Instance_Flow',
+                                                                   restriction=R)
                                 m = MaxMult.MANY if many_if_result.body else MaxMult.ONE
                                 cls.component_flow = Flow_ap(fid=fid, content=Content.INSTANCE, tname=ctype, max_mult=m)
                             else:
@@ -85,8 +98,8 @@ class InstanceSet:
                 case 'Selection_a':
                     # Process to populate a select action, the output type does not change
                     # since we are selecting on a known class
-                    cls.component_flow = SelectAction.populate(
-                        mmdb, input_instance_flow=cls.component_flow, anum=anum, select_agroup=c, domain=domain,
-                        activity_path=activity_data.activity_path, scrall_text=activity_data.scrall_text)
+                    aid, cls.component_flow = SelectAction.populate(
+                        mmdb, input_instance_flow=cls.component_flow, select_agroup=comp, activity_data=activity_data)
 
-        return cls.component_flow
+                    cls.final_action = aid
+        return cls.initial_action, cls.final_action, cls.component_flow

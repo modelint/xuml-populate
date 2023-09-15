@@ -7,7 +7,7 @@ from pyral.relvar import Relvar
 from pyral.relation import Relation
 from xuml_populate.populate.element import Element
 from scrall.parse.parser import ScrallParser
-from xuml_populate.populate.actions.aparse_types import Activity_ap
+from xuml_populate.populate.actions.aparse_types import Activity_ap, Boundary_Actions
 from xuml_populate.populate.xunit import ExecutionUnit
 from typing import TYPE_CHECKING
 from xuml_populate.populate.mmclass_nt import Activity_i, Asynchronous_Activity_i,\
@@ -161,7 +161,7 @@ class Activity:
                 seq_labels = set()
                 for xunit in aparse[0]:
                     if xunit.statement_set:
-                        actions_in, actions_out = ExecutionUnit.process_method_statement_set(
+                        boundary_actions = ExecutionUnit.process_method_statement_set(
                             mmdb=mmdb, activity_data=activity_data, statement_set=xunit.statement_set)
                         pass
                     elif xunit.ouput_flow:

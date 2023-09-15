@@ -6,7 +6,7 @@ import logging
 from typing import TYPE_CHECKING
 from xuml_populate.populate.mmclass_nt import Labeled_Flow_i
 from xuml_populate.populate.actions.expressions.table_expr import TableExpr
-from xuml_populate.populate.actions.aparse_types import Flow_ap, MaxMult, Content, Activity_ap
+from xuml_populate.populate.actions.aparse_types import Flow_ap, MaxMult, Content, Activity_ap, Boundary_Actions
 from scrall.parse.visitor import Table_Assignment_a
 
 from pyral.relvar import Relvar
@@ -33,7 +33,8 @@ class TableAssignment:
     scrall_text = None
 
     @classmethod
-    def process(cls, mmdb: 'Tk', activity_data: Activity_ap, table_assign_parse: Table_Assignment_a):
+    def process(cls, mmdb: 'Tk', activity_data: Activity_ap, table_assign_parse: Table_Assignment_a
+                ) -> Boundary_Actions:
         """
         Given a parsed table assignment consisting of an LHS and an RHS, populate each component action
         and return the resultant table flow
@@ -54,7 +55,7 @@ class TableAssignment:
         xi_instance_flow = Flow_ap(fid=activity_data.xiflow, content=Content.INSTANCE, tname=activity_data.cname,
                                    max_mult=MaxMult.ONE)
 
-        output_flow = TableExpr.process(mmdb, rhs=rhs, activity_data=activity_data,
+        bactions, output_flow = TableExpr.process(mmdb, rhs=rhs, activity_data=activity_data,
                                         input_instance_flow=xi_instance_flow)
 
         output_flow_label = lhs
@@ -73,3 +74,4 @@ class TableAssignment:
                            Name=output_flow_label)
         ])
         Transaction.execute()
+        return bactions

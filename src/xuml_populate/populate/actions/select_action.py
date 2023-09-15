@@ -268,7 +268,8 @@ class SelectAction:
             ])
 
     @classmethod
-    def populate(cls, mmdb: 'Tk', input_instance_flow: Flow_ap, select_agroup, activity_data: Activity_ap) -> str:
+    def populate(cls, mmdb: 'Tk', input_instance_flow: Flow_ap, select_agroup, activity_data: Activity_ap) -> (
+            str, Flow_ap):
         """
         Populate the Select Statement
 
@@ -276,7 +277,7 @@ class SelectAction:
         :param input_instance_flow: The source flow into this selection
         :param select_agroup:  The parsed Scrall select action group
         :param activity_data:
-        :return: string representation of the select critieria expression
+        :return: The select action id and the output flow
         """
         # Save attribute values that we will need when creating the various select subsystem
         # classes
@@ -305,4 +306,4 @@ class SelectAction:
 
         # We now have a transaction with all select-action instances, enter into the metamodel db
         Transaction.execute()  # Select Action
-        return cls.output_instance_flow
+        return cls.action_id, cls.output_instance_flow

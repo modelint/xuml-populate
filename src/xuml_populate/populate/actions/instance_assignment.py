@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING, Set, Dict, List, Optional
 from xuml_populate.populate.flow import Flow
 from xuml_populate.populate.actions.expressions.instance_set import InstanceSet
 from xuml_populate.exceptions.action_exceptions import AssignZeroOneInstanceHasMultiple
-from xuml_populate.populate.actions.aparse_types import Flow_ap, MaxMult, Content, Activity_ap
+from xuml_populate.populate.actions.aparse_types import Flow_ap, MaxMult, Content, Activity_ap, Boundary_Actions
 from scrall.parse.visitor import Inst_Assignment_a
 
 from pyral.transaction import Transaction
@@ -47,7 +47,7 @@ class InstanceAssignment:
     assign_zero_one = None  # Does assignment operator limit to a zero or one instance selection?
 
     @classmethod
-    def process(cls, mmdb: 'Tk', activity_data: Activity_ap, inst_assign: Inst_Assignment_a):
+    def process(cls, mmdb: 'Tk', activity_data: Activity_ap, inst_assign: Inst_Assignment_a) -> Boundary_Actions:
         """
         Given a parsed instance set expression, populate each component action
         and return the resultant Class Type name
@@ -68,8 +68,9 @@ class InstanceAssignment:
                                    max_mult=MaxMult.ONE)
 
         # Process the instance set expression in the RHS and obtain the generated instance flow
-        iset_instance_flow = InstanceSet.process(mmdb, input_instance_flow=xi_instance_flow,
-                                                 iset_components=rhs.components, activity_data=activity_data)
+        initial_aid, final_aid, iset_instance_flow = InstanceSet.process(mmdb, input_instance_flow=xi_instance_flow,
+                                                                         iset_components=rhs.components,
+                                                                         activity_data=activity_data)
 
         # Process LHS after all components have been processed
         if assign_zero_one and iset_instance_flow.max_mult == MaxMult.ONE:
@@ -90,3 +91,5 @@ class InstanceAssignment:
                      f"{activity_data.domain}:{iset_instance_flow.tname}:{activity_data.activity_path.split(':')[-1]}"
                      f":{output_flow_label}:{assigned_flow}]")
         Transaction.execute()  # LHS labeled instance flow
+
+        return Boundary_Actions(ain={initial_aid}, aout={final_aid})
