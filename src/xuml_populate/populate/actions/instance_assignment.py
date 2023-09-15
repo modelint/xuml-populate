@@ -5,12 +5,15 @@ instance_assignment.py – Break an instance set generator into one or more comp
 import logging
 from typing import TYPE_CHECKING, Set, Dict, List, Optional
 from xuml_populate.populate.flow import Flow
+from xuml_populate.populate.mmclass_nt import Labeled_Flow_i
 from xuml_populate.populate.actions.expressions.instance_set import InstanceSet
 from xuml_populate.exceptions.action_exceptions import AssignZeroOneInstanceHasMultiple
 from xuml_populate.populate.actions.aparse_types import Flow_ap, MaxMult, Content, Activity_ap, Boundary_Actions
 from scrall.parse.visitor import Inst_Assignment_a
 
 from pyral.transaction import Transaction
+from pyral.relation import Relation  # For debugging
+from pyral.relvar import Relvar
 
 if TYPE_CHECKING:
     from tkinter import Tk
@@ -81,15 +84,19 @@ class InstanceAssignment:
             # Raise assignment type mismatch exception
             pass
 
-        # Populate the LHS assignment labeled flow
+        # Migrate the RHS output to a labeled flow using the output flow label
         Transaction.open(mmdb)  # LHS labeled instance flow
-        assigned_flow = Flow.populate_instance_flow(mmdb, cname=iset_instance_flow.tname, activity=activity_data.anum,
-                                                    domain=activity_data.domain, label=output_flow_label,
-                                                    single=assign_zero_one)
 
-        _logger.info(f"INSERT Instance Flow (assignment): ["
-                     f"{activity_data.domain}:{iset_instance_flow.tname}:{activity_data.activity_path.split(':')[-1]}"
-                     f":{output_flow_label}:{assigned_flow}]")
+        # Delete the Unlabeled flow
+        Relvar.deleteone(mmdb, "Unlabeled_Flow",
+                         tid={"ID": iset_instance_flow.fid, "Activity": activity_data.anum,
+                              "Domain": activity_data.domain}, defer=True)
+        # Insert the labeled flow
+        Relvar.insert(relvar='Labeled_Flow', tuples=[
+            Labeled_Flow_i(ID=iset_instance_flow.fid, Activity=activity_data.anum, Domain=activity_data.domain,
+                           Name=output_flow_label)
+        ])
+
         Transaction.execute()  # LHS labeled instance flow
 
         return Boundary_Actions(ain={initial_aid}, aout={final_aid})
