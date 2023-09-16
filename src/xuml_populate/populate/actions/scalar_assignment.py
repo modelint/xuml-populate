@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING
 from xuml_populate.populate.mmclass_nt import Labeled_Flow_i
 from xuml_populate.populate.actions.extract_action import ExtractAction
 from xuml_populate.populate.ns_flow import NonScalarFlow
-from xuml_populate.populate.actions.aparse_types import Flow_ap, MaxMult, Content, Activity_ap
+from xuml_populate.populate.actions.aparse_types import Flow_ap, MaxMult, Content, Activity_ap, Boundary_Actions
 from xuml_populate.populate.actions.expressions.scalar_expr import ScalarExpr
 from xuml_populate.exceptions.action_exceptions import ScalarAssignmentFlowMismatch, ScalarAssignmentfromMultipleTuples
 from scrall.parse.visitor import Scalar_Assignment_a
@@ -36,7 +36,8 @@ class ScalarAssignment:
     scrall_text = None
 
     @classmethod
-    def process(cls, mmdb: 'Tk', activity_data: Activity_ap, scalar_assign_parse: Scalar_Assignment_a):
+    def process(cls, mmdb: 'Tk', activity_data: Activity_ap, scalar_assign_parse: Scalar_Assignment_a
+                ) -> Boundary_Actions:
         """
         Given a parsed table assignment consisting of an LHS and an RHS, populate each component action
         and return the resultant table flow
@@ -56,8 +57,8 @@ class ScalarAssignment:
         xi_instance_flow = Flow_ap(fid=activity_data.xiflow, content=Content.INSTANCE, tname=activity_data.cname,
                                    max_mult=MaxMult.ONE)
 
-        scalar_flows = ScalarExpr.process(mmdb, rhs=rhs, input_instance_flow=xi_instance_flow,
-                                          activity_data=activity_data)
+        bactions, scalar_flows = ScalarExpr.process(mmdb, rhs=rhs, input_instance_flow=xi_instance_flow,
+                                                    activity_data=activity_data)
         scalar_flow_labels = [n for n in lhs[0].name]
 
         # There must be a label on the LHS for each scalar output flow
@@ -87,8 +88,7 @@ class ScalarAssignment:
                 Labeled_Flow_i(ID=sflow.fid, Activity=activity_data.anum, Domain=activity_data.domain, Name=label)
             ])
             Transaction.execute()
-
-
+        return bactions
 
         # Create one Extract Action per attribute, label pair
         # for count, a in enumerate(attr_list):

@@ -49,7 +49,6 @@ class TableExpr:
     activity_data = None
     action_inputs = None
     action_outputs = None
-    connected_outputs = None
 
     @classmethod
     def process(cls, mmdb: 'Tk', activity_data: Activity_ap, rhs: TEXPR_a, input_instance_flow: Flow_ap) -> (

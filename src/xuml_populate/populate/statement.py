@@ -47,9 +47,10 @@ class Statement:
                 boundary_actions = TableAssignment.process(mmdb, activity_data=activity_data, table_assign_parse=statement_parse)
                 pass
             case 'Scalar_Assignment_a':
-                ScalarAssignment.process(mmdb, activity_data=activity_data, scalar_assign_parse=statement_parse)
+                boundary_actions = ScalarAssignment.process(mmdb, activity_data=activity_data, scalar_assign_parse=statement_parse)
+                pass
             case 'Switch_a':
-                SwitchAction.populate(mmdb, activity_data=activity_data, sw_parse=statement_parse)
+                boundary_actions = SwitchAction.populate(mmdb, activity_data=activity_data, sw_parse=statement_parse)
             case _:
                 boundary_actions = None
                 print()

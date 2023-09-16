@@ -37,7 +37,7 @@ class ReadAction:
 
     @classmethod
     def populate(cls, mmdb: 'Tk', input_single_instance_flow: Flow_ap, projection: Projection_a,
-                 activity_data: Activity_ap) -> List[Flow_ap]:
+                 activity_data: Activity_ap) -> (str, List[Flow_ap]):
         """
         Populate the Read Action
 
@@ -73,4 +73,4 @@ class ReadAction:
             # output_flows[pa] = of
         # We now have a transaction with all select-action instances, enter into the metamodel db
         Transaction.execute()  # Select Action
-        return scalar_flows
+        return action_id, scalar_flows

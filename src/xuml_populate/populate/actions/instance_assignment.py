@@ -46,7 +46,6 @@ class InstanceAssignment:
     etc). The Scrall syntax will later be udpated to accommodate such expressions.
     """
 
-    input_instance_flow = None  # The instance flow feeding the next component on the RHS
     assign_zero_one = None  # Does assignment operator limit to a zero or one instance selection?
 
     @classmethod
