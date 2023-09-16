@@ -75,7 +75,7 @@ class TableExpr:
         x = cls.walk(texpr=rhs, input_flow=input_instance_flow)
 
         all_ins = {v for s in cls.action_inputs.values() for v in s}
-        all_outs ={v for s in cls.action_outputs.values() for v in s}
+        all_outs = {v for s in cls.action_outputs.values() for v in s}
         init_aids = {a for a in cls.action_inputs.keys() if not cls.action_inputs[a].intersection(all_outs)}
         final_aids = {a for a in cls.action_outputs.keys() if not cls.action_outputs[a].intersection(all_ins)}
 
@@ -138,8 +138,11 @@ class TableExpr:
                 for o in texpr.table.operands:
                     operand_flows.append(cls.walk(texpr=o, input_flow=component_flow))
                 op_name = texpr.table.op
-                component_flow = SetAction.populate(cls.mmdb, a_input=operand_flows[0], b_input=operand_flows[1],
-                                                    setop=op_name, activity_data=cls.activity_data)
+                aid, component_flow = SetAction.populate(cls.mmdb, a_input=operand_flows[0], b_input=operand_flows[1],
+                                                         setop=op_name, activity_data=cls.activity_data)
+                cls.action_inputs[aid] = {operand_flows[0].fid, operand_flows[1].fid}
+                cls.action_outputs[aid] = {component_flow.fid}
+                pass
             case _:
                 _logger.error(
                     f"Expected INST, N, IN or TOP, but received {type(texpr).__name__} during table_expr walk")
@@ -152,10 +155,10 @@ class TableExpr:
                     case 'Rename_a':
                         # Populate a rename relational action
                         input_flow = component_flow
-                        aid, component_flow = RenameAction.populate(cls.mmdb, input_nsflow=component_flow,
-                                                               from_attr=header_op.from_name,
-                                                               to_attr=header_op.to_name,
-                                                               activity_data=cls.activity_data)
+                        aid, component_flow = RenameAction.populate(cls.mmdb, input_nsflow=input_flow,
+                                                                    from_attr=header_op.from_name,
+                                                                    to_attr=header_op.to_name,
+                                                                    activity_data=cls.activity_data)
                         cls.action_inputs[aid] = {input_flow.fid}
                         cls.action_outputs[aid] = {component_flow.fid}
                     case 'Extend':
@@ -166,15 +169,15 @@ class TableExpr:
         if texpr.selection:
             # If there is a selection on the instance set, create the action and obtain its flow id
             input_flow = component_flow
-            aid, component_flow = SelectAction.populate(cls.mmdb, input_instance_flow=component_flow,
+            aid, component_flow = SelectAction.populate(cls.mmdb, input_instance_flow=input_flow,
                                                         select_agroup=texpr.selection, activity_data=cls.activity_data)
             cls.action_inputs[aid] = {input_flow.fid}
             cls.action_outputs[aid] = {component_flow.fid}
         if texpr.projection:
             # If there is a projection, create the action and obtain its flow id
             input_flow = component_flow
-            aid, component_flow = ProjectAction.populate(cls.mmdb, input_nsflow=component_flow,
-                                                    projection=texpr.projection, activity_data=cls.activity_data)
+            aid, component_flow = ProjectAction.populate(cls.mmdb, input_nsflow=input_flow,
+                                                         projection=texpr.projection, activity_data=cls.activity_data)
             cls.action_inputs[aid] = {input_flow.fid}
             cls.action_outputs[aid] = {component_flow.fid}
         return component_flow

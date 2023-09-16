@@ -35,7 +35,7 @@ class SetAction:
 
     @classmethod
     def populate(cls, mmdb: 'Tk', a_input: Flow_ap, b_input: Flow_ap, setop: str,
-                 activity_data: Activity_ap) -> Flow_ap:
+                 activity_data: Activity_ap) -> (str, Flow_ap):
         """
         Populate the Set Action
 
@@ -96,4 +96,4 @@ class SetAction:
             Set_Action_i(ID=cls.action_id, Operation=setop, Activity=anum, Domain=domain, Input_b_flow=b_input.fid)
         ])
         Transaction.execute()
-        return output_tflow
+        return cls.action_id, output_tflow

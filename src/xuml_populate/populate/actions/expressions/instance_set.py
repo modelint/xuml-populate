@@ -43,16 +43,19 @@ class InstanceSet:
         cls.component_flow = input_instance_flow  # This will be input to the first component
         domain = activity_data.domain
         anum = activity_data.anum
+        first_action = True  # We use this to recognize the initial action
         for count, comp in enumerate(iset_components):
+            # We use the count to recognize the final action
             match type(comp).__name__:
                 case 'PATH_a':
                     # Process the path to create the traverse action and obtain the resultant output instance flow
                     aid, cls.component_flow = TraverseAction.build_path(mmdb, input_instance_flow=cls.component_flow,
                                                                         path=comp, activity_data=activity_data)
                     # Data flow to/from actions within the instance_set
-                    if count == 0:
+                    if first_action:
                         # For the first component, there can be dflow input from another action
                         cls.initial_action = aid
+                        first_action = False  # The first action has been encountered and recognized as initial
                     if count == len(iset_components)-1:
                         # For the last component, there can be no dflow output to another action
                         cls.final_action = aid

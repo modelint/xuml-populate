@@ -10,6 +10,7 @@ from xuml_populate.populate.actions.aparse_types import Flow_ap, MaxMult, Conten
 from scrall.parse.visitor import Table_Assignment_a
 
 from pyral.relvar import Relvar
+from pyral.relation import Relation  # Keep for debugging
 from pyral.transaction import Transaction
 
 if TYPE_CHECKING:
