@@ -71,7 +71,7 @@ class TableExpr:
         cls.action_outputs = {}  # ID's of all Action output Data Flows
         cls.action_inputs = {}  # ID's of all Action input Data Flows
 
-        x = cls.walk(texpr=rhs, input_flow=input_instance_flow)
+        x = cls.walk(texpr=rhs, input_nsflow=input_instance_flow)
 
         all_ins = {v for s in cls.action_inputs.values() for v in s}
         all_outs = {v for s in cls.action_outputs.values() for v in s}
@@ -81,15 +81,15 @@ class TableExpr:
         return Boundary_Actions(ain=init_aids, aout=final_aids), x
 
     @classmethod
-    def walk(cls, texpr: TEXPR_a, input_flow: Flow_ap) -> Flow_ap:
+    def walk(cls, texpr: TEXPR_a, input_nsflow: Flow_ap) -> Flow_ap:
         """
 
-        :param input_flow:
+        :param input_nsflow:
         :param texpr: Parsed table expression
         """
         # Process the table component
         # It is either an instance set, name, or a nested table operation
-        component_flow = input_flow
+        component_flow = input_nsflow
         match type(texpr.table).__name__:
             case 'N_a' | 'IN_a':
                 # Is the name an existing Labeled Flow?
@@ -135,7 +135,7 @@ class TableExpr:
                 # insert Computation and set its operator attribute with texpr.op
                 operand_flows = []
                 for o in texpr.table.operands:
-                    operand_flows.append(cls.walk(texpr=o, input_flow=component_flow))
+                    operand_flows.append(cls.walk(texpr=o, input_nsflow=component_flow))
                 op_name = texpr.table.op
                 aid, component_flow = SetAction.populate(cls.mmdb, a_input=operand_flows[0], b_input=operand_flows[1],
                                                          setop=op_name, activity_data=cls.activity_data)
