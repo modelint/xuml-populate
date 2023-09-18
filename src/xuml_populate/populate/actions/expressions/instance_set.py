@@ -10,7 +10,7 @@ from xuml_populate.populate.actions.aparse_types import Flow_ap, MaxMult, Conten
 from pyral.relation import Relation
 from pyral.transaction import Transaction
 from xuml_populate.exceptions.action_exceptions import NoClassOrInstanceFlowForInstanceSetName, \
-    SelectionOnNonInstanceFlow
+    SelectionOnScalarFlow
 
 if TYPE_CHECKING:
     from tkinter import Tk
@@ -89,11 +89,23 @@ class InstanceSet:
                                 m = MaxMult.MANY if many_if_result.body else MaxMult.ONE
                                 cls.component_flow = Flow_ap(fid=fid, content=Content.INSTANCE, tname=ctype, max_mult=m)
                             else:
-                                # It's either a table or scalar flow. Scalar's don't support selection.
-                                # Selection on tables will be supported, but not yet
-                                # TODO: Support labeled table flow selection
-                                raise SelectionOnNonInstanceFlow(path=activity_data.activity_path,
-                                                                 text=activity_data.scrall_text, x=iset_components.X)
+                                fid = label_result.body[0]['ID']
+                                R = f"ID:<{fid}>, Activity:<{anum}>, Domain:<{domain}>"
+                                rf_result = Relation.restrict(mmdb, relation='Relation_Flow', restriction=R)
+                                if rf_result.body:
+                                    # It's a table flow. Now we need the multiplicity on that flow
+                                    ttype = rf_result.body[0]['Type']
+                                    ntuples = Relation.restrict(mmdb, relation='Table_Flow',
+                                                                       restriction=R)
+                                    m = MaxMult.MANY if ntuples.body else MaxMult.ONE
+                                    cls.component_flow = Flow_ap(fid=fid, content=Content.TABLE, tname=ttype,
+                                                                 max_mult=m)
+                                    pass
+                                else:
+                                    # It's a Scalar Flow
+                                    # TODO: Support labeled table flow selection
+                                    raise SelectionOnScalarFlow(path=activity_data.activity_path,
+                                                                     text=activity_data.scrall_text, x=iset_components.X)
                         else:
                             raise NoClassOrInstanceFlowForInstanceSetName(path=activity_data.activity_path,
                                                                           text=activity_data.scrall_text,

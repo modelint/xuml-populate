@@ -58,13 +58,13 @@ class ProjectedAttributeNotDefined(TableExpressionException):
 class TableOperationOrExpressionExpected(TableExpressionException):
     pass
 
-class SelectionOnNonInstanceFlow(ActionException):
+class SelectionOnScalarFlow(ActionException):
     def __init__(self, path, text, x):
         self.path = path
         self.text = text[slice(*x)]
 
     def __str__(self):
-        return f'{pre}Cannot select on a non instance flow. Verify input to selection phrase' \
+        return f'{pre}Cannot select/restrict on a scalar flow. Verify input to selection phrase' \
                f'{post}\n\t[{self.path}] >> {self.text}'
 
 class AssignZeroOneInstanceHasMultiple(ActionException):

@@ -7,7 +7,7 @@ from pyral.relation import Relation
 from xuml_populate.populate.actions.instance_assignment import InstanceAssignment
 from xuml_populate.populate.actions.table_assignment import TableAssignment
 from xuml_populate.populate.actions.scalar_assignment import ScalarAssignment
-from xuml_populate.populate.actions.switch_action import SwitchAction
+from xuml_populate.populate.actions.switch_statement import SwitchStatement
 from xuml_populate.populate.actions.aparse_types import Activity_ap, Boundary_Actions
 from collections import namedtuple
 from typing import TYPE_CHECKING
@@ -50,7 +50,8 @@ class Statement:
                 boundary_actions = ScalarAssignment.process(mmdb, activity_data=activity_data, scalar_assign_parse=statement_parse)
                 pass
             case 'Switch_a':
-                boundary_actions = SwitchAction.populate(mmdb, activity_data=activity_data, sw_parse=statement_parse)
+                boundary_actions = SwitchStatement.populate(mmdb, activity_data=activity_data, sw_parse=statement_parse)
+                pass
             case _:
                 boundary_actions = None
                 print()

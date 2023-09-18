@@ -168,10 +168,16 @@ class TableExpr:
         if texpr.selection:
             # If there is a selection on the instance set, create the action and obtain its flow id
             input_flow = component_flow
-            aid, component_flow = SelectAction.populate(cls.mmdb, input_instance_flow=input_flow,
+            if input_flow.content == Content.TABLE:
+                RestrictAction.populate()
+                pass
+            elif input_flow.content == Content.INSTANCE:
+                aid, component_flow = SelectAction.populate(cls.mmdb, input_instance_flow=input_flow,
                                                         select_agroup=texpr.selection, activity_data=cls.activity_data)
-            cls.action_inputs[aid] = {input_flow.fid}
-            cls.action_outputs[aid] = {component_flow.fid}
+                cls.action_inputs[aid] = {input_flow.fid}
+                cls.action_outputs[aid] = {component_flow.fid}
+            else:
+                raise Exception
         if texpr.projection:
             # If there is a projection, create the action and obtain its flow id
             input_flow = component_flow
