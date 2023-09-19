@@ -43,18 +43,18 @@ class RestrictAction:
         domain = activity_data.domain
         anum = activity_data.anum
 
+        # Populate the Action superclass instance and obtain its action_id
+        action_id = Action.populate(mmdb, anum, domain)  # Transaction open
+
         # Populate the output Table Flow using same Table as input flow
         output_relation_flow = Flow.populate_table_flow(mmdb, activity=anum, domain=domain,
                                                         tname=input_relation_flow.tname, label=None,
                                                         is_tuple=True if selection_parse.card == 'ONE' else False)
 
-        # Populate the Action superclass instance and obtain its action_id
-        action_id = Action.populate(mmdb, anum, domain)  # Transaction open
-
         # Walk through the critieria parse tree storing any attributes or input flows
         # Also check to see if we are selecting on an identifier
         RestrictCondition.process(mmdb, action_id=action_id, input_nsflow=input_relation_flow,
-                                  selection_parse=selection_parse.criteria, activity_data=activity_data)
+                                  selection_parse=selection_parse, activity_data=activity_data)
 
         Relvar.insert(relvar='Relational_Action', tuples=[
             Relational_Action_i(ID=action_id, Activity=anum, Domain=domain)

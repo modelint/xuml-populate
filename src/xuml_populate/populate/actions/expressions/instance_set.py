@@ -117,4 +117,6 @@ class InstanceSet:
                         mmdb, input_instance_flow=cls.component_flow, select_agroup=comp, activity_data=activity_data)
 
                     cls.final_action = aid
+                case _:
+                    raise Exception
         return cls.initial_action, cls.final_action, cls.component_flow

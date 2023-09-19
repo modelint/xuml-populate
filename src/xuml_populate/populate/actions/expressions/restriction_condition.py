@@ -8,6 +8,7 @@ from xuml_populate.populate.actions.aparse_types import Flow_ap, MaxMult, Conten
 from xuml_populate.exceptions.action_exceptions import ComparingNonAttributeInSelection, NoInputInstanceFlow
 from xuml_populate.populate.mmclass_nt import Restriction_Condition_i, Equivalence_Criterion_i, \
     Comparison_Criterion_i, Ranking_Criterion_i, Criterion_i
+from xuml_populate.populate.actions.expressions.instance_set import InstanceSet
 from pyral.relvar import Relvar
 from pyral.relation import Relation
 from scrall.parse.visitor import N_a, BOOL_a, Op_a, Selection_a
@@ -28,6 +29,7 @@ class RestrictCondition:
     input_nsflow = None
     anum = None
     domain = None  # in this domain
+    activity_data = None
 
     expression = None
     comparison_criteria = []
@@ -142,6 +144,10 @@ class RestrictCondition:
                     text += cls.walk_criteria(o.op, o.operands, attr_set)
                 case 'UNARY_a':
                     print()
+                case 'INST_PROJ_a':
+                    pass
+                case _:
+                    raise Exception
         return text
 
     @classmethod
@@ -165,6 +171,7 @@ class RestrictCondition:
         cls.action_id = action_id
         cls.anum = activity_data.anum
         cls.domain = activity_data.domain
+        cls.activity_data = activity_data
 
         cls.input_nsflow = input_nsflow
         criteria = selection_parse.criteria
