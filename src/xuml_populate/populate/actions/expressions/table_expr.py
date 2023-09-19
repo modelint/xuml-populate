@@ -7,6 +7,7 @@ from xuml_populate.populate.flow import Flow
 from xuml_populate.populate.actions.rename_action import RenameAction
 from xuml_populate.populate.actions.aparse_types import Flow_ap, MaxMult, Content, Activity_ap, Boundary_Actions
 from xuml_populate.populate.actions.select_action import SelectAction
+from xuml_populate.populate.actions.restrict_action import RestrictAction
 from xuml_populate.populate.actions.project_action import ProjectAction
 from xuml_populate.populate.actions.set_action import SetAction
 from xuml_populate.exceptions.action_exceptions import (TableOperationOrExpressionExpected, FlowException,
@@ -169,7 +170,9 @@ class TableExpr:
             # If there is a selection on the instance set, create the action and obtain its flow id
             input_flow = component_flow
             if input_flow.content == Content.TABLE:
-                RestrictAction.populate()
+                aid, component_flow = RestrictAction.populate(cls.mmdb, input_relation_flow=input_flow,
+                                                              selection_parse=texpr.selection,
+                                                              activity_data=cls.activity_data)
                 pass
             elif input_flow.content == Content.INSTANCE:
                 aid, component_flow = SelectAction.populate(cls.mmdb, input_instance_flow=input_flow,
