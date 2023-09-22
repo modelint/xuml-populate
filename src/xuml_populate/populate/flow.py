@@ -34,6 +34,42 @@ class Flow:
 
 
     @classmethod
+    def find_labeled_scalar_flow(cls, name: str, anum: str, domain: str) -> Optional[Flow_ap]:
+        """
+        Given a label in an activity, return a Scalar flow record
+
+        :param label: The flow label
+        :param anum: The activity number
+        :param domain: The domain name
+        :return: A flow record or None if no such labeled flow is defined
+        """
+        fid = cls.find_labeled_flow(name=name, anum=anum, domain=domain)
+        R = f"ID:<{fid}>, Activity:<{anum}>, Domain:<{cls.domain}>"
+        result = Relation.restrict(cls.mmdb, relation='Scalar_Flow', restriction=R)
+        if result.body:
+            return Flow_ap(fid=fid, content=Content.SCALAR, tname=result.body[0]['Type'], max_mult=None)
+        else:
+            return None
+
+    @classmethod
+    def find_labeled_flow(cls, name: str, anum: str, domain: str) -> Optional[str]:
+        """
+        Return the fid of a Labeled Flow if it is defined
+
+        :param name: Flow Name
+        :param anum: Activity number
+        :param domain: Domain name
+        :return: flow id (fid) or None if not found
+        """
+        R = f"Name:<{name}>, Activity:<{anum}>, Domain:<{domain}>"
+        result = Relation.restrict(cls.mmdb, relation='Labeled_Flow', restriction=R)
+        if not result.body:
+            return None
+        else:
+            return result.body[0]['ID']
+
+
+    @classmethod
     def populate_table_flow_from_class(cls, cname: str, anum: str, domain: str) -> Flow_ap:
         """
 

@@ -49,7 +49,7 @@ class InstanceAssignment:
     assign_zero_one = None  # Does assignment operator limit to a zero or one instance selection?
 
     @classmethod
-    def process(cls, mmdb: 'Tk', activity_data: Activity_ap, inst_assign: Inst_Assignment_a) -> Boundary_Actions:
+    def process(cls, mmdb: 'Tk', activity_data: Activity_ap, inst_assign: Inst_Assignment_a, case_prefix: str) -> Boundary_Actions:
         """
         Given a parsed instance set expression, populate each component action
         and return the resultant Class Type name
@@ -61,6 +61,7 @@ class InstanceAssignment:
         :param mmdb: The metamodel db
         :param inst_assign: The instance assignment statement parse
         :param activity_data: The enveloping activity
+        :param case_prefix:
         """
         lhs = inst_assign.lhs
         assign_zero_one = True if inst_assign.card == '1' else False
@@ -78,7 +79,8 @@ class InstanceAssignment:
         if assign_zero_one and iset_instance_flow.max_mult == MaxMult.ONE:
             raise AssignZeroOneInstanceHasMultiple(path=activity_data.activity_path, text=activity_data.scrall_text,
                                                    x=inst_assign.X)
-        output_flow_label = lhs.name.name
+
+        output_flow_label = case_prefix + lhs.name.name
         if lhs.exp_type and lhs.exp_type != iset_instance_flow.tname:
             # Raise assignment type mismatch exception
             pass

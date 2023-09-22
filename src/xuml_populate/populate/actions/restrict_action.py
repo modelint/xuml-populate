@@ -3,7 +3,7 @@ restrict_action.py – Populate a Restrict Action instance in PyRAL
 """
 
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Set
 from xuml_populate.populate.actions.aparse_types import Flow_ap, Activity_ap
 from xuml_populate.populate.actions.action import Action
 from xuml_populate.populate.actions.expressions.restriction_condition import RestrictCondition
@@ -19,7 +19,6 @@ if TYPE_CHECKING:
 
 _logger = logging.getLogger(__name__)
 
-
 class RestrictAction:
     """
     Create all relations for a Restrict Action
@@ -27,7 +26,7 @@ class RestrictAction:
 
     @classmethod
     def populate(cls, mmdb: 'Tk', input_relation_flow: Flow_ap, selection_parse: Selection_a,
-                 activity_data: Activity_ap) -> (str, Flow_ap):
+                 activity_data: Activity_ap) -> (str, Flow_ap, Set[Flow_ap]):
         """
         Populate the Restrict Action
 
@@ -48,13 +47,11 @@ class RestrictAction:
 
         # Populate the output Table Flow using same Table as input flow
         output_relation_flow = Flow.populate_table_flow(mmdb, activity=anum, domain=domain,
-                                                        tname=input_relation_flow.tname, label=None,
-                                                        is_tuple=True if selection_parse.card == 'ONE' else False)
+                                                        tname=input_relation_flow.tname, label=None, is_tuple=False)
 
         # Walk through the critieria parse tree storing any attributes or input flows
-        # Also check to see if we are selecting on an identifier
-        RestrictCondition.process(mmdb, action_id=action_id, input_nsflow=input_relation_flow,
-                                  selection_parse=selection_parse, activity_data=activity_data)
+        sflows = RestrictCondition.process(mmdb, action_id=action_id, input_nsflow=input_relation_flow,
+                                           selection_parse=selection_parse, activity_data=activity_data)
 
         Relvar.insert(relvar='Relational_Action', tuples=[
             Relational_Action_i(ID=action_id, Activity=anum, Domain=domain)
@@ -68,4 +65,4 @@ class RestrictAction:
         ])
         # We now have a transaction with all select-action instances, enter into the metamodel db
         Transaction.execute()  # Restrict Action
-        return action_id, output_relation_flow
+        return action_id, output_relation_flow, sflows

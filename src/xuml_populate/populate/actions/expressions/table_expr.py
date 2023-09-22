@@ -10,7 +10,8 @@ from xuml_populate.populate.actions.select_action import SelectAction
 from xuml_populate.populate.actions.restrict_action import RestrictAction
 from xuml_populate.populate.actions.project_action import ProjectAction
 from xuml_populate.populate.actions.set_action import SetAction
-from xuml_populate.exceptions.action_exceptions import (TableOperationOrExpressionExpected, FlowException,
+from xuml_populate.exceptions.action_exceptions import (ActionException, TableOperationOrExpressionExpected,
+                                                        FlowException,
                                                         UndefinedHeaderExpressionOp)
 from scrall.parse.visitor import TEXPR_a
 from pyral.relation import Relation
@@ -72,14 +73,14 @@ class TableExpr:
         cls.action_outputs = {}  # ID's of all Action output Data Flows
         cls.action_inputs = {}  # ID's of all Action input Data Flows
 
-        x = cls.walk(texpr=rhs, input_nsflow=input_instance_flow)
+        rhs_output_flow = cls.walk(texpr=rhs, input_nsflow=input_instance_flow)
 
         all_ins = {v for s in cls.action_inputs.values() for v in s}
         all_outs = {v for s in cls.action_outputs.values() for v in s}
         init_aids = {a for a in cls.action_inputs.keys() if not cls.action_inputs[a].intersection(all_outs)}
         final_aids = {a for a in cls.action_outputs.keys() if not cls.action_outputs[a].intersection(all_ins)}
 
-        return Boundary_Actions(ain=init_aids, aout=final_aids), x
+        return Boundary_Actions(ain=init_aids, aout=final_aids), rhs_output_flow
 
     @classmethod
     def walk(cls, texpr: TEXPR_a, input_nsflow: Flow_ap) -> Flow_ap:
@@ -170,17 +171,20 @@ class TableExpr:
             # If there is a selection on the instance set, create the action and obtain its flow id
             input_flow = component_flow
             if input_flow.content == Content.TABLE:
-                aid, component_flow = RestrictAction.populate(cls.mmdb, input_relation_flow=input_flow,
-                                                              selection_parse=texpr.selection,
-                                                              activity_data=cls.activity_data)
+                aid, component_flow, input_sflows = RestrictAction.populate(cls.mmdb, input_relation_flow=input_flow,
+                                                                            selection_parse=texpr.selection,
+                                                                            activity_data=cls.activity_data)
+                cls.action_inputs[aid] = {input_flow.fid}.union({f.fid for f in input_sflows})
+                cls.action_outputs[aid] = {component_flow.fid}
                 pass
             elif input_flow.content == Content.INSTANCE:
                 aid, component_flow = SelectAction.populate(cls.mmdb, input_instance_flow=input_flow,
-                                                        select_agroup=texpr.selection, activity_data=cls.activity_data)
+                                                            select_agroup=texpr.selection,
+                                                            activity_data=cls.activity_data)
                 cls.action_inputs[aid] = {input_flow.fid}
                 cls.action_outputs[aid] = {component_flow.fid}
             else:
-                raise Exception
+                raise ActionException
         if texpr.projection:
             # If there is a projection, create the action and obtain its flow id
             input_flow = component_flow

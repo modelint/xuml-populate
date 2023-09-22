@@ -30,9 +30,16 @@ class Statement:
     xi_flow_id = None
 
     @classmethod
-    def populate(cls, mmdb: 'Tk', activity_data: Activity_ap, statement_parse: namedtuple) -> Boundary_Actions:
+    def populate(cls, mmdb: 'Tk', activity_data: Activity_ap, statement_parse: namedtuple, case_prefix=''
+                 ) -> Boundary_Actions:
         """
         Populate a Statement
+
+        :param mmdb:
+        :param activity_data:
+        :param statement_parse:
+        :param case_prefix:
+        :return:
         """
         statement_type = type(statement_parse).__name__
         # For now we'll just switch on the action_group name and later wrap all this up
@@ -41,16 +48,19 @@ class Statement:
         match statement_type:
             case 'Inst_Assignment_a':
                 boundary_actions = InstanceAssignment.process(mmdb, activity_data=activity_data,
-                                                              inst_assign=statement_parse)
+                                                              inst_assign=statement_parse, case_prefix=case_prefix)
                 pass
             case 'Table_Assignment_a':
-                boundary_actions = TableAssignment.process(mmdb, activity_data=activity_data, table_assign_parse=statement_parse)
+                boundary_actions = TableAssignment.process(mmdb, activity_data=activity_data,
+                                                           table_assign_parse=statement_parse, case_prefix=case_prefix)
                 pass
             case 'Scalar_Assignment_a':
-                boundary_actions = ScalarAssignment.process(mmdb, activity_data=activity_data, scalar_assign_parse=statement_parse)
+                boundary_actions = ScalarAssignment.process(mmdb, activity_data=activity_data,
+                                                            scalar_assign_parse=statement_parse)
                 pass
             case 'Switch_a':
-                boundary_actions = SwitchStatement.populate(mmdb, activity_data=activity_data, sw_parse=statement_parse)
+                boundary_actions = SwitchStatement.populate(mmdb, activity_data=activity_data,
+                                                            sw_parse=statement_parse)
                 pass
             case _:
                 boundary_actions = None

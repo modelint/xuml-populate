@@ -3,12 +3,14 @@ restrict_condition.py – Process a select phrase and populate a Restriction Con
 """
 
 import logging
-from typing import TYPE_CHECKING, Optional
+from xuml_populate.exceptions.action_exceptions import ActionException
+from typing import TYPE_CHECKING, Optional, Set
 from xuml_populate.populate.actions.aparse_types import Flow_ap, MaxMult, Content, Activity_ap
 from xuml_populate.exceptions.action_exceptions import ComparingNonAttributeInSelection, NoInputInstanceFlow
 from xuml_populate.populate.mmclass_nt import Restriction_Condition_i, Equivalence_Criterion_i, \
-    Comparison_Criterion_i, Ranking_Criterion_i, Criterion_i
+    Comparison_Criterion_i, Ranking_Criterion_i, Criterion_i, Table_Restriction_Condition_i
 from xuml_populate.populate.actions.expressions.instance_set import InstanceSet
+from xuml_populate.populate.flow import Flow
 from pyral.relvar import Relvar
 from pyral.relation import Relation
 from scrall.parse.visitor import N_a, BOOL_a, Op_a, Selection_a
@@ -36,9 +38,32 @@ class RestrictCondition:
     equivalence_criteria = []
     restriction_text = ""
     criterion_ctr = 0
+    input_scalar_flows = set()
 
     @classmethod
-    def pop_restriction_criterion(cls, attr: str) -> int:
+    def pop_comparison_criterion(cls, scalar_flow_label: str, attr: str, op: str):
+        sflow = Flow.find_labeled_scalar_flow(name=scalar_flow_label, anum=cls.anum, domain=cls.domain)
+        cls.input_scalar_flows.add(sflow)
+        if not sflow:
+            raise ActionException  # TODO: Make specific
+        criterion_id = cls.pop_criterion(attr)
+        Relvar.insert(relvar='Comparison_Criterion', tuples=[
+            Comparison_Criterion_i(ID=criterion_id, Action=cls.action_id, Activity=cls.anum, Attribute=attr,
+                                   Comparison=op, Value=sflow.fid, Domain=cls.domain)
+        ])
+
+    @classmethod
+    def pop_ranking_criterion(cls, order: str, attr: str, op: str):
+        # Validate the attribute and add to comparison criteria
+        cls.process_attr(name=attr, op=op)
+        criterion_id = cls.pop_criterion(attr)
+        Relvar.insert(relvar='Ranking_Criterion', tuples=[
+            Ranking_Criterion_i(ID=criterion_id, Action=cls.action_id, Activity=cls.anum, Attribute=attr,
+                                Order=order, Domain=cls.domain)
+        ])
+
+    @classmethod
+    def pop_criterion(cls, attr: str) -> int:
         cls.criterion_ctr += 1
         criterion_id = cls.criterion_ctr
         Relvar.insert(relvar='Criterion', tuples=[
@@ -59,7 +84,7 @@ class RestrictCondition:
         :return:
         """
         # Populate the Restriction Criterion superclass
-        criterion_id = cls.pop_restriction_criterion(attr=attr)
+        criterion_id = cls.pop_criterion(attr=attr)
         # Populate the Equivalence Criterion
         Relvar.insert(relvar='Equivalence_Criterion', tuples=[
             Equivalence_Criterion_i(ID=criterion_id, Action=cls.action_id, Activity=cls.anum,
@@ -70,10 +95,6 @@ class RestrictCondition:
     @classmethod
     def process_enum_value(cls, attr: str, op: str, enum: str):
         pass
-
-    @classmethod
-    def process_flow(cls, name: str, op: str, input_param: bool = False):
-        print(f"Populating [{name}] as flow")
 
     @classmethod
     def process_attr(cls, name: str, op: str):
@@ -118,8 +139,9 @@ class RestrictCondition:
         for o in operands:
             match type(o).__name__:
                 case 'IN_a':
-                    cls.process_flow(name=o, op=operator, input_param=True)
-                    text += f" {o.name}"
+                    pass
+                    # cls.process_flow(name=o, op=operator, input_param=True)
+                    # text += f" {o.name}"
                 case 'N_a':
                     if not attr_set:
                         # It must be the name of some attribute of the class selected upon
@@ -137,7 +159,8 @@ class RestrictCondition:
                             cls.process_bool_value(attr=attr_set, op=operator, setting=(n == 'true'))
                         else:
                             # It must be the name of a scalar flow that should have been set with some value
-                            cls.process_flow(name=o.name, op=operator)
+                            cls.pop_comparison_criterion(scalar_flow_label=o.name, attr=attr_set, op=operator)
+                            pass
                 case 'BOOL_a':
                     text += cls.walk_criteria(o.op, o.operands, attr_set)
                 case 'MATH_a':
@@ -145,6 +168,22 @@ class RestrictCondition:
                 case 'UNARY_a':
                     print()
                 case 'INST_PROJ_a':
+                    i = o.iset.components
+                    if len(i) == 1:
+                        match type(i[0]).__name__:
+                            case 'Order_name_a':
+                                # This is a Ranking Criterion
+                                attr_name = i[0].name.name
+                                order = i[0].order
+                                cls.pop_ranking_criterion(order=order, attr=attr_name, op=operator)
+                                attr_set = attr_name
+                                text = f"{order.upper()}({attr_name}) " + text
+                                pass
+                            case _:
+                                raise Exception
+                    else:
+                        raise Exception
+
                     pass
                 case _:
                     raise Exception
@@ -152,7 +191,7 @@ class RestrictCondition:
 
     @classmethod
     def process(cls, mmdb: 'Tk', action_id: str, input_nsflow: Flow_ap, selection_parse: Selection_a,
-                activity_data: Activity_ap):
+                activity_data: Activity_ap) -> Set[Flow_ap]:
         """
         Break down criteria into a set of attribute comparisons and validate the components of a Select Action that
         must be populated into the metamodel.
@@ -191,3 +230,7 @@ class RestrictCondition:
                                     Expression=cls.expression, Selection_cardinality=cardinality
                                     )
         ])
+        Relvar.insert(relvar='Table_Restriction_Condition', tuples=[
+            Table_Restriction_Condition_i(Restrict_action=cls.action_id, Activity=cls.anum, Domain=cls.domain)
+        ])
+        return cls.input_scalar_flows

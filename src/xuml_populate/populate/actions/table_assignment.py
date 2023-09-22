@@ -34,7 +34,7 @@ class TableAssignment:
     scrall_text = None
 
     @classmethod
-    def process(cls, mmdb: 'Tk', activity_data: Activity_ap, table_assign_parse: Table_Assignment_a
+    def process(cls, mmdb: 'Tk', activity_data: Activity_ap, table_assign_parse: Table_Assignment_a, case_prefix: str
                 ) -> Boundary_Actions:
         """
         Given a parsed table assignment consisting of an LHS and an RHS, populate each component action
@@ -47,6 +47,7 @@ class TableAssignment:
         :param mmdb: The metamodel db
         :param activity_data:
         :param table_assign_parse: A parsed table assignment
+        :param case_prefix:
         """
         lhs = table_assign_parse.lhs
         rhs = table_assign_parse.rhs
@@ -57,9 +58,9 @@ class TableAssignment:
                                    max_mult=MaxMult.ONE)
 
         bactions, output_flow = TableExpr.process(mmdb, rhs=rhs, activity_data=activity_data,
-                                        input_instance_flow=xi_instance_flow)
+                                                  input_instance_flow=xi_instance_flow)
 
-        output_flow_label = lhs
+        output_flow_label = case_prefix + lhs
         # TODO: handle case where lhs is an explicit table assignment
 
         # Migrate the output_flow to a labeled flow
