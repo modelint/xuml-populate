@@ -11,7 +11,16 @@ post = " --"
 class ActionException(Exception):
     pass
 
+class SwitchException(ActionException):
+    pass
+
+class BadScalarSwitchInput(SwitchException):
+    pass
+
 class FlowException(ActionException):
+    pass
+
+class ControlFlowHasNoTargetActions(FlowException):
     pass
 
 class NonScalarFlowRequired(FlowException):

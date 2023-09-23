@@ -6,12 +6,12 @@ import logging
 from pyral.relvar import Relvar
 from pyral.relation import Relation
 from pyral.transaction import Transaction
-from typing import TYPE_CHECKING, Optional
-from xuml_populate.exceptions.action_exceptions import FlowException
+from typing import TYPE_CHECKING, Optional, Set
+from xuml_populate.exceptions.action_exceptions import FlowException, ControlFlowHasNoTargetActions
 from xuml_populate.populate.mmclass_nt import Data_Flow_i, Flow_i, \
     Multiple_Instance_Flow_i, Single_Instance_Flow_i, Instance_Flow_i, \
     Control_Flow_i, Non_Scalar_Flow_i, Scalar_Flow_i, Relation_Flow_i, Labeled_Flow_i, Unlabeled_Flow_i, \
-    Tuple_Flow_i, Table_Flow_i
+    Tuple_Flow_i, Table_Flow_i, Control_Dependency_i
 from xuml_populate.populate.actions.aparse_types import Flow_ap, MaxMult, Content
 
 if TYPE_CHECKING:
@@ -67,6 +67,34 @@ class Flow:
             return None
         else:
             return result.body[0]['ID']
+
+    @classmethod
+    def populate_control_flow(cls, mmdb: 'Tk', label: Optional[str], enabled_actions: Set[str], activity: str,
+                              domain: str) -> str:
+        """
+        Populate a new control flow
+
+        :return:
+        """
+        # Set all these values so that the superclass populates can find them
+        cls.label = label
+        cls.domain = domain
+        cls.activity = activity
+        cls.mmdb = mmdb
+
+        flow_id = cls.populate_flow()
+        Relvar.insert(relvar='Control_Flow', tuples=[
+            Control_Flow_i(ID=flow_id, Activity=cls.activity, Domain=cls.domain)
+        ])
+        # Populate one or more targets of each Control Flow
+        if len(enabled_actions) < 1:
+            cls._logger.error(f"Control flow requires at least one target action")
+            raise ControlFlowHasNoTargetActions
+        for a in enabled_actions:
+            Relvar.insert(relvar='Control_Dependency', tuples=[
+                Control_Dependency_i(Control_flow=flow_id, Action=a, Activity=cls.activity, Domain=cls.domain)
+            ])
+        return flow_id
 
 
     @classmethod

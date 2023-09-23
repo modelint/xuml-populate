@@ -153,12 +153,13 @@ P_Reference_i = namedtuple('P_Reference_i', 'Association_class Participating_cla
 T_Reference_i = namedtuple('T_Reference_i', 'Association_class Participating_class Rnum Domain Ref_type')
 
 # Conditional Logic subsystem
-Case_i = namedtuple('Case_i', 'Value Switch_action Flow Activity Domain')
+Case_i = namedtuple('Case_i', 'Flow Activity Domain Switch_action')
 Control_Dependency_i = namedtuple('Control_Dependency_i', 'Control_flow Action Activity Domain')
 Decision_Action_i = namedtuple('Decision_Action_i', 'ID Activity Domain Predicate')
 Decision_Input_i = namedtuple('Decision_Input_i', 'Decision_action Flow Activity Domain')
+Match_Value_i = namedtuple('Match_Value_i', 'Case_flow Activity Domain Value')
 Result_i = namedtuple('Result_i', 'Decision Decision_action Flow Activity Domain')
-Scalar_Switch_Action_i = namedtuple('Scalar_Switch_Action_i', 'ID Activity Domain Scalar_input Enumerated_type')
+Scalar_Switch_Action_i = namedtuple('Scalar_Switch_Action_i', 'ID Activity Domain Scalar_input')
 Sequence_Flow_i = namedtuple('Sequence_Flow_i', 'Source_action Flow Activity Domain')
 Subclass_Switch_Action_i = namedtuple('Subclass_Switch_Action_i', 'ID Activity Domain Superclass_instance Generalization')
 Switch_Action_i = namedtuple('Switch_Action_i', 'ID Activity Domain')

@@ -39,7 +39,7 @@ class SwitchAction:
     def populate(cls, mmdb: 'Tk', input_single_instance_flow: Flow_ap, projection: Projection_a,
                  activity_data: Activity_ap) -> (str, List[Flow_ap]):
         """
-        Populate the Read Action
+        Populate the Switch Action
 
         :param mmdb:
         :param input_single_instance_flow: The source flow into this selection
