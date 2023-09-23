@@ -36,6 +36,7 @@ class SwitchStatement:
     domain = None
     activity_path = None
     scrall_text = None
+    output_actions = None
 
     @classmethod
     def populate(cls, mmdb: 'Tk', sw_parse: Switch_a, activity_data: Activity_ap) -> Boundary_Actions:
@@ -49,6 +50,7 @@ class SwitchStatement:
         cls.mmdb = mmdb
         cls.anum = activity_data.anum
         cls.domain = activity_data.domain
+        cls.output_actions = set()
 
         # Process the input flow
         scalar_input_flow = None
@@ -77,6 +79,7 @@ class SwitchStatement:
                 boundary_actions = Statement.populate(mmdb, activity_data=activity_data,
                                                       statement_parse=c.comp_statement_set.statement,
                                                       case_prefix=case_name)
+                cls.output_actions = cls.output_actions.union(boundary_actions.aout)
                 cactions[case_name] = Case_Control(match_values=c.enums, target_actions=boundary_actions.ain)
             else:
                 if not c.component_statement_set.block:
@@ -112,4 +115,4 @@ class SwitchStatement:
         # Initial, because the Switch Action is the one Action in the statement that does not
         # depend on any other data input.
         # Also the final output since regardless of what case
-        return Boundary_Actions(ain={cls.action_id}, aout={cls.action_id})
+        return Boundary_Actions(ain={cls.action_id}, aout=cls.output_actions)
