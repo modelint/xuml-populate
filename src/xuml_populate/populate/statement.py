@@ -44,7 +44,6 @@ class Statement:
         statement_type = type(statement_parse).__name__
         # For now we'll just switch on the action_group name and later wrap all this up
         # into a dictionary of functions of some sort
-        boundary_actions = Boundary_Actions(ain=[], aout=[])
         match statement_type:
             case 'Inst_Assignment_a':
                 boundary_actions = InstanceAssignment.process(mmdb, activity_data=activity_data,

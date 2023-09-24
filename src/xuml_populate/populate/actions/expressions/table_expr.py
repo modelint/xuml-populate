@@ -176,12 +176,11 @@ class TableExpr:
                                                                             activity_data=cls.activity_data)
                 cls.action_inputs[aid] = {input_flow.fid}.union({f.fid for f in input_sflows})
                 cls.action_outputs[aid] = {component_flow.fid}
-                pass
             elif input_flow.content == Content.INSTANCE:
-                aid, component_flow = SelectAction.populate(cls.mmdb, input_instance_flow=input_flow,
-                                                            selection_parse=texpr.selection,
-                                                            activity_data=cls.activity_data)
-                cls.action_inputs[aid] = {input_flow.fid}
+                aid, component_flow, input_sflows = SelectAction.populate(cls.mmdb, input_instance_flow=input_flow,
+                                                                          selection_parse=texpr.selection,
+                                                                          activity_data=cls.activity_data)
+                cls.action_inputs[aid] = {input_flow.fid}.union({f.fid for f in input_sflows})
                 cls.action_outputs[aid] = {component_flow.fid}
             else:
                 raise ActionException

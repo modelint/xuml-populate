@@ -3,8 +3,8 @@ select_action.py – Populate a selection action instance in PyRAL
 """
 
 import logging
-from typing import TYPE_CHECKING, Optional, Set
-from xuml_populate.populate.actions.aparse_types import Flow_ap, MaxMult, Content, Activity_ap
+from typing import TYPE_CHECKING, Optional, Set, List
+from xuml_populate.populate.actions.aparse_types import Flow_ap, MaxMult, Content, Activity_ap, Attribute_Comparison
 from xuml_populate.exceptions.action_exceptions import ComparingNonAttributeInSelection, NoInputInstanceFlow
 from xuml_populate.populate.actions.action import Action
 from xuml_populate.populate.flow import Flow
@@ -45,7 +45,7 @@ class SelectAction:
     activity_data = None
 
     @classmethod
-    def identifier_selection(cls) -> int:
+    def identifier_selection(cls, attr_comparisons: List[Attribute_Comparison]) -> int:
         """
         | Determine whether we are selecting based on an identifier match.
         An identifier match supplies one value per identifier attribute for some identifier defined on
@@ -66,7 +66,7 @@ class SelectAction:
          | you may select multiple instances since a Shaft intersects multiple Floors
          :returns: An identifier number 1,2, ... or 0 if none found
         """
-        idcheck = {c['attr'] for c in cls.comparison_criteria if c['op'] == '=='}
+        idcheck = {c.attr for c in attr_comparisons if c.op == '=='}
         R = f"Class:<{cls.input_instance_flow.tname}>, Domain:<{cls.domain}>"
         Relation.restrict(cls.mmdb, relation='Identifier_Attribute', restriction=R)
         Relation.project(cls.mmdb, attributes=('Identifier', 'Attribute',), svar_name='all_id_attrs')
@@ -92,13 +92,13 @@ class SelectAction:
         return 0
 
     @classmethod
-    def populate_multiplicity_subclasses(cls):
+    def populate_multiplicity_subclasses(cls, selection_cardinality: str, attr_comparisons: List[Attribute_Comparison]):
         """
         Determine multiplicity of output and populate the relevant Select Action subclasses
         """
         # Determine if this should be an Identifier Select subclass that yields at most one instance
-        selection_idnum = cls.identifier_selection()
-        if selection_idnum or cls.cardinality == 'ONE':
+        selection_idnum = cls.identifier_selection(attr_comparisons)
+        if selection_idnum or selection_cardinality == 'ONE':
             cls.max_mult = MaxMult.ONE
             # Populate a single instance flow for the selection output
             output_fid = Flow.populate_instance_flow(cls.mmdb, cname=cls.input_instance_flow.tname,
@@ -159,6 +159,7 @@ class SelectAction:
         cls.domain = activity_data.domain
         cls.anum = activity_data.anum
         cls.activity_data = activity_data
+        cls.input_instance_flow = input_instance_flow
 
         # Populate the Action superclass instance and obtain its action_id
         cls.action_id = Action.populate(cls.mmdb, cls.anum, cls.domain)  # Transaction open
@@ -169,16 +170,16 @@ class SelectAction:
         # Walk through the criteria parse tree storing any attributes or input flows
         # Also check to see if we are selecting on an identifier
 
-        selection_cardinality, sflows = RestrictCondition.process(mmdb, action_id=cls.action_id,
-                                                                  input_nsflow=input_instance_flow,
-                                                                  selection_parse=selection_parse,
-                                                                  activity_data=activity_data)
+        selection_cardinality, attr_comparisons, sflows = RestrictCondition.process(mmdb, action_id=cls.action_id,
+                                                                                    input_nsflow=input_instance_flow,
+                                                                                    selection_parse=selection_parse,
+                                                                                    activity_data=activity_data)
 
         Relvar.insert(relvar='Class_Restriction_Condition', tuples=[
             Class_Restriction_Condition_i(Select_action=cls.action_id, Activity=cls.anum, Domain=cls.domain)
         ])
         # Create output flows
-        cls.populate_multiplicity_subclasses()
+        cls.populate_multiplicity_subclasses(selection_cardinality, attr_comparisons)
 
         # We now have a transaction with all select-action instances, enter into the metamodel db
         Transaction.execute()  # Select Action

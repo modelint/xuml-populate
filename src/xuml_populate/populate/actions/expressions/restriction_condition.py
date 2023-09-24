@@ -4,12 +4,11 @@ restrict_condition.py – Process a select phrase and populate a Restriction Con
 
 import logging
 from xuml_populate.exceptions.action_exceptions import ActionException
-from typing import TYPE_CHECKING, Optional, Set
-from xuml_populate.populate.actions.aparse_types import Flow_ap, MaxMult, Content, Activity_ap
+from typing import TYPE_CHECKING, Optional, Set, Dict, List
+from xuml_populate.populate.actions.aparse_types import Flow_ap, MaxMult, Content, Activity_ap, Attribute_Comparison
 from xuml_populate.exceptions.action_exceptions import ComparingNonAttributeInSelection, NoInputInstanceFlow
 from xuml_populate.populate.mmclass_nt import Restriction_Condition_i, Equivalence_Criterion_i, \
     Comparison_Criterion_i, Ranking_Criterion_i, Criterion_i, Table_Restriction_Condition_i
-from xuml_populate.populate.actions.expressions.instance_set import InstanceSet
 from xuml_populate.populate.flow import Flow
 from pyral.relvar import Relvar
 from pyral.relation import Relation
@@ -78,6 +77,7 @@ class RestrictCondition:
         An Equivalence Criterion is populated when a boolean value is compared
         against an Attribute typed Boolean
 
+        :param scalar_flow_label:
         :param attr: THe name of the class attribute typed boolean
         :param op: The comparision operation as ==
         :param setting:
@@ -112,7 +112,7 @@ class RestrictCondition:
                 raise ComparingNonAttributeInSelection(f"select action restriction on class"
                                                        f"[{cls.input_nsflow.tname}] is "
                                                        f"comparing on name [{name}] that is not an attribute of that class")
-            cls.comparison_criteria.append({'attr': name, 'op': op})
+            cls.comparison_criteria.append(Attribute_Comparison(attr=name, op=op))
         elif cls.input_nsflow.content == Content.TABLE:
             R = f"Name:<{name}>, Table:<{cls.input_nsflow.tname}>, Domain:<{cls.domain}>"
             result = Relation.restrict(cls.mmdb, relation='Table_Attribute', restriction=R)
@@ -191,7 +191,7 @@ class RestrictCondition:
 
     @classmethod
     def process(cls, mmdb: 'Tk', action_id: str, input_nsflow: Flow_ap, selection_parse: Selection_a,
-                activity_data: Activity_ap) -> (str, Set[Flow_ap]):
+                activity_data: Activity_ap) -> (str, List[Attribute_Comparison], Set[Flow_ap]):
         """
         Break down criteria into a set of attribute comparisons and validate the components of a Select Action that
         must be populated into the metamodel.
@@ -205,7 +205,7 @@ class RestrictCondition:
         :param input_nsflow:
         :param activity_data:
         :param selection_parse:
-        :return: Selection cardinality and a set of scalar flows input for attribute comparison
+        :return: Selection cardinality, attribute comparisons, and a set of scalar flows input for attribute comparison
         """
         cls.mmdb = mmdb
         cls.action_id = action_id
@@ -231,4 +231,4 @@ class RestrictCondition:
                                     Expression=cls.expression, Selection_cardinality=cardinality
                                     )
         ])
-        return cardinality, cls.input_scalar_flows
+        return cardinality, cls.comparison_criteria, cls.input_scalar_flows
