@@ -300,8 +300,9 @@ class SelectAction:
             Select_Action_i(ID=cls.action_id, Activity=cls.anum, Domain=cls.domain, Input_flow=input_instance_flow.fid)
         ])
         cls.select_agroup = select_agroup
-        # Walk through the critieria parse tree storing any attributes or input flows
+        # Walk through the criteria parse tree storing any attributes or input flows
         # Also check to see if we are selecting on an identifier
+
         cls.process_criteria(criteria=select_agroup.criteria)
 
         # We now have a transaction with all select-action instances, enter into the metamodel db

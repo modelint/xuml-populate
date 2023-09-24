@@ -61,7 +61,6 @@ class Statement:
             case 'Switch_a':
                 boundary_actions = SwitchStatement.populate(mmdb, activity_data=activity_data,
                                                             sw_parse=statement_parse)
-                pass
             case _:
                 boundary_actions = None
                 print()

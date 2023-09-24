@@ -9,12 +9,14 @@ from xuml_populate.populate.element import Element
 from scrall.parse.parser import ScrallParser
 from xuml_populate.populate.actions.aparse_types import Activity_ap, Boundary_Actions
 from xuml_populate.populate.xunit import ExecutionUnit
+from xuml_populate.exceptions.action_exceptions import ActionException
 from typing import TYPE_CHECKING
-from xuml_populate.populate.mmclass_nt import Activity_i, Asynchronous_Activity_i,\
+from xuml_populate.populate.mmclass_nt import Activity_i, Asynchronous_Activity_i, \
     State_Activity_i, Synchronous_Activity_i
 
 if TYPE_CHECKING:
     from tkinter import Tk
+
 
 class Activity:
     """
@@ -29,7 +31,8 @@ class Activity:
     domain = None
 
     @classmethod
-    def populate_method(cls, mmdb: 'Tk', action_text: str, class_name: str, method_name: str, subsys_name: str, domain_name: str) -> str:
+    def populate_method(cls, mmdb: 'Tk', action_text: str, class_name: str, method_name: str, subsys_name: str,
+                        domain_name: str) -> str:
         """
         Populate Synchronous Activity for Method
         :param method_name:
@@ -43,7 +46,8 @@ class Activity:
         cls.domain = domain_name
         Anum = cls.populate(mmdb, action_text, subsys_name, domain_name, synchronous=True)
         if class_name not in cls.methods:
-            cls.methods[class_name] = {method_name: {'anum': Anum, 'domain': domain_name, 'text': action_text, 'parse': None}}
+            cls.methods[class_name] = {
+                method_name: {'anum': Anum, 'domain': domain_name, 'text': action_text, 'parse': None}}
         else:
             cls.methods[class_name][method_name]['anum'] = Anum
             cls.methods[class_name][method_name]['domain'] = domain_name
@@ -117,7 +121,7 @@ class Activity:
         if state_model not in cls.sm:
             cls.sm[state_model] = {}
         parsed_activity = ScrallParser.parse_text(scrall_text=action_text, debug=False)
-        cls.sm[state_model][state] = parsed_activity # To subsys_parse parsed actions for debugging
+        cls.sm[state_model][state] = parsed_activity  # To subsys_parse parsed actions for debugging
         # cls.populate_activity(text=action_text, pa=parsed_activity)
 
         # Create the Susbystem Element and obtain a unique Anum
@@ -155,25 +159,30 @@ class Activity:
                 method_path = f"{cls.domain}:{class_name}:{method_name}.mtd"
 
                 aparse = activity_data['parse']
-                activity_data = Activity_ap(anum=activity_data['anum'], domain=cls.domain, cname=class_name, sname=None, eename=None,
+                activity_data = Activity_ap(anum=activity_data['anum'], domain=cls.domain,
+                                            cname=class_name, sname=None, eename=None,
                                             xiflow=xi_flow_id, activity_path=method_path, scrall_text=aparse[1])
                 seq_flows = {}
                 seq_labels = set()
                 for xunit in aparse[0]:
-                    if xunit.statement_set:
-                        boundary_actions = ExecutionUnit.process_method_statement_set(
-                            mmdb=mmdb, activity_data=activity_data, statement_set=xunit.statement_set)
-                        pass
-                    elif xunit.ouput_flow:
-                        pass
+                    match type(xunit).__name__:
+                        case 'Execution_Unit_a':
+                            boundary_actions = ExecutionUnit.process_method_statement_set(
+                                mmdb=mmdb, activity_data=activity_data, statement_set=xunit.statement_set)
+                        case 'Output_Flow_a':
+                            ExecutionUnit.process_synch_output(mmdb=mmdb, activity_data=activity_data, synch_output=xunit)
+                            pass
+                        case _:
+                            cls._logger.error(f"Execution unit [{xunit}] is neither a statement set nor a "
+                                              f"synch output flow")
+                            raise ActionException
                     # Obtain set of initial and terminal action ids
 
                     # Process any input or output tokens
                     # if output_tk not in seq_flows:
-                        # Get a set of terminal actions
-                        # seq_flows[output_tk] = {'from': [terminal_actions], 'to': []}
+                    # Get a set of terminal actions
+                    # seq_flows[output_tk] = {'from': [terminal_actions], 'to': []}
                     pass
-
 
         pass
 
@@ -192,5 +201,5 @@ class Activity:
     #                                           domain=activity_data['domain'], aparse=a, scrall_text=aparse[1])
     #
     #     pass
-        # Populate all state activities
-        # Populate all operation activities
+    # Populate all state activities
+    # Populate all operation activities

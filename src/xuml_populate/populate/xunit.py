@@ -1,13 +1,17 @@
 """ xunit.py - Process a Scrall Execution Unit"""
 
 import logging
-from scrall.parse.visitor import Execution_Unit_a, Seq_Statement_Set_a, Comp_Statement_Set_a
+from scrall.parse.visitor import Output_Flow_a
+from xuml_populate.populate.actions.aparse_types import Flow_ap, Content, MaxMult
 from xuml_populate.populate.statement import Statement
 from xuml_populate.populate.actions.aparse_types import Activity_ap
+from xuml_populate.populate.actions.expressions.instance_set import InstanceSet
+from xuml_populate.populate.actions.expressions.scalar_expr import ScalarExpr
 from typing import TYPE_CHECKING, List
 
 if TYPE_CHECKING:
     from tkinter import Tk
+
 
 class ExecutionUnit:
     """
@@ -24,7 +28,28 @@ class ExecutionUnit:
         pass
 
     @classmethod
-    def process_output_flow(cls):
+    def process_synch_output(cls, mmdb: 'Tk', activity_data: Activity_ap, synch_output: Output_Flow_a):
+        """
+
+        :param mmdb:
+        :param activity_data:
+        :param synch_output:  Output flow execution unit parse
+        :return:
+        """
+        cls.mmdb = mmdb
+        cls.activity_data = activity_data
+        xi_instance_flow = Flow_ap(fid=activity_data.xiflow, content=Content.INSTANCE, tname=activity_data.cname,
+                                   max_mult=MaxMult.ONE)
+        match type(synch_output.output).__name__:
+            case 'INST_a':
+                _, _, output_flow = InstanceSet.process(mmdb, input_instance_flow=xi_instance_flow,
+                                                        iset_components=synch_output.output.components,
+                                                        activity_data=activity_data)
+                pass
+            case _:
+                pass
+        # b, f = ScalarExpr.process(mmdb, rhs=synch_output.output, input_instance_flow=xi_instance_flow,
+        #                           activity_data=activity_data)
         pass
 
     @classmethod
@@ -44,7 +69,8 @@ class ExecutionUnit:
         pass
 
     @classmethod
-    def process_method_statement_set(cls, mmdb: 'Tk', activity_data: Activity_ap, statement_set) -> (List[str], List[str]):
+    def process_method_statement_set(cls, mmdb: 'Tk', activity_data: Activity_ap, statement_set) -> (
+            List[str], List[str]):
         """
         Initiates the population of all elements derived from a set of statements in a method.
 
@@ -79,8 +105,6 @@ class ExecutionUnit:
             # Parsing error, neither were specified
             raise Exception
 
-
         # aid = Statement.populate()
         pass
         return boundary_actions
-
