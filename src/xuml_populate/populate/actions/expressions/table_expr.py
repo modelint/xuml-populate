@@ -179,7 +179,7 @@ class TableExpr:
                 pass
             elif input_flow.content == Content.INSTANCE:
                 aid, component_flow = SelectAction.populate(cls.mmdb, input_instance_flow=input_flow,
-                                                            select_agroup=texpr.selection,
+                                                            selection_parse=texpr.selection,
                                                             activity_data=cls.activity_data)
                 cls.action_inputs[aid] = {input_flow.fid}
                 cls.action_outputs[aid] = {component_flow.fid}

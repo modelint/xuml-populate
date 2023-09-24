@@ -114,7 +114,7 @@ class InstanceSet:
                     # Process to populate a select action, the output type does not change
                     # since we are selecting on a known class
                     aid, cls.component_flow = SelectAction.populate(
-                        mmdb, input_instance_flow=cls.component_flow, select_agroup=comp, activity_data=activity_data)
+                        mmdb, input_instance_flow=cls.component_flow, selection_parse=comp, activity_data=activity_data)
 
                     cls.final_action = aid
                 case _:

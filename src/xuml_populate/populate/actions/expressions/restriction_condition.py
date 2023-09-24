@@ -191,7 +191,7 @@ class RestrictCondition:
 
     @classmethod
     def process(cls, mmdb: 'Tk', action_id: str, input_nsflow: Flow_ap, selection_parse: Selection_a,
-                activity_data: Activity_ap) -> Set[Flow_ap]:
+                activity_data: Activity_ap) -> (str, Set[Flow_ap]):
         """
         Break down criteria into a set of attribute comparisons and validate the components of a Select Action that
         must be populated into the metamodel.
@@ -205,6 +205,7 @@ class RestrictCondition:
         :param input_nsflow:
         :param activity_data:
         :param selection_parse:
+        :return: Selection cardinality and a set of scalar flows input for attribute comparison
         """
         cls.mmdb = mmdb
         cls.action_id = action_id
@@ -230,7 +231,4 @@ class RestrictCondition:
                                     Expression=cls.expression, Selection_cardinality=cardinality
                                     )
         ])
-        Relvar.insert(relvar='Table_Restriction_Condition', tuples=[
-            Table_Restriction_Condition_i(Restrict_action=cls.action_id, Activity=cls.anum, Domain=cls.domain)
-        ])
-        return cls.input_scalar_flows
+        return cardinality, cls.input_scalar_flows
