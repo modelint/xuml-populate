@@ -168,21 +168,32 @@ class RestrictCondition:
                 case 'UNARY_a':
                     print()
                 case 'INST_PROJ_a':
-                    i = o.iset.components
-                    if len(i) == 1:
-                        match type(i[0]).__name__:
-                            case 'Order_name_a':
-                                # This is a Ranking Criterion
-                                attr_name = i[0].name.name
-                                order = i[0].order
-                                cls.pop_ranking_criterion(order=order, attr=attr_name, op=operator)
-                                attr_set = attr_name
-                                text = f"{order.upper()}({attr_name}) " + text
-                                pass
-                            case _:
-                                raise Exception
-                    else:
-                        raise Exception
+                    match type(o.iset).__name__:
+                        case 'N_a':
+                            from xuml_populate.populate.actions.expressions.instance_set import InstanceSet
+                            InstanceSet.process(cls.mmdb, )
+
+                            pass
+                        case 'IN_a':
+                            pass
+                        case 'INST_a':
+                            i = o.iset.components
+                            if len(i) == 1:
+                                match type(i[0]).__name__:
+                                    case 'Order_name_a':
+                                        # This is a Ranking Criterion
+                                        attr_name = i[0].name.name
+                                        order = i[0].order
+                                        cls.pop_ranking_criterion(order=order, attr=attr_name, op=operator)
+                                        attr_set = attr_name
+                                        text = f"{order.upper()}({attr_name}) " + text
+                                        pass
+                                    case _:
+                                        raise ActionException
+                            else:
+                                raise ActionException
+                        case _:
+                            raise ActionException
 
                     pass
                 case _:

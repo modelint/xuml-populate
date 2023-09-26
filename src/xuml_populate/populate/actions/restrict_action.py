@@ -53,7 +53,7 @@ class RestrictAction:
 
         # Walk through the critieria parse tree storing any attributes or input flows
         _, _, sflows = RestrictCondition.process(mmdb, action_id=action_id, input_nsflow=input_relation_flow,
-                                              selection_parse=selection_parse, activity_data=activity_data)
+                                                 selection_parse=selection_parse, activity_data=activity_data)
         # The first two return values are relevant only to instance selection (Select Action)
         # Restrict action does not use the returned cardinality since output is always a Table Flow
         # Nor does it use the comparision critieria to test for identifier selection
