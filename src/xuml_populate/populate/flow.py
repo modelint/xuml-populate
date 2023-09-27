@@ -6,7 +6,7 @@ import logging
 from pyral.relvar import Relvar
 from pyral.relation import Relation
 from pyral.transaction import Transaction
-from typing import TYPE_CHECKING, Optional, Set
+from typing import TYPE_CHECKING, Optional, Set, List
 from xuml_populate.exceptions.action_exceptions import FlowException, ControlFlowHasNoTargetActions
 from xuml_populate.populate.mmclass_nt import Data_Flow_i, Flow_i, \
     Multiple_Instance_Flow_i, Single_Instance_Flow_i, Instance_Flow_i, \
@@ -32,6 +32,24 @@ class Flow:
     label = None
     mmdb = None
 
+    @classmethod
+    def compatible(cls, flows: List[Flow_ap]) -> bool:
+        """
+        Ensure that all flows in the given list have the same content, type, and multiplicity.
+        If so, return true
+
+        :param flows:
+        :return: True if all flows are compatible
+        """
+        assert len(flows) > 1
+        # Set reference properties
+        c = flows[0].content
+        t = flows[0].tname
+        m = flows[0].max_mult
+        for f in flows[1:]:
+            # Compare to reference properties
+            if f.content != c or f.tname != t or f.max_mult != m: return False
+        return True
 
     @classmethod
     def find_labeled_scalar_flow(cls, name: str, anum: str, domain: str) -> Optional[Flow_ap]:
@@ -95,7 +113,6 @@ class Flow:
                 Control_Dependency_i(Control_flow=flow_id, Action=a, Activity=cls.activity, Domain=cls.domain)
             ])
         return flow_id
-
 
     @classmethod
     def populate_table_flow_from_class(cls, cname: str, anum: str, domain: str) -> Flow_ap:
@@ -184,7 +201,7 @@ class Flow:
             content = Content.SCALAR
             max_mult = None
             flow = cls.populate_scalar_flow(mmdb, scalar_type=mm_type, activity=activity, domain=domain,
-                                               label=label)
+                                            label=label)
         return flow
 
     @classmethod

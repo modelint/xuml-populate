@@ -14,7 +14,8 @@ class Content(Enum):
     INSTANCE = 2
     TABLE = 3
 
-
+Labeled_Flow = namedtuple('Labeled_Flow', 'label flow')
+""" A label, Flow_ap pair """
 Attribute_Comparison = namedtuple('Attribute_Comparison', 'attr op')
 """ An attribute compared in a selection phrase """
 Boundary_Actions = namedtuple("Boundary_Actions", "ain aout")

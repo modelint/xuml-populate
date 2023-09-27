@@ -3,10 +3,11 @@ table_assignment.py – Populate elements of a table assignment
 """
 
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Dict, Set
 from xuml_populate.populate.mmclass_nt import Labeled_Flow_i
 from xuml_populate.populate.actions.expressions.table_expr import TableExpr
-from xuml_populate.populate.actions.aparse_types import Flow_ap, MaxMult, Content, Activity_ap, Boundary_Actions
+from xuml_populate.populate.actions.aparse_types import (Flow_ap, MaxMult, Content, Activity_ap, Boundary_Actions,
+                                                         Labeled_Flow)
 from scrall.parse.visitor import Table_Assignment_a
 
 from pyral.relvar import Relvar
@@ -34,8 +35,8 @@ class TableAssignment:
     scrall_text = None
 
     @classmethod
-    def process(cls, mmdb: 'Tk', activity_data: Activity_ap, table_assign_parse: Table_Assignment_a, case_prefix: str
-                ) -> Boundary_Actions:
+    def process(cls, mmdb: 'Tk', activity_data: Activity_ap, table_assign_parse: Table_Assignment_a,
+                case_name: str, case_outputs: Set[Labeled_Flow] = None) -> Boundary_Actions:
         """
         Given a parsed table assignment consisting of an LHS and an RHS, populate each component action
         and return the resultant table flow
@@ -47,20 +48,24 @@ class TableAssignment:
         :param mmdb: The metamodel db
         :param activity_data:
         :param table_assign_parse: A parsed table assignment
-        :param case_prefix:
+        :param case_name:
+        :param case_outputs:
         """
         lhs = table_assign_parse.lhs
         rhs = table_assign_parse.rhs
         cls.input_instance_flow = activity_data.xiflow
 
         # The executing instance is by nature a single instance flow
-        xi_instance_flow = Flow_ap(fid=activity_data.xiflow, content=Content.INSTANCE, tname=activity_data.cname,
+        me_instance_flow = Flow_ap(fid=activity_data.xiflow, content=Content.INSTANCE, tname=activity_data.cname,
                                    max_mult=MaxMult.ONE)
 
         bactions, output_flow = TableExpr.process(mmdb, rhs=rhs, activity_data=activity_data,
-                                                  input_instance_flow=xi_instance_flow)
+                                                  input_instance_flow=me_instance_flow)
 
+        case_prefix = '' if not case_name else f"{case_name}_"
         output_flow_label = case_prefix + lhs
+        if case_name:
+            case_outputs.add(Labeled_Flow(label=lhs, flow=output_flow))
         # TODO: handle case where lhs is an explicit table assignment
 
         # Migrate the output_flow to a labeled flow

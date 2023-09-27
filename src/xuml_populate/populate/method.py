@@ -5,6 +5,7 @@ method.py – Convert parsed method to a relation
 import logging
 from pyral.transaction import Transaction
 from pyral.relvar import Relvar
+from pyral.relation import Relation  # For debugging
 from xuml_populate.populate.flow import Flow
 from xuml_populate.populate.signature import Signature
 from xuml_populate.populate.activity import Activity
@@ -22,7 +23,7 @@ class Method:
     """
     _logger = logging.getLogger(__name__)
     subsys_method_path = None
-    xi_flow = None  # Executing instance flow
+    me_flow = None  # Executing instance flow
 
     @classmethod
     def populate(cls, mmdb: 'Tk', domain_name: str, subsys_name: str, m_parse):
@@ -47,14 +48,14 @@ class Method:
                                         method_name=m_parse.method,
                                         subsys_name=subsys_name, domain_name=domain_name)
 
-        # Populate the executing instance (xi) flow
-        cls.xi_flow = Flow.populate_instance_flow(mmdb, cname=class_name, activity=anum, domain=domain_name,
-                                                     label=None, single=True)
-        cls._logger.info(f"INSERT Instance Flow (method xi): [{domain_name}:{class_name}:{m_parse.method}:"
-                         f"{cls.xi_flow.fid}]")
+        # Populate the executing instance (me) flow
+        cls.me_flow = Flow.populate_instance_flow(mmdb, cname=class_name, activity=anum, domain=domain_name,
+                                                  label='me', single=True)
+        cls._logger.info(f"INSERT Instance Flow (method me): [{domain_name}:{class_name}:{m_parse.method}:"
+                         f"{cls.me_flow.fid}]")
         Relvar.insert(relvar='Method', tuples=[
             Method_i(Anum=anum, Name=m_parse.method, Class=class_name, Domain=domain_name,
-                     Executing_instance_flow=cls.xi_flow.fid)
+                     Executing_instance_flow=cls.me_flow.fid)
         ])
 
         Transaction.execute()  # Populate empty method

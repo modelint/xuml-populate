@@ -8,9 +8,9 @@ from xuml_populate.populate.actions.instance_assignment import InstanceAssignmen
 from xuml_populate.populate.actions.table_assignment import TableAssignment
 from xuml_populate.populate.actions.scalar_assignment import ScalarAssignment
 from xuml_populate.populate.actions.switch_statement import SwitchStatement
-from xuml_populate.populate.actions.aparse_types import Activity_ap, Boundary_Actions
+from xuml_populate.populate.actions.aparse_types import Activity_ap, Boundary_Actions, Labeled_Flow
 from collections import namedtuple
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Dict, Set, List
 
 if TYPE_CHECKING:
     from tkinter import Tk
@@ -30,15 +30,16 @@ class Statement:
     xi_flow_id = None
 
     @classmethod
-    def populate(cls, mmdb: 'Tk', activity_data: Activity_ap, statement_parse: namedtuple, case_prefix=''
-                 ) -> Boundary_Actions:
+    def populate(cls, mmdb: 'Tk', activity_data: Activity_ap, statement_parse: namedtuple,
+                 case_name: str = '', case_outputs: Set[Labeled_Flow] = None) -> Boundary_Actions:
         """
         Populate a Statement
 
         :param mmdb:
         :param activity_data:
         :param statement_parse:
-        :param case_prefix:
+        :param case_name:  Values matched by case concatenated into a string
+        :param case_outputs: Each output labeled data flow in the case
         :return:
         """
         statement_type = type(statement_parse).__name__
@@ -47,15 +48,23 @@ class Statement:
         match statement_type:
             case 'Inst_Assignment_a':
                 boundary_actions = InstanceAssignment.process(mmdb, activity_data=activity_data,
-                                                              inst_assign=statement_parse, case_prefix=case_prefix)
+                                                              inst_assign=statement_parse,
+                                                              case_name=case_name,
+                                                              case_outputs=case_outputs,
+                                                              )
                 pass
             case 'Table_Assignment_a':
                 boundary_actions = TableAssignment.process(mmdb, activity_data=activity_data,
-                                                           table_assign_parse=statement_parse, case_prefix=case_prefix)
+                                                           table_assign_parse=statement_parse,
+                                                           case_name=case_name,
+                                                           case_outputs=case_outputs)
                 pass
             case 'Scalar_Assignment_a':
                 boundary_actions = ScalarAssignment.process(mmdb, activity_data=activity_data,
-                                                            scalar_assign_parse=statement_parse)
+                                                            scalar_assign_parse=statement_parse,
+                                                            # case_outputs=case_outputs,
+                                                            # case_prefix=case_prefix
+                                                            )
                 pass
             case 'Switch_a':
                 boundary_actions = SwitchStatement.populate(mmdb, activity_data=activity_data,

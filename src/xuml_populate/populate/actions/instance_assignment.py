@@ -8,7 +8,8 @@ from xuml_populate.populate.flow import Flow
 from xuml_populate.populate.mmclass_nt import Labeled_Flow_i
 from xuml_populate.populate.actions.expressions.instance_set import InstanceSet
 from xuml_populate.exceptions.action_exceptions import AssignZeroOneInstanceHasMultiple
-from xuml_populate.populate.actions.aparse_types import Flow_ap, MaxMult, Content, Activity_ap, Boundary_Actions
+from xuml_populate.populate.actions.aparse_types import (Flow_ap, MaxMult, Content, Activity_ap, Boundary_Actions,
+                                                         Labeled_Flow)
 from scrall.parse.visitor import Inst_Assignment_a
 
 from pyral.transaction import Transaction
@@ -49,7 +50,8 @@ class InstanceAssignment:
     assign_zero_one = None  # Does assignment operator limit to a zero or one instance selection?
 
     @classmethod
-    def process(cls, mmdb: 'Tk', activity_data: Activity_ap, inst_assign: Inst_Assignment_a, case_prefix: str) -> Boundary_Actions:
+    def process(cls, mmdb: 'Tk', activity_data: Activity_ap, inst_assign: Inst_Assignment_a,
+                case_name: str, case_outputs: Set[Labeled_Flow]) -> Boundary_Actions:
         """
         Given a parsed instance set expression, populate each component action
         and return the resultant Class Type name
@@ -58,6 +60,8 @@ class InstanceAssignment:
         The final output flow must be an instance flow. The associated Class Type determines the type of the
         assignment which must match any explicit type.
 
+        :param case_outputs:
+        :param case_name:
         :param mmdb: The metamodel db
         :param inst_assign: The instance assignment statement parse
         :param activity_data: The enveloping activity
@@ -80,7 +84,10 @@ class InstanceAssignment:
             raise AssignZeroOneInstanceHasMultiple(path=activity_data.activity_path, text=activity_data.scrall_text,
                                                    x=inst_assign.X)
 
+        case_prefix = '' if not case_name else f"{case_name}_"
         output_flow_label = case_prefix + lhs.name.name
+        if case_name:
+            case_outputs.add(Labeled_Flow(label=output_flow_label, flow=iset_instance_flow))
         if lhs.exp_type and lhs.exp_type != iset_instance_flow.tname:
             # Raise assignment type mismatch exception
             pass

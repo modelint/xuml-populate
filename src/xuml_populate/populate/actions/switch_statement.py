@@ -22,8 +22,10 @@ if TYPE_CHECKING:
 
 _logger = logging.getLogger(__name__)
 
-from collections import namedtuple
+from collections import namedtuple, Counter
+
 Case_Control = namedtuple("Case_Control", "match_values target_actions")
+
 
 class SwitchStatement:
     """
@@ -37,6 +39,7 @@ class SwitchStatement:
     activity_path = None
     scrall_text = None
     output_actions = None
+    labeled_outputs = None
 
     @classmethod
     def populate(cls, mmdb: 'Tk', sw_parse: Switch_a, activity_data: Activity_ap) -> Boundary_Actions:
@@ -51,6 +54,7 @@ class SwitchStatement:
         cls.anum = activity_data.anum
         cls.domain = activity_data.domain
         cls.output_actions = set()
+        cls.labeled_outputs = {}  # { <case>: [output_flow, ...], }  labeled output flows keyed by case
 
         # Process the input flow
         scalar_input_flow = None
@@ -75,10 +79,12 @@ class SwitchStatement:
             # Need to create all component set statements and obtain a set of initial action ids
             if c.comp_statement_set.statement:
                 case_name = f"{'_'.join(c.enums)}"
+                cls.labeled_outputs[case_name] = set()
                 from xuml_populate.populate.statement import Statement
                 boundary_actions = Statement.populate(mmdb, activity_data=activity_data,
                                                       statement_parse=c.comp_statement_set.statement,
-                                                      case_prefix=case_name)
+                                                      case_name=case_name,
+                                                      case_outputs=cls.labeled_outputs[case_name])
                 cls.output_actions = cls.output_actions.union(boundary_actions.aout)
                 cactions[case_name] = Case_Control(match_values=c.enums, target_actions=boundary_actions.ain)
             else:
@@ -109,6 +115,29 @@ class SwitchStatement:
                 ])
                 pass
             # TODO: Create cases and control dependencies
+
+        # Get all labels that appear in more than one case
+        # (The same label cannot appear more than once in the same case since label names are unique within a case)
+        # First create a bag of labels (list with possible duplicates) ranging over all cases
+        all_labels = [lf.label for v in cls.labeled_outputs.values() for lf in v]
+        all_flows = [lf for v in cls.labeled_outputs.values() for lf in v]
+        # Now filter out only those labels that appear more than once
+        label_count = Counter(all_labels)
+        multi_case_labels = {label for label, count in label_count.items() if count > 1}
+        # For each multi_case_label, verify type/content/multipicity compatibility
+        # We create a dict keyed by multi_case_label wiht a list of flows per key
+        mcl_flows = {mcl: [f for f in all_flows if f.label == mcl] for mcl in multi_case_labels}
+        for label, flows in mcl_flows.items():
+            # Create list of flows from flow component of each Labeled_Flow and verify that they are all compatible
+            if not Flow.compatible([f.flow for f in flows]):
+                raise ActionException
+        pass
+        # Create a switch for each such multi_case_label
+        # Create an input to the switch for each case where the label appears that connects to
+        # and connect the corresponding flow
+
+        # x = {i.label for f in cls.labeled_outputs.items() for i in f}
+        # TODO: Create data flow switches
         Transaction.execute()
 
         # For a switch statement, the switch action is both the initial and output action
