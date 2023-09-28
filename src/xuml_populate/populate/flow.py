@@ -33,6 +33,26 @@ class Flow:
     mmdb = None
 
     @classmethod
+    def populate_switch_output(cls, mmdb: 'Tk', label: str, ref_flow: Flow_ap, anum: str, domain: str) -> Flow_ap:
+        cls.mmdb = mmdb
+        cls.domain = domain
+        cls.activity = anum
+        cls.label = label
+
+        match ref_flow.content:
+            case Content.INSTANCE:
+                return cls.populate_instance_flow(mmdb, cname=ref_flow.tname, activity=anum, domain=domain, label=label,
+                                                  single=True if ref_flow.max_mult == MaxMult.ONE else False)
+            case Content.TABLE:
+                return cls.populate_table_flow(mmdb, tname=ref_flow.tname, activity=anum, domain=domain, label=label,
+                                               is_tuple=True if ref_flow.max_mult == MaxMult.ONE else False)
+            case Content.SCALAR:
+                return cls.populate_scalar_flow(mmdb, scalar_type=ref_flow.tname, activity=anum, domain=domain,
+                                                label=label)
+            case _:
+                raise FlowException
+
+    @classmethod
     def compatible(cls, flows: List[Flow_ap]) -> bool:
         """
         Ensure that all flows in the given list have the same content, type, and multiplicity.

@@ -12,7 +12,7 @@ from scrall.parse.visitor import Switch_a
 from xuml_populate.populate.mmclass_nt import (Switch_Action_i, Scalar_Switch_Action_i, Case_i, Match_Value_i,
                                                Control_Dependency_i, Result_i, Sequence_Flow_i,
                                                Decision_Input_i, Decision_Action_i,
-                                               Subclass_Switch_Action_i)
+                                               Subclass_Switch_Action_i, Switched_Data_Flow_i, Data_Flow_Switch_i)
 from pyral.relvar import Relvar
 from pyral.relation import Relation  # Keep here for debugging
 from pyral.transaction import Transaction
@@ -102,7 +102,6 @@ class SwitchStatement:
             Scalar_Switch_Action_i(ID=cls.action_id, Activity=cls.anum, Domain=cls.domain,
                                    Scalar_input=scalar_input_flow.fid)
         ])
-        control_flow_fid = None
         for k, v in cactions.items():
             control_flow_fid = Flow.populate_control_flow(mmdb, label=k, enabled_actions=v.target_actions,
                                                           activity=cls.anum, domain=cls.domain)
@@ -120,18 +119,46 @@ class SwitchStatement:
         # (The same label cannot appear more than once in the same case since label names are unique within a case)
         # First create a bag of labels (list with possible duplicates) ranging over all cases
         all_labels = [lf.label for v in cls.labeled_outputs.values() for lf in v]
+        # all_labels_ = [{k:lf.label} for k, v in cls.labeled_outputs.items() for lf in v]
         all_flows = [lf for v in cls.labeled_outputs.values() for lf in v]
         # Now filter out only those labels that appear more than once
         label_count = Counter(all_labels)
         multi_case_labels = {label for label, count in label_count.items() if count > 1}
         # For each multi_case_label, verify type/content/multipicity compatibility
         # We create a dict keyed by multi_case_label wiht a list of flows per key
-        mcl_flows = {mcl: [f for f in all_flows if f.label == mcl] for mcl in multi_case_labels}
-        for label, flows in mcl_flows.items():
+        mcl_flows = {mcl: [f.flow for f in all_flows if f.label == mcl] for mcl in multi_case_labels}
+        for flows in mcl_flows.values():
             # Create list of flows from flow component of each Labeled_Flow and verify that they are all compatible
-            if not Flow.compatible([f.flow for f in flows]):
+            if not Flow.compatible(flows):
                 raise ActionException
+            pass
         pass
+        # Data Flow Switch
+        # Create an output Data Flow for each multi case label
+        output_flows = {}
+        for mcl in multi_case_labels:
+            output_flows[mcl] = Flow.populate_switch_output(mmdb, label=mcl, ref_flow=mcl_flows[mcl][0],
+                                                            anum=cls.anum, domain=cls.domain)
+            Relvar.insert(relvar='Data_Flow_Switch', tuples=[
+                Data_Flow_Switch_i(Output_flow=output_flows[mcl].fid, Activity=cls.anum, Domain=cls.domain)
+            ])
+        for label, flows in mcl_flows.items():
+            for f in flows:
+                Relvar.insert(relvar='Switched_Data_Flow', tuples=[
+                    Switched_Data_Flow_i(Input_flow=f.fid, Activity=cls.anum, Domain=cls.domain,
+                                         Output_flow=output_flows[label].fid)
+                ])
+
+        # for sc, lfset in cls.labeled_outputs.items():
+        #     for lf in lfset:
+        #         if lf.label in multi_case_labels:
+        #             # Create the output flow
+        #             Relvar.insert(relvar='Data_Flow', tuples=[
+        #                 Table_i()
+        #             ])
+        #             pass
+
+        # Create the output dataflow
         # Create a switch for each such multi_case_label
         # Create an input to the switch for each case where the label appears that connects to
         # and connect the corresponding flow
