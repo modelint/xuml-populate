@@ -7,6 +7,7 @@ from pyral.relvar import Relvar
 from pyral.relation import Relation
 from pyral.transaction import Transaction
 from typing import TYPE_CHECKING, Optional, Set, List
+from xuml_populate.populate.mm_class import MMclass
 from xuml_populate.exceptions.action_exceptions import FlowException, ControlFlowHasNoTargetActions
 from xuml_populate.populate.mmclass_nt import Data_Flow_i, Flow_i, \
     Multiple_Instance_Flow_i, Single_Instance_Flow_i, Instance_Flow_i, \
@@ -72,16 +73,43 @@ class Flow:
         return True
 
     @classmethod
+    def find_labeled_ns_flow(cls, mmdb: 'Tk', name: str, anum: str, domain: str) -> Optional[Flow_ap]:
+        fid = cls.find_labeled_flow(name=name, anum=anum, domain=domain)
+        if not fid:
+            return None
+        # Is it an Instance Flow?
+        R = f"ID:<{fid}>, Activity:<{anum}>, Domain:<{domain}>"
+        if_result = Relation.restrict(mmdb, relation='Instance_Flow', restriction=R)
+        if if_result.body:
+            # Okay, it's an instance flow. Now we need the multiplicity on that flow
+            ctype = if_result.body[0]['Class']
+            many_if_result = Relation.restrict(mmdb, relation='Multiple_Instance_Flow', restriction=R)
+            m = MaxMult.MANY if many_if_result.body else MaxMult.ONE
+            return Flow_ap(fid=fid, content=Content.INSTANCE, tname=ctype, max_mult=m)
+
+        # Is it a Relation Flow?
+        R = f"ID:<{fid}>, Activity:<{anum}>, Domain:<{domain}>"
+        rf_result = Relation.restrict(mmdb, relation='Relation_Flow', restriction=R)
+        if rf_result.body:
+            # It's a Relation Flow. Tuple or Table?
+            ttype = rf_result.body[0]['Type']
+            ntuples = Relation.restrict(mmdb, relation='Table_Flow', restriction=R)
+            m = MaxMult.MANY if ntuples.body else MaxMult.ONE
+            return Flow_ap(fid=fid, content=Content.TABLE, tname=ttype, max_mult=m)
+
+    @classmethod
     def find_labeled_scalar_flow(cls, name: str, anum: str, domain: str) -> Optional[Flow_ap]:
         """
         Given a label in an activity, return a Scalar flow record
 
-        :param label: The flow label
+        :param name:
         :param anum: The activity number
         :param domain: The domain name
         :return: A flow record or None if no such labeled flow is defined
         """
         fid = cls.find_labeled_flow(name=name, anum=anum, domain=domain)
+        if not fid:
+            return None
         R = f"ID:<{fid}>, Activity:<{anum}>, Domain:<{cls.domain}>"
         result = Relation.restrict(cls.mmdb, relation='Scalar_Flow', restriction=R)
         if result.body:

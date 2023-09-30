@@ -6,6 +6,8 @@ import logging
 from xuml_populate.exceptions.action_exceptions import ActionException
 from typing import TYPE_CHECKING, Optional, Set, Dict, List
 from xuml_populate.populate.actions.aparse_types import Flow_ap, MaxMult, Content, Activity_ap, Attribute_Comparison
+from xuml_populate.populate.actions.read_action import ReadAction
+from xuml_populate.populate.actions.extract_action import ExtractAction
 from xuml_populate.exceptions.action_exceptions import ComparingNonAttributeInSelection, NoInputInstanceFlow
 from xuml_populate.populate.mmclass_nt import Restriction_Condition_i, Equivalence_Criterion_i, \
     Comparison_Criterion_i, Ranking_Criterion_i, Criterion_i, Table_Restriction_Condition_i
@@ -40,8 +42,13 @@ class RestrictCondition:
     input_scalar_flows = set()
 
     @classmethod
-    def pop_comparison_criterion(cls, scalar_flow_label: str, attr: str, op: str):
-        sflow = Flow.find_labeled_scalar_flow(name=scalar_flow_label, anum=cls.anum, domain=cls.domain)
+    def pop_comparison_criterion(cls, attr: str, op: str, scalar_flow_label:str =None, scalar_flow: Flow_ap=None):
+        if not scalar_flow:
+            if not scalar_flow_label:
+                raise ActionException
+            sflow = Flow.find_labeled_scalar_flow(name=scalar_flow_label, anum=cls.anum, domain=cls.domain)
+        else:
+            sflow = scalar_flow
         cls.input_scalar_flows.add(sflow)
         if not sflow:
             raise ActionException  # TODO: Make specific
@@ -170,9 +177,36 @@ class RestrictCondition:
                 case 'INST_PROJ_a':
                     match type(o.iset).__name__:
                         case 'N_a':
-                            from xuml_populate.populate.actions.expressions.instance_set import InstanceSet
-                            InstanceSet.process(cls.mmdb, )
+                            if o.projection:
+                                # This must be a Non Scalar Flow
+                                # If it is an Instance Flow, an attribute will be read with a Read Action
+                                # Otherwise, a Tuple Flow will have a value extracted with an Extract Action
 
+                                sflow = None  # This is the scalar flow result of the projection/extraction
+                                ns_flow = Flow.find_labeled_ns_flow(cls.mmdb, name=o.iset.name, anum=cls.anum,
+                                                                    domain=cls.domain)
+                                if not ns_flow:
+                                    raise ActionException
+                                if ns_flow.content == Content.INSTANCE:
+                                    # TODO: Fill out the read action case
+                                    ReadAction.populate()
+                                elif ns_flow.content == Content.TABLE:
+                                    if len(o.projection.attrs) != 1:
+                                        # For attribute comparison, there can only be one extracted attribute
+                                        raise ActionException
+                                    attr_to_extract = o.projection.attrs[0]
+                                    sflow = ExtractAction.populate(cls.mmdb, tuple_flow=ns_flow,
+                                                                   attr=attr_to_extract, anum=cls.anum,
+                                                                   domain=cls.domain, activity_data=cls.activity_data)
+                                # Now populate a comparison criterion
+                                cls.pop_comparison_criterion(attr=o.projection.attrs[0], scalar_flow=sflow, op=operator)
+                            else:
+                                # This must be a Scalar Flow
+                                # TODO: check need for mmdb param
+                                sflow = Flow.find_labeled_scalar_flow(name=o.iset.name, anum=cls.anum,
+                                                                      domain=cls.domain)
+                                if not sflow:
+                                    raise ActionException
                             pass
                         case 'IN_a':
                             pass
@@ -194,7 +228,7 @@ class RestrictCondition:
                                 raise ActionException
                         case _:
                             raise ActionException
-
+                    # TODO: Now process the projection
                     pass
                 case _:
                     raise Exception

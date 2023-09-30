@@ -121,6 +121,7 @@ Polymorphic_Event_Specification_i = namedtuple('Polymorphic_Event_Specification_
 Root_Delegated_Event_i = namedtuple('Root_Delegated_Event_i', 'Name Class Domain')
 
 # Flow subsystem
+Class_Accessor_i = namedtuple('Class_Accessor_i', 'Class Activity Domain Output_flow')
 Control_Flow_i = namedtuple('Control_Flow_i', 'ID Activity Domain')
 Data_Flow_i = namedtuple('Data_Flow_i', 'ID Activity Domain')
 Data_Flow_Switch_i = namedtuple('Data_Flow_Switch_i', 'Output_flow Activity Domain')
