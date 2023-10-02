@@ -15,7 +15,7 @@ if TYPE_CHECKING:
 
 class Lineage:
     """
-    Create all lineages for a domain_name
+    Create all lineages for a domain
     """
     _logger = logging.getLogger(__name__)
 
@@ -150,7 +150,7 @@ class Lineage:
         Return the set of all subclasses in the specified generalization
 
         :param grel:
-        :param domain_name:
+        :param domain:
         :return:
         """
         Relation.restrict(tclral=cls.mmdb, relation='Subclass', restriction=f"Rnum:<{grel}>, Domain:<{cls.domain}>")
@@ -172,7 +172,7 @@ class Lineage:
         Traverse the specified relationship and return the name of the superclass
 
         :param grel:  A generalization relationship rnum
-        :param domain_name:  A the name of the domain_name
+        :param domain:  A the name of the domain
         :return:
         """
         Relation.restrict(tclral=cls.mmdb, relation='Superclass', restriction=f"Rnum:<{grel}>, Domain:<{cls.domain}>")

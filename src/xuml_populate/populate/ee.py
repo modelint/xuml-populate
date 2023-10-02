@@ -29,7 +29,7 @@ class EE:
         """
         :param mmdb:
         :param ee_name:
-        :param class_name:
+        :param cname:
         :param subsys_name:
         :param domain_name:
         :return:

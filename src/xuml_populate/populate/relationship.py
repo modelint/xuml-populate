@@ -10,46 +10,50 @@ from xuml_populate.populate.ordinal import Ordinal
 from pyral.transaction import Transaction
 from pyral.relvar import Relvar
 from xuml_populate.mp_exceptions import UnknownRelationshipType
-from typing import TYPE_CHECKING
 from xuml_populate.populate.mmclass_nt import Relationship_i
 
-if TYPE_CHECKING:
-    from tkinter import Tk
+_logger = logging.getLogger(__name__)
 
+# Transactions
+tr_Rel = "Relationship"
 
 class Relationship:
     """
-    Create a relationship relation
+    Populate a Relationship
     """
-    _logger = logging.getLogger(__name__)
-    record = None
-    name = None
     rnum = None
 
     @classmethod
-    def populate(cls, mmdb: 'Tk', domain: str, subsystem, record):
-        """Constructor"""
+    def populate(cls, mmdb: str, domain: str, subsystem, record):
+        """
+        Populate all relevant Relationship relvars
 
-        cls.record = record
+        :param mmdb: The metamodel db name
+        :param domain: The domain name
+        :param subsystem: The subsystem name
+        :param record: Parse of the relationship
+        """
+
         cls.rnum = record['rnum']
 
         # Populate relationship
-        Transaction.open(tclral=mmdb)
+        Transaction.open(mmdb, tr_Rel)
 
-        Element.populate_labeled_subys_element(mmdb, label=cls.rnum, subsystem_name=subsystem.name, domain_name=domain)
-        Relvar.insert(relvar='Relationship', tuples=[
+        Element.populate_labeled_subys_element(mmdb, tr=tr_Rel, label=cls.rnum, subsystem=subsystem.name, domain=domain)
+        Relvar.insert(mmdb, tr=tr_Rel, relvar='Relationship', tuples=[
             Relationship_i(Rnum=cls.rnum, Domain=domain)
         ])
 
         # Populate based on relationship type
-        if 't_side' in cls.record:
-            BinaryAssociation.populate(mmdb, domain, cls.rnum, cls.record)
-        elif 'superclass' in cls.record:
-            Generalization.populate(mmdb, domain, cls.rnum, cls.record)
-        elif 'ascend' in cls.record:
-            Ordinal.populate(mmdb, domain, cls.rnum, cls.record)
+        if 't_side' in record:
+            BinaryAssociation.populate(mmdb, tr=tr_Rel, domain=domain, rnum=cls.rnum, record=record)
+        elif 'superclass' in record:
+            Generalization.populate(mmdb, tr=tr_Rel, domain=domain, rnum=cls.rnum, record=record)
+        elif 'ascend' in record:
+            Ordinal.populate(mmdb, tr=tr_Rel, domain=domain, rnum=cls.rnum, record=record)
         else:
-            logging.error(
+            _logger.error(
                 "Population encountered relationship type that is not an Association, Generalization, or Ordinal.")
             raise UnknownRelationshipType
-        Transaction.execute()
+        Transaction.execute(mmdb, tr_Rel)
+        pass

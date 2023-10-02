@@ -192,12 +192,12 @@ class Activity:
     #     Process each Scrall statement in the Method
     #     """
     #     # Populate all method activities
-    #     for class_name, method_data in cls.methods.items():
+    #     for cname, method_data in cls.methods.items():
     #         for method_name, activity_data in method_data.items():
-    #             cls._logger.info(f"Populating anum for method: {class_name}.{method_name}")
+    #             cls._logger.info(f"Populating anum for method: {cname}.{method_name}")
     #             aparse = activity_data['parse']
     #             for a in aparse[0]:
-    #                 Statement.populate_method(mmdb=mmdb, cname=class_name, method=method_name, anum=activity_data['anum'],
+    #                 Statement.populate_method(mmdb=mmdb, cname=cname, method=method_name, anum=activity_data['anum'],
     #                                           domain=activity_data['domain'], aparse=a, scrall_text=aparse[1])
     #
     #     pass

@@ -30,7 +30,7 @@ class Table:
         :param mmdb:
         :param tname:   Class name
         :param domain:  Domain name
-        :return:  Dictionary of attr_name:scalar (type) values
+        :return:  Dictionary of attr:scalar (type) values
         """
         R = f"Table:<{tname}>, Domain:<{domain}>"
         attrs = Relation.restrict(mmdb, relation='Table_Attribute', restriction=R)

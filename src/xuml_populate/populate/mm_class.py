@@ -12,19 +12,18 @@ from xuml_populate.populate.mmclass_nt import Class_i, Alias_i
 
 from pyral.relation import Relation
 
-from typing import TYPE_CHECKING, Dict
+from typing import Dict
 
-if TYPE_CHECKING:
-    from tkinter import Tk
+_logger = logging.getLogger(__name__)
 
+# Transactions
+_tr_Class = "Class"
 
 
 class MMclass:
     """
     Create a class relation
     """
-    _logger = logging.getLogger(__name__)
-    mmdb = None
     record = None
     name = None
     alias = None
@@ -36,39 +35,47 @@ class MMclass:
     ee_ops = None
 
     @classmethod
-    def header(cls, mmdb: 'Tk', cname: str, domain: str) -> Dict[str, str]:
+    def header(cls, mmdb: str, cname: str, domain: str) -> Dict[str, str]:
         """
         Returns the header for a table reprsentation of this class
 
-        :param mmdb:
+        :param mmdb:  The metamodel db
         :param cname:   Class name
         :param domain:  Domain name
-        :return:
+        :return: The header as a dictionary of attr;type key value pairs
         """
         R = f"Class:<{cname}>, Domain:<{domain}>"
-        attrs = Relation.restrict(cls.mmdb, relation='Attribute', restriction=R)
+        attrs = Relation.restrict(mmdb, relation='Attribute', restriction=R)
         h = {a['Name']: a['Scalar'] for a in attrs.body}
         return h
 
     @classmethod
-    def exists(cls, cname: str, domain: str) -> bool:
+    def exists(cls, mmdb: str, cname: str, domain: str) -> bool:
         """
 
+        :param mmdb:  The metamodel db
         :param cname:  Name of the class
         :param domain: Its domain name
         :return: True if the class has been populated into this domain
         """
         R = f"Name:<{cname}>, Domain:<{domain}>"
-        result = Relation.restrict(cls.mmdb, relation='Class', restriction=R)
+        result = Relation.restrict(mmdb, relation='Class', restriction=R)
         return bool(result.body)
 
 
 
     @classmethod
-    def populate(cls, mmdb: 'Tk', domain: str, subsystem, record):
-        """Constructor"""
+    def populate(cls, mmdb: str, domain: str, subsystem, record):
+        """
+        Populate a metamodel Class relation
 
-        cls.mmdb = mmdb
+        :param mmdb:
+        :param domain:
+        :param subsystem:
+        :param record:
+        :return:
+        """
+
         cls.record = record
         cls.name = record['name']
         cls.attributes = record['attributes']
@@ -81,27 +88,28 @@ class MMclass:
         cls.cnum = subsystem.next_cnum()
         #
         # Populate class
-        cls._logger.info(f"Populating class [{cls.name}]")
-        cls._logger.info("Transaction open: Populate class")
-        Transaction.open(tclral=mmdb)  # Class, Class Type and Attributes
+        _logger.info(f"Populating class [{cls.name}]")
+        _logger.info("Transaction open: Populate class")
+        Transaction.open(mmdb, "Class")  # Class, Class Type and Attributes
 
         # Populate the corresponding Type superclass
-        MMtype.populate_class(mmdb, cname=cls.name, domain=domain)
+        MMtype.populate_class(mmdb, tr=_tr_Class, cname=cls.name, domain=domain)
 
-        Element.populate_labeled_subys_element(mmdb, label=cls.cnum, subsystem_name=subsystem.name, domain_name=domain)
-        Relvar.insert(relvar='Class', tuples=[
+        Element.populate_labeled_subys_element(mmdb, tr=_tr_Class, label=cls.cnum,
+                                               subsystem=subsystem.name, domain=domain)
+        Relvar.insert(mmdb, tr=_tr_Class, relvar='Class', tuples=[
             Class_i(Name=cls.name, Cnum=cls.cnum, Domain=domain)
         ])
         if cls.alias:
-            Relvar.insert(relvar='Alias', tuples=[
+            Relvar.insert(mmdb, tr=_tr_Class, relvar='Alias', tuples=[
                 Alias_i(Name=cls.name, Class=cls.name, Domain=domain)
             ])
 
         # Populate the attributes
         cls.identifiers = set()  # For each newly created class we clear the id set
         for a in cls.record['attributes']:
-            Attribute.populate(mmdb=mmdb, domain=domain, cname=cls.name,
+            Attribute.populate(mmdb=mmdb, tr=_tr_Class, domain=domain, cname=cls.name,
                                class_identifiers=cls.identifiers, record=a)
 
-        Transaction.execute()  # Class, Class Type, and Attributes
-        cls._logger.info("Transaction closed: Populate class")
+        Transaction.execute(mmdb, _tr_Class)  # Class, Class Type, and Attributes
+        _logger.info("Transaction closed: Populate class")

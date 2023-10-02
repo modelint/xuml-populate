@@ -3,20 +3,20 @@ mm_type.py – Pouplate (metamodel) Type instance
 """
 
 import logging
-from typing import TYPE_CHECKING
 from xuml_populate.populate.mmclass_nt import Type_i, Scalar_i, Table_i, Table_Attribute_i
 from pyral.relvar import Relvar
 from pyral.relation import Relation
 from pyral.transaction import Transaction
 
-if TYPE_CHECKING:
-    from tkinter import Tk
+_logger = logging.getLogger(__name__)
+
+# Transactions
+tr_Scalar_Delete = "Scalar Delete"
 
 class MMtype:
     """
     Populate (metamodel) Type instances
     """
-    _logger = logging.getLogger(__name__)
 
     name = None
     domain = None
@@ -25,28 +25,29 @@ class MMtype:
     class_names = set()
 
     @classmethod
-    def populate_unknown(cls, mmdb: 'Tk', name: str, domain: str):
+    def populate_unknown(cls, mmdb: str, tr: str, name: str, domain: str):
         """
         Populate a type that may be Class, Table, or Scalar
 
-        :param mmdb:
-        :param name:
-        :param domain:
+        :param mmdb: The metamodel db name
+        :param tr:  The name of the open db transaction
+        :param name:  The type name
+        :param domain: The domain name
         """
         # TODO: For now Table types are not supported
         if name not in cls.class_names:
-            cls.populate_scalar(mmdb, name, domain)
+            cls.populate_scalar(mmdb, tr, name, domain)
 
     @classmethod
-    def populate_scalar(cls, mmdb: 'Tk', name: str, domain: str):
+    def populate_scalar(cls, mmdb: str, tr: str, name: str, domain: str):
         """
         Populate a class type given a class name and domain
 
-        :param mmdb:  metamodel db
+        :param mmdb: The metamodel db name
+        :param tr:  The name of the open db transaction
         :param name:  Name of a Scalar Type
         :param domain:  Name of its domain
         """
-        cls.mmdb = mmdb
         cls.domain = domain
         cls.name = name
 
@@ -61,55 +62,54 @@ class MMtype:
         # Add it to the set of defined scalar types so that we don't populated it more than once
         cls.scalar_types[domain].add(name)
 
-        cls._logger.info(f"Populating Type for scalar [{cls.name}]")
+        _logger.info(f"Populating Type for scalar [{cls.name}]")
 
-        Relvar.insert(relvar='Type', tuples=[
+        Relvar.insert(mmdb, tr=tr, relvar='Type', tuples=[
             Type_i(Name=cls.name, Domain=cls.domain)
         ])
-        Relvar.insert(relvar='Scalar', tuples=[
+        Relvar.insert(mmdb, tr=tr, relvar='Scalar', tuples=[
             Scalar_i(Name=cls.name, Domain=cls.domain)
         ])
 
     @classmethod
-    def populate_class(cls, mmdb: 'Tk', cname: str, domain: str):
+    def populate_class(cls, mmdb: str, tr: str, cname: str, domain: str):
         """
         Populate a class type given a class name and domain
 
-        :param mmdb:  metamodel db
+        :param mmdb: The metamodel db name
+        :param tr:  The name of the open db transaction
         :param cname:  Name of some class
         :param domain:  Name of its domain
         """
-        cls.mmdb = mmdb
         cls.domain = domain
         cls.name = cname
 
         cls.class_names.add(cname)
 
-        cls._logger.info(f"Populating Type for class [{cls.name}]")
-        Relvar.insert(relvar='Type', tuples=[
+        _logger.info(f"Populating Type for class [{cls.name}]")
+        Relvar.insert(mmdb, tr=tr, relvar='Type', tuples=[
             Type_i(Name=cls.name, Domain=cls.domain)
         ])
 
     @classmethod
-    def depopulate_scalar_type(cls, mmdb: 'Tk', name: str, domain: str):
+    def depopulate_scalar(cls, mmdb: str, name: str, domain: str):
         """
-        Remove the specified type from the database.
+        Remove the specified Scalar from the database.
 
         The only use case for this currently is the removal of the dummy UNRESOLVED Scalar
-        :param mmdb:
-        :param name:
-        :param domain:
+
+        :param mmdb: The metamodel db name
+        :param name:  The Scalar name
+        :param domain:  The domain name
         :return:
         """
-        # Get the element label
+        # Verify that the scalar exists
         R = f"Name:<{name}>, Domain:<{domain}>"
         result = Relation.restrict(mmdb, restriction=R, relation="Type").body
         if not result:
-            cls._logger.error("Unresolved attr type not found during depopulate")
-        Transaction.open(mmdb)
-        Relvar.deleteone(mmdb, 'Type', {'Name': name, 'Domain': domain}, defer=True)
-        Relvar.deleteone(mmdb, 'Scalar', {'Name': name, 'Domain': domain}, defer=True)
-        # Depopulate element
-        Transaction.execute()
-        # Relation.print(mmdb)
-
+            _logger.error("Scalar dummy UNRESOLVED not found during depopulate")
+        # Depopulate scalar
+        Transaction.open(mmdb, tr_Scalar_Delete)
+        Relvar.deleteone(mmdb, tr=tr_Scalar_Delete, relvar_name='Type', tid={'Name': name, 'Domain': domain})
+        Relvar.deleteone(mmdb, tr=tr_Scalar_Delete, relvar_name='Scalar', tid={'Name': name, 'Domain': domain})
+        Transaction.execute(mmdb, tr_Scalar_Delete)

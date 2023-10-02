@@ -9,7 +9,10 @@ from op2_parser.op_parser import OpParser
 from mtd_parser.method_parser import MethodParser
 from xuml_populate.populate.domain import Domain
 
+mmdb = "mmdb"
 _mmdb_fname = "mmdb.txt"
+_logger = logging.getLogger(__name__)
+
 
 class System:
     """
@@ -20,7 +23,6 @@ class System:
 
     We then proceed to populate each modeled domain in the repository.
     """
-    _logger = logging.getLogger(__name__)
 
     content = {}  # Parsed content for all files in the system package
     mmdb_path = Path(__file__).parent / "populate" / _mmdb_fname  # Path to the serialized repository db
@@ -33,7 +35,7 @@ class System:
 
         :param system_path:  The path to the system package
         """
-        cls._logger.info(f"Processing system: [{system_path}]")
+        _logger.info(f"Processing system: [{system_path}]")
 
         # Process each domain folder in the system package
         for domain_path in system_path.iterdir():
@@ -43,7 +45,7 @@ class System:
             # to organize our content dictionary since we these are immediately available
             domain_name = None  # Domain name is unknown until the class model is parsed
             domain_alias = None
-            cls._logger.info(f"Processing domain: [{domain_path}]")
+            _logger.info(f"Processing domain: [{domain_path}]")
 
             # Populate each subsystem of this domain
             subsys_folders = [f for f in domain_path.iterdir() if f.is_dir()]
@@ -54,7 +56,7 @@ class System:
                 # Any other .xcm files will be ignored (only one class model recognized per subsystem)
                 cm_file_name = subsys_path.stem + ".xcm"
                 cm_path = subsys_path / cm_file_name
-                cls._logger.info(f"Processing class model: [{cm_path}]")
+                _logger.info(f"Processing class model: [{cm_path}]")
                 # Parse the class model
                 cm_parse = ClassModelParser.parse_file(file_input=cm_path, debug=False)
 
@@ -67,12 +69,12 @@ class System:
                     cls.content[domain_name] = {'alias': domain_alias, 'subsystems': {} }
 
                     # Parse the domain's types.yaml file with all of the domain specific types (data types)
-                    # Load domain_name specific types
+                    # Load domain specific types
                     try:
                         with open(domain_path / "types.yaml", 'r') as file:
                             cls.content[domain_name]['types'] = yaml.safe_load(file)
                     except FileNotFoundError:
-                        cls._logger.error(f"No types.yaml file found for domain at: {domain_path}")
+                        _logger.error(f"No types.yaml file found for domain at: {domain_path}")
 
                 # Get this subsystem name from the parse
                 subsys_name = cm_parse.subsystem['name']
@@ -91,7 +93,7 @@ class System:
                     # Process each method file in this class folder
                     for method_file in class_folder.glob("*.mtd"):
                         method_name = method_file.stem
-                        cls._logger.info(f"Processing method: [{method_file}]")
+                        _logger.info(f"Processing method: [{method_file}]")
                         # Parse the method file and insert it in the subsystem subsys_parse
                         mtd_parse = MethodParser.parse_file(method_file, debug=False)
                         cls.content[domain_name]['subsystems'][subsys_name]['methods'][method_name] = mtd_parse
@@ -100,7 +102,7 @@ class System:
                 sm_path = subsys_path / "state-machines"
                 for sm_file in sm_path.glob("*.xsm"):
                     sm_name = sm_file.stem
-                    cls._logger.info(f"Processing state model: [{sm_file}]")
+                    _logger.info(f"Processing state model: [{sm_file}]")
                     # Parse the state model
                     sm_parse = StateModelParser.parse_file(file_input=sm_file, debug=False)
                     cls.content[domain_name]['subsystems'][subsys_name]['state_models'][sm_name] = sm_parse
@@ -112,11 +114,12 @@ class System:
                     cls.content[domain_name]['subsystems'][subsys_name]['external'][ee_name] = {}
                     for op_file in ee_path.glob("*.op"):
                         op_name = op_file.stem
-                        cls._logger.info(f"Processing ee operation: [{op_file}]")
+                        _logger.info(f"Processing ee operation: [{op_file}]")
                         op_parse = OpParser.parse_file(file_input=op_file, debug=False)
                         cls.content[domain_name]['subsystems'][subsys_name]['external'][ee_name][op_name] = op_parse
 
         cls.populate()
+        pass
 
     @classmethod
     def populate(cls):
@@ -124,14 +127,12 @@ class System:
 
         # Initiate a connection to the TclRAL database
         from pyral.database import Database  # Metamodel load or creates has already initialized the DB session
-        cls._logger.info("Initializing TclRAL database connection")
-        mmdb = Database.init()
+        _logger.info("Initializing TclRAL database connection")
+        Database.open_session(mmdb)
 
         # Start with an empty metamodel repository
-        cls._logger.info("Loading Blueprint MBSE metamodel repository schema")
-        # We don't pass in the mmdb value since, at present, there is only one db open at a time
-        # And PyRAL already has the connection open
-        Database.load(cls.mmdb_path)
+        _logger.info("Loading Blueprint MBSE metamodel repository schema")
+        Database.load(db=mmdb, fname=str(cls.mmdb_path))
 
         # Populate each domain into the metamodel db
         for domain_name, domain_parse in cls.content.items():
