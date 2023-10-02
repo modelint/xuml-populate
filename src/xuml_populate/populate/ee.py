@@ -9,50 +9,44 @@ from xuml_populate.populate.element import Element
 from xuml_populate.populate.operation import Operation
 from xuml_populate.populate.mmclass_nt import External_Entity_i
 
-from typing import TYPE_CHECKING
+_logger = logging.getLogger(__name__)
 
-if TYPE_CHECKING:
-    from tkinter import Tk
-
-
+# Transactions
+tr_EE = "EE"
 
 class EE:
     """
-    Create an External Entity relation
+    Populate all relevant External Entity relvars
     """
-    _logger = logging.getLogger(__name__)
     subsys_ee_path = None
     record = None
 
     @classmethod
-    def populate(cls, mmdb: 'Tk', ee_name: str, subsys_name: str, domain_name: str, op_parse):
+    def populate(cls, mmdb: str, ee_name: str, subsys: str, domain: str, op_parse):
         """
-        :param mmdb:
-        :param ee_name:
-        :param cname:
-        :param subsys_name:
-        :param domain_name:
-        :return:
+        Populate an External Entity
+
+        :param mmdb: The metamodel db name
+        :param ee_name: The EE name
+        :param cname: The proxy Class name
+        :param subsys: The name of the subsystem
+        :param domain: The name of the domain
         """
         # Class name can be obtained from the parse of any operation
         cname = next(iter(op_parse.values())).cname
         # Populate ee
-        cls._logger.info(f"Populating ee [{ee_name}]")
-        cls._logger.info(f"Transaction open: Populate EE")
-        Transaction.open(tclral=mmdb)  # Create an EE with at least one Operation
-        EEnum = Element.populate_unlabeled_subsys_element(mmdb,
-                                                         prefix='EE',
-                                                         subsystem_name=subsys_name, domain_name=domain_name)
-        Relvar.insert(relvar='External_Entity', tuples=[
-            External_Entity_i(EEnum=EEnum, Name=ee_name, Class=cname, Domain=domain_name)
+        _logger.info(f"Populating ee [{ee_name}]")
+        _logger.info(f"Transaction open: Populate EE")
+        Transaction.open(mmdb, tr_EE)  # Create an EE with at least one Operation
+        EEnum = Element.populate_unlabeled_subsys_element(mmdb, tr=tr_EE, prefix='EE', subsystem=subsys, domain=domain)
+        Relvar.insert(mmdb, tr=tr_EE, relvar='External_Entity', tuples=[
+            External_Entity_i(EEnum=EEnum, Name=ee_name, Class=cname, Domain=domain)
         ])
 
         # Add operations
-        first_op = True
+        tr = tr_EE  # Start out by completing the required op for the EE
         for op in op_parse.values():
-            Operation.populate(mmdb=mmdb, domain_name=domain_name, subsys_name=subsys_name, parsed_op=op,
-                               first_op=first_op)
-            if first_op:
-                first_op = False
-
+            tr = Operation.populate(mmdb, tr=tr, domain=domain, subsys=subsys, parsed_op=op)
+            pass
+            # "EE" (tr_EE) closes on first operation and all subsequent tr values will be "Operation"
 

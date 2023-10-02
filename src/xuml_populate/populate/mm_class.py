@@ -1,5 +1,5 @@
 """
-mm_class.py – Convert parsed class to a relation
+mm_class.py – Process parsed class to populate the metamodel db
 """
 
 import logging
@@ -22,7 +22,7 @@ _tr_Class = "Class"
 
 class MMclass:
     """
-    Create a class relation
+    Populate all relevant Class relvars
     """
     record = None
     name = None
@@ -39,7 +39,7 @@ class MMclass:
         """
         Returns the header for a table reprsentation of this class
 
-        :param mmdb:  The metamodel db
+        :param mmdb:  The name of teh metamodel db
         :param cname:   Class name
         :param domain:  Domain name
         :return: The header as a dictionary of attr;type key value pairs

@@ -1,5 +1,5 @@
 """
-domain.py – Convert parsed domain to a relation
+domain.py – Process parsed domain to populate the metamodel db
 """
 
 import logging
@@ -80,13 +80,13 @@ class Domain:
             for m_parse in subsys_parse['methods'].values():
                 # All classes must be populated first, so that parameter types in signatures can be resolved
                 # as class or non-class types
-                Method.populate(mmdb, domain_name=domain, subsys_name=subsys.name, m_parse=m_parse)
+                Method.populate(mmdb, domain=domain, subsys=subsys.name, m_parse=m_parse)
 
             # Insert external entities and operations
             _logger.info("Populating operations")
             for ee_name, op_parse in subsys_parse['external'].items():
-                EE.populate(mmdb, ee_name=ee_name, subsys_name=subsys.name,
-                            domain_name=domain, op_parse=op_parse)
+                EE.populate(mmdb, ee_name=ee_name, subsys=subsys.name,
+                            domain=domain, op_parse=op_parse)
 
             # Insert state machines
             _logger.info("Populating state models")

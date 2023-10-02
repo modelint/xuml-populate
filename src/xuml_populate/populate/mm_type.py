@@ -11,6 +11,7 @@ from pyral.transaction import Transaction
 _logger = logging.getLogger(__name__)
 
 # Transactions
+tr_Scalar = "Scalar"
 tr_Scalar_Delete = "Scalar Delete"
 
 class MMtype:
@@ -25,26 +26,24 @@ class MMtype:
     class_names = set()
 
     @classmethod
-    def populate_unknown(cls, mmdb: str, tr: str, name: str, domain: str):
+    def populate_unknown(cls, mmdb: str, name: str, domain: str):
         """
         Populate a type that may be Class, Table, or Scalar
 
         :param mmdb: The metamodel db name
-        :param tr:  The name of the open db transaction
         :param name:  The type name
         :param domain: The domain name
         """
         # TODO: For now Table types are not supported
         if name not in cls.class_names:
-            cls.populate_scalar(mmdb, tr, name, domain)
+            cls.populate_scalar(mmdb, name, domain)
 
     @classmethod
-    def populate_scalar(cls, mmdb: str, tr: str, name: str, domain: str):
+    def populate_scalar(cls, mmdb: str, name: str, domain: str):
         """
         Populate a class type given a class name and domain
 
         :param mmdb: The metamodel db name
-        :param tr:  The name of the open db transaction
         :param name:  Name of a Scalar Type
         :param domain:  Name of its domain
         """
@@ -64,12 +63,15 @@ class MMtype:
 
         _logger.info(f"Populating Type for scalar [{cls.name}]")
 
-        Relvar.insert(mmdb, tr=tr, relvar='Type', tuples=[
+        Transaction.open(mmdb, tr_Scalar)
+        Relvar.insert(mmdb, tr=tr_Scalar, relvar='Type', tuples=[
             Type_i(Name=cls.name, Domain=cls.domain)
         ])
-        Relvar.insert(mmdb, tr=tr, relvar='Scalar', tuples=[
+        Relvar.insert(mmdb, tr=tr_Scalar, relvar='Scalar', tuples=[
             Scalar_i(Name=cls.name, Domain=cls.domain)
         ])
+        Transaction.execute(mmdb, tr_Scalar)
+
 
     @classmethod
     def populate_class(cls, mmdb: str, tr: str, cname: str, domain: str):

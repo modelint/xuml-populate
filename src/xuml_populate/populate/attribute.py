@@ -1,5 +1,5 @@
 """
-attribute.py – Create an attribute relation
+attribute.py – Process parsed attribute to populate the metamodel db
 """
 
 import logging
@@ -18,7 +18,7 @@ _logger = logging.getLogger(__name__)
 
 class Attribute:
     """
-    Populate an Attribute of a Class
+    Populate all relevant Attribute relvars
     """
 
     record = None
@@ -28,11 +28,11 @@ class Attribute:
     @classmethod
     def populate(cls, mmdb: str, tr: str, domain: str, cname: str, class_identifiers: Set[int], record):
         """
-        Populate an Attribute relation
+        Populate all relevant Attribute relvars
 
         :param mmdb: The metamodel db name
         :param tr: The open db transaction name
-        :param domain: The domainname
+        :param domain: The domain name
         :param cname: The class name
         :param class_identifiers: The set of class identifier numbers
         :param record: The parsed class information
@@ -42,7 +42,7 @@ class Attribute:
         cls.dtype = record.get('type', UNRESOLVED)
         participating_ids = cls.record.get('I', [])  # This attr might not participate in any identifier
         # Populate the Attribute's type if it hasn't already been populated
-        MMtype.populate_unknown(mmdb, tr=tr, name=cls.dtype, domain=domain)
+        MMtype.populate_unknown(mmdb, name=cls.dtype, domain=domain)
         Relvar.insert(mmdb, tr=tr, relvar='Attribute', tuples=[
             Attribute_i(Name=record['name'], Class=cname, Domain=domain, Scalar=cls.dtype)
         ])
