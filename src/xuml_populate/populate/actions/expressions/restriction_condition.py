@@ -194,10 +194,11 @@ class RestrictCondition:
                                     if len(o.projection.attrs) != 1:
                                         # For attribute comparison, there can only be one extracted attribute
                                         raise ActionException
-                                    attr_to_extract = o.projection.attrs[0]
+                                    attr_to_extract = o.projection.attrs[0].name
                                     sflow = ExtractAction.populate(cls.mmdb, tuple_flow=ns_flow,
                                                                    attr=attr_to_extract, anum=cls.anum,
-                                                                   domain=cls.domain, activity_data=cls.activity_data)
+                                                                   domain=cls.domain, activity_data=cls.activity_data,
+                                                                   defer=True)  # Select Action transaction is open
                                 # Now populate a comparison criterion
                                 cls.pop_comparison_criterion(attr=o.projection.attrs[0], scalar_flow=sflow, op=operator)
                             else:
