@@ -21,7 +21,7 @@ class Element:
         """
         Create a new counter using the supplied key if it does not already exist in the num counter dict
 
-        :param key: Usually the domain name but could be subsys_name:domain or something else
+        :param key: Usually the domain name but could be subsys:domain or something else
         :return: The next available number
         """
         # Should refactor this into an Element population numbering method

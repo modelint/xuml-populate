@@ -65,7 +65,7 @@ class StateModel:
                 if sig_params not in signatures:
                     # Add new signature if it doesn't exist
                     # First create signature superclass instance in Activity subsystem
-                    signum = Signature.populate(mmdb, subsys_name=subsys, domain_name=sm.domain)
+                    signum = Signature.populate(mmdb, subsys=subsys, domain=sm.domain)
                     signatures[sig_params] = signum # Save the SIGnum as a value, keyed to the frozen params
                     Relvar.insert(relvar='State_Signature', tuples=[
                         State_Signature_i(SIGnum=signum, State_model=cname, Domain=sm.domain)

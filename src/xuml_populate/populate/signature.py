@@ -1,33 +1,31 @@
-"""
-signature.py – Populate a Signature in PyRAL
-"""
+""" signature.py – Populate a Signature in the metamodel db """
 
 import logging
 from pyral.relvar import Relvar
-from typing import TYPE_CHECKING
 from xuml_populate.populate.element import Element
 from xuml_populate.populate.mmclass_nt import Signature_i
 
-if TYPE_CHECKING:
-    from tkinter import Tk
-
+_logger = logging.getLogger(__name__)
 
 class Signature:
     """
-    Create a Signature relation with a unique id
+    Populate a Signature relvar with a unique id
     """
-    _logger = logging.getLogger(__name__)
-
     @classmethod
-    def populate(cls, mmdb: 'Tk', subsys_name: str, domain_name: str) -> str:
-        """Constructor"""
+    def populate(cls, mmdb: str, tr: str, subsys: str, domain: str) -> str:
+        """
+
+        :param mmdb: The metamodel db name
+        :param tr: The name of the open transaction
+        :param subsys: The subsystem name
+        :param domain: The domain name
+        :return: The Signature id (SIGnum)
+        """
 
         # Populate
-        SIGnum = Element.populate_unlabeled_subsys_element(mmdb, prefix='SIG',
-                                                           subsystem_name=subsys_name,
-                                                           domain_name=domain_name)
-        Relvar.insert(relvar='Signature', tuples=[
-            Signature_i(SIGnum=SIGnum, Domain=domain_name)
+        SIGnum = Element.populate_unlabeled_subsys_element(mmdb, tr=tr, prefix='SIG', subsystem=subsys, domain=domain)
+        Relvar.insert(mmdb, tr=tr, relvar='Signature', tuples=[
+            Signature_i(SIGnum=SIGnum, Domain=domain)
         ])
         return SIGnum
 

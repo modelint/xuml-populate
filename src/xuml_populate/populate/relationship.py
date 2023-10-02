@@ -56,4 +56,3 @@ class Relationship:
                 "Population encountered relationship type that is not an Association, Generalization, or Ordinal.")
             raise UnknownRelationshipType
         Transaction.execute(mmdb, tr_Rel)
-        pass

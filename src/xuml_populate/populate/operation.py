@@ -42,7 +42,7 @@ class Operation:
             Transaction.open(tclral=mmdb)
 
         # Create the signature
-        signum = Signature.populate(mmdb, subsys_name=subsys_name, domain_name=domain_name)
+        signum = Signature.populate(mmdb, subsys=subsys_name, domain=domain_name)
         Relvar.insert(relvar='Operation_Signature', tuples=[
             Operation_Signature_i(SIGnum=signum, Operation=parsed_op.op, EE=parsed_op.ee, Domain=domain_name)
         ])

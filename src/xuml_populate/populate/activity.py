@@ -10,20 +10,15 @@ from scrall.parse.parser import ScrallParser
 from xuml_populate.populate.actions.aparse_types import Activity_ap, Boundary_Actions
 from xuml_populate.populate.xunit import ExecutionUnit
 from xuml_populate.exceptions.action_exceptions import ActionException
-from typing import TYPE_CHECKING
 from xuml_populate.populate.mmclass_nt import Activity_i, Asynchronous_Activity_i, \
     State_Activity_i, Synchronous_Activity_i
 
-if TYPE_CHECKING:
-    from tkinter import Tk
-
+_logger = logging.getLogger(__name__)
 
 class Activity:
     """
     Create an Activity relation
     """
-    _logger = logging.getLogger(__name__)
-
     # These dictionaries are for debugging purposes, delete once we get action semantics populated
     sm = {}
     methods = {}
@@ -31,29 +26,31 @@ class Activity:
     domain = None
 
     @classmethod
-    def populate_method(cls, mmdb: 'Tk', action_text: str, class_name: str, method_name: str, subsys_name: str,
-                        domain_name: str) -> str:
+    def populate_method(cls, mmdb: str, tr: str, action_text: str, cname: str, method: str,
+                        subsys: str, domain: str) -> str:
         """
         Populate Synchronous Activity for Method
-        :param method_name:
-        :param mmdb:
+
+        :param mmdb: The metamodel db name
+        :param tr: The name of the open transaction
+        :param cname: The class name
+        :param method: The method name
         :param action_text: Unparsed scrall text
-        :param class_name:
-        :param subsys_name:
-        :param domain_name:
-        :return: Anum
+        :param subsys: The subsystem name
+        :param domain: The domain name
+        :return: The Activity number (Anum)
         """
-        cls.domain = domain_name
-        Anum = cls.populate(mmdb, action_text, subsys_name, domain_name, synchronous=True)
-        if class_name not in cls.methods:
-            cls.methods[class_name] = {
-                method_name: {'anum': Anum, 'domain': domain_name, 'text': action_text, 'parse': None}}
+        cls.domain = domain
+        Anum = cls.populate(mmdb, tr=tr, action_text=action_text, subsys=subsys, domain=domain, synchronous=True)
+        if cname not in cls.methods:
+            cls.methods[cname] = {
+                method: {'anum': Anum, 'domain': domain, 'text': action_text, 'parse': None}}
         else:
-            cls.methods[class_name][method_name]['anum'] = Anum
-            cls.methods[class_name][method_name]['domain'] = domain_name
-            cls.methods[class_name][method_name]['text'] = action_text
+            cls.methods[cname][method]['anum'] = Anum
+            cls.methods[cname][method]['domain'] = domain
+            cls.methods[cname][method]['text'] = action_text
         # Parse the scrall and save for later population
-        cls.methods[class_name][method_name]['parse'] = ScrallParser.parse_text(scrall_text=action_text, debug=False)
+        cls.methods[cname][method]['parse'] = ScrallParser.parse_text(scrall_text=action_text, debug=False)
         return Anum
 
     @classmethod
@@ -75,31 +72,30 @@ class Activity:
         return Anum
 
     @classmethod
-    def populate(cls, mmdb: 'Tk', action_text: str, subsys_name: str, domain_name: str,
+    def populate(cls, mmdb: str, tr: str, action_text: str, subsys: str, domain: str,
                  synchronous: bool) -> str:
         """
-        Populate an Activity Operation
+        Populate an Activity
 
-        :param mmdb:
-        :param action_text:
-        :param subsys_name:
-        :param domain_name:
-        :param synchronous:
-        :return:
+        :param mmdb: The metamodel db name
+        :param tr: The name of the open transaction
+        :param action_text: Unparsed scrall text
+        :param subsys: The subsystem name
+        :param domain: The domain name
+        :param synchronous: True if Activity is synchronous
+        :return: The Activity number (Anum)
         """
-        Anum = Element.populate_unlabeled_subsys_element(mmdb,
-                                                         prefix='A',
-                                                         subsystem_name=subsys_name, domain_name=domain_name)
-        Relvar.insert(relvar='Activity', tuples=[
-            Activity_i(Anum=Anum, Domain=domain_name)
+        Anum = Element.populate_unlabeled_subsys_element(mmdb, tr=tr, prefix='A', subsystem=subsys, domain=domain)
+        Relvar.insert(mmdb, tr=tr, relvar='Activity', tuples=[
+            Activity_i(Anum=Anum, Domain=domain)
         ])
         if synchronous:
-            Relvar.insert(relvar='Synchronous_Activity', tuples=[
-                Synchronous_Activity_i(Anum=Anum, Domain=domain_name)
+            Relvar.insert(mmdb, tr=tr, relvar='Synchronous_Activity', tuples=[
+                Synchronous_Activity_i(Anum=Anum, Domain=domain)
             ])
         else:
-            Relvar.insert(relvar='Asynchronous_Activity', tuples=[
-                Asynchronous_Activity_i(Anum=Anum, Domain=domain_name)
+            Relvar.insert(mmdb, tr=tr, relvar='Asynchronous_Activity', tuples=[
+                Asynchronous_Activity_i(Anum=Anum, Domain=domain)
             ])
         return Anum
 
@@ -140,7 +136,7 @@ class Activity:
         for class_name, method_data in cls.methods.items():
             for method_name, activity_data in method_data.items():
 
-                cls._logger.info(f"Populating method execution units: {class_name}.{method_name}")
+                _logger.info(f"Populating method execution units: {class_name}.{method_name}")
                 # Look up signature
                 R = f"Method:<{method_name}>, Class:<{class_name}>, Domain:<{cls.domain}>"
                 result = Relation.restrict(mmdb, relation='Method_Signature', restriction=R)
@@ -173,7 +169,7 @@ class Activity:
                             ExecutionUnit.process_synch_output(mmdb=mmdb, activity_data=activity_data, synch_output=xunit)
                             pass
                         case _:
-                            cls._logger.error(f"Execution unit [{xunit}] is neither a statement set nor a "
+                            _logger.error(f"Execution unit [{xunit}] is neither a statement set nor a "
                                               f"synch output flow")
                             raise ActionException
                     # Obtain set of initial and terminal action ids
@@ -193,11 +189,11 @@ class Activity:
     #     """
     #     # Populate all method activities
     #     for cname, method_data in cls.methods.items():
-    #         for method_name, activity_data in method_data.items():
-    #             cls._logger.info(f"Populating anum for method: {cname}.{method_name}")
+    #         for method, activity_data in method_data.items():
+    #             _logger.info(f"Populating anum for method: {cname}.{method}")
     #             aparse = activity_data['parse']
     #             for a in aparse[0]:
-    #                 Statement.populate_method(mmdb=mmdb, cname=cname, method=method_name, anum=activity_data['anum'],
+    #                 Statement.populate_method(mmdb=mmdb, cname=cname, method=method, anum=activity_data['anum'],
     #                                           domain=activity_data['domain'], aparse=a, scrall_text=aparse[1])
     #
     #     pass
