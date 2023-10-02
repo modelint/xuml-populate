@@ -16,6 +16,7 @@ _logger = logging.getLogger(__name__)
 
 # Transactions
 tr_Method = "Method"
+tr_Parameter = "Parameter"
 
 
 class Method:
@@ -63,32 +64,31 @@ class Method:
         # Add input flows (parameters)
         for p in m_parse.flows_in:
             _logger.info("Transaction open: Populating method parameter")
-            Transaction.open(tclral=mmdb)  # Method parameter
+            Transaction.open(mmdb, tr_Parameter)
             # Populate the Parameter's type if it hasn't already been populated
-            MMtype.populate_unknown(mmdb, name=p['type'], domain=domain_name)
+            MMtype.populate_unknown(mmdb, tr=tr_Parameter, name=p['type'], domain=domain_name)
 
             input_fid = Flow.populate_data_flow_by_type(mmdb, mm_type=p['type'], activity=anum,
                                                         domain=domain_name, label=p['name']).fid
 
             _logger.info(f"INSERT Scalar Flow (method input): ["
                          f"{domain_name}:{class_name}:{m_parse.method}:^{p['name']}:{input_fid}]")
-            Relvar.insert(relvar='Parameter', tuples=[
+            Relvar.insert(mmdb, tr=tr_Parameter, relvar='Parameter', tuples=[
                 Parameter_i(Name=p['name'], Signature=signum, Domain=domain_name,
                             Input_flow=input_fid, Activity=anum, Type=p['type'])
             ])
-            Transaction.execute()  # Method parameter
+            Transaction.execute(mmdb, tr_Parameter)  # Method parameter
             _logger.info("Transaction closed: Populating parameter")
 
         # Add output flow
         if m_parse.flow_out:
             # Populate Synchronous Output and an associated output Data Flow
-            Transaction.open(mmdb)
             output_fid = Flow.populate_data_flow_by_type(mmdb, label=None, mm_type=m_parse.flow_out,
                                                          activity=anum, domain=domain_name).fid
-            Relvar.insert(relvar='Synchronous_Output', tuples=[
+            # No transaction needed since a single tuple is inserted for this feature
+            Relvar.insert(mmdb, relvar='Synchronous_Output', tuples=[
                 Synchronous_Output_i(Anum=anum, Domain=domain_name,
                                      Output_flow=output_fid, Type=m_parse.flow_out)
             ])
             _logger.info(f"INSERT Flow (method output): ["
                          f"{domain_name}:{class_name}:{m_parse.method}:^{output_fid}]")
-            Transaction.execute()

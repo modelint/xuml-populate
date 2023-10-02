@@ -233,20 +233,15 @@ class Flow:
         :param domain:
         :return: The generated flow id
         """
-        cls.mmdb = mmdb
         # For now we distinguish only between class and scalar types
         # Is the type a Class Type?
         R = f"Name:<{mm_type}>, Domain:<{domain}>"
-        r_result = Relation.restrict(cls.mmdb, relation='Class', restriction=R)
+        r_result = Relation.restrict(mmdb, relation='Class', restriction=R)
         if r_result.body:
             # It's a class type, create a multiple instance flow
-            content = Content.INSTANCE
-            max_mult = MaxMult.MANY
             flow = cls.populate_instance_flow(mmdb, cname=mm_type, activity=activity, domain=domain, label=label)
         else:
             # It's a scalar type
-            content = Content.SCALAR
-            max_mult = None
             flow = cls.populate_scalar_flow(mmdb, scalar_type=mm_type, activity=activity, domain=domain,
                                             label=label)
         return flow
@@ -257,23 +252,25 @@ class Flow:
         """
         Populate an instance of Scalar flow
 
-        :param mmdb:
-        :param label:
-        :param scalar_type:
-        :param activity:
-        :param domain:
-        :return: The generated flow id
+        :param mmdb: The metamodel db name
+        :param label: If provided, a labeled flow is populated
+        :param scalar_type: The name of the Scalar
+        :param activity: The anum of the enclosing Activity
+        :param domain: The name of the domain
+        :return: A Flow_ap summary of the key flow characteristics
         """
         # Set all these values so that the superclass populates can find them
         cls.label = label
         cls.domain = domain
         cls.activity = activity
-        cls.mmdb = mmdb
 
-        flow_id = cls.populate_data_flow()
-        Relvar.insert(relvar='Scalar_Flow', tuples=[
+        Transaction.open(mmdb, tr_Flow)
+
+        flow_id = cls.populate_data_flow(mmdb)
+        Relvar.insert(mmdb, tr=tr_Flow, relvar='Scalar_Flow', tuples=[
             Scalar_Flow_i(ID=flow_id, Activity=cls.activity, Domain=cls.domain, Type=scalar_type)
         ])
+        Transaction.execute(mmdb, tr_Flow)
         return Flow_ap(fid=flow_id, content=Content.SCALAR, tname=scalar_type, max_mult=None)
 
     @classmethod
