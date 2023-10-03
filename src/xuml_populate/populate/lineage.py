@@ -10,14 +10,14 @@ from pyral.transaction import Transaction
 from pyral.relvar import Relvar
 from pyral.relation import Relation
 
-if TYPE_CHECKING:
-    from tkinter import Tk
+_logger = logging.getLogger(__name__)
+
+tr_Lin = "Lineage"
 
 class Lineage:
     """
     Create all lineages for a domain
     """
-    _logger = logging.getLogger(__name__)
 
     domain = None
     mmdb = None
@@ -30,7 +30,7 @@ class Lineage:
     lineages = None
 
     @classmethod
-    def Derive(cls, mmdb: 'Tk', domain: str):
+    def Derive(cls, mmdb: str, domain: str):
         """
 
         :param mmdb:
@@ -72,7 +72,6 @@ class Lineage:
         # Finally, we load each lineage into the tclral
         cls.populate()
 
-
     @classmethod
     def step(cls, walk: List, cvisit: str, rvisit: Optional[str] = None) -> List:
         """
@@ -93,8 +92,8 @@ class Lineage:
         # Could be either superclass_name or subclasses, so we search Facets
         # Get all Facets that cvisit participates in
         R = f"Class:<{cvisit}>, Domain:<{cls.domain}>"
-        Relation.restrict(tclral=cls.mmdb, restriction=R, relation="Facet")
-        s = Relation.project(tclral=cls.mmdb, attributes=("Rnum", ))
+        Relation.restrict(cls.mmdb, restriction=R, relation="Facet")
+        s = Relation.project(cls.mmdb, attributes=("Rnum", ))
         # Grab the result being careful to exclude prior traversals so we don't walk around in circles!
         adj_rels = [r['Rnum'] for r in s.body if r['Rnum'] not in cls.xrels and r['Rnum'] != rvisit]
 
@@ -153,17 +152,17 @@ class Lineage:
         :param domain:
         :return:
         """
-        Relation.restrict(tclral=cls.mmdb, relation='Subclass', restriction=f"Rnum:<{grel}>, Domain:<{cls.domain}>")
-        s = Relation.project(tclral=cls.mmdb, attributes=('Class', ))
+        Relation.restrict(cls.mmdb, relation='Subclass', restriction=f"Rnum:<{grel}>, Domain:<{cls.domain}>")
+        s = Relation.project(cls.mmdb, attributes=('Class', ))
 
         return {t['Class'] for t in s}
 
     @classmethod
     def isSubclass(cls, grel: str, cname: str) -> bool:
-        Relation.restrict(tclral=cls.mmdb,
+        Relation.restrict(cls.mmdb,
                           relation='Subclass',
                           restriction=f"Class:<{cname}>, Rnum:<{grel}>, Domain:<{cls.domain}>")
-        s = Relation.project(tclral=cls.mmdb, attributes=())
+        s = Relation.project(cls.mmdb, attributes=())
         return bool(s.body)
 
     @classmethod
@@ -175,8 +174,8 @@ class Lineage:
         :param domain:  A the name of the domain
         :return:
         """
-        Relation.restrict(tclral=cls.mmdb, relation='Superclass', restriction=f"Rnum:<{grel}>, Domain:<{cls.domain}>")
-        s = Relation.project(tclral=cls.mmdb, attributes=("Class", ))
+        Relation.restrict(cls.mmdb, relation='Superclass', restriction=f"Rnum:<{grel}>, Domain:<{cls.domain}>")
+        s = Relation.project(cls.mmdb, attributes=("Class", ))
         return s.body[0]['Class']
 
     @classmethod
@@ -189,19 +188,19 @@ class Lineage:
         for lin in cls.lineages:
             cls.lnums += 1
             lnum = 'L' + (str(cls.lnums))
-            cls._logger.info(f"Populating lineage [{lnum}]")
-            Transaction.open(tclral=cls.mmdb)
-            Relvar.insert(relvar='Element', tuples=[
+            _logger.info(f"Populating lineage [{lnum}]")
+            Transaction.open(cls.mmdb, tr_Lin)
+            Relvar.insert(cls.mmdb, tr=tr_Lin, relvar='Element', tuples=[
                 Element_i(Label=lnum, Domain=cls.domain)
             ])
-            Relvar.insert(relvar='Spanning_Element', tuples=[
+            Relvar.insert(cls.mmdb, tr=tr_Lin, relvar='Spanning_Element', tuples=[
                 Spanning_Element_i(Label=lnum, Domain=cls.domain)
             ])
-            Relvar.insert(relvar='Lineage', tuples=[
+            Relvar.insert(cls.mmdb, tr=tr_Lin, relvar='Lineage', tuples=[
                 Lineage_i(Lnum=lnum, Domain=cls.domain)
             ])
             for cname in lin.split(':'):
-                Relvar.insert(relvar='Class_In_Lineage', tuples=[
+                Relvar.insert(cls.mmdb, tr=tr_Lin, relvar='Class_In_Lineage', tuples=[
                     Class_In_Lineage_i(Class=cname,Lnum=lnum, Domain=cls.domain)
                 ])
-            Transaction.execute()
+            Transaction.execute(cls.mmdb, tr_Lin)
