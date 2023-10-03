@@ -70,39 +70,39 @@ class Domain:
 
             # Insert classes
             for c in subsys_parse['class_model'].classes:
-                MMclass.populate(mmdb, domain=domain, subsystem=subsys, record=c)
+                MMclass.populate(domain=domain, subsystem=subsys, record=c)
             _logger.info("Populating relationships")
             for r in subsys_parse['class_model'].rels:
-                Relationship.populate(mmdb, domain=domain, subsystem=subsys, record=r)
+                Relationship.populate(domain=domain, subsystem=subsys, record=r)
 
             # Insert methods
             _logger.info("Populating methods")
             for m_parse in subsys_parse['methods'].values():
                 # All classes must be populated first, so that parameter types in signatures can be resolved
                 # as class or non-class types
-                Method.populate(mmdb, domain=domain, subsys=subsys.name, m_parse=m_parse)
+                Method.populate(domain=domain, subsys=subsys.name, m_parse=m_parse)
 
             # Insert external entities and operations
             _logger.info("Populating operations")
             for ee_name, op_parse in subsys_parse['external'].items():
-                EE.populate(mmdb, ee_name=ee_name, subsys=subsys.name,
+                EE.populate(ee_name=ee_name, subsys=subsys.name,
                             domain=domain, op_parse=op_parse)
 
             # Insert state machines
             _logger.info("Populating state models")
             for sm in subsys_parse['state_models'].values():
-                StateModel.populate(mmdb, subsys=subsys.name, sm=sm)
+                StateModel.populate(subsys=subsys.name, sm=sm)
 
-        Attribute.ResolveAttrTypes(mmdb, domain=domain)
+        Attribute.ResolveAttrTypes(domain=domain)
         _logger.info("Populating lineage")
         #
         # Reprinting these for lineage debugging purposes
-        Lineage.Derive(mmdb, domain=domain)
+        Lineage.Derive(domain=domain)
         #
         # Print out the populated metamodel
         Relvar.printall(mmdb)
         #
         # Populate actions for all Activities
-        Activity.process_execution_units(mmdb)
+        Activity.process_execution_units()
         pass
         #

@@ -4,6 +4,7 @@ ordinal.py – Process a parsed ordinal relationship to populate the metamodel d
 
 import logging
 from pyral.relvar import Relvar
+from xuml_populate.config import mmdb
 from xuml_populate.populate.mmclass_nt import Ordinal_Relationship_i
 
 _logger = logging.getLogger(__name__)
@@ -17,11 +18,10 @@ class Ordinal:
     oform = None
 
     @classmethod
-    def populate(cls, mmdb: str, tr: str, domain: str, rnum: str, record):
+    def populate(cls, tr: str, domain: str, rnum: str, record):
         """
         Populate an Ordinal Relationship
 
-        :param mmdb: The metamodel db name
         :param tr: The name of the open transaction
         :param domain: The domain name
         :param rnum: The relationship name

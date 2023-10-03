@@ -4,6 +4,7 @@ binary_association.py – Process a parsed binary association to populate the me
 
 import logging
 from pyral.relvar import Relvar
+from xuml_populate.config import mmdb
 
 from xuml_populate.populate.mmclass_nt import Association_i, Binary_Association_i, Association_Class_i, \
     Perspective_i, Asymmetric_Perspective_i, T_Perspective_i, P_Perspective_i, \
@@ -28,11 +29,10 @@ class BinaryAssociation:
     assoc_mult = None
 
     @classmethod
-    def populate(cls, mmdb: str, tr: str, domain: str, rnum: str, record):
+    def populate(cls, tr: str, domain: str, rnum: str, record):
         """
         Populate a Binary Association
 
-        :param mmdb: The metamodel db name
         :param tr: The name of the open transaction
         :param domain: The domain name
         :param rnum: The relationship name
@@ -98,7 +98,6 @@ class BinaryAssociation:
         Relvar.insert(mmdb, tr=tr, relvar='P_Perspective', tuples=[
             P_Perspective_i(Side='P', Rnum=cls.rnum, Domain=domain)
         ])
-        pass
 
         if not cls.ref2:  # Simple binary association
             Relvar.insert(mmdb, tr=tr, relvar='Reference', tuples=[

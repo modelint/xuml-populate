@@ -3,6 +3,7 @@ activity.py – Populate an Activity
 """
 
 import logging
+from xuml_populate.config import mmdb
 from pyral.relvar import Relvar
 from pyral.relation import Relation
 from xuml_populate.populate.element import Element
@@ -26,12 +27,11 @@ class Activity:
     domain = None
 
     @classmethod
-    def populate_method(cls, mmdb: str, tr: str, action_text: str, cname: str, method: str,
+    def populate_method(cls, tr: str, action_text: str, cname: str, method: str,
                         subsys: str, domain: str) -> str:
         """
         Populate Synchronous Activity for Method
 
-        :param mmdb: The metamodel db name
         :param tr: The name of the open transaction
         :param cname: The class name
         :param method: The method name
@@ -41,7 +41,7 @@ class Activity:
         :return: The Activity number (Anum)
         """
         cls.domain = domain
-        Anum = cls.populate(mmdb, tr=tr, action_text=action_text, subsys=subsys, domain=domain, synchronous=True)
+        Anum = cls.populate(tr=tr, action_text=action_text, subsys=subsys, domain=domain, synchronous=True)
         if cname not in cls.methods:
             cls.methods[cname] = {
                 method: {'anum': Anum, 'domain': domain, 'text': action_text, 'parse': None}}
@@ -54,30 +54,29 @@ class Activity:
         return Anum
 
     @classmethod
-    def populate_operation(cls, mmdb: str, tr: str, action_text: str, ee: str, subsys: str, domain: str,
+    def populate_operation(cls, tr: str, action_text: str, ee: str, subsys: str, domain: str,
                            synchronous: bool) -> str:
         """
         Populate Operation Activity
 
+        :param tr:
         :param action_text:
         :param ee:
         :param subsys:
         :param domain:
         :param synchronous:
-        :param mmdb:
         :return:
         """
-        Anum = cls.populate(mmdb, tr=tr, action_text=action_text, subsys=subsys, domain=domain, synchronous=synchronous)
+        Anum = cls.populate(tr=tr, action_text=action_text, subsys=subsys, domain=domain, synchronous=synchronous)
         cls.operations[ee] = ScrallParser.parse_text(scrall_text=action_text, debug=False)
         return Anum
 
     @classmethod
-    def populate(cls, mmdb: str, tr: str, action_text: str, subsys: str, domain: str,
+    def populate(cls, tr: str, action_text: str, subsys: str, domain: str,
                  synchronous: bool) -> str:
         """
         Populate an Activity
 
-        :param mmdb: The metamodel db name
         :param tr: The name of the open transaction
         :param action_text: Unparsed scrall text
         :param subsys: The subsystem name
@@ -85,7 +84,7 @@ class Activity:
         :param synchronous: True if Activity is synchronous
         :return: The Activity number (Anum)
         """
-        Anum = Element.populate_unlabeled_subsys_element(mmdb, tr=tr, prefix='A', subsystem=subsys, domain=domain)
+        Anum = Element.populate_unlabeled_subsys_element(tr=tr, prefix='A', subsystem=subsys, domain=domain)
         Relvar.insert(mmdb, tr=tr, relvar='Activity', tuples=[
             Activity_i(Anum=Anum, Domain=domain)
         ])
@@ -100,10 +99,10 @@ class Activity:
         return Anum
 
     @classmethod
-    def populate_state(cls, mmdb: str, tr: str, state: str, state_model: str, actions: str,
+    def populate_state(cls, tr: str, state: str, state_model: str, actions: str,
                        subsys: str, domain: str) -> str:
         """
-        :param mmdb:
+        :param tr:
         :param state:
         :param state_model:
         :param actions:
@@ -121,14 +120,14 @@ class Activity:
         # cls.populate_activity(text=action_text, pa=parsed_activity)
 
         # Create the Susbystem Element and obtain a unique Anum
-        Anum = cls.populate(mmdb, tr=tr, action_text=action_text, subsys=subsys, domain=domain, synchronous=False)
+        Anum = cls.populate(tr=tr, action_text=action_text, subsys=subsys, domain=domain, synchronous=False)
         Relvar.insert(mmdb, tr=tr, relvar='State_Activity', tuples=[
             State_Activity_i(Anum=Anum, State=state, State_model=state_model, Domain=domain)
         ])
         return Anum
 
     @classmethod
-    def process_execution_units(cls, mmdb: str):
+    def process_execution_units(cls):
         """
         Process each Scrall Execution Unit for all Activities (Method, State, and Synchronous Operation)
         """
@@ -164,9 +163,9 @@ class Activity:
                     match type(xunit).__name__:
                         case 'Execution_Unit_a':
                             boundary_actions = ExecutionUnit.process_method_statement_set(
-                                mmdb=mmdb, activity_data=activity_data, statement_set=xunit.statement_set)
+                                activity_data=activity_data, statement_set=xunit.statement_set)
                         case 'Output_Flow_a':
-                            ExecutionUnit.process_synch_output(mmdb=mmdb, activity_data=activity_data, synch_output=xunit)
+                            ExecutionUnit.process_synch_output(activity_data=activity_data, synch_output=xunit)
                             pass
                         case _:
                             _logger.error(f"Execution unit [{xunit}] is neither a statement set nor a "
@@ -183,7 +182,7 @@ class Activity:
         pass
 
     # @classmethod
-    # def process_statements(cls, mmdb: 'Tk'):
+    # def process_statements(cls):
     #     """
     #     Process each Scrall statement in the Method
     #     """

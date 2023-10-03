@@ -3,6 +3,7 @@ ee.py – Convert external entity to a relation
 """
 
 import logging
+from xuml_populate.config import mmdb
 from pyral.transaction import Transaction
 from pyral.relvar import Relvar
 from xuml_populate.populate.element import Element
@@ -22,11 +23,10 @@ class EE:
     record = None
 
     @classmethod
-    def populate(cls, mmdb: str, ee_name: str, subsys: str, domain: str, op_parse):
+    def populate(cls, ee_name: str, subsys: str, domain: str, op_parse):
         """
         Populate an External Entity
 
-        :param mmdb: The metamodel db name
         :param ee_name: The EE name
         :param cname: The proxy Class name
         :param subsys: The name of the subsystem
@@ -38,7 +38,7 @@ class EE:
         _logger.info(f"Populating ee [{ee_name}]")
         _logger.info(f"Transaction open: Populate EE")
         Transaction.open(mmdb, tr_EE)  # Create an EE with at least one Operation
-        EEnum = Element.populate_unlabeled_subsys_element(mmdb, tr=tr_EE, prefix='EE', subsystem=subsys, domain=domain)
+        EEnum = Element.populate_unlabeled_subsys_element(tr=tr_EE, prefix='EE', subsystem=subsys, domain=domain)
         Relvar.insert(mmdb, tr=tr_EE, relvar='External_Entity', tuples=[
             External_Entity_i(EEnum=EEnum, Name=ee_name, Class=cname, Domain=domain)
         ])
@@ -46,6 +46,6 @@ class EE:
         # Add operations
         tr = tr_EE  # Start out by completing the required op for the EE
         for op in op_parse.values():
-            tr = Operation.populate(mmdb, tr=tr, domain=domain, subsys=subsys, parsed_op=op)
+            tr = Operation.populate(tr=tr, domain=domain, subsys=subsys, parsed_op=op)
             # "EE" (tr_EE) closes on first operation and all subsequent tr values will be "Operation"
 

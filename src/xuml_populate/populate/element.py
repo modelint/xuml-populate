@@ -4,6 +4,7 @@ element.py – Populate an element instance in PyRAL
 
 import logging
 from pyral.relvar import Relvar
+from xuml_populate.config import mmdb
 from xuml_populate.populate.mmclass_nt import Element_i, Spanning_Element_i, Subsystem_Element_i
 # TODO: Add spanning element support
 
@@ -32,12 +33,10 @@ class Element:
         return cls._num_counters[key]
 
     @classmethod
-    def populate_unlabeled_subsys_element(cls, mmdb: str, tr: str, prefix: str, subsystem: str, domain: str
-                                          ) -> str:
+    def populate_unlabeled_subsys_element(cls, tr: str, prefix: str, subsystem: str, domain: str) -> str:
         """
         Generates a label for a new Subsystem Element and populates it
 
-        :param mmdb: The Metamodel DB
         :param tr:  An open transaction name
         :param prefix: Prefixed to counter to create unique string label
         :param subsystem: The name of the subsystem since these are Subsystem Elements
@@ -55,7 +54,7 @@ class Element:
         return label
 
     @classmethod
-    def populate_labeled_subys_element(cls, mmdb: str, tr: str, label: str, subsystem: str, domain: str):
+    def populate_labeled_subys_element(cls, tr: str, label: str, subsystem: str, domain: str):
         """
         Populates pre-labeled Subsystem Element such as cnum and rnum
 
@@ -65,7 +64,6 @@ class Element:
         Most users ignore the Cnums so they can be generated behind the scenes and kept as an internal labeling
         system for the most part. They are not specified in the xcm files for now (but may be later)
 
-        :param mmdb: The Metamodel DB
         :param tr:  An open transaction name
         :param label: The user or generated label such as R812 for rnums or C7 for cnums
         :param subsystem: The name of the subsystem since these are Subsystem Elements
@@ -83,13 +81,12 @@ class Element:
 
 
     @classmethod
-    def depopulate_spanning_element(cls, mmdb: str, tr: str, label: str, domain: str):
+    def depopulate_spanning_element(cls, tr: str, label: str, domain: str):
         """
         Remove the specified spanning elmenent type from the database.
 
         Assumes that the spanning element subclass is managing the db transaction
 
-        :param mmdb: The Metamodel DB
         :param tr:  An open transaction name
         :param label: The user or generated label such as R812 for rnums or C7 for cnums
         :param domain: The element belongs to this domain

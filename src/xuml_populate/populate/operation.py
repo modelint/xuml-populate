@@ -3,6 +3,7 @@ operation.py – Convert parsed operation to a relation
 """
 
 import logging
+from xuml_populate.config import mmdb
 from pyral.transaction import Transaction
 from pyral.relvar import Relvar
 from xuml_populate.populate.flow import Flow
@@ -25,13 +26,12 @@ class Operation:
     """
 
     @classmethod
-    def populate(cls, mmdb: str, tr: str, subsys: str, domain: str, parsed_op) -> str:
+    def populate(cls, tr: str, subsys: str, domain: str, parsed_op) -> str:
         """
         Populate a single operation for an EE
 
         (This is meant to be invoked for each operation of the EE)
 
-        :param mmdb: The metamodel db name
         :param tr: Either "EE" or "Operation" as the name of the transaction
         :param subsys: The subsystem name
         :param domain: The domain name
@@ -49,7 +49,7 @@ class Operation:
             Transaction.open(mmdb, tr_Op)
 
         # Create the signature
-        signum = Signature.populate(mmdb, tr=tr, subsys=subsys, domain=domain)
+        signum = Signature.populate(tr=tr, subsys=subsys, domain=domain)
         Relvar.insert(mmdb, tr=tr, relvar='Operation_Signature', tuples=[
             Operation_Signature_i(SIGnum=signum, Operation=parsed_op.op, EE=parsed_op.ee, Domain=domain)
         ])
@@ -57,7 +57,7 @@ class Operation:
         Relvar.insert(mmdb, tr=tr, relvar='Operation', tuples=[
             Operation_i(Name=parsed_op.op, EE=parsed_op.ee, Domain=domain, Direction=parsed_op.op_type)
         ])
-        anum = Activity.populate_operation(mmdb, tr=tr, action_text=parsed_op.activity,
+        anum = Activity.populate_operation(tr=tr, action_text=parsed_op.activity,
                                            ee=parsed_op.ee, subsys=subsys, domain=domain,
                                            synchronous=True if parsed_op.flow_out else False)
 
@@ -77,10 +77,10 @@ class Operation:
         for p in parsed_op.flows_in:
 
             # Populate the Parameter's type if it hasn't already been populated
-            MMtype.populate_unknown(mmdb, name=p['type'], domain=domain)
+            MMtype.populate_unknown(name=p['type'], domain=domain)
             _logger.info("Transaction open: Populating operation parameter")
             Transaction.open(mmdb, tr_Parameter)
-            input_fid = Flow.populate_data_flow_by_type(mmdb, mm_type=p['type'], activity=anum,
+            input_fid = Flow.populate_data_flow_by_type(mm_type=p['type'], activity=anum,
                                                         domain=domain, label=None).fid
             Relvar.insert(mmdb, tr=tr_Parameter, relvar='Parameter', tuples=[
                 Parameter_i(Name=p['name'], Signature=signum, Domain=domain,
@@ -93,7 +93,7 @@ class Operation:
         if parsed_op.flow_out:
             # Populate Synchronous Output and an associated output Data Flow
             Transaction.open(mmdb, tr_Output)
-            of_id = Flow.populate_data_flow_by_type(mmdb, label=None, mm_type=parsed_op.flow_out,
+            of_id = Flow.populate_data_flow_by_type(label=None, mm_type=parsed_op.flow_out,
                                                     activity=anum, domain=domain).fid
             Relvar.insert(mmdb, tr=tr_Output, relvar='Synchronous_Output', tuples=[
                 Synchronous_Output_i(Anum=anum, Domain=domain,

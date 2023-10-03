@@ -91,9 +91,9 @@ class MMclass:
         Transaction.open(mmdb, "Class")  # Class, Class Type and Attributes
 
         # Populate the corresponding Type superclass
-        MMtype.populate_class(mmdb, tr=_tr_Class, cname=cls.name, domain=domain)
+        MMtype.populate_class(tr=_tr_Class, cname=cls.name, domain=domain)
 
-        Element.populate_labeled_subys_element(mmdb, tr=_tr_Class, label=cls.cnum,
+        Element.populate_labeled_subys_element(tr=_tr_Class, label=cls.cnum,
                                                subsystem=subsystem.name, domain=domain)
         Relvar.insert(mmdb, tr=_tr_Class, relvar='Class', tuples=[
             Class_i(Name=cls.name, Cnum=cls.cnum, Domain=domain)

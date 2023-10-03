@@ -263,7 +263,7 @@ class Flow:
 
         Transaction.open(mmdb, tr_Flow)
 
-        flow_id = cls.populate_data_flow(mmdb)
+        flow_id = cls.populate_data_flow()
         Relvar.insert(mmdb, tr=tr_Flow, relvar='Scalar_Flow', tuples=[
             Scalar_Flow_i(ID=flow_id, Activity=cls.activity, Domain=cls.domain, Type=scalar_type)
         ])

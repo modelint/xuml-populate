@@ -3,6 +3,7 @@ relationship.py – Convert parsed relationship to a relation
 """
 
 import logging
+from xuml_populate.config import mmdb
 from xuml_populate.populate.element import Element
 from xuml_populate.populate.generalization import Generalization
 from xuml_populate.populate.binary_association import BinaryAssociation
@@ -24,11 +25,10 @@ class Relationship:
     rnum = None
 
     @classmethod
-    def populate(cls, mmdb: str, domain: str, subsystem, record):
+    def populate(cls, domain: str, subsystem, record):
         """
         Populate all relevant Relationship relvars
 
-        :param mmdb: The metamodel db name
         :param domain: The domain name
         :param subsystem: The subsystem name
         :param record: Parse of the relationship
@@ -39,18 +39,18 @@ class Relationship:
         # Populate relationship
         Transaction.open(mmdb, tr_Rel)
 
-        Element.populate_labeled_subys_element(mmdb, tr=tr_Rel, label=cls.rnum, subsystem=subsystem.name, domain=domain)
+        Element.populate_labeled_subys_element(tr=tr_Rel, label=cls.rnum, subsystem=subsystem.name, domain=domain)
         Relvar.insert(mmdb, tr=tr_Rel, relvar='Relationship', tuples=[
             Relationship_i(Rnum=cls.rnum, Domain=domain)
         ])
 
         # Populate based on relationship type
         if 't_side' in record:
-            BinaryAssociation.populate(mmdb, tr=tr_Rel, domain=domain, rnum=cls.rnum, record=record)
+            BinaryAssociation.populate(tr=tr_Rel, domain=domain, rnum=cls.rnum, record=record)
         elif 'superclass' in record:
-            Generalization.populate(mmdb, tr=tr_Rel, domain=domain, rnum=cls.rnum, record=record)
+            Generalization.populate(tr=tr_Rel, domain=domain, rnum=cls.rnum, record=record)
         elif 'ascend' in record:
-            Ordinal.populate(mmdb, tr=tr_Rel, domain=domain, rnum=cls.rnum, record=record)
+            Ordinal.populate(tr=tr_Rel, domain=domain, rnum=cls.rnum, record=record)
         else:
             _logger.error(
                 "Population encountered relationship type that is not an Association, Generalization, or Ordinal.")

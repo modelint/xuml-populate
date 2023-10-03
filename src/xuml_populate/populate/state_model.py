@@ -3,6 +3,7 @@ state_model.py – Process parsed lifecycle to p
 """
 
 import logging
+from xuml_populate.config import mmdb
 from xsm_parser.state_model_parser import StateModel_a
 from xuml_populate.mp_exceptions import MismatchedStateSignature
 from pyral.relvar import Relvar
@@ -30,7 +31,7 @@ class StateModel:
     """
 
     @classmethod
-    def populate(cls, mmdb: str, subsys: str, sm: StateModel_a):
+    def populate(cls, subsys: str, sm: StateModel_a):
         """Constructor"""
 
         cname = sm.lifecycle
@@ -57,7 +58,7 @@ class StateModel:
                     State_i(Name=s.state.name, State_model=cname, Domain=sm.domain)
                 ])
                 # Create its Activity
-                anum = Activity.populate_state(mmdb, tr=tr_SM,
+                anum = Activity.populate_state(tr=tr_SM,
                                                state=s.state.name, subsys=subsys, actions=s.activity,
                                                state_model=cname, domain=sm.domain,
                                                )
@@ -66,7 +67,7 @@ class StateModel:
                 if sig_params not in signatures:
                     # Add new signature if it doesn't exist
                     # First create signature superclass instance in Activity subsystem
-                    signum = Signature.populate(mmdb, tr=tr_SM, subsys=subsys, domain=sm.domain)
+                    signum = Signature.populate(tr=tr_SM, subsys=subsys, domain=sm.domain)
                     signatures[sig_params] = signum  # Save the SIGnum as a value, keyed to the frozen params
                     Relvar.insert(mmdb, tr=tr_SM, relvar='State_Signature', tuples=[
                         State_Signature_i(SIGnum=signum, State_model=cname, Domain=sm.domain)
@@ -75,8 +76,8 @@ class StateModel:
                     for p in s.state.signature:
                         # Create a Data flow
                         # Populate the Parameter's type if it hasn't already been populated
-                        MMtype.populate_unknown(mmdb, name=p.type, domain=sm.domain)
-                        input_fid = Flow.populate_data_flow_by_type(mmdb, mm_type=p.type, activity=anum,
+                        MMtype.populate_unknown(name=p.type, domain=sm.domain)
+                        input_fid = Flow.populate_data_flow_by_type(mm_type=p.type, activity=anum,
                                                                     domain=sm.domain, label=None).fid
                         Relvar.insert(mmdb, tr=tr_SM, relvar='Parameter', tuples=[
                             Parameter_i(Name=p.name, Signature=signum, Domain=sm.domain,

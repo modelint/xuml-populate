@@ -3,6 +3,7 @@ mm_type.py – Pouplate (metamodel) Type instance
 """
 
 import logging
+from xuml_populate.config import mmdb
 from xuml_populate.populate.mmclass_nt import Type_i, Scalar_i, Table_i, Table_Attribute_i
 from pyral.relvar import Relvar
 from pyral.relation import Relation
@@ -26,24 +27,22 @@ class MMtype:
     class_names = set()
 
     @classmethod
-    def populate_unknown(cls, mmdb: str, name: str, domain: str):
+    def populate_unknown(cls, name: str, domain: str):
         """
         Populate a type that may be Class, Table, or Scalar
 
-        :param mmdb: The metamodel db name
         :param name:  The type name
         :param domain: The domain name
         """
         # TODO: For now Table types are not supported
         if name not in cls.class_names:
-            cls.populate_scalar(mmdb, name, domain)
+            cls.populate_scalar(name, domain)
 
     @classmethod
-    def populate_scalar(cls, mmdb: str, name: str, domain: str):
+    def populate_scalar(cls, name: str, domain: str):
         """
         Populate a class type given a class name and domain
 
-        :param mmdb: The metamodel db name
         :param name:  Name of a Scalar Type
         :param domain:  Name of its domain
         """
@@ -74,7 +73,7 @@ class MMtype:
 
 
     @classmethod
-    def populate_class(cls, mmdb: str, tr: str, cname: str, domain: str):
+    def populate_class(cls, tr: str, cname: str, domain: str):
         """
         Populate a class type given a class name and domain
 
@@ -94,7 +93,7 @@ class MMtype:
         ])
 
     @classmethod
-    def depopulate_scalar(cls, mmdb: str, name: str, domain: str):
+    def depopulate_scalar(cls, name: str, domain: str):
         """
         Remove the specified Scalar from the database.
 

@@ -4,6 +4,7 @@ generalization.py – Process parsed generalization to populate the metamodel db
 
 import logging
 from pyral.relvar import Relvar
+from xuml_populate.config import mmdb
 from xuml_populate.mp_exceptions import LessThanTwoSubclassesInGeneralization
 
 from xuml_populate.populate.mmclass_nt import \
@@ -24,11 +25,10 @@ class Generalization:
     genrefs = None
 
     @classmethod
-    def populate(cls, mmdb: str, tr: str, domain: str, rnum: str, record):
+    def populate(cls, tr: str, domain: str, rnum: str, record):
         """
         Populate a Generalization
 
-        :param mmdb: The metamodel db name
         :param tr: The name of the open transaction
         :param domain: The domain name
         :param rnum: The relationship name
