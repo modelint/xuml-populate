@@ -3,6 +3,7 @@ domain.py – Process parsed domain to populate the metamodel db
 """
 
 import logging
+from xuml_populate.config import mmdb
 from typing import Dict
 from xuml_populate.populate.attribute import Attribute
 from xuml_populate.populate.mm_class import MMclass
@@ -32,11 +33,10 @@ class Domain:
     types = None
 
     @classmethod
-    def populate(cls, mmdb: str, domain: str, content: Dict):
+    def populate(cls, domain: str, content: Dict):
         """
         Insert all user model elements in this Domain into the corresponding Metamodel classes.
 
-        :param mmdb:  The metamodel db name
         :param domain:  The name of the domain extracted from the content
         :param content:  The parsed content of the domain
         """

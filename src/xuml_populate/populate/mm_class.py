@@ -3,6 +3,7 @@ mm_class.py – Process parsed class to populate the metamodel db
 """
 
 import logging
+from xuml_populate.config import mmdb
 from pyral.transaction import Transaction
 from pyral.relvar import Relvar
 from xuml_populate.populate.element import Element
@@ -35,11 +36,10 @@ class MMclass:
     ee_ops = None
 
     @classmethod
-    def header(cls, mmdb: str, cname: str, domain: str) -> Dict[str, str]:
+    def header(cls, cname: str, domain: str) -> Dict[str, str]:
         """
         Returns the header for a table reprsentation of this class
 
-        :param mmdb:  The name of teh metamodel db
         :param cname:   Class name
         :param domain:  Domain name
         :return: The header as a dictionary of attr;type key value pairs
@@ -50,10 +50,9 @@ class MMclass:
         return h
 
     @classmethod
-    def exists(cls, mmdb: str, cname: str, domain: str) -> bool:
+    def exists(cls, cname: str, domain: str) -> bool:
         """
 
-        :param mmdb:  The metamodel db
         :param cname:  Name of the class
         :param domain: Its domain name
         :return: True if the class has been populated into this domain
@@ -65,11 +64,10 @@ class MMclass:
 
 
     @classmethod
-    def populate(cls, mmdb: str, domain: str, subsystem, record):
+    def populate(cls, domain: str, subsystem, record):
         """
         Populate a metamodel Class relation
 
-        :param mmdb:
         :param domain:
         :param subsystem:
         :param record:
@@ -108,7 +106,7 @@ class MMclass:
         # Populate the attributes
         cls.identifiers = set()  # For each newly created class we clear the id set
         for a in cls.record['attributes']:
-            Attribute.populate(mmdb=mmdb, tr=_tr_Class, domain=domain, cname=cls.name,
+            Attribute.populate(tr=_tr_Class, domain=domain, cname=cls.name,
                                class_identifiers=cls.identifiers, record=a)
 
         Transaction.execute(mmdb, _tr_Class)  # Class, Class Type, and Attributes

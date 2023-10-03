@@ -3,7 +3,8 @@ traverse_action.py – Populate a traverse action instance in PyRAL
 """
 
 import logging
-from typing import TYPE_CHECKING, Set, Dict, List, Optional
+from typing import Set, Dict, List, Optional
+from xuml_populate.config import mmdb
 from xuml_populate.exceptions.action_exceptions import UndefinedRelationship, IncompletePath, \
     NoDestinationInPath, UndefinedClass, RelationshipUnreachableFromClass, HopToUnreachableClass, \
     MissingTorPrefInAssociativeRel, NoSubclassInHop, SubclassNotInGeneralization, PerspectiveNotDefined, \
@@ -24,11 +25,10 @@ from collections import namedtuple
 # HopArgs = namedtuple('HopArgs', 'cname rnum attrs')
 Hop = namedtuple('Hop', 'hoptype to_class rnum attrs')
 
-if TYPE_CHECKING:
-    from tkinter import Tk
-
 _logger = logging.getLogger(__name__)
 
+# Transactions
+tr_Traverse = "Traverse Action"
 
 class TraverseAction:
     """
@@ -43,7 +43,6 @@ class TraverseAction:
     dest_class = None  # End of path
     class_cursor = None
     rel_cursor = None
-    mmdb = None
     domain = None
     hops = []
     anum = None
@@ -60,20 +59,21 @@ class TraverseAction:
         """
         cls.name = cls.name.rstrip('/')  # Remove trailing '/' from the path name
         # Create a Traverse Action and Path
-        cls.action_id = Action.populate(cls.mmdb, cls.anum, cls.domain)
+        Transaction.open(mmdb, tr_Traverse)
+        cls.action_id = Action.populate(tr=tr_Traverse, anum=cls.anum, domain=cls.domain)
         # Create the Traverse action destination flow (the output for R930)
-        cls.dest_fid = Flow.populate_instance_flow(cls.mmdb, cname=cls.dest_class, activity=cls.anum,
+        cls.dest_fid = Flow.populate_instance_flow(cname=cls.dest_class, activity=cls.anum,
                                                    domain=cls.domain, label=None,
                                                    single=True if cls.mult == MaxMult.ONE else False).fid
 
         _logger.info(f"INSERT Traverse action output Flow: ["
                      f"{cls.domain}:{cls.dest_class}:{cls.activity_path.split(':')[-1]}"
                      f":{cls.dest_fid}]")
-        Relvar.insert(relvar='Traverse_Action', tuples=[
+        Relvar.insert(mmdb, tr=tr_Traverse, relvar='Traverse_Action', tuples=[
             Traverse_Action_i(ID=cls.action_id, Activity=cls.anum, Domain=cls.domain, Path=cls.name,
                               Source_flow=cls.input_instance_flow.fid, Destination_flow=cls.dest_fid)
         ])
-        Relvar.insert(relvar='Path', tuples=[
+        Relvar.insert(mmdb, tr=tr_Traverse, relvar='Path', tuples=[
             Path_i(Name=cls.name, Domain=cls.domain, Dest_class=cls.dest_class)
         ])
 
@@ -82,12 +82,12 @@ class TraverseAction:
         for number, h in enumerate(cls.hops, start=1):
             h.hoptype(number=number, to_class=h.to_class, rnum=h.rnum,
                       attrs=h.attrs)  # Call hop type method with hop type general and specific args
-        pass
+        Transaction.execute(mmdb, tr_Traverse)
 
     @classmethod
     def validate_rel(cls, rnum: str):
         rel = f"Rnum:<{rnum}>, Domain:<{cls.domain}>"
-        if not Relation.restrict(tclral=cls.mmdb, restriction=rel, relation="Relationship").body:
+        if not Relation.restrict(mmdb, restriction=rel, relation="Relationship").body:
             _logger.error(f"Undefined Rnum {rnum} in Domain {cls.domain}")
             raise UndefinedRelationship(rnum, cls.domain)
 
@@ -118,21 +118,21 @@ class TraverseAction:
     @classmethod
     def to_association_class(cls, number: int, rnum: str, to_class: str, attrs: Optional[Dict]):
         _logger.info("ACTION:Traverse - Populating a to association class hop")
-        Relvar.insert(relvar='To_Association_Class_Hop', tuples=[
+        Relvar.insert(mmdb, tr=tr_Traverse, relvar='To_Association_Class_Hop', tuples=[
             To_Association_Class_Hop_i(Number=number, Path=cls.name, Domain=cls.domain)
         ])
-        Relvar.insert(relvar='Association_Class_Hop', tuples=[
+        Relvar.insert(mmdb, tr=tr_Traverse, relvar='Association_Class_Hop', tuples=[
             Association_Class_Hop_i(Number=number, Path=cls.name, Domain=cls.domain)
         ])
-        Relvar.insert(relvar='Association_Hop', tuples=[
+        Relvar.insert(mmdb, tr=tr_Traverse, relvar='Association_Hop', tuples=[
             Association_Hop_i(Number=number, Path=cls.name, Domain=cls.domain)
         ])
-        Relvar.insert(relvar='Hop', tuples=[
+        Relvar.insert(mmdb, tr=tr_Traverse, relvar='Hop', tuples=[
             Hop_i(Number=number, Path=cls.name, Domain=cls.domain, Rnum=rnum, Class_step=to_class)
         ])
 
     @classmethod
-    def straight_hop(cls, number: int, rnum: str, to_class: str, attrs: Optional[Dict]):
+    def straight_hop(cls, number: int, rnum: str, to_class: str, attrs: Optional[Dict] = None):
         """
         Populate an instance of Straight HopArgs
 
@@ -142,13 +142,13 @@ class TraverseAction:
         :param attrs:  Unused, but required in signature
         """
         _logger.info("ACTION:Traverse - Populating a straight hop")
-        Relvar.insert(relvar='Straight_Hop', tuples=[
+        Relvar.insert(mmdb, tr=tr_Traverse, relvar='Straight_Hop', tuples=[
             Straight_Hop_i(Number=number, Path=cls.name, Domain=cls.domain)
         ])
-        Relvar.insert(relvar='Association_Hop', tuples=[
+        Relvar.insert(mmdb, tr=tr_Traverse, relvar='Association_Hop', tuples=[
             Association_Hop_i(Number=number, Path=cls.name, Domain=cls.domain)
         ])
-        Relvar.insert(relvar='Hop', tuples=[
+        Relvar.insert(mmdb, tr=tr_Traverse, relvar='Hop', tuples=[
             Hop_i(Number=number, Path=cls.name, Domain=cls.domain, Rnum=rnum, Class_step=to_class)
         ])
 
@@ -169,7 +169,7 @@ class TraverseAction:
         :return: True of the class is an association class formalizing the specified association
         """
         r = f"Class:<{cname}>, Rnum:<{rnum}>, Domain:<{cls.domain}>"
-        return bool(Relation.restrict(tclral=cls.mmdb, restriction=r, relation="Association_Class").body)
+        return bool(Relation.restrict(mmdb, restriction=r, relation="Association_Class").body)
 
     @classmethod
     def is_reflexive(cls, rnum: str) -> int:
@@ -183,11 +183,11 @@ class TraverseAction:
         """
         # Get all perspectives defined on rnum
         R = f"Rnum:<{rnum}>, Domain:<{cls.domain}>"
-        perspectives = Relation.restrict(tclral=cls.mmdb, restriction=R, relation="Perspective")
+        perspectives = Relation.restrict(mmdb, restriction=R, relation="Perspective")
         if not perspectives.body:
             # Every association relationship defines at least one perspective
             raise UndefinedAssociation(rnum, cls.domain)
-        vclasses = Relation.project(tclral=cls.mmdb, attributes=('Viewed_class',)).body
+        vclasses = Relation.project(mmdb, attributes=('Viewed_class',)).body
         # Reflexive if there is both viewed classes are the same (only 1)
         # So, if reflexive, return 1 (S - Symmetric) or 2 (T,P - Assymetric), otherwise 0, non-reflexive
         return len(perspectives.body) if len(vclasses) == 1 else 0
@@ -202,7 +202,7 @@ class TraverseAction:
         """
         reachable_classes = set()
         R = f"Rnum:<{rnum}>, Domain:<{cls.domain}>"
-        refs = Relation.restrict(tclral=cls.mmdb, restriction=R, relation="Reference").body
+        refs = Relation.restrict(mmdb, restriction=R, relation="Reference").body
         for ref in refs:
             reachable_classes.add(ref['To_class'])
             reachable_classes.add(ref['From_class'])
@@ -214,7 +214,7 @@ class TraverseAction:
         # TODO: Update metamodel with two additional identifiers
         R = f"Ranked_class:<{cls.class_cursor}>, Domain:<{cls.domain}>, " \
             f"(Ascending_perspective:<{perspective}> OR Descending_perspective:<{perspective}>)"
-        orel = Relation.restrict(tclral=cls.mmdb, restriction=R, relation="Ordinal_Relationship").body[0]
+        orel = Relation.restrict(mmdb, restriction=R, relation="Ordinal_Relationship").body[0]
         if not orel:
             return False
         cls.rel_cursor = orel['Rnum']
@@ -236,7 +236,7 @@ class TraverseAction:
         if len(refs) > 1:
             # We are hopping from the super_class to a subclass
             P = ("From_class",)
-            sub_tuples = Relation.project(cls.mmdb, attributes=P, relation="rhop").body
+            sub_tuples = Relation.project(mmdb, attributes=P, relation="rhop").body
             subclasses = {s['From_class'] for s in sub_tuples}
             # The subclass must be specified in the next hop
             cls.path_index += 1
@@ -281,7 +281,7 @@ class TraverseAction:
                     # rnum, domain, and viewed class which will be the updated class cursor
                     cls.class_cursor = to_class if to_class != cls.class_cursor else from_class
                     R = f"Rnum:<{cls.rel_cursor}>, Domain:<{cls.domain}>, Viewed_class:<{cls.class_cursor}>"
-                    result = Relation.restrict(cls.mmdb, relation='Perspective', restriction=R)
+                    result = Relation.restrict(mmdb, relation='Perspective', restriction=R)
                     if not result.body:
                         # TODO: raise exception
                         return False
@@ -310,7 +310,7 @@ class TraverseAction:
                     # Update multiplicty
                     # First check multiplicity on to_class perspective (same as ref)
                     R = f"Rnum:<{cls.rel_cursor}>, Domain:<{cls.domain}>, Side:<{ref}>"
-                    result = Relation.restrict(cls.mmdb, relation='Perspective', restriction=R)
+                    result = Relation.restrict(mmdb, relation='Perspective', restriction=R)
                     if not result.body:
                         # TODO: raise exception
                         return False
@@ -318,7 +318,7 @@ class TraverseAction:
                     cls.mult = MaxMult.ONE if result.body[0]['Multiplicity'] == '1' else MaxMult.MANY
                     # If multiplicity has been set to 1, but associative multiplicty is M, we need to set it as M
                     R = f"Rnum:<{cls.rel_cursor}>, Domain:<{cls.domain}>, Class:<{cls.class_cursor}>"
-                    result = Relation.restrict(cls.mmdb, relation='Association_Class', restriction=R)
+                    result = Relation.restrict(mmdb, relation='Association_Class', restriction=R)
                     if not result.body:
                         # TODO: raise exception
                         return False
@@ -339,7 +339,7 @@ class TraverseAction:
                     # Get the To class of the other (T or P) reference
                     other_ref_name = 'P' if ref == 'T' else 'T'
                     R = f"Ref:<{other_ref_name}>, Rnum:<{cls.rel_cursor}>, Domain:<{cls.domain}>"
-                    other_ref = Relation.restrict(tclral=cls.mmdb, restriction=R, relation="Reference").body
+                    other_ref = Relation.restrict(restriction=R, relation="Reference").body
                     if not other_ref:
                         # The model must be currupted somehow
                         raise MissingTorPrefInAssociativeRel(rnum=cls.rel_cursor, domain=cls.domain)
@@ -364,9 +364,9 @@ class TraverseAction:
                 # The particpating class is explicitly named
                 cls.class_cursor = next_hop.name
                 R = f"Viewed_class:<{cls.class_cursor}>, Rnum:<{cls.rel_cursor}>, Domain:<{cls.domain}>"
-                Relation.restrict(cls.mmdb, relation='Perspective', restriction=R)
+                Relation.restrict(relation='Perspective', restriction=R)
                 P = ('Side',)
-                side = Relation.project(cls.mmdb, attributes=P).body[0]['Side']
+                side = Relation.project(mmdb, attributes=P).body[0]['Side']
                 cls.from_asymmetric_association_class(side=side)
                 return
             else:
@@ -383,11 +383,11 @@ class TraverseAction:
         """
         # Find phrase and ensure that it is on an association that involves the class cursor
         R = f"Phrase:<{phrase}>, Domain:<{cls.domain}>"
-        r_result = Relation.restrict(cls.mmdb, relation='Perspective', restriction=R)
+        r_result = Relation.restrict(mmdb, relation='Perspective', restriction=R)
         if not r_result.body:
             return False
         P = ('Side', 'Rnum', 'Viewed_class')
-        p_result = Relation.project(cls.mmdb, attributes=P)
+        p_result = Relation.project(mmdb, attributes=P)
         side, rnum, viewed_class = map(p_result.body[0].get, P)
         cls.rel_cursor = rnum
 
@@ -432,23 +432,22 @@ class TraverseAction:
                 cls.from_asymmetric_association_class(side)
             else:
                 cls.class_cursor = viewed_class
+                # TODO: Supply params below
                 cls.straight_hop()
             return True  # Non-reflexive hop to a participating class
 
     @classmethod
-    def build_path(cls, mmdb: 'Tk', input_instance_flow: Flow_ap, path: PATH_a,
+    def build_path(cls, input_instance_flow: Flow_ap, path: PATH_a,
                    activity_data: Activity_ap) -> (str, Flow_ap):
         """
         Step through a path populating it along the way.
 
-        :param mmdb: The metamodel db
         :param input_instance_flow: This is the source instance flow where the path begins
         :param path: Parsed Scrall representing a Path
         :param activity_data:
         :return: The Traverse Action ID and the output instance flow id, its Class Type name and its maximum instance
         multiplicity, 1 or M
         """
-        cls.mmdb = mmdb
         cls.path = path
         cls.anum = activity_data.anum
         cls.input_instance_flow = input_instance_flow
@@ -500,9 +499,9 @@ class TraverseAction:
                 # First we look for any References to or from the class cursor
                 R = f"(From_class:<{cls.class_cursor}> OR To_class:<{cls.class_cursor}>), Rnum:<{hop.rnum}>, " \
                     f"Domain:<{cls.domain}>"
-                if Relation.restrict(cls.mmdb, restriction=R, relation="Reference").body:
+                if Relation.restrict(mmdb, restriction=R, relation="Reference").body:
                     P = ('Ref', 'From_class', 'To_class')
-                    refs = Relation.project(cls.mmdb, attributes=P, svar_name='rhop').body
+                    refs = Relation.project(mmdb, attributes=P, svar_name='rhop').body
 
                     # Generalization
                     if refs[0]['Ref'] == 'G':
@@ -522,7 +521,6 @@ class TraverseAction:
 
         # Now we can populate the path
         cls.populate()
-        Transaction.execute()
         # Relvar.printall(mmdb)
 
         return cls.action_id, Flow_ap(fid=cls.dest_fid, content=Content.INSTANCE, tname=cls.dest_class,

@@ -1,7 +1,7 @@
 """ instance_set.py """
 
 import logging
-from typing import TYPE_CHECKING
+from xuml_populate.config import mmdb
 from xuml_populate.populate.actions.traverse_action import TraverseAction
 from xuml_populate.populate.actions.expressions.class_accessor import ClassAccessor
 from xuml_populate.populate.mm_class import MMclass
@@ -12,9 +12,6 @@ from pyral.relation import Relation
 from pyral.transaction import Transaction
 from xuml_populate.exceptions.action_exceptions import NoClassOrInstanceFlowForInstanceSetName, \
     SelectionOnScalarFlow
-
-if TYPE_CHECKING:
-    from tkinter import Tk
 
 _logger = logging.getLogger(__name__)
 
@@ -35,7 +32,7 @@ class InstanceSet:
     final_action = None  # The last action in the chain
 
     @classmethod
-    def process(cls, mmdb: 'Tk', input_instance_flow: Flow_ap, iset_components,
+    def process(cls, input_instance_flow: Flow_ap, iset_components,
                 activity_data: Activity_ap) -> ( str, str, Flow_ap):
         """
         Populate any Actions or Flows corresponding to a sequence of instance set components.
@@ -60,7 +57,7 @@ class InstanceSet:
                 case 'PATH_a':
                     # Path component
                     # Process the path to create the traverse action and obtain the resultant output instance flow
-                    aid, cls.component_flow = TraverseAction.build_path(mmdb, input_instance_flow=cls.component_flow,
+                    aid, cls.component_flow = TraverseAction.build_path(input_instance_flow=cls.component_flow,
                                                                         path=comp, activity_data=activity_data)
                     # Data flow to/from actions within the instance_set
                     if first_action:
@@ -73,7 +70,7 @@ class InstanceSet:
                 case 'N_a':
                     # Name component
                     # Is it a class name?  If so, we'll need a Class Accessor populated if we don't have one already
-                    class_flow = ClassAccessor.populate(mmdb, name=comp.name, anum=anum, domain=domain)
+                    class_flow = ClassAccessor.populate(name=comp.name, anum=anum, domain=domain)
                     if class_flow:
                         # We have a Class Accessor either previously or just now populated
                         # Set its output flow to the current component output
@@ -81,7 +78,7 @@ class InstanceSet:
                                                      tname=comp.name, max_mult=MaxMult.MANY)
                     else:
                         # Is it a Non Scalar Flow?
-                        ns_flow = Flow.find_labeled_ns_flow(mmdb, name=comp.name, anum=anum, domain=domain)
+                        ns_flow = Flow.find_labeled_ns_flow(name=comp.name, anum=anum, domain=domain)
                         if ns_flow:
                             cls.component_flow = ns_flow
                         else:
@@ -93,7 +90,7 @@ class InstanceSet:
                     # Process to populate a select action, the output type does not change
                     # since we are selecting on a known class
                     aid, cls.component_flow = SelectAction.populate(
-                        mmdb, input_instance_flow=cls.component_flow, selection_parse=comp, activity_data=activity_data)
+                        input_instance_flow=cls.component_flow, selection_parse=comp, activity_data=activity_data)
 
                     cls.final_action = aid
                 case _:

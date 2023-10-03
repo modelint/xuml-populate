@@ -1,23 +1,21 @@
 """ xunit.py - Process a Scrall Execution Unit"""
 
 import logging
+from xuml_populate.config import mmdb
 from scrall.parse.visitor import Output_Flow_a
 from xuml_populate.populate.actions.aparse_types import Flow_ap, Content, MaxMult
 from xuml_populate.populate.statement import Statement
 from xuml_populate.populate.actions.aparse_types import Activity_ap
 from xuml_populate.populate.actions.expressions.instance_set import InstanceSet
 from xuml_populate.populate.actions.expressions.scalar_expr import ScalarExpr
-from typing import TYPE_CHECKING, List
+from typing import List
 
-if TYPE_CHECKING:
-    from tkinter import Tk
-
+_logger = logging.getLogger(__name__)
 
 class ExecutionUnit:
     """
     Process an Execution Unit
     """
-    _logger = logging.getLogger(__name__)
 
     @classmethod
     def process(cls):
@@ -28,21 +26,19 @@ class ExecutionUnit:
         pass
 
     @classmethod
-    def process_synch_output(cls, mmdb: 'Tk', activity_data: Activity_ap, synch_output: Output_Flow_a):
+    def process_synch_output(cls, activity_data: Activity_ap, synch_output: Output_Flow_a):
         """
 
-        :param mmdb:
         :param activity_data:
         :param synch_output:  Output flow execution unit parse
         :return:
         """
-        cls.mmdb = mmdb
         cls.activity_data = activity_data
         xi_instance_flow = Flow_ap(fid=activity_data.xiflow, content=Content.INSTANCE, tname=activity_data.cname,
                                    max_mult=MaxMult.ONE)
         match type(synch_output.output).__name__:
             case 'INST_a':
-                _, _, output_flow = InstanceSet.process(mmdb, input_instance_flow=xi_instance_flow,
+                _, _, output_flow = InstanceSet.process(input_instance_flow=xi_instance_flow,
                                                         iset_components=synch_output.output.components,
                                                         activity_data=activity_data)
                 pass
@@ -65,11 +61,11 @@ class ExecutionUnit:
         pass
 
     @classmethod
-    def process_method_output_flow(cls, mmdb: 'Tk', ):
+    def process_method_output_flow(cls):
         pass
 
     @classmethod
-    def process_method_statement_set(cls, mmdb: 'Tk', activity_data: Activity_ap, statement_set) -> (
+    def process_method_statement_set(cls, activity_data: Activity_ap, statement_set) -> (
             List[str], List[str]):
         """
         Initiates the population of all elements derived from a set of statements in a method.
@@ -81,7 +77,6 @@ class ExecutionUnit:
         The second list is each action that does not provide any data input
         to any other action in the execution unit. These are terminal actions.
 
-        :param mmdb:
         :param activity_data:
         :param statements:
         :return: Tuple with a list of initial and terminal actions
@@ -96,7 +91,7 @@ class ExecutionUnit:
             raise Exception
 
         if single_statement:
-            boundary_actions = Statement.populate(mmdb, activity_data, statement_parse=single_statement)
+            boundary_actions = Statement.populate(activity_data, statement_parse=single_statement)
 
             pass
         elif block:

@@ -128,7 +128,7 @@ class Activity:
         return Anum
 
     @classmethod
-    def process_execution_units(cls, mmdb: 'Tk'):
+    def process_execution_units(cls, mmdb: str):
         """
         Process each Scrall Execution Unit for all Activities (Method, State, and Synchronous Operation)
         """

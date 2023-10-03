@@ -3,6 +3,7 @@ attribute.py – Process parsed attribute to populate the metamodel db
 """
 
 import logging
+from xuml_populate.config import mmdb
 from pyral.relvar import Relvar
 from pyral.relation import Relation
 from typing import Set
@@ -26,11 +27,10 @@ class Attribute:
     participating_ids = None
 
     @classmethod
-    def populate(cls, mmdb: str, tr: str, domain: str, cname: str, class_identifiers: Set[int], record):
+    def populate(cls, tr: str, domain: str, cname: str, class_identifiers: Set[int], record):
         """
         Populate all relevant Attribute relvars
 
-        :param mmdb: The metamodel db name
         :param tr: The open db transaction name
         :param domain: The domain name
         :param cname: The class name
@@ -42,7 +42,7 @@ class Attribute:
         cls.dtype = record.get('type', UNRESOLVED)
         participating_ids = cls.record.get('I', [])  # This attr might not participate in any identifier
         # Populate the Attribute's type if it hasn't already been populated
-        MMtype.populate_unknown(mmdb, name=cls.dtype, domain=domain)
+        MMtype.populate_unknown(name=cls.dtype, domain=domain)
         Relvar.insert(mmdb, tr=tr, relvar='Attribute', tuples=[
             Attribute_i(Name=record['name'], Class=cname, Domain=domain, Scalar=cls.dtype)
         ])
@@ -76,7 +76,7 @@ class Attribute:
             ])
 
     @classmethod
-    def ResolveAttrTypes(cls, mmdb: str, domain: str):
+    def ResolveAttrTypes(cls, domain: str):
         """
         Determine an update type of each unresolved (referential) attribute
         """
@@ -88,16 +88,16 @@ class Attribute:
         # Rather than batch all the updates, we do them one by one
         # This reduces the search space for each subsequent type resolution
         for a in uattrs.body:
-            assign_type = cls.ResolveAttr(mmdb=mmdb, attr=a['Name'], cname=a['Class'], domain=domain)
+            assign_type = cls.ResolveAttr(attr=a['Name'], cname=a['Class'], domain=domain)
             Relvar.updateone(mmdb, relvar_name='Attribute',
                              id={'Name': a['Name'], 'Class': a['Class'], 'Domain': domain},
                              update={'Scalar': assign_type})
 
         # All attr types resolved, so delete the dummy UNRESOLVED type
-        MMtype.depopulate_scalar(mmdb, name=UNRESOLVED, domain=domain)
+        MMtype.depopulate_scalar(name=UNRESOLVED, domain=domain)
 
     @classmethod
-    def ResolveAttr(cls, mmdb: str, attr: str, cname: str, domain: str) -> str:
+    def ResolveAttr(cls, attr: str, cname: str, domain: str) -> str:
         """
         The modeler specifies explicit types only for non-referential attributes.
         This means that all attributes with unresolved types are referential.
@@ -110,7 +110,6 @@ class Attribute:
 
         The chain of references must eventually land on a specified type if the model has been properly formalized.
 
-        :param mmdb: The metamodel tclral session
         :param attr: Unresolved attribute: A referential attribute with an unresolved type
         :param cname: The class name
         :param domain: The domain name
@@ -134,4 +133,4 @@ class Attribute:
             return to_type  # The To_attribute has a type
         else:
             # The To_attribute is also unresolved. Resolve it!
-            return cls.ResolveAttr(mmdb=mmdb, attr=to_name, cname=to_class, domain=domain)
+            return cls.ResolveAttr(attr=to_name, cname=to_class, domain=domain)

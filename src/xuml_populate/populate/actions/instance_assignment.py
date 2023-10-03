@@ -3,7 +3,8 @@ instance_assignment.py – Break an instance set generator into one or more comp
 """
 
 import logging
-from typing import TYPE_CHECKING, Set, Dict, List, Optional
+from typing import Set, Dict, List, Optional
+from xuml_populate.config import mmdb
 from xuml_populate.populate.flow import Flow
 from xuml_populate.populate.mmclass_nt import Labeled_Flow_i
 from xuml_populate.populate.actions.expressions.instance_set import InstanceSet
@@ -16,11 +17,10 @@ from pyral.transaction import Transaction
 from pyral.relation import Relation  # For debugging
 from pyral.relvar import Relvar
 
-if TYPE_CHECKING:
-    from tkinter import Tk
-
 _logger = logging.getLogger(__name__)
 
+# Transactions
+tr_Migrate = "Migrate to Label"
 
 class InstanceAssignment:
     """
@@ -50,7 +50,7 @@ class InstanceAssignment:
     assign_zero_one = None  # Does assignment operator limit to a zero or one instance selection?
 
     @classmethod
-    def process(cls, mmdb: 'Tk', activity_data: Activity_ap, inst_assign: Inst_Assignment_a,
+    def process(cls, activity_data: Activity_ap, inst_assign: Inst_Assignment_a,
                 case_name: str, case_outputs: Set[Labeled_Flow]) -> Boundary_Actions:
         """
         Given a parsed instance set expression, populate each component action
@@ -62,7 +62,6 @@ class InstanceAssignment:
 
         :param case_outputs:
         :param case_name:
-        :param mmdb: The metamodel db
         :param inst_assign: The instance assignment statement parse
         :param activity_data: The enveloping activity
         :param case_prefix:
@@ -75,7 +74,7 @@ class InstanceAssignment:
                                    max_mult=MaxMult.ONE)
 
         # Process the instance set expression in the RHS and obtain the generated instance flow
-        initial_aid, final_aid, iset_instance_flow = InstanceSet.process(mmdb, input_instance_flow=xi_instance_flow,
+        initial_aid, final_aid, iset_instance_flow = InstanceSet.process(input_instance_flow=xi_instance_flow,
                                                                          iset_components=rhs.components,
                                                                          activity_data=activity_data)
 
@@ -93,18 +92,18 @@ class InstanceAssignment:
             pass
 
         # Migrate the RHS output to a labeled flow using the output flow label
-        Transaction.open(mmdb)  # LHS labeled instance flow
+        Transaction.open(mmdb, tr_Migrate)  # LHS labeled instance flow
 
         # Delete the Unlabeled flow
-        Relvar.deleteone(mmdb, "Unlabeled_Flow",
+        Relvar.deleteone(mmdb, tr=tr_Migrate, relvar_name="Unlabeled_Flow",
                          tid={"ID": iset_instance_flow.fid, "Activity": activity_data.anum,
-                              "Domain": activity_data.domain}, defer=True)
+                              "Domain": activity_data.domain})
         # Insert the labeled flow
-        Relvar.insert(relvar='Labeled_Flow', tuples=[
+        Relvar.insert(mmdb, tr=tr_Migrate, relvar='Labeled_Flow', tuples=[
             Labeled_Flow_i(ID=iset_instance_flow.fid, Activity=activity_data.anum, Domain=activity_data.domain,
                            Name=output_flow_label)
         ])
 
-        Transaction.execute()  # LHS labeled instance flow
+        Transaction.execute(mmdb, tr_Migrate)  # LHS labeled instance flow
 
         return Boundary_Actions(ain={initial_aid}, aout={final_aid})
