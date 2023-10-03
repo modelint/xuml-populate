@@ -47,6 +47,5 @@ class EE:
         tr = tr_EE  # Start out by completing the required op for the EE
         for op in op_parse.values():
             tr = Operation.populate(mmdb, tr=tr, domain=domain, subsys=subsys, parsed_op=op)
-            pass
             # "EE" (tr_EE) closes on first operation and all subsequent tr values will be "Operation"
 

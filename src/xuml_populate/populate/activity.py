@@ -100,15 +100,15 @@ class Activity:
         return Anum
 
     @classmethod
-    def populate_state(cls, mmdb: 'Tk', state: str, state_model: str, actions: str,
-                       subsys_name: str, domain_name: str) -> str:
+    def populate_state(cls, mmdb: str, tr: str, state: str, state_model: str, actions: str,
+                       subsys: str, domain: str) -> str:
         """
         :param mmdb:
         :param state:
         :param state_model:
         :param actions:
-        :param subsys_name:
-        :param domain_name:
+        :param subsys:
+        :param domain:
         :return:
         """
 
@@ -121,9 +121,9 @@ class Activity:
         # cls.populate_activity(text=action_text, pa=parsed_activity)
 
         # Create the Susbystem Element and obtain a unique Anum
-        Anum = cls.populate(mmdb, action_text, subsys_name, domain_name, synchronous=False)
-        Relvar.insert(relvar='State_Activity', tuples=[
-            State_Activity_i(Anum=Anum, State=state, State_model=state_model, Domain=domain_name)
+        Anum = cls.populate(mmdb, tr=tr, action_text=action_text, subsys=subsys, domain=domain, synchronous=False)
+        Relvar.insert(mmdb, tr=tr, relvar='State_Activity', tuples=[
+            State_Activity_i(Anum=Anum, State=state, State_model=state_model, Domain=domain)
         ])
         return Anum
 
