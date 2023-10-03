@@ -147,7 +147,7 @@ class Flow:
         cls.activity = activity
 
         flow_id = cls.populate_flow()
-        Relvar.insert(relvar='Control_Flow', tuples=[
+        Relvar.insert(mmdb, tr=tr_Flow, relvar='Control_Flow', tuples=[
             Control_Flow_i(ID=flow_id, Activity=cls.activity, Domain=cls.domain)
         ])
         # Populate one or more targets of each Control Flow
@@ -155,7 +155,7 @@ class Flow:
             _logger.error(f"Control flow requires at least one target action")
             raise ControlFlowHasNoTargetActions
         for a in enabled_actions:
-            Relvar.insert(relvar='Control_Dependency', tuples=[
+            Relvar.insert(mmdb, tr=tr_Flow, relvar='Control_Dependency', tuples=[
                 Control_Dependency_i(Control_flow=flow_id, Action=a, Activity=cls.activity, Domain=cls.domain)
             ])
         return flow_id
@@ -333,15 +333,15 @@ class Flow:
     def populate_table_flow(cls, activity: str, domain: str, tname: str, label: Optional[str],
                             is_tuple: bool = False) -> Flow_ap:
         flow_id = cls.populate_non_scalar_flow()
-        Relvar.insert(relvar='Relation_Flow', tuples=[
+        Relvar.insert(mmdb, tr=tr_Flow, relvar='Relation_Flow', tuples=[
             Relation_Flow_i(ID=flow_id, Activity=cls.activity, Domain=cls.domain, Type=tname)
         ])
         if not is_tuple:
-            Relvar.insert(relvar='Table_Flow', tuples=[
+            Relvar.insert(mmdb, tr=tr_Flow, relvar='Table_Flow', tuples=[
                 Table_Flow_i(ID=flow_id, Activity=cls.activity, Domain=cls.domain)
             ])
         else:
-            Relvar.insert(relvar='Tuple_Flow', tuples=[
+            Relvar.insert(mmdb, tr=tr_Flow, relvar='Tuple_Flow', tuples=[
                 Tuple_Flow_i(ID=flow_id, Activity=cls.activity, Domain=cls.domain)
             ])
         return Flow_ap(fid=flow_id, content=Content.TABLE, tname=tname,

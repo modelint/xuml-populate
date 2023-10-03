@@ -3,14 +3,14 @@
 import logging
 from pathlib import Path
 import yaml
+from xuml_populate.config import mmdb
 from xcm_parser.class_model_parser import ClassModelParser
 from xsm_parser.state_model_parser import StateModelParser
 from op2_parser.op_parser import OpParser
 from mtd_parser.method_parser import MethodParser
 from xuml_populate.populate.domain import Domain
 
-mmdb = "mmdb"
-_mmdb_fname = "mmdb.txt"
+_mmdb_fname = f"{mmdb}.txt"
 _logger = logging.getLogger(__name__)
 
 
@@ -44,7 +44,6 @@ class System:
             # The domain name will be in the parsed content, but it is convenient to use the file names as keys
             # to organize our content dictionary since we these are immediately available
             domain_name = None  # Domain name is unknown until the class model is parsed
-            domain_alias = None
             _logger.info(f"Processing domain: [{domain_path}]")
 
             # Populate each subsystem of this domain
@@ -136,4 +135,4 @@ class System:
 
         # Populate each domain into the metamodel db
         for domain_name, domain_parse in cls.content.items():
-            Domain.populate(mmdb, domain_name, domain_parse)
+            Domain.populate(domain_name, domain_parse)

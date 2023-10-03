@@ -3,7 +3,8 @@ lineage.py – Compute all lineage instances and populate them
 """
 
 import logging
-from typing import List, Set, Optional, TYPE_CHECKING
+from xuml_populate.config import mmdb
+from typing import List, Set, Optional
 from xuml_populate.tree.tree import extract
 from xuml_populate.populate.mmclass_nt import Element_i, Spanning_Element_i, Lineage_i, Class_In_Lineage_i
 from pyral.transaction import Transaction
@@ -20,7 +21,6 @@ class Lineage:
     """
 
     domain = None
-    mmdb = None
 
     lnums = 0
     walks = []
@@ -30,15 +30,13 @@ class Lineage:
     lineages = None
 
     @classmethod
-    def Derive(cls, mmdb: str, domain: str):
+    def Derive(cls, domain: str):
         """
 
-        :param mmdb:
         :param domain:
         :return:
         """
         cls.domain = domain
-        cls.mmdb = mmdb
 
         # Get all classes with at least one subclass facet and no superclass facets
         # These constitute 'leaves'. We use them as starting points as we step through a set of generalizations
@@ -92,8 +90,8 @@ class Lineage:
         # Could be either superclass_name or subclasses, so we search Facets
         # Get all Facets that cvisit participates in
         R = f"Class:<{cvisit}>, Domain:<{cls.domain}>"
-        Relation.restrict(cls.mmdb, restriction=R, relation="Facet")
-        s = Relation.project(cls.mmdb, attributes=("Rnum", ))
+        Relation.restrict(mmdb, restriction=R, relation="Facet")
+        s = Relation.project(mmdb, attributes=("Rnum", ))
         # Grab the result being careful to exclude prior traversals so we don't walk around in circles!
         adj_rels = [r['Rnum'] for r in s.body if r['Rnum'] not in cls.xrels and r['Rnum'] != rvisit]
 
@@ -152,17 +150,17 @@ class Lineage:
         :param domain:
         :return:
         """
-        Relation.restrict(cls.mmdb, relation='Subclass', restriction=f"Rnum:<{grel}>, Domain:<{cls.domain}>")
-        s = Relation.project(cls.mmdb, attributes=('Class', ))
+        Relation.restrict(mmdb, relation='Subclass', restriction=f"Rnum:<{grel}>, Domain:<{cls.domain}>")
+        s = Relation.project(mmdb, attributes=('Class', ))
 
         return {t['Class'] for t in s}
 
     @classmethod
     def isSubclass(cls, grel: str, cname: str) -> bool:
-        Relation.restrict(cls.mmdb,
+        Relation.restrict(mmdb,
                           relation='Subclass',
                           restriction=f"Class:<{cname}>, Rnum:<{grel}>, Domain:<{cls.domain}>")
-        s = Relation.project(cls.mmdb, attributes=())
+        s = Relation.project(mmdb, attributes=())
         return bool(s.body)
 
     @classmethod
@@ -174,8 +172,8 @@ class Lineage:
         :param domain:  A the name of the domain
         :return:
         """
-        Relation.restrict(cls.mmdb, relation='Superclass', restriction=f"Rnum:<{grel}>, Domain:<{cls.domain}>")
-        s = Relation.project(cls.mmdb, attributes=("Class", ))
+        Relation.restrict(mmdb, relation='Superclass', restriction=f"Rnum:<{grel}>, Domain:<{cls.domain}>")
+        s = Relation.project(mmdb, attributes=("Class", ))
         return s.body[0]['Class']
 
     @classmethod
@@ -189,18 +187,18 @@ class Lineage:
             cls.lnums += 1
             lnum = 'L' + (str(cls.lnums))
             _logger.info(f"Populating lineage [{lnum}]")
-            Transaction.open(cls.mmdb, tr_Lin)
-            Relvar.insert(cls.mmdb, tr=tr_Lin, relvar='Element', tuples=[
+            Transaction.open(mmdb, tr_Lin)
+            Relvar.insert(mmdb, tr=tr_Lin, relvar='Element', tuples=[
                 Element_i(Label=lnum, Domain=cls.domain)
             ])
-            Relvar.insert(cls.mmdb, tr=tr_Lin, relvar='Spanning_Element', tuples=[
+            Relvar.insert(mmdb, tr=tr_Lin, relvar='Spanning_Element', tuples=[
                 Spanning_Element_i(Label=lnum, Domain=cls.domain)
             ])
-            Relvar.insert(cls.mmdb, tr=tr_Lin, relvar='Lineage', tuples=[
+            Relvar.insert(mmdb, tr=tr_Lin, relvar='Lineage', tuples=[
                 Lineage_i(Lnum=lnum, Domain=cls.domain)
             ])
             for cname in lin.split(':'):
-                Relvar.insert(cls.mmdb, tr=tr_Lin, relvar='Class_In_Lineage', tuples=[
+                Relvar.insert(mmdb, tr=tr_Lin, relvar='Class_In_Lineage', tuples=[
                     Class_In_Lineage_i(Class=cname,Lnum=lnum, Domain=cls.domain)
                 ])
-            Transaction.execute(cls.mmdb, tr_Lin)
+            Transaction.execute(mmdb, tr_Lin)

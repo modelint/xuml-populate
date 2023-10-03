@@ -3,8 +3,9 @@ restrict_condition.py – Process a select phrase and populate a Restriction Con
 """
 
 import logging
+from xuml_populate.config import mmdb
 from xuml_populate.exceptions.action_exceptions import ActionException
-from typing import TYPE_CHECKING, Optional, Set, Dict, List
+from typing import Optional, Set, Dict, List
 from xuml_populate.populate.actions.aparse_types import Flow_ap, MaxMult, Content, Activity_ap, Attribute_Comparison
 from xuml_populate.populate.actions.read_action import ReadAction
 from xuml_populate.populate.actions.extract_action import ExtractAction
@@ -16,23 +17,22 @@ from pyral.relvar import Relvar
 from pyral.relation import Relation
 from scrall.parse.visitor import N_a, BOOL_a, Op_a, Selection_a
 
-if TYPE_CHECKING:
-    from tkinter import Tk
-
 _logger = logging.getLogger(__name__)
 
+# Transactions
+tr_Restrict_Cond = "Restrict Condition"
 
 class RestrictCondition:
     """
     Create all relations for a Restrict Condition for either a Select or Restrict Action
     """
 
-    mmdb = None  # The database
     action_id = None
     input_nsflow = None
     anum = None
     domain = None  # in this domain
     activity_data = None
+    tr = None  # Open Select or Restrict Action transaction
 
     expression = None
     comparison_criteria = []
@@ -42,7 +42,8 @@ class RestrictCondition:
     input_scalar_flows = set()
 
     @classmethod
-    def pop_comparison_criterion(cls, attr: str, op: str, scalar_flow_label:str =None, scalar_flow: Flow_ap=None):
+    def pop_comparison_criterion(cls, attr: str, op: str, scalar_flow_label: Optional[str] = None,
+                                 scalar_flow: Optional[Flow_ap] = None):
         if not scalar_flow:
             if not scalar_flow_label:
                 raise ActionException
@@ -53,7 +54,7 @@ class RestrictCondition:
         if not sflow:
             raise ActionException  # TODO: Make specific
         criterion_id = cls.pop_criterion(attr)
-        Relvar.insert(relvar='Comparison_Criterion', tuples=[
+        Relvar.insert(mmdb, tr=cls.tr, relvar='Comparison_Criterion', tuples=[
             Comparison_Criterion_i(ID=criterion_id, Action=cls.action_id, Activity=cls.anum, Attribute=attr,
                                    Comparison=op, Value=sflow.fid, Domain=cls.domain)
         ])
@@ -63,7 +64,7 @@ class RestrictCondition:
         # Validate the attribute and add to comparison criteria
         cls.process_attr(name=attr, op=op)
         criterion_id = cls.pop_criterion(attr)
-        Relvar.insert(relvar='Ranking_Criterion', tuples=[
+        Relvar.insert(mmdb, tr=cls.tr, relvar='Ranking_Criterion', tuples=[
             Ranking_Criterion_i(ID=criterion_id, Action=cls.action_id, Activity=cls.anum, Attribute=attr,
                                 Order=order, Domain=cls.domain)
         ])
@@ -72,7 +73,7 @@ class RestrictCondition:
     def pop_criterion(cls, attr: str) -> int:
         cls.criterion_ctr += 1
         criterion_id = cls.criterion_ctr
-        Relvar.insert(relvar='Criterion', tuples=[
+        Relvar.insert(mmdb, tr=cls.tr, relvar='Criterion', tuples=[
             Criterion_i(ID=criterion_id, Action=cls.action_id, Activity=cls.anum, Attribute=attr,
                         Non_scalar_type=cls.input_nsflow.tname, Domain=cls.domain)
         ])
@@ -93,7 +94,7 @@ class RestrictCondition:
         # Populate the Restriction Criterion superclass
         criterion_id = cls.pop_criterion(attr=attr)
         # Populate the Equivalence Criterion
-        Relvar.insert(relvar='Equivalence_Criterion', tuples=[
+        Relvar.insert(mmdb, tr=cls.tr, relvar='Equivalence_Criterion', tuples=[
             Equivalence_Criterion_i(ID=criterion_id, Action=cls.action_id, Activity=cls.anum,
                                     Attribute=attr, Domain=cls.domain, Operation="true" if op == "==" else "false",
                                     Value="true" if setting else "false", Scalar="Boolean")
@@ -114,7 +115,7 @@ class RestrictCondition:
         """
         if cls.input_nsflow.content == Content.INSTANCE:
             R = f"Name:<{name}>, Class:<{cls.input_nsflow.tname}>, Domain:<{cls.domain}>"
-            result = Relation.restrict(cls.mmdb, relation='Attribute', restriction=R)
+            result = Relation.restrict(mmdb, relation='Attribute', restriction=R)
             if not result.body:
                 raise ComparingNonAttributeInSelection(f"select action restriction on class"
                                                        f"[{cls.input_nsflow.tname}] is "
@@ -122,7 +123,7 @@ class RestrictCondition:
             cls.comparison_criteria.append(Attribute_Comparison(attr=name, op=op))
         elif cls.input_nsflow.content == Content.TABLE:
             R = f"Name:<{name}>, Table:<{cls.input_nsflow.tname}>, Domain:<{cls.domain}>"
-            result = Relation.restrict(cls.mmdb, relation='Table_Attribute', restriction=R)
+            result = Relation.restrict(mmdb, relation='Table_Attribute', restriction=R)
             if not result.body:
                 raise ComparingNonAttributeInSelection(f"select action restriction on class"
                                                        f"[{cls.input_nsflow.tname}] is "
@@ -183,8 +184,7 @@ class RestrictCondition:
                                 # Otherwise, a Tuple Flow will have a value extracted with an Extract Action
 
                                 sflow = None  # This is the scalar flow result of the projection/extraction
-                                ns_flow = Flow.find_labeled_ns_flow(cls.mmdb, name=o.iset.name, anum=cls.anum,
-                                                                    domain=cls.domain)
+                                ns_flow = Flow.find_labeled_ns_flow(name=o.iset.name, anum=cls.anum, domain=cls.domain)
                                 if not ns_flow:
                                     raise ActionException
                                 if ns_flow.content == Content.INSTANCE:
@@ -195,10 +195,10 @@ class RestrictCondition:
                                         # For attribute comparison, there can only be one extracted attribute
                                         raise ActionException
                                     attr_to_extract = o.projection.attrs[0].name
-                                    sflow = ExtractAction.populate(cls.mmdb, tuple_flow=ns_flow,
+                                    sflow = ExtractAction.populate(tuple_flow=ns_flow,
                                                                    attr=attr_to_extract, anum=cls.anum,
                                                                    domain=cls.domain, activity_data=cls.activity_data,
-                                                                   defer=True)  # Select Action transaction is open
+                                                                   )  # Select Action transaction is open
                                 # Now populate a comparison criterion
                                 cls.pop_comparison_criterion(attr=o.projection.attrs[0], scalar_flow=sflow, op=operator)
                             else:
@@ -236,7 +236,7 @@ class RestrictCondition:
         return text
 
     @classmethod
-    def process(cls, mmdb: 'Tk', action_id: str, input_nsflow: Flow_ap, selection_parse: Selection_a,
+    def process(cls, tr: str, action_id: str, input_nsflow: Flow_ap, selection_parse: Selection_a,
                 activity_data: Activity_ap) -> (str, List[Attribute_Comparison], Set[Flow_ap]):
         """
         Break down criteria into a set of attribute comparisons and validate the components of a Select Action that
@@ -246,18 +246,18 @@ class RestrictCondition:
         * Scalar Flow inputs to any Comparison Criterion
 
         Sift through criteria to ensure that each terminal is either an attribute, input flow, or value.
-        :param mmdb:
+        :param tr:  The select or restrict action transaction
         :param action_id:
         :param input_nsflow:
         :param activity_data:
         :param selection_parse:
         :return: Selection cardinality, attribute comparisons, and a set of scalar flows input for attribute comparison
         """
-        cls.mmdb = mmdb
         cls.action_id = action_id
         cls.anum = activity_data.anum
         cls.domain = activity_data.domain
         cls.activity_data = activity_data
+        cls.tr = tr
 
         cls.input_nsflow = input_nsflow
         criteria = selection_parse.criteria
@@ -272,7 +272,7 @@ class RestrictCondition:
         # Walk the parse tree and save all attributes, ops, values, and input scalar flows
         cls.expression = cls.walk_criteria(criteria.op, criteria.operands)
         # Populate the Restriction Condition class
-        Relvar.insert(relvar='Restriction_Condition', tuples=[
+        Relvar.insert(mmdb, tr=tr, relvar='Restriction_Condition', tuples=[
             Restriction_Condition_i(Action=cls.action_id, Activity=cls.anum, Domain=cls.domain,
                                     Expression=cls.expression, Selection_cardinality=cardinality
                                     )

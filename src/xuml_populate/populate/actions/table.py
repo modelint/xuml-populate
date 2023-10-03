@@ -1,7 +1,8 @@
 """ table.py - Define a table """
 
 import logging
-from typing import TYPE_CHECKING, Tuple, Dict
+from typing import Tuple, Dict
+from xuml_populate.config import mmdb
 from xuml_populate.populate.flow import Flow
 from xuml_populate.populate.actions.aparse_types import Flow_ap
 from pyral.transaction import Transaction
@@ -10,11 +11,10 @@ from pyral.relation import Relation
 from xuml_populate.populate.mmclass_nt import Table_i, Type_i, Table_Attribute_i, Model_Attribute_i
 from xuml_populate.populate.actions.aparse_types import MaxMult
 
-if TYPE_CHECKING:
-    from tkinter import Tk
-
 _logger = logging.getLogger(__name__)
 
+# Transactions
+tr_Table_Type = "Table Type"
 
 class Table:
     """
@@ -23,11 +23,10 @@ class Table:
     """
 
     @classmethod
-    def header(cls, mmdb: 'Tk', tname: str, domain: str) -> Dict[str, str]:
+    def header(cls, tname: str, domain: str) -> Dict[str, str]:
         """
         Returns the header for this table type
 
-        :param mmdb:
         :param tname:   Class name
         :param domain:  Domain name
         :return:  Dictionary of attr:scalar (type) values
@@ -38,10 +37,9 @@ class Table:
         return h
 
     @classmethod
-    def populate(cls, mmdb: 'Tk', table_header: Dict[str, str], maxmult: MaxMult, anum: str, domain: str) -> Flow_ap:
+    def populate(cls, table_header: Dict[str, str], maxmult: MaxMult, anum: str, domain: str) -> Flow_ap:
         """
 
-        :param mmdb:
         :param table_header:
         :param maxmult:  The multplicity of the source flow
         :param anum:
@@ -59,30 +57,28 @@ class Table:
         result = Relation.restrict(mmdb, relation='Table', restriction=R)
         if result.body:
             _logger.info(f"Populating flow on existing Table: [{table_name}]")
-            Transaction.open(mmdb)  # Table type
-            table_flow = Flow.populate_table_flow(mmdb, activity=anum, tname=table_name, domain=domain,
+            table_flow = Flow.populate_table_flow(activity=anum, tname=table_name, domain=domain,
                                                   is_tuple=True if maxmult == MaxMult.ONE else False, label=None)
-            Transaction.execute()
             return table_flow
 
         _logger.info(f"Populating Table flow on existing Table: [{table_name}]")
-        Transaction.open(mmdb)  # Table type
         # A Table can't exist without a flow
-        table_flow = Flow.populate_table_flow(mmdb, activity=anum, tname=table_name, domain=domain,
+        table_flow = Flow.populate_table_flow(activity=anum, tname=table_name, domain=domain,
                                               is_tuple=True if maxmult == MaxMult.ONE else False, label=None)
-        Relvar.insert(relvar='Table', tuples=[
+        Transaction.open(mmdb, tr_Table_Type)  # Table type
+        Relvar.insert(mmdb, tr=tr_Table_Type, relvar='Table', tuples=[
             Table_i(table_name, domain)
         ])
-        Relvar.insert(relvar='Type', tuples=[
+        Relvar.insert(mmdb, tr=tr_Table_Type, relvar='Type', tuples=[
             Type_i(table_name, domain)
         ])
         for a, t in table_header.items():
-            Relvar.insert(relvar='Table_Attribute', tuples=[
+            Relvar.insert(mmdb, tr=tr_Table_Type, relvar='Table_Attribute', tuples=[
                 Table_Attribute_i(Name=a, Table=table_name, Domain=domain, Scalar=t)
             ])
-            Relvar.insert(relvar='Model_Attribute', tuples=[
+            Relvar.insert(mmdb, tr=tr_Table_Type, relvar='Model_Attribute', tuples=[
                 Model_Attribute_i(Name=a, Non_scalar_type=table_name, Domain=domain)
             ])
-        Transaction.execute()
+        Transaction.execute(mmdb, tr_Table_Type)
         return table_flow
 

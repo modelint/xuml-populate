@@ -3,7 +3,7 @@ switch_statement.py – Populate a switch action instance in PyRAL
 """
 
 import logging
-from typing import TYPE_CHECKING
+from xuml_populate.config import mmdb
 from xuml_populate.exceptions.action_exceptions import ActionException, BadScalarSwitchInput
 from xuml_populate.populate.actions.aparse_types import Activity_ap, Boundary_Actions
 from xuml_populate.populate.actions.action import Action
@@ -17,22 +17,20 @@ from pyral.relvar import Relvar
 from pyral.relation import Relation  # Keep here for debugging
 from pyral.transaction import Transaction
 
-if TYPE_CHECKING:
-    from tkinter import Tk
-
 _logger = logging.getLogger(__name__)
 
 from collections import namedtuple, Counter
 
 Case_Control = namedtuple("Case_Control", "match_values target_actions")
 
+# Transactions
+tr_Switch = "Switch Action"
 
 class SwitchStatement:
     """
     Create all relations for a Switch Action
     """
 
-    mmdb = None  # The database
     anum = None  # Activity number
     action_id = None
     domain = None
@@ -42,15 +40,13 @@ class SwitchStatement:
     labeled_outputs = None
 
     @classmethod
-    def populate(cls, mmdb: 'Tk', sw_parse: Switch_a, activity_data: Activity_ap) -> Boundary_Actions:
+    def populate(cls, sw_parse: Switch_a, activity_data: Activity_ap) -> Boundary_Actions:
         """
         Populate the Switch Action and its Cases
 
-        :param mmdb:
         :param sw_parse:  The parsed switch action group
         :param activity_data:
         """
-        cls.mmdb = mmdb
         cls.anum = activity_data.anum
         cls.domain = activity_data.domain
         cls.output_actions = set()
@@ -81,7 +77,7 @@ class SwitchStatement:
                 case_name = f"{'_'.join(c.enums)}"
                 cls.labeled_outputs[case_name] = set()
                 from xuml_populate.populate.statement import Statement
-                boundary_actions = Statement.populate(mmdb, activity_data=activity_data,
+                boundary_actions = Statement.populate(activity_data=activity_data,
                                                       statement_parse=c.comp_statement_set.statement,
                                                       case_name=case_name,
                                                       case_outputs=cls.labeled_outputs[case_name])
@@ -94,22 +90,23 @@ class SwitchStatement:
                 pass
             pass
         # Populate the Action superclass instance and obtain its action_id
-        cls.action_id = Action.populate(cls.mmdb, cls.anum, cls.domain)  # Transaction open
-        Relvar.insert(relvar='Switch_Action', tuples=[
+        Transaction.open(mmdb, tr_Switch)
+        cls.action_id = Action.populate(mmdb, cls.anum, cls.domain)  # Transaction open
+        Relvar.insert(mmdb, tr=tr_Switch, relvar='Switch_Action', tuples=[
             Switch_Action_i(ID=cls.action_id, Activity=cls.anum, Domain=cls.domain)
         ])
-        Relvar.insert(relvar='Scalar_Switch_Action', tuples=[
+        Relvar.insert(mmdb, tr=tr_Switch, relvar='Scalar_Switch_Action', tuples=[
             Scalar_Switch_Action_i(ID=cls.action_id, Activity=cls.anum, Domain=cls.domain,
                                    Scalar_input=scalar_input_flow.fid)
         ])
         for k, v in cactions.items():
-            control_flow_fid = Flow.populate_control_flow(mmdb, label=k, enabled_actions=v.target_actions,
+            control_flow_fid = Flow.populate_control_flow(label=k, enabled_actions=v.target_actions,
                                                           activity=cls.anum, domain=cls.domain)
-            Relvar.insert(relvar='Case', tuples=[
+            Relvar.insert(mmdb, tr=tr_Switch, relvar='Case', tuples=[
                 Case_i(Flow=control_flow_fid, Activity=cls.anum, Domain=cls.domain, Switch_action=cls.action_id)
             ])
             for mv in v.match_values:
-                Relvar.insert(relvar='Match_Value', tuples=[
+                Relvar.insert(mmdb, tr=tr_Switch, relvar='Match_Value', tuples=[
                     Match_Value_i(Case_flow=control_flow_fid, Activity=cls.anum, Domain=cls.domain, Value=mv)
                 ])
                 pass
@@ -137,14 +134,14 @@ class SwitchStatement:
         # Create an output Data Flow for each multi case label
         output_flows = {}
         for mcl in multi_case_labels:
-            output_flows[mcl] = Flow.populate_switch_output(mmdb, label=mcl, ref_flow=mcl_flows[mcl][0],
+            output_flows[mcl] = Flow.populate_switch_output(label=mcl, ref_flow=mcl_flows[mcl][0],
                                                             anum=cls.anum, domain=cls.domain)
-            Relvar.insert(relvar='Data_Flow_Switch', tuples=[
+            Relvar.insert(mmdb, tr=tr_Switch, relvar='Data_Flow_Switch', tuples=[
                 Data_Flow_Switch_i(Output_flow=output_flows[mcl].fid, Activity=cls.anum, Domain=cls.domain)
             ])
         for label, flows in mcl_flows.items():
             for f in flows:
-                Relvar.insert(relvar='Switched_Data_Flow', tuples=[
+                Relvar.insert(mmdb, tr=tr_Switch, relvar='Switched_Data_Flow', tuples=[
                     Switched_Data_Flow_i(Input_flow=f.fid, Activity=cls.anum, Domain=cls.domain,
                                          Output_flow=output_flows[label].fid)
                 ])
@@ -153,7 +150,7 @@ class SwitchStatement:
         #     for lf in lfset:
         #         if lf.label in multi_case_labels:
         #             # Create the output flow
-        #             Relvar.insert(relvar='Data_Flow', tuples=[
+        #             Relvar.insert(mmdb, tr=tr_Switch, relvar='Data_Flow', tuples=[
         #                 Table_i()
         #             ])
         #             pass
@@ -165,7 +162,7 @@ class SwitchStatement:
 
         # x = {i.label for f in cls.labeled_outputs.items() for i in f}
         # TODO: Create data flow switches
-        Transaction.execute()
+        Transaction.execute(mmdb, tr_Switch)
 
         # For a switch statement, the switch action is both the initial and output action
         # Initial, because the Switch Action is the one Action in the statement that does not

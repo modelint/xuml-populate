@@ -1,13 +1,11 @@
 """ synch_output.py - Process a Synchronous Output"""
 
 import logging
+from xuml_populate.config import mmdb
 from scrall.parse.visitor import Execution_Unit_a, Seq_Statement_Set_a, Comp_Statement_Set_a
 from xuml_populate.populate.statement import Statement
 from xuml_populate.populate.actions.aparse_types import Activity_ap
-from typing import TYPE_CHECKING, List
-
-if TYPE_CHECKING:
-    from tkinter import Tk
+from typing import List
 
 class SynchOutput:
     """
@@ -16,11 +14,11 @@ class SynchOutput:
     _logger = logging.getLogger(__name__)
 
     @classmethod
-    def process_method_output_flow(cls, mmdb: 'Tk', ):
+    def process_method_output_flow(cls):
         pass
 
     @classmethod
-    def process_method_statement_set(cls, mmdb: 'Tk', activity_data: Activity_ap, statement_set) -> (List[str], List[str]):
+    def process_method_statement_set(cls, activity_data: Activity_ap, statement_set) -> (List[str], List[str]):
         """
         Initiates the population of all elements derived from a set of statements in a method.
 
@@ -31,9 +29,8 @@ class SynchOutput:
         The second list is each action that does not provide any data input
         to any other action in the execution unit. These are terminal actions.
 
-        :param mmdb:
         :param activity_data:
-        :param statements:
+        :param statement_set:
         :return: Tuple with a list of initial and terminal actions
         """
         single_statement = statement_set.statement
@@ -46,7 +43,7 @@ class SynchOutput:
             raise Exception
 
         if single_statement:
-            boundary_actions = Statement.populate(mmdb, activity_data, statement_parse=single_statement)
+            boundary_actions = Statement.populate(activity_data, statement_parse=single_statement)
 
             pass
         elif block:

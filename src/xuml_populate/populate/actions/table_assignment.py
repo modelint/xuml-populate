@@ -3,7 +3,8 @@ table_assignment.py – Populate elements of a table assignment
 """
 
 import logging
-from typing import TYPE_CHECKING, Dict, Set
+from typing import Dict, Set
+from xuml_populate.config import mmdb
 from xuml_populate.populate.mmclass_nt import Labeled_Flow_i
 from xuml_populate.populate.actions.expressions.table_expr import TableExpr
 from xuml_populate.populate.actions.aparse_types import (Flow_ap, MaxMult, Content, Activity_ap, Boundary_Actions,
@@ -14,10 +15,10 @@ from pyral.relvar import Relvar
 from pyral.relation import Relation  # Keep for debugging
 from pyral.transaction import Transaction
 
-if TYPE_CHECKING:
-    from tkinter import Tk
-
 _logger = logging.getLogger(__name__)
+
+# Transactions
+tr_Migrate = "Migrate to Label"
 
 
 class TableAssignment:
@@ -35,7 +36,7 @@ class TableAssignment:
     scrall_text = None
 
     @classmethod
-    def process(cls, mmdb: 'Tk', activity_data: Activity_ap, table_assign_parse: Table_Assignment_a,
+    def process(cls, activity_data: Activity_ap, table_assign_parse: Table_Assignment_a,
                 case_name: str, case_outputs: Set[Labeled_Flow] = None) -> Boundary_Actions:
         """
         Given a parsed table assignment consisting of an LHS and an RHS, populate each component action
@@ -45,7 +46,6 @@ class TableAssignment:
         The final output flow must be a table flow. The associated Table determines the type of the
         assignment. If the LHS spcifies an explicit Table, the resultant Table which must match.
 
-        :param mmdb: The metamodel db
         :param activity_data:
         :param table_assign_parse: A parsed table assignment
         :param case_name:
@@ -56,11 +56,10 @@ class TableAssignment:
         cls.input_instance_flow = activity_data.xiflow
 
         # The executing instance is by nature a single instance flow
-        me_instance_flow = Flow_ap(fid=activity_data.xiflow, content=Content.INSTANCE, tname=activity_data.cname,
-                                   max_mult=MaxMult.ONE)
+        xi_flow = Flow_ap(fid=activity_data.xiflow, content=Content.INSTANCE, tname=activity_data.cname,
+                          max_mult=MaxMult.ONE)
 
-        bactions, output_flow = TableExpr.process(mmdb, rhs=rhs, activity_data=activity_data,
-                                                  input_instance_flow=me_instance_flow)
+        bactions, output_flow = TableExpr.process(rhs=rhs, activity_data=activity_data, input_instance_flow=xi_flow)
 
         case_prefix = '' if not case_name else f"{case_name}_"
         output_flow_label = case_prefix + lhs
@@ -70,15 +69,14 @@ class TableAssignment:
 
         # Migrate the output_flow to a labeled flow
         _logger.info(f"Labeling output of table expression to [{lhs}]")
-        Transaction.open(mmdb)
+        Transaction.open(mmdb, tr_Migrate)
         # Delete the Unlabeled flow
-        Relvar.deleteone(mmdb, "Unlabeled_Flow",
-                         tid={"ID": output_flow.fid, "Activity": activity_data.anum, "Domain": activity_data.domain},
-                         defer=True)
+        Relvar.deleteone(mmdb, tr=tr_Migrate, relvar_name="Unlabeled_Flow",
+                         tid={"ID": output_flow.fid, "Activity": activity_data.anum, "Domain": activity_data.domain})
         # Insert the labeled flow
-        Relvar.insert(relvar='Labeled_Flow', tuples=[
+        Relvar.insert(mmdb, tr=tr_Migrate, relvar='Labeled_Flow', tuples=[
             Labeled_Flow_i(ID=output_flow.fid, Activity=activity_data.anum, Domain=activity_data.domain,
                            Name=output_flow_label)
         ])
-        Transaction.execute()
+        Transaction.execute(mmdb, tr_Migrate)
         return bactions

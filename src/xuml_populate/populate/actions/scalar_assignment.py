@@ -3,7 +3,7 @@ scalar_assignment.py – Populate elements of a scalar assignment
 """
 
 import logging
-from typing import TYPE_CHECKING
+from xuml_populate.config import mmdb
 from xuml_populate.populate.mmclass_nt import Labeled_Flow_i
 from xuml_populate.populate.actions.extract_action import ExtractAction
 from xuml_populate.populate.ns_flow import NonScalarFlow
@@ -15,11 +15,10 @@ from scrall.parse.visitor import Scalar_Assignment_a
 from pyral.relvar import Relvar
 from pyral.transaction import Transaction
 
-if TYPE_CHECKING:
-    from tkinter import Tk
-
 _logger = logging.getLogger(__name__)
 
+# Transactions
+tr_Migrate = "Migrate to Label"
 
 class ScalarAssignment:
     """
@@ -31,13 +30,11 @@ class ScalarAssignment:
     input_instance_ctype = None  # The class type of the input instance flow
     domain = None
     anum = None
-    mmdb = None
     activity_path = None
     scrall_text = None
 
     @classmethod
-    def process(cls, mmdb: 'Tk', activity_data: Activity_ap, scalar_assign_parse: Scalar_Assignment_a
-                ) -> Boundary_Actions:
+    def process(cls, activity_data: Activity_ap, scalar_assign_parse: Scalar_Assignment_a) -> Boundary_Actions:
         """
         Given a parsed table assignment consisting of an LHS and an RHS, populate each component action
         and return the resultant table flow
@@ -46,7 +43,6 @@ class ScalarAssignment:
         The final output flow must be a table flow. The associated Table determines the type of the
         assignment. If the LHS spcifies an explicit Table, the resultant Table which must match.
 
-        :param mmdb: The metamodel db
         :param scalar_assign_parse: A parsed scalar assignment
         :param activity_data:
         """
@@ -54,10 +50,10 @@ class ScalarAssignment:
         rhs = scalar_assign_parse.rhs
 
         # The executing instance is by nature a single instance flow
-        xi_instance_flow = Flow_ap(fid=activity_data.xiflow, content=Content.INSTANCE, tname=activity_data.cname,
-                                   max_mult=MaxMult.ONE)
+        xi_flow = Flow_ap(fid=activity_data.xiflow, content=Content.INSTANCE, tname=activity_data.cname,
+                          max_mult=MaxMult.ONE)
 
-        bactions, scalar_flows = ScalarExpr.process(mmdb, rhs=rhs, input_instance_flow=xi_instance_flow,
+        bactions, scalar_flows = ScalarExpr.process(mmdb, rhs=rhs, input_instance_flow=xi_flow,
                                                     activity_data=activity_data)
         scalar_flow_labels = [n for n in lhs[0].name]
 
@@ -78,16 +74,15 @@ class ScalarAssignment:
             sflow = scalar_flows[count]
             # Migrate the scalar_flow to a labeled flow
             _logger.info(f"Labeling output of scalar expression to [{lhs}]")
-            Transaction.open(mmdb)
+            Transaction.open(mmdb, tr_Migrate)
             # Delete the Unlabeled flow
-            Relvar.deleteone(mmdb, "Unlabeled_Flow",
-                             tid={"ID": sflow.fid, "Activity": activity_data.anum, "Domain": activity_data.domain},
-                             defer=True)
+            Relvar.deleteone(mmdb, tr=tr_Migrate, relvar_name="Unlabeled_Flow",
+                             tid={"ID": sflow.fid, "Activity": activity_data.anum, "Domain": activity_data.domain})
             # Insert the labeled flow
-            Relvar.insert(relvar='Labeled_Flow', tuples=[
+            Relvar.insert(mmdb, tr=tr_Migrate, relvar='Labeled_Flow', tuples=[
                 Labeled_Flow_i(ID=sflow.fid, Activity=activity_data.anum, Domain=activity_data.domain, Name=label)
             ])
-            Transaction.execute()
+            Transaction.execute(mmdb, tr_Migrate)
         return bactions
 
         # Create one Extract Action per attribute, label pair
