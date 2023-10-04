@@ -162,7 +162,7 @@ class TableExpr:
             # If there is a selection on the instance set, create the action and obtain its flow id
             input_flow = component_flow
             if input_flow.content == Content.RELATION:
-                aid, component_flow, input_sflows = RestrictAction.populate(mmdb, input_relation_flow=input_flow,
+                aid, component_flow, input_sflows = RestrictAction.populate(input_relation_flow=input_flow,
                                                                             selection_parse=texpr.selection,
                                                                             activity_data=cls.activity_data)
                 cls.action_inputs[aid] = {input_flow.fid}.union({f.fid for f in input_sflows})

@@ -53,7 +53,7 @@ class ScalarAssignment:
         xi_flow = Flow_ap(fid=activity_data.xiflow, content=Content.INSTANCE, tname=activity_data.cname,
                           max_mult=MaxMult.ONE)
 
-        bactions, scalar_flows = ScalarExpr.process(mmdb, rhs=rhs, input_instance_flow=xi_flow,
+        bactions, scalar_flows = ScalarExpr.process(rhs=rhs, input_instance_flow=xi_flow,
                                                     activity_data=activity_data)
         scalar_flow_labels = [n for n in lhs[0].name]
 
@@ -87,5 +87,5 @@ class ScalarAssignment:
 
         # Create one Extract Action per attribute, label pair
         # for count, a in enumerate(attr_list):
-        #     ExtractAction.populate(mmdb, tuple_flow=output_flow, attr=a, target_flow_name=output_flow_labels[count],
+        #     ExtractAction.populate(tuple_flow=output_flow, attr=a, target_flow_name=output_flow_labels[count],
         #                            anum=anum, domain=domain, activity_path=activity_path, scrall_text=scrall_text)

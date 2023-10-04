@@ -404,7 +404,7 @@ class Flow:
         """
         Transaction.open(mmdb, tr_Rel_Flow)
         # Populate the table if it does not aleady exist
-        table_name = Table.populate(table_header=table_header, domain=domain)
+        table_name = Table.populate(tr=tr_Rel_Flow, table_header=table_header, domain=domain)
         rflow = cls.populate_relation_flow(table_name=table_name, anum=anum, domain=domain,
                                            is_tuple=(max_mult == MaxMult.ONE), label=label)
         Transaction.execute(mmdb, tr_Rel_Flow)

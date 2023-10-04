@@ -57,17 +57,17 @@ class ProjectAction:
                 raise ProjectedAttributeNotDefined
             table_header[pattr.name] = result.body[0]['Scalar']
 
-        output_rel_flow = Flow.populate_relation_flow(table_header=table_header, activity=anum, domain=domain,
-                                                      max_mult=input_nsflow.max_mult)
+        output_rel_flow = Flow.populate_relation_flow_by_header(table_header=table_header, anum=anum, domain=domain,
+                                                                max_mult=input_nsflow.max_mult)
 
         Transaction.open(mmdb, tr_Project)
-        action_id = Action.populate(mmdb, anum, domain)
+        action_id = Action.populate(tr=tr_Project, anum=anum, domain=domain)
         Relvar.insert(mmdb, tr=tr_Project, relvar='Relational_Action', tuples=[
             Relational_Action_i(ID=action_id, Activity=anum, Domain=domain)
         ])
         Relvar.insert(mmdb, tr=tr_Project, relvar='Table_Action', tuples=[
             Table_Action_i(ID=action_id, Activity=anum, Domain=domain, Input_a_flow=input_nsflow.fid,
-                           Output_flow=output_tflow.fid)
+                           Output_flow=output_rel_flow.fid)
         ])
         Relvar.insert(mmdb, tr=tr_Project, relvar='Project_Action', tuples=[
             Project_Action_i(ID=action_id, Activity=anum, Domain=domain)

@@ -5,6 +5,7 @@ set_action.py – Populate a Set Action instance in PyRAL
 import logging
 from xuml_populate.config import mmdb
 from xuml_populate.populate.actions.table import Table
+from xuml_populate.populate.flow import Flow
 from xuml_populate.populate.actions.aparse_types import Flow_ap, MaxMult, Content, Activity_ap
 from xuml_populate.exceptions.action_exceptions import (ProductForbidsCommonAttributes, UnjoinableHeaders,
                                                         SetOpRequiresSameHeaders)
@@ -78,7 +79,8 @@ class SetAction:
 
         # a/b flow inputs are compatible with the spedified operation
         # Populate the output Table Flow and Table (transaction open/close)
-        output_tflow = Table.populate(table_header=table_header, maxmult=max_mult, anum=anum, domain=domain)
+        output_tflow = Flow.populate_relation_flow_by_header(table_header=table_header, anum=anum, domain=domain,
+                                                             max_mult=max_mult)
 
         # Create the action (trannsaction open)
         Transaction.open(mmdb, tr_Set_Action)

@@ -5,7 +5,7 @@ rename_action.py – Populate a selection action instance in PyRAL
 import logging
 from xuml_populate.config import mmdb
 from xuml_populate.populate.actions.aparse_types import Flow_ap, MaxMult, Content, Activity_ap
-from xuml_populate.populate.actions.table import Table
+from xuml_populate.populate.flow import Flow
 from xuml_populate.populate.ns_flow import NonScalarFlow
 from xuml_populate.populate.actions.action import Action
 from xuml_populate.populate.mmclass_nt import Relational_Action_i, Table_Action_i, Rename_Action_i
@@ -43,12 +43,12 @@ class RenameAction:
         del table_header[from_attr]
         table_header[to_attr] = from_scalar
         # Create output table flow
-        output_tflow = Table.populate(table_header=table_header, maxmult=input_nsflow.max_mult,
-                                      anum=anum, domain=domain)
+        output_tflow = Flow.populate_relation_flow_by_header(table_header=table_header, anum=anum, domain=domain,
+                                                             max_mult=input_nsflow.max_mult)
 
         # Create the action
         Transaction.open(mmdb, tr_Rename)
-        action_id = Action.populate(mmdb, anum, domain)
+        action_id = Action.populate(tr=tr_Rename, anum=anum, domain=domain)
         Relvar.insert(mmdb, tr=tr_Rename, relvar='Relational_Action', tuples=[
             Relational_Action_i(ID=action_id, Activity=anum, Domain=domain)
         ])

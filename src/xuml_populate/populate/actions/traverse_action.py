@@ -364,7 +364,7 @@ class TraverseAction:
                 # The particpating class is explicitly named
                 cls.class_cursor = next_hop.name
                 R = f"Viewed_class:<{cls.class_cursor}>, Rnum:<{cls.rel_cursor}>, Domain:<{cls.domain}>"
-                Relation.restrict(relation='Perspective', restriction=R)
+                Relation.restrict(mmdb, relation='Perspective', restriction=R)
                 P = ('Side',)
                 side = Relation.project(mmdb, attributes=P).body[0]['Side']
                 cls.from_asymmetric_association_class(side=side)
