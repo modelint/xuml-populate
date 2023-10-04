@@ -24,7 +24,6 @@ _logger = logging.getLogger(__name__)
 tr_Inst_Flow = "Instance Flow"
 tr_Rel_Flow = "Relation Flow"
 tr_Scalar_Flow = "Scalar Flow"
-tr_Control_Flow = "Control Flow"
 
 
 class Flow:
@@ -152,17 +151,18 @@ class Flow:
             return result.body[0]['ID']
 
     @classmethod
-    def populate_control_flow(cls, enabled_actions: Set[str], anum: str, domain: str,
+    def populate_control_flow(cls, tr: str, enabled_actions: Set[str], anum: str, domain: str,
                               label: Optional[str] = None) -> str:
         """
-        Populate a new Control Flow
+        Populate a new Control Flow.
+
+        Since a Control Flow must feed an Action, it populates inside the provided transaction
+        and does not open and close its own like Data Flows.
 
         :return: The flow id
         """
-        Transaction.open(mmdb, tr_Control_Flow)
-
-        flow_id = cls.populate_flow(tr=tr_Control_Flow, anum=anum, domain=domain, label=label)
-        Relvar.insert(mmdb, tr=tr_Control_Flow, relvar='Control_Flow', tuples=[
+        flow_id = cls.populate_flow(tr=tr, anum=anum, domain=domain, label=label)
+        Relvar.insert(mmdb, tr=tr, relvar='Control_Flow', tuples=[
             Control_Flow_i(ID=flow_id, Activity=anum, Domain=domain)
         ])
         # Populate one or more targets of each Control Flow
@@ -170,7 +170,7 @@ class Flow:
             _logger.error(f"Control flow requires at least one target action")
             raise ControlFlowHasNoTargetActions
         for a in enabled_actions:
-            Relvar.insert(mmdb, tr=tr_Control_Flow, relvar='Control_Dependency', tuples=[
+            Relvar.insert(mmdb, tr=tr, relvar='Control_Dependency', tuples=[
                 Control_Dependency_i(Control_flow=flow_id, Action=a, Activity=anum, Domain=domain)
             ])
         return flow_id
@@ -367,7 +367,8 @@ class Flow:
                        max_mult=MaxMult.ONE if is_tuple else MaxMult.MANY)
 
     @classmethod
-    def populate_relation_flow_by_reference(cls, ref_flow: Flow_ap, label: str, anum: str, domain: str) -> Flow_ap:
+    def populate_relation_flow_by_reference(cls, ref_flow: Flow_ap, anum: str, domain: str,
+                                            label: Optional[str] = None) -> Flow_ap:
         """
         Given an existing Relation Flow, create another with the same properties.
 
@@ -375,7 +376,7 @@ class Flow:
         the input.
 
         :param ref_flow: A Relation Flow summary
-        :param label: Label is required since the output of a Data Flow Switch is always labeled
+        :param label: optional label
         :param anum: The anum number
         :param domain: The domain name
         :return: Summary of duplicated flow

@@ -95,7 +95,7 @@ class SwitchStatement:
                                    Scalar_input=scalar_input_flow.fid)
         ])
         for k, v in cactions.items():
-            control_flow_fid = Flow.populate_control_flow(label=k, enabled_actions=v.target_actions,
+            control_flow_fid = Flow.populate_control_flow(tr=tr_Switch, label=k, enabled_actions=v.target_actions,
                                                           anum=anum, domain=domain)
             Relvar.insert(mmdb, tr=tr_Switch, relvar='Case', tuples=[
                 Case_i(Flow=control_flow_fid, Activity=anum, Domain=domain, Switch_action=action_id)

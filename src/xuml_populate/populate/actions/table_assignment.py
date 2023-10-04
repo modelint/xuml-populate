@@ -51,6 +51,7 @@ class TableAssignment:
         :param case_name:
         :param case_outputs:
         """
+
         lhs = table_assign_parse.lhs
         rhs = table_assign_parse.rhs
         cls.input_instance_flow = activity_data.xiflow
@@ -59,7 +60,7 @@ class TableAssignment:
         xi_flow = Flow_ap(fid=activity_data.xiflow, content=Content.INSTANCE, tname=activity_data.cname,
                           max_mult=MaxMult.ONE)
 
-        bactions, output_flow = TableExpr.process(rhs=rhs, activity_data=activity_data, input_instance_flow=xi_flow)
+        bactions, output_flow = TableExpr.process(tuple_output=table_assign_parse.assign_tuple, rhs=rhs, activity_data=activity_data, input_instance_flow=xi_flow)
 
         case_prefix = '' if not case_name else f"{case_name}_"
         output_flow_label = case_prefix + lhs

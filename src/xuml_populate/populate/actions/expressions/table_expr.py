@@ -18,6 +18,7 @@ from pyral.relation import Relation
 
 _logger = logging.getLogger(__name__)
 
+
 class TableExpr:
     """
     For reference, a table expression is defined in the scrall grammar as:
@@ -36,6 +37,7 @@ class TableExpr:
 
     Here we focus on unnesting all those table ops and operands.
     """
+    tuple_output = None
     text = None  # A text representation of the expression
     domain = None
     anum = None
@@ -48,14 +50,17 @@ class TableExpr:
     action_outputs = None
 
     @classmethod
-    def process(cls, activity_data: Activity_ap, rhs: TEXPR_a, input_instance_flow: Flow_ap) -> (
+    def process(cls, tuple_output: bool, activity_data: Activity_ap, rhs: TEXPR_a, input_instance_flow: Flow_ap) -> (
             Boundary_Actions, Flow_ap):
         """
+        Initiate the recursive descent through a table expression and yield a final result as either a
+        Table or Tuple Flow.
 
-        :param activity_data:
+        :param tuple_output: The final output is a Tuple Flow
+        :param activity_data: Context of the enclosing activity
         :param rhs: The right hand side of a table assignment
-        :param input_instance_flow:
-        :return:
+        :param input_instance_flow: This instance flow is available
+        :return: boundary actions and a flow summary
         """
         cls.activity_data = activity_data
         cls.domain = activity_data.domain
@@ -66,14 +71,17 @@ class TableExpr:
         cls.action_outputs = {}  # ID's of all Action output Data Flows
         cls.action_inputs = {}  # ID's of all Action input Data Flows
 
-        rhs_output_flow = cls.walk(texpr=rhs, input_nsflow=input_instance_flow)
+        of = cls.walk(texpr=rhs, input_nsflow=input_instance_flow)
+        # If tuple output has been specified, for a tuple assignment for example, tighten the max multiplicity to one
+        final_output_flow = Flow_ap(fid=of.fid, content=of.content, tname=of.tname,
+                                    max_mult=MaxMult.ONE if tuple_output else of.max_mult)
 
         all_ins = {v for s in cls.action_inputs.values() for v in s}
         all_outs = {v for s in cls.action_outputs.values() for v in s}
         init_aids = {a for a in cls.action_inputs.keys() if not cls.action_inputs[a].intersection(all_outs)}
         final_aids = {a for a in cls.action_outputs.keys() if not cls.action_outputs[a].intersection(all_ins)}
 
-        return Boundary_Actions(ain=init_aids, aout=final_aids), rhs_output_flow
+        return Boundary_Actions(ain=init_aids, aout=final_aids), final_output_flow
 
     @classmethod
     def walk(cls, texpr: TEXPR_a, input_nsflow: Flow_ap) -> Flow_ap:

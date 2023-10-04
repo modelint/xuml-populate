@@ -48,8 +48,8 @@ class RestrictAction:
         action_id = Action.populate(tr=tr_Restrict_Action, anum=anum, domain=domain)
 
         # Populate the output Table Flow using same Table as input flow
-        output_relation_flow = Flow.populate_table_flow(activity=anum, domain=domain,
-                                                        tname=input_relation_flow.tname, label=None, is_tuple=False)
+        output_relation_flow = Flow.populate_relation_flow_by_reference(ref_flow=input_relation_flow, anum=anum,
+                                                                        domain=domain)
 
         # Walk through the critieria parse tree storing any attributes or input flows
         _, _, sflows = RestrictCondition.process(tr=tr_Restrict_Action, action_id=action_id,
