@@ -80,7 +80,7 @@ class Operation:
             MMtype.populate_unknown(name=p['type'], domain=domain)
             _logger.info("Transaction open: Populating operation parameter")
             Transaction.open(mmdb, tr_Parameter)
-            input_fid = Flow.populate_data_flow_by_type(mm_type=p['type'], activity=anum,
+            input_fid = Flow.populate_data_flow_by_type(mm_type=p['type'], anum=anum,
                                                         domain=domain, label=None).fid
             Relvar.insert(mmdb, tr=tr_Parameter, relvar='Parameter', tuples=[
                 Parameter_i(Name=p['name'], Signature=signum, Domain=domain,
@@ -94,7 +94,7 @@ class Operation:
             # Populate Synchronous Output and an associated output Data Flow
             Transaction.open(mmdb, tr_Output)
             of_id = Flow.populate_data_flow_by_type(label=None, mm_type=parsed_op.flow_out,
-                                                    activity=anum, domain=domain).fid
+                                                    anum=anum, domain=domain).fid
             Relvar.insert(mmdb, tr=tr_Output, relvar='Synchronous_Output', tuples=[
                 Synchronous_Output_i(Anum=anum, Domain=domain,
                                      Output_flow=of_id, Type=parsed_op.flow_out)

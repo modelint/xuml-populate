@@ -12,7 +12,7 @@ class MaxMult(Enum):
 class Content(Enum):
     SCALAR = 1
     INSTANCE = 2
-    TABLE = 3
+    RELATION = 3
 
 Labeled_Flow = namedtuple('Labeled_Flow', 'label flow')
 """ A label, Flow_ap pair """

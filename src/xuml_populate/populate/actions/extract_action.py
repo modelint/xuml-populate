@@ -50,7 +50,7 @@ class ExtractAction:
         action_id = Action.populate(anum, domain)
 
         # Create the labeled Scalar Flow
-        sflow = Flow.populate_scalar_flow(label=label, scalar_type=tuple_header[attr], activity=anum, domain=domain)
+        sflow = Flow.populate_scalar_flow(label=label, scalar_type=tuple_header[attr], anum=anum, domain=domain)
 
         Relvar.insert(mmdb, tr=tr_Extract, relvar='Relational_Action', tuples=[
             Relational_Action_i(ID=action_id, Activity=anum, Domain=domain)

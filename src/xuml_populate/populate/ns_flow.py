@@ -53,7 +53,7 @@ class NonScalarFlow:
         match ns_flow.content:
             case Content.INSTANCE:
                 return MMclass.header(ns_flow.tname, domain)
-            case Content.TABLE:
+            case Content.RELATION:
                 return Table.header(ns_flow.tname, domain)
             case _:
                 raise NonScalarFlowRequired

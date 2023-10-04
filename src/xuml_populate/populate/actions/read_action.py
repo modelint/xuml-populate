@@ -63,7 +63,7 @@ class ReadAction:
         scalar_flows = []
         proj_attrs = [n.name for n in projection.attrs] if projection.expand != 'ALL' else list(class_attrs.keys())
         for pa in proj_attrs:
-            of = Flow.populate_scalar_flow(scalar_type=class_attrs[pa], activity=anum, domain=domain, label=None)
+            of = Flow.populate_scalar_flow(scalar_type=class_attrs[pa], anum=anum, domain=domain, label=None)
             Relvar.insert(mmdb, tr=tr_Read, relvar='Attribute_Read_Access', tuples=[
                 Attribute_Read_Access_i(Attribute=pa, Class=si_flow.tname, Read_action=action_id, Activity=anum,
                                         Domain=domain, Output_flow=of.fid)

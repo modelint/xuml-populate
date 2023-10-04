@@ -121,7 +121,7 @@ class RestrictCondition:
                                                        f"[{cls.input_nsflow.tname}] is "
                                                        f"comparing on name [{name}] that is not an attribute of that class")
             cls.comparison_criteria.append(Attribute_Comparison(attr=name, op=op))
-        elif cls.input_nsflow.content == Content.TABLE:
+        elif cls.input_nsflow.content == Content.RELATION:
             R = f"Name:<{name}>, Table:<{cls.input_nsflow.tname}>, Domain:<{cls.domain}>"
             result = Relation.restrict(mmdb, relation='Table_Attribute', restriction=R)
             if not result.body:
@@ -190,7 +190,7 @@ class RestrictCondition:
                                 if ns_flow.content == Content.INSTANCE:
                                     # TODO: Fill out the read action case
                                     ReadAction.populate()
-                                elif ns_flow.content == Content.TABLE:
+                                elif ns_flow.content == Content.RELATION:
                                     if len(o.projection.attrs) != 1:
                                         # For attribute comparison, there can only be one extracted attribute
                                         raise ActionException

@@ -55,7 +55,7 @@ class Method:
                                         subsys=subsys, domain=domain)
 
         # Populate the executing instance (me) flow
-        cls.me_flow = Flow.populate_instance_flow(cname=class_name, activity=anum, domain=domain,
+        cls.me_flow = Flow.populate_instance_flow(cname=class_name, anum=anum, domain=domain,
                                                   label='me', single=True)
         _logger.info(f"INSERT Instance Flow (method me): [{domain}:{class_name}:{m_parse.method}:"
                      f"{cls.me_flow.fid}]")
@@ -75,7 +75,7 @@ class Method:
             _logger.info("Transaction open: Populating method parameter")
             Transaction.open(mmdb, tr_Parameter)
 
-            input_fid = Flow.populate_data_flow_by_type(mm_type=p['type'], activity=anum,
+            input_fid = Flow.populate_data_flow_by_type(mm_type=p['type'], anum=anum,
                                                         domain=domain, label=p['name']).fid
 
             _logger.info(f"INSERT Scalar Flow (method input): ["
@@ -91,7 +91,7 @@ class Method:
         if m_parse.flow_out:
             # Populate Synchronous Output and an associated output Data Flow
             output_fid = Flow.populate_data_flow_by_type(label=None, mm_type=m_parse.flow_out,
-                                                         activity=anum, domain=domain).fid
+                                                         anum=anum, domain=domain).fid
             # No transaction needed since a single tuple is inserted for this feature
             Relvar.insert(mmdb, relvar='Synchronous_Output', tuples=[
                 Synchronous_Output_i(Anum=anum, Domain=domain,

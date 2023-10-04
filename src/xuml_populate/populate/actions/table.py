@@ -3,13 +3,10 @@
 import logging
 from typing import Tuple, Dict
 from xuml_populate.config import mmdb
-from xuml_populate.populate.flow import Flow
-from xuml_populate.populate.actions.aparse_types import Flow_ap
 from pyral.transaction import Transaction
 from pyral.relvar import Relvar
 from pyral.relation import Relation
 from xuml_populate.populate.mmclass_nt import Table_i, Type_i, Table_Attribute_i, Model_Attribute_i
-from xuml_populate.populate.actions.aparse_types import MaxMult
 
 _logger = logging.getLogger(__name__)
 

@@ -100,7 +100,7 @@ class TableExpr:
                     R = f"Name:<{texpr.table.name}>, Domain:<{cls.domain}>"
                     result = Relation.restrict(mmdb, relation='Class', restriction=R)
                     if result.body:
-                        component_flow = Flow.populate_instance_flow(cname=texpr.table.name, activity=cls.anum,
+                        component_flow = Flow.populate_instance_flow(cname=texpr.table.name, anum=cls.anum,
                                                                      domain=cls.domain, label=None)
                     else:
                         # Neither labeled flow or class
@@ -161,7 +161,7 @@ class TableExpr:
         if texpr.selection:
             # If there is a selection on the instance set, create the action and obtain its flow id
             input_flow = component_flow
-            if input_flow.content == Content.TABLE:
+            if input_flow.content == Content.RELATION:
                 aid, component_flow, input_sflows = RestrictAction.populate(mmdb, input_relation_flow=input_flow,
                                                                             selection_parse=texpr.selection,
                                                                             activity_data=cls.activity_data)

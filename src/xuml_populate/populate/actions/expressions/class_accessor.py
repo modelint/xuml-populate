@@ -26,7 +26,7 @@ class ClassAccessor:
         Populate the Class Accessor Action or return nothing if the name is not a class
 
         :param name:  A name which may or may not correspond to a class
-        :param anum:  The enclosing activity
+        :param anum:  The enclosing anum
         :param domain:  The current domain
         :return: The output flow id of an existing or newly populated class accessor or none name is not a class
         """
@@ -44,7 +44,7 @@ class ClassAccessor:
 
         # Populate a Class Accessor and Multiple Instance Flow returning the flow id
         Transaction.open(mmdb, tr_Class_Accessor)
-        output_flow = Flow.populate_instance_flow(cname=name, activity=anum, domain=domain, label=None)
+        output_flow = Flow.populate_instance_flow(cname=name, anum=anum, domain=domain, label=None)
         Relvar.insert(mmdb, relvar='Class_Accessor', tuples=[
             Class_Accessor_i(Class=name, Activity=anum, Domain=domain, Output_flow=output_flow.fid)
         ])

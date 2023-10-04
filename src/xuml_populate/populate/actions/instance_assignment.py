@@ -63,7 +63,7 @@ class InstanceAssignment:
         :param case_outputs:
         :param case_name:
         :param inst_assign: The instance assignment statement parse
-        :param activity_data: The enveloping activity
+        :param activity_data: The enveloping anum
         :param case_prefix:
         """
         lhs = inst_assign.lhs

@@ -101,7 +101,7 @@ class SelectAction:
             cls.max_mult = MaxMult.ONE
             # Populate a single instance flow for the selection output
             output_fid = Flow.populate_instance_flow(cname=cls.input_instance_flow.tname,
-                                                     activity=cls.anum, domain=cls.domain,
+                                                     anum=cls.anum, domain=cls.domain,
                                                      label=None, single=True)
             cls.output_instance_flow = Flow_ap(fid=output_fid, content=Content.INSTANCE,
                                                tname=cls.input_instance_flow.tname, max_mult=cls.max_mult)
@@ -129,7 +129,7 @@ class SelectAction:
             # Many select with Multiple Instance Flow output
             cls.max_mult = MaxMult.MANY
             cls.output_instance_flow = Flow.populate_instance_flow(cname=cls.input_instance_flow.tname,
-                                                                   activity=cls.anum,
+                                                                   anum=cls.anum,
                                                                    domain=cls.domain, label=None, single=False)
             _logger.info(f"INSERT Select action output multiple instance Flow: [{cls.domain}:"
                          f"{cls.input_instance_flow.tname}:{cls.activity_data.activity_path.split(':')[-1]}"

@@ -62,7 +62,7 @@ class TraverseAction:
         Transaction.open(mmdb, tr_Traverse)
         cls.action_id = Action.populate(tr=tr_Traverse, anum=cls.anum, domain=cls.domain)
         # Create the Traverse action destination flow (the output for R930)
-        cls.dest_fid = Flow.populate_instance_flow(cname=cls.dest_class, activity=cls.anum,
+        cls.dest_fid = Flow.populate_instance_flow(cname=cls.dest_class, anum=cls.anum,
                                                    domain=cls.domain, label=None,
                                                    single=True if cls.mult == MaxMult.ONE else False).fid
 
