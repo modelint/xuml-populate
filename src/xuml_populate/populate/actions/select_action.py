@@ -168,7 +168,7 @@ class SelectAction:
         # Walk through the criteria parse tree storing any attributes or input flows
         # Also check to see if we are selecting on an identifier
 
-        selection_cardinality, attr_comparisons, sflows = RestrictCondition.process(action_id=cls.action_id,
+        selection_cardinality, attr_comparisons, sflows = RestrictCondition.process(tr=tr_Select, action_id=cls.action_id,
                                                                                     input_nsflow=input_instance_flow,
                                                                                     selection_parse=selection_parse,
                                                                                     activity_data=activity_data)

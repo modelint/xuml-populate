@@ -6,10 +6,10 @@ import logging
 from xuml_populate.config import mmdb
 from xuml_populate.exceptions.action_exceptions import ProjectedAttributeNotDefined
 from scrall.parse.visitor import Projection_a
-from xuml_populate.populate.actions.table import Table
+from xuml_populate.populate.actions.table import Flow
 from xuml_populate.populate.actions.aparse_types import Flow_ap, MaxMult, Content, Activity_ap
 from xuml_populate.populate.actions.action import Action
-from xuml_populate.populate.mmclass_nt import Relational_Action_i, Table_Action_i, Project_Action_i,\
+from xuml_populate.populate.mmclass_nt import Relational_Action_i, Table_Action_i, Project_Action_i, \
     Projected_Attribute_i
 from pyral.relvar import Relvar
 from pyral.relation import Relation
@@ -20,21 +20,21 @@ _logger = logging.getLogger(__name__)
 # Transactions
 tr_Project = "Project Action"
 
+
 class ProjectAction:
     """
     Create all relations for a ProjectAction
     """
 
     @classmethod
-    def populate(cls, input_nsflow: Flow_ap, projection: Projection_a,
-                 activity_data: Activity_ap) -> (str, Flow_ap):
+    def populate(cls, input_nsflow: Flow_ap, projection: Projection_a, activity_data: Activity_ap) -> (str, Flow_ap):
         """
         Populate the Project Action
 
         :param input_nsflow: The input Non Scalar Flow that is being projected
         :param projection:  A list of attr names to be projected and optional expansion (ALL, EMPTY)
         :param activity_data:
-        :return: Projected table flow
+        :return: Action ID and Projected table flow
         """
         # Save attribute values that we will need when creating the various select subsystem
         # classes
@@ -57,9 +57,8 @@ class ProjectAction:
                 raise ProjectedAttributeNotDefined
             table_header[pattr.name] = result.body[0]['Scalar']
 
-        # Populate the output Table Flow and Table (transaction open/close)
-        output_tflow = Table.populate(table_header=table_header, maxmult=input_nsflow.max_mult,
-                                      anum=anum, domain=domain)
+        output_rel_flow = Flow.populate_relation_flow(table_header=table_header, activity=anum, domain=domain,
+                                                      max_mult=input_nsflow.max_mult)
 
         Transaction.open(mmdb, tr_Project)
         action_id = Action.populate(mmdb, anum, domain)
@@ -79,4 +78,4 @@ class ProjectAction:
                                       Activity=anum, Domain=domain)
             ])
         Transaction.execute(mmdb, tr_Project)
-        return action_id, output_tflow
+        return action_id, output_rel_flow

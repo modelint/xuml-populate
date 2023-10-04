@@ -37,34 +37,27 @@ class Table:
         return h
 
     @classmethod
-    def populate(cls, table_header: Dict[str, str], maxmult: MaxMult, anum: str, domain: str) -> Flow_ap:
+    def populate(cls, table_header: Dict[str, str], domain: str) -> str:
         """
 
         :param table_header:
         :param maxmult:  The multplicity of the source flow
         :param anum:
         :param domain:
-        :return:
+        :return: The name of the Table
         """
-
         # Generate a table name by converting the table_header into one long string
-        # with attribute/types delimited by underscores
-        table_name = "_".join([f"{k}_{v}" for k, v in table_header.items()])
+        # with attribute name/types delimited by underscores
+        table_name = "_".join([f"{attr_name}_{attr_type}" for attr_name, attr_type in table_header.items()])
 
-        # Check to see if the table already exists, if so, just create the table flow
-        # using the existing Table instance (name)
+        # Check to see if the table already exists, if so, just return the name
         R = f"Name:<{table_name}>, Domain:<{domain}>"
         result = Relation.restrict(mmdb, relation='Table', restriction=R)
         if result.body:
-            _logger.info(f"Populating flow on existing Table: [{table_name}]")
-            table_flow = Flow.populate_table_flow(activity=anum, tname=table_name, domain=domain,
-                                                  is_tuple=True if maxmult == MaxMult.ONE else False, label=None)
-            return table_flow
+            return table_name
 
         _logger.info(f"Populating Table flow on existing Table: [{table_name}]")
         # A Table can't exist without a flow
-        table_flow = Flow.populate_table_flow(activity=anum, tname=table_name, domain=domain,
-                                              is_tuple=True if maxmult == MaxMult.ONE else False, label=None)
         Transaction.open(mmdb, tr_Table_Type)  # Table type
         Relvar.insert(mmdb, tr=tr_Table_Type, relvar='Table', tuples=[
             Table_i(table_name, domain)
@@ -80,5 +73,5 @@ class Table:
                 Model_Attribute_i(Name=a, Non_scalar_type=table_name, Domain=domain)
             ])
         Transaction.execute(mmdb, tr_Table_Type)
-        return table_flow
+        return table_name
 
