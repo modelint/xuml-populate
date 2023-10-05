@@ -47,7 +47,7 @@ class ExtractAction:
         tuple_header = NonScalarFlow.header(tuple_flow, domain)
 
         Transaction.open(mmdb, tr_Extract)
-        action_id = Action.populate(anum, domain)
+        action_id = Action.populate(tr=tr_Extract, anum=anum, domain=domain)
 
         # Create the labeled Scalar Flow
         sflow = Flow.populate_scalar_flow(label=label, scalar_type=tuple_header[attr], anum=anum, domain=domain)

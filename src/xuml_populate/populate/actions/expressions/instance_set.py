@@ -38,7 +38,6 @@ class InstanceSet:
         Populate any Actions or Flows corresponding to a sequence of instance set components.
         Return the boundary actions and the resultant output Instance Flow
 
-        :param mmdb: The metamodel db
         :param input_instance_flow: This Flow provides input at the beginning of the chain
         :param iset_components: The components in the instance set
         :param activity_data:  General information about the enclosing anum, anum, domain, etc

@@ -35,9 +35,7 @@ class RestrictCondition:
     tr = None  # Open Select or Restrict Action transaction
 
     expression = None
-    comparison_criteria = []
-    equivalence_criteria = []
-    restriction_text = ""
+    comparison_criteria = None
     criterion_ctr = 0
     input_scalar_flows = set()
 
@@ -201,6 +199,7 @@ class RestrictCondition:
                                                                    )  # Select Action transaction is open
                                 # Now populate a comparison criterion
                                 cls.pop_comparison_criterion(attr=o.projection.attrs[0], scalar_flow=sflow, op=operator)
+                                text += "<projection>"
                             else:
                                 # This must be a Scalar Flow
                                 # TODO: check need for mmdb param
@@ -258,6 +257,7 @@ class RestrictCondition:
         cls.domain = activity_data.domain
         cls.activity_data = activity_data
         cls.tr = tr
+        cls.comparison_criteria = []
 
         cls.input_nsflow = input_nsflow
         criteria = selection_parse.criteria
