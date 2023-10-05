@@ -6,6 +6,8 @@ import logging
 from xuml_populate.config import mmdb
 from xuml_populate.exceptions.action_exceptions import ActionException
 from typing import Optional, Set, Dict, List
+from xuml_populate.populate.attribute import Attribute
+from xuml_populate.populate.actions.table_attribute import TableAttribute
 from xuml_populate.populate.actions.aparse_types import Flow_ap, MaxMult, Content, Activity_ap, Attribute_Comparison
 from xuml_populate.populate.actions.read_action import ReadAction
 from xuml_populate.populate.actions.extract_action import ExtractAction
@@ -78,29 +80,34 @@ class RestrictCondition:
         return criterion_id
 
     @classmethod
-    def process_bool_value(cls, attr: str, op: str, setting: bool):
+    def pop_equivalence_criterion(cls, attr: str, op: str, value: str, scalar: str):
         """
-        An Equivalence Criterion is populated when a boolean value is compared
-        against an Attribute typed Boolean
+        Populates either a boolean or enum equivalence
 
-        :param scalar_flow_label:
-        :param attr: THe name of the class attribute typed boolean
-        :param op: The comparision operation as ==
-        :param setting:
-        :return:
+        :param attr: Attribute name
+        :param op: Either eq or ne (== !=)
+        :param value: Enum value or true
+        :param scalar: Scalar name
         """
         # Populate the Restriction Criterion superclass
         criterion_id = cls.pop_criterion(attr=attr)
         # Populate the Equivalence Criterion
         Relvar.insert(mmdb, tr=cls.tr, relvar='Equivalence_Criterion', tuples=[
             Equivalence_Criterion_i(ID=criterion_id, Action=cls.action_id, Activity=cls.anum,
-                                    Attribute=attr, Domain=cls.domain, Operation="true" if op == "==" else "false",
-                                    Value="true" if setting else "false", Scalar="Boolean")
+                                    Attribute=attr, Domain=cls.domain, Operation=op,
+                                    Value=value, Scalar=scalar)
         ])
 
     @classmethod
-    def process_enum_value(cls, attr: str, op: str, enum: str):
-        pass
+    def pop_boolean_equivalence_criterion(cls, not_op: bool, attr: str):
+        """
+        An Equivalence Criterion is populated when a boolean value is compared
+        against an Attribute typed Boolean
+
+        :param not_op: True if attribute preceded by NOT operator in expression
+        :param attr: Attribute name
+        """
+        cls.pop_equivalence_criterion(attr=attr, op="ne" if not_op else "eq", value="true", scalar="Boolean")
 
     @classmethod
     def process_attr(cls, name: str, op: str):
@@ -129,7 +136,7 @@ class RestrictCondition:
             cls.comparison_criteria.append({'attr': name, 'op': op})
 
     @classmethod
-    def walk_criteria(cls, operator, operands, attr: Optional[str] = None) -> str:
+    def walk_criteria(cls, operands: List, operator: Optional[str] = None, attr: Optional[str] = None) -> str:
         """
         Recursively walk down the selection criteria parse tree validating attributes and input flows found in
         the leaf nodes. Also flatten the parse back into a language independent text representation for reference
@@ -141,7 +148,7 @@ class RestrictCondition:
         :return: Flattened selection expression as a string
         """
         attr_set = attr  # Has an attribute been set for this invocation?
-        text = f" {operator} "  # Flatten operator into temporary string
+        text = f" {'' if not operator else operator} "  # Flatten operator into temporary string
         for o in operands:
             match type(o).__name__:
                 case 'IN_a':
@@ -149,8 +156,30 @@ class RestrictCondition:
                     # cls.process_flow(name=o, op=operator, input_param=True)
                     # text += f" {o.name}"
                 case 'N_a':
-                    if not attr_set:
+                    if not operator:
+                        # We are processing a single name with no operator
+                        # If the input ns flow is not an instance flow or
+                        # If it is not an Attribute of the flow's class, raise an exception
+                        scalar = Attribute.scalar(name=o.name, cname=cls.input_nsflow.tname, domain=cls.domain)
+                        if scalar == "Boolean":
+                            # Populate a simple equivalence criterion
+                            cls.pop_boolean_equivalence_criterion(not_op=False, attr=o.name)
+                        else:
+                            pass
+                            # Populate a comparison criterion against the xi instance attribute value
+
+                        pass
+                    # Just a name
+                    if not attr_set or operator in {'AND', 'OR'}:
                         # It must be the name of some attribute of the class selected upon
+                        # Get the scalar of this type (exception raised if no such Model Attribute)
+                        if cls.input_nsflow.content == Content.INSTANCE:
+                            scalar = Attribute.scalar(name=o.name, cname=cls.input_nsflow.cname, domain=cls.domain)
+                        else:
+                            scalar = TableAttribute.scalar(name=o.name, table=cls.input_nsflow.tname, domain=cls.domain)
+                        # if scalar == 'Boolean':
+                        #     cls.pop
+
                         cls.process_attr(name=o.name, op=operator)
                         text = f"{o.name} {text}"
                         attr_set = o.name
@@ -158,8 +187,10 @@ class RestrictCondition:
                     else:
                         text += f" {o.name}"
                         if o.name.startswith('_'):
+                            pass
                             # It's an enum value
-                            cls.process_enum_value(attr=attr_set, op=operator, enum=o.name)
+                            # TODO: get the scalar for the enum
+                            # cls.pop_equivalence_criterion(attr=attr_set, op=operator, value=o.name, scalar=)
                         elif (n := o.name.lower()) in {'true', 'false'}:
                             # It's a boolean value
                             cls.process_bool_value(attr=attr_set, op=operator, setting=(n == 'true'))
@@ -267,10 +298,12 @@ class RestrictCondition:
         # So elaborate the parse elminating our shorhand
         cardinality = 'ONE' if selection_parse.card == '1' else 'ALL'
         if type(criteria).__name__ == 'N_a':
+            cls.expression = cls.walk_criteria(operands=[criteria])
+            # criteria = BOOL_a(op='==', operands=[criteria, N_a(name='true')])
             # Name only (no explicit operator or operand)
-            criteria = BOOL_a(op='==', operands=[criteria, N_a(name='true')])
+        else:
+            cls.expression = cls.walk_criteria(operands=criteria.operands, operator=criteria.operator)
         # Walk the parse tree and save all attributes, ops, values, and input scalar flows
-        cls.expression = cls.walk_criteria(criteria.op, criteria.operands)
         # Populate the Restriction Condition class
         Relvar.insert(mmdb, tr=tr, relvar='Restriction_Condition', tuples=[
             Restriction_Condition_i(Action=cls.action_id, Activity=cls.anum, Domain=cls.domain,

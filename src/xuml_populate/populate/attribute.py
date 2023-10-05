@@ -4,9 +4,11 @@ attribute.py – Process parsed attribute to populate the metamodel db
 
 import logging
 from xuml_populate.config import mmdb
+from typing import Set
 from pyral.relvar import Relvar
 from pyral.relation import Relation
-from typing import Set
+from typing import Optional
+from xuml_populate.exceptions.action_exceptions import UndefinedAttribute
 from xuml_populate.populate.mm_type import MMtype
 from xuml_populate.populate.mmclass_nt import \
     Attribute_i, Non_Derived_Attribute_i, Model_Attribute_i, \
@@ -25,6 +27,25 @@ class Attribute:
     record = None
     dtype = None
     participating_ids = None
+
+    @classmethod
+    def scalar(cls, name: str, cname: str, domain: str) -> str:
+        """
+        Returns the name of the Scalar (Type) of the specified Attribute.
+
+        Raises an exception if the Attribute is not defined on the specified Class.
+
+        :param name:  Attribute name
+        :param cname:  Class name
+        :param domain:  Domain name
+        :return: Name of Attribute's Scalar (Type)
+        """
+        R = f"Name:<{name}>, Class:<{cname}>, Domain:<{domain}>"
+        result = Relation.restrict(mmdb, relation='Attribute', restriction=R)
+        if not result.body:
+            _logger.error(f"Undefined attribute: [{name}:{cname}:{domain}]")
+            raise UndefinedAttribute
+        return result.body[0]['Scalar']
 
     @classmethod
     def populate(cls, tr: str, domain: str, cname: str, class_identifiers: Set[int], record):
