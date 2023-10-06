@@ -100,11 +100,11 @@ class SelectAction:
         if selection_idnum or selection_cardinality == 'ONE':
             cls.max_mult = MaxMult.ONE
             # Populate a single instance flow for the selection output
-            output_fid = Flow.populate_instance_flow(cname=cls.input_instance_flow.tname,
+            cls.output_instance_flow = Flow.populate_instance_flow(cname=cls.input_instance_flow.tname,
                                                      anum=cls.anum, domain=cls.domain,
                                                      label=None, single=True)
-            cls.output_instance_flow = Flow_ap(fid=output_fid, content=Content.INSTANCE,
-                                               tname=cls.input_instance_flow.tname, max_mult=cls.max_mult)
+            # cls.output_instance_flow = Flow_ap(fid=output_fid, content=Content.INSTANCE,
+            #                                    tname=cls.input_instance_flow.tname, max_mult=cls.max_mult)
             _logger.info(f"INSERT Select action output single instance Flow: [{cls.domain}:"
                          f"{cls.input_instance_flow.tname}:{cls.activity_data.activity_path.split(':')[-1]}"
                          f":{cls.output_instance_flow}]")

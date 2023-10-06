@@ -36,6 +36,8 @@ class ScalarExpr:
     output_tflow_id = None
     action_inputs = None
     action_outputs = None
+    anum = None
+    domain = None
 
     @classmethod
     def process(cls, rhs: Scalar_RHS_a, input_instance_flow: Flow_ap,
@@ -51,6 +53,8 @@ class ScalarExpr:
         :param activity_data:
         :return:  The output tuple flow and the attribute names as ordered in the RHS text expression
         """
+        cls.domain = activity_data.domain
+        cls.anum = activity_data.anum
         cls.activity_data = activity_data
 
         cls.action_outputs = {}  # ID's of all Action output Data Flows
@@ -92,8 +96,9 @@ class ScalarExpr:
                     if final_aid:
                         cls.action_outputs[final_aid] = {component_flow.fid}
                 action_input = component_flow
+                project_attrs = tuple([a.name for a in sexpr.projection.attrs])
                 aid, sflows = ReadAction.populate(input_single_instance_flow=action_input,
-                                                  projection=sexpr.projection, activity_data=cls.activity_data)
+                                                  attrs=project_attrs, anum=cls.anum, domain=cls.domain)
                 cls.action_inputs[aid] = {action_input.fid}
                 cls.action_outputs[aid] = {s.fid for s in sflows}
                 return sflows

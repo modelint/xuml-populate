@@ -160,11 +160,14 @@ class Activity:
 
                 aparse = activity_data['parse']
                 activity_data = Activity_ap(anum=activity_data['anum'], domain=cls.domain,
-                                            cname=class_name, sname=None, eename=None,
+                                            cname=class_name, sname=None, eename=None, opname=method_name,
                                             xiflow=xi_flow_id, activity_path=method_path, scrall_text=aparse[1])
                 seq_flows = {}
                 seq_labels = set()
-                for xunit in aparse[0]:
+                # for xunit in aparse[0]:
+                for count, xunit in enumerate(aparse[0]):  # Use count for debugging
+                    c = count+1
+                    print(f"Processing statement: {c}")
                     match type(xunit).__name__:
                         case 'Execution_Unit_a':
                             boundary_actions = ExecutionUnit.process_method_statement_set(

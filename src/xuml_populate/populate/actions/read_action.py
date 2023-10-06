@@ -36,14 +36,13 @@ class ReadAction:
     max_mult = None
 
     @classmethod
-    def populate(cls, input_single_instance_fid: str, attrs: Tuple[str],
-                 cname: str, anum: str, domain: str) -> (str, Tuple[Flow_ap]):
+    def populate(cls, input_single_instance_flow: Flow_ap, attrs: Tuple[str],
+                 anum: str, domain: str) -> (str, Tuple[Flow_ap]):
         """
         Populate the Read Action
 
-        :param input_single_instance_fid: The Flow ID of the instance to be read
+        :param input_single_instance_flow: The summary of the input flow to the Read Action
         :param attrs: A tuple of attribute names to read
-        :param cname: Attrs belong to this class
         :param anum:  The activity number
         :param domain:  The domain name
         :return: A tuple of scalar flows matching the order of the specified attrs
@@ -52,6 +51,10 @@ class ReadAction:
         # TODO: for the current activity. If duplicate found, return its action id and output flows instead.
         # TODO: Ensure that the existing read action that has no incoming control flows
 
+        assert input_single_instance_flow.content == Content.INSTANCE
+        assert input_single_instance_flow.max_mult == MaxMult.ONE
+        cname = input_single_instance_flow.tname
+
         # Get the class header
         class_attrs = MMclass.header(cname=cname, domain=domain)
 
@@ -59,7 +62,7 @@ class ReadAction:
         Transaction.open(mmdb, tr_Read)
         action_id = Action.populate(tr=tr_Read, anum=anum, domain=domain)  # Transaction open
         Relvar.insert(mmdb, tr=tr_Read, relvar='Read_Action', tuples=[
-            Read_Action_i(ID=action_id, Activity=anum, Domain=domain, Instance_flow=input_single_instance_fid)
+            Read_Action_i(ID=action_id, Activity=anum, Domain=domain, Instance_flow=input_single_instance_flow.fid)
         ])
         scalar_flows = []
         for a in attrs:

@@ -7,7 +7,6 @@ from xuml_populate.config import mmdb
 from typing import Set
 from pyral.relvar import Relvar
 from pyral.relation import Relation
-from typing import Optional
 from xuml_populate.exceptions.action_exceptions import UndefinedAttribute
 from xuml_populate.populate.mm_type import MMtype
 from xuml_populate.populate.mmclass_nt import \

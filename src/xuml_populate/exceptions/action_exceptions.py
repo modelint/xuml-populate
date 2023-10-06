@@ -11,9 +11,14 @@ post = " --"
 class ActionException(Exception):
     pass
 
+class UndefinedMethod(ActionException):
+    pass
+
 class UndefinedAttribute(ActionException):
     pass
 
+class UndefinedParameter(ActionException):
+    pass
 class UndefinedTableAttribute(ActionException):
     pass
 

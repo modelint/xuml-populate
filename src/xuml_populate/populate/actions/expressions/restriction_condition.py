@@ -7,7 +7,7 @@ from xuml_populate.config import mmdb
 from xuml_populate.exceptions.action_exceptions import ActionException
 from typing import Optional, Set, Dict, List
 from xuml_populate.populate.attribute import Attribute
-from xuml_populate.populate.activity import Activity
+from xuml_populate.populate.actions.validation.parameter_validation import validate_param
 from xuml_populate.populate.actions.table_attribute import TableAttribute
 from xuml_populate.populate.actions.aparse_types import (Flow_ap, MaxMult, Content, Activity_ap, Attribute_Comparison,
                                                          Attribute_ap)
@@ -42,18 +42,27 @@ class RestrictCondition:
     expression = None
     comparison_criteria = None
     criterion_ctr = 0
-    input_scalar_flows = set()
+    input_scalar_flows = None
 
     @classmethod
     def pop_xi_comparison_criterion(cls, attr: str):
         """
+        Let's say that we are performing a select/restrict on some Class and comparing the value of some
+        attribute named X on that Class. If the executing instance (xi) also has an attribute named X,
+        we can read that value and supply it in the comparison criterion.
 
-        :param attr:
-        :return:
+        Here we populate a Read Action on the executing instance (xi) to read the value of the matching
+        Attribute.
+
+        :param attr: Name of some compared Attribute that matches an Attribute of the executing instance
         """
-        _, read_flows = ReadAction.populate(input_single_instance_fid=cls.activity_data.xiflow,
-                                            cname=cls.activity_data.cname, attrs=(attr,),
+        read_iflow = Flow_ap(fid=cls.activity_data.xiflow, tname=cls.activity_data.cname, content=Content.INSTANCE,
+                             max_mult=MaxMult.ONE)
+        _, read_flows = ReadAction.populate(input_single_instance_flow=read_iflow,
+                                            attrs=(attr,),
                                             anum=cls.anum, domain=cls.domain)
+        assert len(read_flows) == 1
+        # Since we are reading a single attribute, assume only one output flow
         cls.pop_comparison_criterion(attr=attr, op='==', scalar_flow=read_flows[0])
 
     @classmethod
@@ -81,12 +90,16 @@ class RestrictCondition:
             Comparison_Criterion_i(ID=criterion_id, Action=cls.action_id, Activity=cls.anum, Attribute=attr,
                                    Comparison=op, Value=sflow.fid, Domain=cls.domain)
         ])
-        cls.comparison_criteria.append({'attr': attr, 'op': op})
+        cls.comparison_criteria.append(Attribute_Comparison(attr, op))
 
     @classmethod
-    def pop_ranking_criterion(cls, order: str, attr: str, op: str):
-        # Validate the attribute and add to comparison criteria
-        cls.process_attr(name=attr, op=op)
+    def pop_ranking_criterion(cls, order: str, attr: str):
+        """
+
+        :param order:
+        :param attr:
+        :return:
+        """
         criterion_id = cls.pop_criterion(attr)
         Relvar.insert(mmdb, tr=cls.tr, relvar='Ranking_Criterion', tuples=[
             Ranking_Criterion_i(ID=criterion_id, Action=cls.action_id, Activity=cls.anum, Attribute=attr,
@@ -95,6 +108,11 @@ class RestrictCondition:
 
     @classmethod
     def pop_criterion(cls, attr: str) -> int:
+        """
+
+        :param attr:
+        :return:
+        """
         cls.criterion_ctr += 1
         criterion_id = cls.criterion_ctr
         Relvar.insert(mmdb, tr=cls.tr, relvar='Criterion', tuples=[
@@ -134,32 +152,6 @@ class RestrictCondition:
         """
         cls.pop_equivalence_criterion(attr=attr, op="ne" if not_op else "eq", value=value, scalar="Boolean")
 
-    # @classmethod
-    # def process_attr(cls, name: str, op: str):
-    #     """
-    #     Validate that attribute is a member of the input flow class or table
-    #
-    #     :param op:
-    #     :param name:
-    #     :return:
-    #     """
-    #     if cls.input_nsflow.content == Content.INSTANCE:
-    #         R = f"Name:<{name}>, Class:<{cls.input_nsflow.tname}>, Domain:<{cls.domain}>"
-    #         result = Relation.restrict(mmdb, relation='Attribute', restriction=R)
-    #         if not result.body:
-    #             raise ComparingNonAttributeInSelection(f"select action restriction on class"
-    #                                                    f"[{cls.input_nsflow.tname}] is "
-    #                                                    f"comparing on name [{name}] that is not an attribute of that class")
-    #         cls.comparison_criteria.append(Attribute_Comparison(attr=name, op=op))
-    #     elif cls.input_nsflow.content == Content.RELATION:
-    #         R = f"Name:<{name}>, Table:<{cls.input_nsflow.tname}>, Domain:<{cls.domain}>"
-    #         result = Relation.restrict(mmdb, relation='Table_Attribute', restriction=R)
-    #         if not result.body:
-    #             raise ComparingNonAttributeInSelection(f"select action restriction on class"
-    #                                                    f"[{cls.input_nsflow.tname}] is "
-    #                                                    f"comparing on name [{name}] that is not an attribute of that class")
-    #         cls.comparison_criteria.append({'attr': name, 'op': op})
-
     @classmethod
     def walk_criteria(cls, operands: List, operator: Optional[str] = None, attr: Optional[str] = None) -> str:
         """
@@ -179,7 +171,7 @@ class RestrictCondition:
             match type(o).__name__:
                 case 'IN_a':
                     # Verify that this input is defined on the enclosing Activity
-                    Activity.valid_param(pname=o.name, activity=cls.activity_data)
+                    validate_param(name=o.name, activity=cls.activity_data)
                     if not attr_set:
                         # The Attribute has the same name as the Parameter
                         # We assume that attribute names are capitalized so the name doubling shorthand for
@@ -247,9 +239,9 @@ class RestrictCondition:
                         else:
                             text = f"{text} {o.name}"
                 case 'BOOL_a':
-                    text += cls.walk_criteria(o.op, o.operands, attr_set)
+                    text += cls.walk_criteria(operands=o.operands, operator=o.op, attr=attr_set)
                 case 'MATH_a':
-                    text += cls.walk_criteria(o.op, o.operands, attr_set)
+                    text += cls.walk_criteria(operands=o.operands, operator=o.op, attr=attr_set)
                 case 'UNARY_a':
                     print()
                 case 'INST_PROJ_a':
@@ -277,7 +269,7 @@ class RestrictCondition:
                                                                    domain=cls.domain, activity_data=cls.activity_data,
                                                                    )  # Select Action transaction is open
                                 # Now populate a comparison criterion
-                                cls.pop_comparison_criterion(attr=o.projection.attrs[0], scalar_flow=sflow, op=operator)
+                                cls.pop_comparison_criterion(attr=o.projection.attrs[0].name, scalar_flow=sflow, op=operator)
                                 text += "<projection>"
                             else:
                                 # This must be a Scalar Flow
@@ -297,7 +289,7 @@ class RestrictCondition:
                                         # This is a Ranking Criterion
                                         attr_name = i[0].name.name
                                         order = i[0].order
-                                        cls.pop_ranking_criterion(order=order, attr=attr_name, op=operator)
+                                        cls.pop_ranking_criterion(order=order, attr=attr_name)
                                         attr_set = attr_name
                                         text = f"{order.upper()}({attr_name}) " + text
                                         pass
@@ -337,6 +329,7 @@ class RestrictCondition:
         cls.activity_data = activity_data
         cls.tr = tr
         cls.comparison_criteria = []
+        cls.input_scalar_flows = set()
 
         cls.input_nsflow = input_nsflow
         criteria = selection_parse.criteria
