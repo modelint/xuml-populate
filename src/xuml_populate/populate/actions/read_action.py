@@ -3,7 +3,7 @@ read_action.py – Populate a read action instance in PyRAL
 """
 
 import logging
-from typing import List
+from typing import Set, List, Tuple
 from xuml_populate.config import mmdb
 from xuml_populate.populate.actions.aparse_types import Flow_ap, MaxMult, Content, Activity_ap
 from xuml_populate.populate.actions.action import Action
@@ -36,36 +36,32 @@ class ReadAction:
     max_mult = None
 
     @classmethod
-    def populate(cls, input_single_instance_flow: Flow_ap, projection: Projection_a,
-                 activity_data: Activity_ap) -> (str, List[Flow_ap]):
+    def populate(cls, input_single_instance_fid: str, attrs: Tuple[str],
+                 cname: str, anum: str, domain: str) -> (str, Tuple[Flow_ap]):
         """
         Populate the Read Action
 
-        :param input_single_instance_flow: The source flow into this selection
-        :param projection:
-        :param input_single_instance_flow:
-        :param activity_data:
-        :return: A list of scalar flows in the order of the project statement
+        :param input_single_instance_fid: The Flow ID of the instance to be read
+        :param attrs: A tuple of attribute names to read
+        :param cname: Attrs belong to this class
+        :param anum:  The activity number
+        :param domain:  The domain name
+        :return: A tuple of scalar flows matching the order of the specified attrs
         """
-        anum = activity_data.anum
-        domain = activity_data.domain
-        si_flow = input_single_instance_flow  # Short name for convenience
-
         # Get the class header
-        class_attrs = MMclass.header(cname=si_flow.tname, domain=domain)
+        class_attrs = MMclass.header(cname=cname, domain=domain)
 
         # Populate the Action superclass instance and obtain its action_id
         Transaction.open(mmdb, tr_Read)
         action_id = Action.populate(tr=tr_Read, anum=anum, domain=domain)  # Transaction open
         Relvar.insert(mmdb, tr=tr_Read, relvar='Read_Action', tuples=[
-            Read_Action_i(ID=action_id, Activity=anum, Domain=domain, Instance_flow=input_single_instance_flow.fid)
+            Read_Action_i(ID=action_id, Activity=anum, Domain=domain, Instance_flow=input_single_instance_fid)
         ])
         scalar_flows = []
-        proj_attrs = [n.name for n in projection.attrs] if projection.expand != 'ALL' else list(class_attrs.keys())
-        for pa in proj_attrs:
-            of = Flow.populate_scalar_flow(scalar_type=class_attrs[pa], anum=anum, domain=domain, label=None)
+        for a in attrs:
+            of = Flow.populate_scalar_flow(scalar_type=class_attrs[a], anum=anum, domain=domain, label=None)
             Relvar.insert(mmdb, tr=tr_Read, relvar='Attribute_Read_Access', tuples=[
-                Attribute_Read_Access_i(Attribute=pa, Class=si_flow.tname, Read_action=action_id, Activity=anum,
+                Attribute_Read_Access_i(Attribute=a, Class=cname, Read_action=action_id, Activity=anum,
                                         Domain=domain, Output_flow=of.fid)
             ])
             scalar_flows.append(of)
@@ -73,4 +69,4 @@ class ReadAction:
             # output_flows[pa] = of
         # We now have a transaction with all select-action instances, enter into the metamodel db
         Transaction.execute(mmdb, tr_Read)  # Select Action
-        return action_id, scalar_flows
+        return action_id, tuple(scalar_flows)
