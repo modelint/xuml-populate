@@ -48,6 +48,10 @@ class ReadAction:
         :param domain:  The domain name
         :return: A tuple of scalar flows matching the order of the specified attrs
         """
+        # TODO: Avoid populating duplicate for reading the same attr set by maintaining dict of action/flows
+        # TODO: for the current activity. If duplicate found, return its action id and output flows instead.
+        # TODO: Ensure that the existing read action that has no incoming control flows
+
         # Get the class header
         class_attrs = MMclass.header(cname=cname, domain=domain)
 

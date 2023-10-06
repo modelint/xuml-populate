@@ -7,8 +7,10 @@ from xuml_populate.config import mmdb
 from xuml_populate.exceptions.action_exceptions import ActionException
 from typing import Optional, Set, Dict, List
 from xuml_populate.populate.attribute import Attribute
+from xuml_populate.populate.activity import Activity
 from xuml_populate.populate.actions.table_attribute import TableAttribute
-from xuml_populate.populate.actions.aparse_types import Flow_ap, MaxMult, Content, Activity_ap, Attribute_Comparison
+from xuml_populate.populate.actions.aparse_types import (Flow_ap, MaxMult, Content, Activity_ap, Attribute_Comparison,
+                                                         Attribute_ap)
 from xuml_populate.populate.actions.read_action import ReadAction
 from xuml_populate.populate.actions.extract_action import ExtractAction
 from xuml_populate.exceptions.action_exceptions import ComparingNonAttributeInSelection, NoInputInstanceFlow
@@ -23,6 +25,7 @@ _logger = logging.getLogger(__name__)
 
 # Transactions
 tr_Restrict_Cond = "Restrict Condition"
+
 
 class RestrictCondition:
     """
@@ -42,8 +45,28 @@ class RestrictCondition:
     input_scalar_flows = set()
 
     @classmethod
+    def pop_xi_comparison_criterion(cls, attr: str):
+        """
+
+        :param attr:
+        :return:
+        """
+        _, read_flows = ReadAction.populate(input_single_instance_fid=cls.activity_data.xiflow,
+                                            cname=cls.activity_data.cname, attrs=(attr,),
+                                            anum=cls.anum, domain=cls.domain)
+        cls.pop_comparison_criterion(attr=attr, op='==', scalar_flow=read_flows[0])
+
+    @classmethod
     def pop_comparison_criterion(cls, attr: str, op: str, scalar_flow_label: Optional[str] = None,
                                  scalar_flow: Optional[Flow_ap] = None):
+        """
+
+        :param attr:
+        :param op:
+        :param scalar_flow_label:
+        :param scalar_flow:
+        :return:
+        """
         if not scalar_flow:
             if not scalar_flow_label:
                 raise ActionException
@@ -100,15 +123,16 @@ class RestrictCondition:
         ])
 
     @classmethod
-    def pop_boolean_equivalence_criterion(cls, not_op: bool, attr: str):
+    def pop_boolean_equivalence_criterion(cls, not_op: bool, attr: str, value: str):
         """
         An Equivalence Criterion is populated when a boolean value is compared
         against an Attribute typed Boolean
 
         :param not_op: True if attribute preceded by NOT operator in expression
         :param attr: Attribute name
+        :param value:  Attribute is compared to either "true" / "false"
         """
-        cls.pop_equivalence_criterion(attr=attr, op="ne" if not_op else "eq", value="true", scalar="Boolean")
+        cls.pop_equivalence_criterion(attr=attr, op="ne" if not_op else "eq", value=value, scalar="Boolean")
 
     # @classmethod
     # def process_attr(cls, name: str, op: str):
@@ -154,9 +178,18 @@ class RestrictCondition:
         for o in operands:
             match type(o).__name__:
                 case 'IN_a':
-                    pass
-                    # cls.process_flow(name=o, op=operator, input_param=True)
-                    # text += f" {o.name}"
+                    # Verify that this input is defined on the enclosing Activity
+                    Activity.valid_param(pname=o.name, activity=cls.activity_data)
+                    if not attr_set:
+                        # The Attribute has the same name as the Parameter
+                        # We assume that attribute names are capitalized so the name doubling shorthand for
+                        # params only works if this convention is followed.
+                        Attribute.scalar(name=o.name.capitalize(), cname=cls.input_nsflow.tname, domain=cls.domain)
+                        cls.pop_xi_comparison_criterion(attr=o.name)
+                    else:
+                        # We know this is not an Attribute since it is a scalar flow label coming in as a Parameter
+                        cls.pop_comparison_criterion(attr=attr_set.name, op=operator, scalar_flow_label=o.name)
+                    text += f" {o.name}"
                 case 'N_a':
                     if not operator or operator in {'AND', 'OR'}:
                         # This covers shorthand cases like:
@@ -178,10 +211,10 @@ class RestrictCondition:
                         # Comparison Criterion
                         if scalar == 'Boolean':
                             # Populate a simple equivalence criterion
-                            cls.pop_boolean_equivalence_criterion(not_op=False, attr=o.name)
+                            cls.pop_boolean_equivalence_criterion(not_op=False, attr=o.name, value="true")
                         else:
                             # Populate a comparison
-                            cls.pop_xi_comparison_criterion()
+                            cls.pop_xi_comparison_criterion(attr=o.name)
                     elif not attr_set:
                         # We know that the operator is a comparison op (==, >=, etc) which means that
                         # the first operand is an Attribute and the second is a scalar expression
@@ -190,42 +223,29 @@ class RestrictCondition:
                         # comparison and, hence, the attribute
                         # We verify this:
                         scalar = Attribute.scalar(name=o.name, cname=cls.input_nsflow.tname, domain=cls.domain)
-                        attr_set = o.name
-
+                        # The criterion is populated when the second operand is processed, so all we need to do
+                        # now is to remember the Attribute name
+                        attr_set = Attribute_ap(o.name, scalar)
                     else:
                         # The scalar expression on the right side of the comparison must be a scalar flow
                         # an enum, or a boolean value
                         if o.name.startswith('_'):
-                            pass
-                            # It's an enum value
-                            # TODO: get the scalar for the enum
-                            # cls.pop_equivalence_criterion(attr=attr_set, op=operator, value=o.name, scalar=)
+                            # This name is an enum value
+                            # TODO: Validate the enum value as a member of the Attribute's Scalar
+                            cls.pop_equivalence_criterion(attr=attr_set.name, op=operator, value=o.name,
+                                                          scalar=attr_set.scalar)
                         elif (n := o.name.lower()) in {'true', 'false'}:
-                            # It's a boolean value
-                            cls.process_bool_value(attr=attr_set, op=operator, setting=(n == 'true'))
+                            # This name is a boolean value
+                            cls.pop_boolean_equivalence_criterion(not_op=False, attr=attr_set, value=n)
                         else:
                             # It must be the name of a scalar flow that should have been set with some value
                             cls.pop_comparison_criterion(scalar_flow_label=o.name, attr=attr_set, op=operator)
-                            pass
 
                         # Update the text expression
                         if not attr_set:
                             text = f"{o.name} {text}"
                         else:
                             text = f"{text} {o.name}"
-                        # if scalar == 'Boolean':
-                        #     # We want to know if the value of this attribute is true
-                        #     cls.pop_boolean_equivalence_criterion(not_op=False, attr=o.name)
-                        # else:
-                        #     # We want to compare the value of this attribute in the input flow's class against the
-                        #     # attribute of the same name in the xi instance's Class
-                        #     pass
-                        #     # This is a comparison with the scalar coming from the xi attribute read
-                        #     read_flows = ReadAction.populate(input_single_instance_fid=cls.activity_data.xiflow,
-                        #                                      cname=cls.activity_data.cname, attrs=(o.name,),
-                        #                                      anum=cls.anum, domain=cls.domain)
-                        #
-
                 case 'BOOL_a':
                     text += cls.walk_criteria(o.op, o.operands, attr_set)
                 case 'MATH_a':

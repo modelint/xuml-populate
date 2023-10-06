@@ -27,6 +27,11 @@ class Activity:
     domain = None
 
     @classmethod
+    def valid_param(cls, pname: str, activity: Activity_ap):
+        # TODO: Verify that the parameter is in the signature of the specified activity with exception if not
+        pass
+
+    @classmethod
     def populate_method(cls, tr: str, action_text: str, cname: str, method: str,
                         subsys: str, domain: str) -> str:
         """
