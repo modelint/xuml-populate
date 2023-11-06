@@ -188,21 +188,5 @@ class Activity:
                     pass
 
         pass
-
-    # @classmethod
-    # def process_statements(cls):
-    #     """
-    #     Process each Scrall statement in the Method
-    #     """
-    #     # Populate all method activities
-    #     for cname, method_data in cls.methods.items():
-    #         for method, activity_data in method_data.items():
-    #             _logger.info(f"Populating anum for method: {cname}.{method}")
-    #             aparse = activity_data['parse']
-    #             for a in aparse[0]:
-    #                 Statement.populate_method(mmdb=mmdb, cname=cname, method=method, anum=activity_data['anum'],
-    #                                           domain=activity_data['domain'], aparse=a, scrall_text=aparse[1])
-    #
-    #     pass
-    # Populate all state activities
-    # Populate all operation activities
+    # TODO: Populate all state activities
+    # TODO: Populate all operation activities
