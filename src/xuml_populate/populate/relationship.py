@@ -48,7 +48,7 @@ class Relationship:
         if 't_side' in record:
             BinaryAssociation(tr=tr_Rel, domain=domain, rnum=cls.rnum, record=record)
         elif 'superclass' in record:
-            Generalization.populate(tr=tr_Rel, domain=domain, rnum=cls.rnum, record=record)
+            Generalization(tr=tr_Rel, domain=domain, rnum=cls.rnum, record=record)
         elif 'ascend' in record:
             Ordinal(tr=tr_Rel, domain=domain, rnum=cls.rnum, record=record)
         else:
