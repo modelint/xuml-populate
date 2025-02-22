@@ -2,10 +2,14 @@
 binary_association.py – Process a parsed binary association to populate the metamodel db
 """
 
+# System
 import logging
-from pyral.relvar import Relvar
-from xuml_populate.config import mmdb
 
+# Model Integration
+from pyral.relvar import Relvar
+
+# xUML Populate
+from xuml_populate.config import mmdb
 from xuml_populate.populate.mmclass_nt import Association_i, Binary_Association_i, Association_Class_i, \
     Perspective_i, Asymmetric_Perspective_i, T_Perspective_i, P_Perspective_i, \
     Reference_i, Formalizing_Class_Role_i, \
@@ -27,6 +31,10 @@ class BinaryAssociation:
     ref1, ref2 = None, None
     assoc_cname = None
     assoc_mult = None
+
+    @classmethod
+    def targetid(cls):
+        pass
 
     @classmethod
     def populate(cls, tr: str, domain: str, rnum: str, record):
@@ -125,12 +133,13 @@ class BinaryAssociation:
             ])
 
             # Simple Attribute Reference
+            to_id = cls.targetid()
             for from_attr, to_attr in zip(cls.ref1_source['attrs'], cls.ref1_target['attrs']):
-                Relvar.insert(mmdb, tr=tr, relvar='Attribute_Reference', tuples=[
+                Relvar.insert(db=mmdb, tr=tr, relvar='Attribute_Reference', tuples=[
                     Attribute_Reference_i(From_attribute=from_attr, From_class=cls.ref1_source['class'],
                                           To_attribute=to_attr, To_class=cls.ref1_target['class'],
                                           Ref='R',
-                                          Domain=domain, To_identifier=cls.ref1['id'], Rnum=cls.rnum)
+                                          Domain=domain, To_identifier=to_id, Rnum=cls.rnum)
                 ])
         else:  # Binary associative (with association class)
             # T Reference
