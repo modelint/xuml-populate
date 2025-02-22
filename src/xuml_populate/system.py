@@ -1,13 +1,18 @@
 """ system.py – Process all modeled domains within a system """
 
+# System
 import logging
 from pathlib import Path
 import yaml
-from xuml_populate.config import mmdb
+
+# Model Integration
 from xcm_parser.class_model_parser import ClassModelParser
 from xsm_parser.state_model_parser import StateModelParser
 from op2_parser.op_parser import OpParser
 from mtd_parser.method_parser import MethodParser
+
+# xUML Populate
+from xuml_populate.config import mmdb
 from xuml_populate.populate.domain import Domain
 
 _mmdb_fname = f"{mmdb}.txt"
@@ -24,18 +29,20 @@ class System:
     We then proceed to populate each modeled domain in the repository.
     """
 
-    content = {}  # Parsed content for all files in the system package
-    mmdb_path = Path(__file__).parent / "populate" / _mmdb_fname  # Path to the serialized repository db
-
-    @classmethod
-    def load(cls, system_path: Path):
+    def __init__(self, system_path: Path, parse_actions: bool = False):
         """
         Parse and otherwise process the contents of each modeled domain in the system.
         Then populate the content of each domain into the metamodel database.
 
-        :param system_path:  The path to the system package
+        :param system_path: The path to the system package
+        :param parse_actions: If true, all action text is parsed and populated into the metamodel,
+        otherwise it is just kept as text
         """
         _logger.info(f"Processing system: [{system_path}]")
+
+        self.parse_actions = parse_actions
+        self.content = {}  # Parsed content for all files in the system package
+        self.mmdb_path = Path(__file__).parent / "populate" / _mmdb_fname  # Path to the serialized repository db
 
         # Process each domain folder in the system package
         for domain_path in system_path.iterdir():
@@ -65,13 +72,13 @@ class System:
                     domain_name = cm_parse.domain['name']
                     domain_alias = cm_parse.domain['alias']
                     # Create dictionary key for domain content
-                    cls.content[domain_name] = {'alias': domain_alias, 'subsystems': {} }
+                    self.content[domain_name] = {'alias': domain_alias, 'subsystems': {}}
 
                     # Parse the domain's types.yaml file with all of the domain specific types (data types)
                     # Load domain specific types
                     try:
                         with open(domain_path / "types.yaml", 'r') as file:
-                            cls.content[domain_name]['types'] = yaml.safe_load(file)
+                            self.content[domain_name]['types'] = yaml.safe_load(file)
                     except FileNotFoundError:
                         _logger.error(f"No types.yaml file found for domain at: {domain_path}")
 
@@ -80,7 +87,7 @@ class System:
 
                 # We add the subsystem dictionary to the system content for the current domain file name
                 # inserting the class model parse
-                cls.content[domain_name]['subsystems'][subsys_name] = {
+                self.content[domain_name]['subsystems'][subsys_name] = {
                     'class_model': cm_parse, 'methods': {}, 'state_models': {}, 'external': {}
                 }
 
@@ -95,7 +102,7 @@ class System:
                         _logger.info(f"Processing method: [{method_file}]")
                         # Parse the method file and insert it in the subsystem subsys_parse
                         mtd_parse = MethodParser.parse_file(method_file, debug=False)
-                        cls.content[domain_name]['subsystems'][subsys_name]['methods'][method_name] = mtd_parse
+                        self.content[domain_name]['subsystems'][subsys_name]['methods'][method_name] = mtd_parse
 
                 # Load and parse the current subsystem's state models (state machines)
                 sm_path = subsys_path / "state-machines"
@@ -104,24 +111,23 @@ class System:
                     _logger.info(f"Processing state model: [{sm_file}]")
                     # Parse the state model
                     sm_parse = StateModelParser.parse_file(file_input=sm_file, debug=False)
-                    cls.content[domain_name]['subsystems'][subsys_name]['state_models'][sm_name] = sm_parse
+                    self.content[domain_name]['subsystems'][subsys_name]['state_models'][sm_name] = sm_parse
 
                 # Load and parse the external entity operations
                 ext_path = subsys_path / "external"
                 for ee_path in ext_path.iterdir():
                     ee_name = ee_path.name
-                    cls.content[domain_name]['subsystems'][subsys_name]['external'][ee_name] = {}
+                    self.content[domain_name]['subsystems'][subsys_name]['external'][ee_name] = {}
                     for op_file in ee_path.glob("*.op"):
                         op_name = op_file.stem
                         _logger.info(f"Processing ee operation: [{op_file}]")
                         op_parse = OpParser.parse_file(file_input=op_file, debug=False)
-                        cls.content[domain_name]['subsystems'][subsys_name]['external'][ee_name][op_name] = op_parse
+                        self.content[domain_name]['subsystems'][subsys_name]['external'][ee_name][op_name] = op_parse
 
-        cls.populate()
+        self.populate()
         pass
 
-    @classmethod
-    def populate(cls):
+    def populate(self):
         """Populate the database from the parsed input"""
 
         # Initiate a connection to the TclRAL database
@@ -131,8 +137,8 @@ class System:
 
         # Start with an empty metamodel repository
         _logger.info("Loading Blueprint MBSE metamodel repository schema")
-        Database.load(db=mmdb, fname=str(cls.mmdb_path))
+        Database.load(db=mmdb, fname=str(self.mmdb_path))
 
         # Populate each domain into the metamodel db
-        for domain_name, domain_parse in cls.content.items():
-            Domain.populate(domain_name, domain_parse)
+        for domain_name, domain_parse in self.content.items():
+            Domain(domain=domain_name, content=domain_parse, parse_actions=self.parse_actions)

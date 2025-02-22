@@ -1,17 +1,21 @@
 """
 method.py – Process parsed method to populate the metamodel db
 """
-
+# System
 import logging
-from xuml_populate.config import mmdb
+
+# Model Integration
 from pyral.transaction import Transaction
 from pyral.relvar import Relvar
 from pyral.relation import Relation  # For debugging
+
+# xUML Populate
+from xuml_populate.config import mmdb
 from xuml_populate.populate.flow import Flow
 from xuml_populate.populate.signature import Signature
 from xuml_populate.populate.activity import Activity
 from xuml_populate.populate.mm_type import MMtype
-from xuml_populate.populate.mmclass_nt import Method_Signature_i, Method_i, Parameter_i, Synchronous_Output_i
+from xuml_populate.populate.mmclass_nt import (Method_Signature_i, Method_i, Parameter_i, Synchronous_Output_i)
 
 _logger = logging.getLogger(__name__)
 
@@ -24,11 +28,7 @@ class Method:
     """
     Populate all relevant Method relvars
     """
-    subsys_method_path = None
-    me_flow = None  # Executing instance flow
-
-    @classmethod
-    def populate(cls, domain: str, subsys: str, m_parse):
+    def __init__(self, domain: str, subsys: str, m_parse):
         """
         Populate a method
 
@@ -37,14 +37,17 @@ class Method:
         :param m_parse: The parsed content of the method
         :return:
         """
+        subsys_method_path = None
+        me_flow = None  # Executing instance flow
+
         class_name = m_parse.class_name
 
-        Transaction.open(mmdb, tr_Method)
+        Transaction.open(db=mmdb, name=tr_Method)
         _logger.info("Transaction open: Populating method")
 
         # Create the signature
         signum = Signature.populate(tr=tr_Method, subsys=subsys, domain=domain)
-        Relvar.insert(mmdb, tr=tr_Method, relvar='Method_Signature', tuples=[
+        Relvar.insert(db=mmdb, tr=tr_Method, relvar='Method_Signature', tuples=[
             Method_Signature_i(SIGnum=signum, Method=m_parse.method, Class=class_name, Domain=domain)
         ])
 
@@ -55,16 +58,16 @@ class Method:
                                         subsys=subsys, domain=domain)
 
         # Populate the executing instance (me) flow
-        cls.me_flow = Flow.populate_instance_flow(cname=class_name, anum=anum, domain=domain,
+        self.me_flow = Flow.populate_instance_flow(cname=class_name, anum=anum, domain=domain,
                                                   label='me', single=True)
         _logger.info(f"INSERT Instance Flow (method me): [{domain}:{class_name}:{m_parse.method}:"
-                     f"{cls.me_flow.fid}]")
-        Relvar.insert(mmdb, tr=tr_Method, relvar='Method', tuples=[
+                     f"{self.me_flow.fid}]")
+        Relvar.insert(db=mmdb, tr=tr_Method, relvar='Method', tuples=[
             Method_i(Anum=anum, Name=m_parse.method, Class=class_name, Domain=domain,
-                     Executing_instance_flow=cls.me_flow.fid)
+                     Executing_instance_flow=self.me_flow.fid)
         ])
 
-        Transaction.execute(mmdb, tr_Method)  # Populate empty method
+        Transaction.execute(db=mmdb, name=tr_Method)  # Populate empty method
         _logger.info("Transaction closed: Populating method")
 
         # Add input flows (parameters)
@@ -73,18 +76,18 @@ class Method:
             MMtype.populate_unknown(name=p['type'], domain=domain)
 
             _logger.info("Transaction open: Populating method parameter")
-            Transaction.open(mmdb, tr_Parameter)
+            Transaction.open(db=mmdb, name=tr_Parameter)
 
             input_fid = Flow.populate_data_flow_by_type(mm_type=p['type'], anum=anum,
                                                         domain=domain, label=p['name']).fid
 
             _logger.info(f"INSERT Scalar Flow (method input): ["
                          f"{domain}:{class_name}:{m_parse.method}:^{p['name']}:{input_fid}]")
-            Relvar.insert(mmdb, tr=tr_Parameter, relvar='Parameter', tuples=[
+            Relvar.insert(db=mmdb, tr=tr_Parameter, relvar='Parameter', tuples=[
                 Parameter_i(Name=p['name'], Signature=signum, Domain=domain,
                             Input_flow=input_fid, Activity=anum, Type=p['type'])
             ])
-            Transaction.execute(mmdb, tr_Parameter)  # Method parameter
+            Transaction.execute(db=mmdb, name=tr_Parameter)  # Method parameter
             _logger.info("Transaction closed: Populating parameter")
 
         # Add output flow
@@ -93,7 +96,7 @@ class Method:
             output_fid = Flow.populate_data_flow_by_type(label=None, mm_type=m_parse.flow_out,
                                                          anum=anum, domain=domain).fid
             # No transaction needed since a single tuple is inserted for this feature
-            Relvar.insert(mmdb, relvar='Synchronous_Output', tuples=[
+            Relvar.insert(db=mmdb, relvar='Synchronous_Output', tuples=[
                 Synchronous_Output_i(Anum=anum, Domain=domain,
                                      Output_flow=output_fid, Type=m_parse.flow_out)
             ])

@@ -28,6 +28,8 @@ def parse(cl_input):
                         help='Name of the system package')
     parser.add_argument('-D', '--debug', action='store_true',
                         help='Debug mode'),
+    parser.add_argument('-A', '--actions', action='store_true',
+                        help='Parse actions'),
     parser.add_argument('-V', '--version', action='store_true',
                         help='Print the current version of the repo populator')
     return parser.parse_args(cl_input)
@@ -49,7 +51,7 @@ def main():
     # System package specified
     if args.system:
         system_pkg_path = Path(args.system)
-        System.load(system_pkg_path)
+        s = System(system_path=system_pkg_path, parse_actions=args.actions)
 
     logger.info("No problemo")  # We didn't die on an exception, basically
     print("\nNo problemo")
