@@ -5,7 +5,7 @@ state_model.py – Process parsed lifecycle to p
 import logging
 from xuml_populate.config import mmdb
 from xsm_parser.state_model_parser import StateModel_a
-from xuml_populate.mp_exceptions import MismatchedStateSignature
+from xuml_populate.exceptions.mp_exceptions import MismatchedStateSignature
 from pyral.relvar import Relvar
 from pyral.transaction import Transaction
 from xuml_populate.populate.flow import Flow

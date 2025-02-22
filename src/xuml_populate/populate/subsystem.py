@@ -3,7 +3,7 @@ subsystem.py – Manage assignment of subsystem class and relationship numbers
 """
 
 import logging
-from xuml_populate.mp_exceptions import CnumsExceeded
+from xuml_populate.exceptions.mp_exceptions import CnumsExceeded
 
 
 class Subsystem:

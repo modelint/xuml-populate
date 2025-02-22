@@ -5,7 +5,7 @@ generalization.py – Process parsed generalization to populate the metamodel db
 import logging
 from pyral.relvar import Relvar
 from xuml_populate.config import mmdb
-from xuml_populate.mp_exceptions import LessThanTwoSubclassesInGeneralization
+from xuml_populate.exceptions.mp_exceptions import LessThanTwoSubclassesInGeneralization
 
 from xuml_populate.populate.mmclass_nt import \
     Generalization_i, Facet_i, Superclass_i, Subclass_i, Minimal_Partition_i, \
