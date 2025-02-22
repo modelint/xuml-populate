@@ -72,6 +72,7 @@ class Domain:
             for c in subsys_parse['class_model'].classes:
                 MMclass.populate(domain=domain, subsystem=subsys, record=c)
             _logger.info("Populating relationships")
+            Relvar.printall(mmdb)
             for r in subsys_parse['class_model'].rels:
                 Relationship.populate(domain=domain, subsystem=subsys, record=r)
 
