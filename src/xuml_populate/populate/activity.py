@@ -2,17 +2,22 @@
 anum.py – Populate an Activity
 """
 
+# System
 import logging
-from xuml_populate.config import mmdb
+
+# Model Integration
 from pyral.relvar import Relvar
 from pyral.relation import Relation
-from xuml_populate.populate.element import Element
 from scrall.parse.parser import ScrallParser
+
+# xUML Populate
+from xuml_populate.config import mmdb
+from xuml_populate.populate.element import Element
 from xuml_populate.populate.actions.aparse_types import Activity_ap, Boundary_Actions
 from xuml_populate.populate.xunit import ExecutionUnit
 from xuml_populate.exceptions.action_exceptions import ActionException
-from xuml_populate.populate.mmclass_nt import Activity_i, Asynchronous_Activity_i, \
-    State_Activity_i, Synchronous_Activity_i
+from xuml_populate.populate.mmclass_nt import (Activity_i, Asynchronous_Activity_i, State_Activity_i,
+                                               Synchronous_Activity_i)
 
 _logger = logging.getLogger(__name__)
 
@@ -33,7 +38,7 @@ class Activity:
 
     @classmethod
     def populate_method(cls, tr: str, action_text: str, cname: str, method: str,
-                        subsys: str, domain: str) -> str:
+                        subsys: str, domain: str, parse_actions: bool) -> str:
         """
         Populate Synchronous Activity for Method
 
@@ -53,7 +58,10 @@ class Activity:
         else:
             cls.methods[cname][method] = {'anum': Anum, 'domain': domain, 'text': action_text, 'parse': None}
         # Parse the scrall and save for later population
-        cls.methods[cname][method]['parse'] = ScrallParser.parse_text(scrall_text=action_text, debug=False)
+        if parse_actions:
+            cls.methods[cname][method]['parse'] = ScrallParser.parse_text(scrall_text=action_text, debug=False)
+        else:
+            cls.methods[cname][method]['parse'] = None
         return Anum
 
     @classmethod
@@ -88,22 +96,22 @@ class Activity:
         :return: The Activity number (Anum)
         """
         Anum = Element.populate_unlabeled_subsys_element(tr=tr, prefix='A', subsystem=subsys, domain=domain)
-        Relvar.insert(mmdb, tr=tr, relvar='Activity', tuples=[
+        Relvar.insert(db=mmdb, tr=tr, relvar='Activity', tuples=[
             Activity_i(Anum=Anum, Domain=domain)
         ])
         if synchronous:
-            Relvar.insert(mmdb, tr=tr, relvar='Synchronous_Activity', tuples=[
+            Relvar.insert(db=mmdb, tr=tr, relvar='Synchronous_Activity', tuples=[
                 Synchronous_Activity_i(Anum=Anum, Domain=domain)
             ])
         else:
-            Relvar.insert(mmdb, tr=tr, relvar='Asynchronous_Activity', tuples=[
+            Relvar.insert(db=mmdb, tr=tr, relvar='Asynchronous_Activity', tuples=[
                 Asynchronous_Activity_i(Anum=Anum, Domain=domain)
             ])
         return Anum
 
     @classmethod
     def populate_state(cls, tr: str, state: str, state_model: str, actions: str,
-                       subsys: str, domain: str) -> str:
+                       subsys: str, domain: str, parse_actions: bool) -> str:
         """
         :param tr:
         :param state:
@@ -111,6 +119,7 @@ class Activity:
         :param actions:
         :param subsys:
         :param domain:
+        :param parse_actions:
         :return:
         """
 
@@ -118,13 +127,16 @@ class Activity:
         action_text = ''.join(actions) + '\n'
         if state_model not in cls.sm:
             cls.sm[state_model] = {}
-        parsed_activity = ScrallParser.parse_text(scrall_text=action_text, debug=False)
+        if parse_actions:
+            parsed_activity = ScrallParser.parse_text(scrall_text=action_text, debug=False)
+        else:
+            parsed_activity = None
         cls.sm[state_model][state] = parsed_activity  # To subsys_parse parsed actions for debugging
         # cls.populate_activity(text=action_text, pa=parsed_activity)
 
         # Create the Susbystem Element and obtain a unique Anum
         Anum = cls.populate(tr=tr, action_text=action_text, subsys=subsys, domain=domain, synchronous=False)
-        Relvar.insert(mmdb, tr=tr, relvar='State_Activity', tuples=[
+        Relvar.insert(db=mmdb, tr=tr, relvar='State_Activity', tuples=[
             State_Activity_i(Anum=Anum, State=state, State_model=state_model, Domain=domain)
         ])
         return Anum
@@ -141,7 +153,7 @@ class Activity:
                 _logger.info(f"Populating method execution units: {class_name}.{method_name}")
                 # Look up signature
                 R = f"Method:<{method_name}>, Class:<{class_name}>, Domain:<{cls.domain}>"
-                result = Relation.restrict(mmdb, relation='Method_Signature', restriction=R)
+                result = Relation.restrict(db=mmdb, relation='Method_Signature', restriction=R)
                 if not result.body:
                     # TODO: raise exception here
                     pass
@@ -149,7 +161,7 @@ class Activity:
 
                 # Look up xi flow
                 R = f"Name:<{method_name}>, Class:<{class_name}>, Domain:<{cls.domain}>"
-                result = Relation.restrict(mmdb, relation='Method', restriction=R)
+                result = Relation.restrict(db=mmdb, relation='Method', restriction=R)
                 if not result.body:
                     # TODO: raise exception here
                     pass

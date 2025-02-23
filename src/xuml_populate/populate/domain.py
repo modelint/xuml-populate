@@ -101,7 +101,7 @@ class Domain:
             # Insert state machines
             _logger.info("Populating state models")
             for sm in subsys_parse['state_models'].values():
-                StateModel.populate(subsys=subsys.name, sm=sm)
+                StateModel(subsys=subsys.name, sm=sm, parse_actions=self.parse_actions)
 
         Attribute.ResolveAttrTypes(domain=domain)
         _logger.info("Populating lineage")
@@ -113,6 +113,7 @@ class Domain:
         Relvar.printall(mmdb)
         #
         # Populate actions for all Activities
-        Activity.process_execution_units()
+        if self.parse_actions:
+            Activity.process_execution_units()
         pass
         #
