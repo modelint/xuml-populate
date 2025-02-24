@@ -10,6 +10,7 @@ from xcm_parser.class_model_parser import ClassModelParser
 from xsm_parser.state_model_parser import StateModelParser
 from op2_parser.op_parser import OpParser
 from mtd_parser.method_parser import MethodParser
+from pyral.database import Database
 
 # xUML Populate
 from xuml_populate.config import mmdb
@@ -142,3 +143,6 @@ class System:
         # Populate each domain into the metamodel db
         for domain_name, domain_parse in self.content.items():
             Domain(domain=domain_name, content=domain_parse, parse_actions=self.parse_actions)
+
+        # Save the populated metamodel
+        Database.save(db=mmdb, fname="pop_mmdb.txt")
