@@ -1,0 +1,10 @@
+---
+Level Name : string
+Distance : float
+Building Name : string
+Bank Name : string
+Count : int
+Speed : float
+Duration : float
+Boolean : boolean
+Direction : string

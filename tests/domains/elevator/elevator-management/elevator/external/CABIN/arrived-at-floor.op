@@ -1,0 +1,9 @@
+--
+<< CABIN.Arrived at floor( cabin : Nominal )
+--
+//
+// Asynchronous ingress operation
+// The Transport domain has delivered a Cabin to its destination
+// Send the appropriate event to the Cabin instance
+
+Arrived at floor -> Cabin( Shaft : ^cabin )

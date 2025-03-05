@@ -81,6 +81,12 @@ class Domain:
             for r in subsys_parse['class_model'].rels:
                 Relationship.populate(domain=domain, subsystem=subsys, record=r)
 
+            # Insert external entities and operations
+            _logger.info("Populating operations")
+            for ee_name, op_parse in subsys_parse['external'].items():
+                EE.populate(ee_name=ee_name, subsys=subsys.name,
+                            domain=domain, op_parse=op_parse)
+
             Relvar.printall(mmdb)
             # Insert methods
             if self.parse_actions:
@@ -90,11 +96,6 @@ class Domain:
                     # as class or non-class types
                     Method(domain=domain, subsys=subsys.name, m_parse=m_parse)
 
-                    # Insert external entities and operations
-                    _logger.info("Populating operations")
-                    for ee_name, op_parse in subsys_parse['external'].items():
-                        EE.populate(ee_name=ee_name, subsys=subsys.name,
-                                    domain=domain, op_parse=op_parse)
             else:
                 _logger.info("Action parsing off: Not parsing and populating method/EE ops text")
 
