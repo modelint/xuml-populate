@@ -11,12 +11,14 @@ from xsm_parser.state_model_parser import StateModelParser
 from op2_parser.op_parser import OpParser
 from mtd_parser.method_parser import MethodParser
 from pyral.database import Database
+from pyral.relvar import Relvar
 
 # xUML Populate
 from xuml_populate.config import mmdb
 from xuml_populate.populate.domain import Domain
+from xuml_populate.populate.mmclass_nt import System_i
 
-_mmdb_fname = f"{mmdb}.txt"
+_mmdb_fname = f"{mmdb}.ral"
 _logger = logging.getLogger(__name__)
 
 
@@ -30,7 +32,7 @@ class System:
     We then proceed to populate each modeled domain in the repository.
     """
 
-    def __init__(self, system_path: Path, parse_actions: bool = False):
+    def __init__(self, name: str, system_path: Path, parse_actions: bool = False):
         """
         Parse and otherwise process the contents of each modeled domain in the system.
         Then populate the content of each domain into the metamodel database.
@@ -41,9 +43,11 @@ class System:
         """
         _logger.info(f"Processing system: [{system_path}]")
 
+        self.name = name
         self.parse_actions = parse_actions
         self.content = {}  # Parsed content for all files in the system package
         self.mmdb_path = Path(__file__).parent / "populate" / _mmdb_fname  # Path to the serialized repository db
+        self.system_name = system_path.stem.title()
 
         # Process each domain folder in the system package
         for domain_path in system_path.iterdir():
@@ -126,7 +130,6 @@ class System:
                         self.content[domain_name]['subsystems'][subsys_name]['external'][ee_name][op_name] = op_parse
 
         self.populate()
-        pass
 
     def populate(self):
         """Populate the database from the parsed input"""
@@ -140,9 +143,14 @@ class System:
         _logger.info("Loading Blueprint MBSE metamodel repository schema")
         Database.load(db=mmdb, fname=str(self.mmdb_path))
 
+        # Populate the single instance System class
+        Relvar.insert(db=mmdb, relvar='System', tuples=[
+            System_i(Name=self.system_name),
+        ])
+
         # Populate each domain into the metamodel db
         for domain_name, domain_parse in self.content.items():
             Domain(domain=domain_name, content=domain_parse, parse_actions=self.parse_actions)
 
         # Save the populated metamodel
-        Database.save(db=mmdb, fname="pop_mmdb.txt")
+        Database.save(db=mmdb, fname=f"{self.name}_pop.ral")

@@ -98,6 +98,7 @@ Realized_Domain_i = namedtuple('Realized_Domain_i', 'Name')
 Spanning_Element_i = namedtuple('Spanning_Element_i', 'Label Domain')
 Subsystem_i = namedtuple('Subsystem_i', 'Name First_element_number Domain Alias')
 Subsystem_Element_i = namedtuple('Subsystem_Element_i', 'Label Domain Subsystem')
+System_i = namedtuple('System_i', 'Name')
 
 # Select Action subsystem
 Identifier_Select_i = namedtuple('Identifier_Select_i', 'ID Activity Domain Identifier Class')
