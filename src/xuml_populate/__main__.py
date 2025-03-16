@@ -50,8 +50,8 @@ def main():
 
     # System package specified
     if args.system:
-        system_pkg_path = Path(args.system)
-        s = System(name=args.system, system_path=system_pkg_path, parse_actions=args.actions)
+        system_pkg_path = Path(args.system).resolve()
+        s = System(name=system_pkg_path.stem, system_path=system_pkg_path, parse_actions=args.actions)
 
     logger.info("No problemo")  # We didn't die on an exception, basically
     print("\nNo problemo")

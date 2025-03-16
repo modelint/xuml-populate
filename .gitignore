@@ -1,3 +1,6 @@
+# Ignore PyCharm project files
+.idea/
+
 build/
 dist/
 diagnostics/
@@ -8,9 +11,3 @@ working/
 *.db
 .DS_Store
 src/class-model-dsl.egg-info
-.idea/**/workspace.xml
-.idea/**/tasks.xml
-.idea/**/usage.statistics.xml
-.idea/**/dictionaries
-.idea/**/shelf
-.idea/workspace.xml
