@@ -48,7 +48,7 @@ transitions
 state Are we already there
 activity
     (/R53/Transfer.Destination floor == /R43/is at/Shaft Level/Floor) ?
-    Already there -> | Prepare to move -> me
+        Already there -> | Prepare to move -> me
 transitions
     Prepare to move > SECURING DOORS
     Already there > PICKUP DROPOFF

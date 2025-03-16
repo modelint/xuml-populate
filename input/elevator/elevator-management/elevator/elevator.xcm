@@ -12,9 +12,9 @@ domain Elevator Management, EVMAN
 subsystem Elevator, ELEV 1-99
 class Accessible Shaft Level
 attributes
-    Floor {I, R3}
-    Shaft {I, R3}
-    Bank {R3c}
+    Floor : Level Name {I, R3}
+    Shaft : Shaft ID {I, R3}
+    Bank : Bank Name {R3c}
     Stop requested : Boolean
 --
 class Bank
@@ -28,13 +28,13 @@ attributes
 --
 class Bank Level
 attributes
-    Bank {I, R29}
-    Floor {I, R29}
+    Bank : Bank Name {I, R29}
+    Floor : Level Name {I, R29}
 --
 class Bottom Bank Level
 attributes
-    Bank {I, R38, R6}
-    Floor {I, R38}
+    Bank : Bank Name {I, R38, R6}
+    Floor : Level Name {I, R38}
     Calling up : Boolean
 --
 class Building
@@ -45,13 +45,13 @@ attributes
 class Cabin
 ee CABIN
 attributes
-    Shaft {I, R2, R43}
+    Shaft : Shaft ID {I, R2, R43}
     Travel direction : Direction
-    Current floor {R43}
+    Current floor : Level Name {R43}
 --
 class Door
 attributes
-    Shaft {I, R4}
+    Shaft : Shaft ID {I, R4}
     Close attempts : Count
     Lock requested : Boolean
     Held : Boolean
@@ -63,47 +63,41 @@ attributes
     Name : Level Name {I}
     Height : Distance {I2, OR7}
 --
-class Floor Order
-attributes
-    Lower floor {I, R55}
-    Higher floor {I2, R55}
---
 class Floor Service
 attributes
-    Floor {I, I2, R49}
-    Shaft {I, R49}
+    Floor : Level Name {I, I2, R49}
+    Shaft : Shaft ID {I, R49}
     Direction : Direction {I, I2}
-    Bank {I2, R49}
+    Bank : Bank Name {I2, R49}
 --
 class Middle Bank Level
 attributes
-    Bank {I, R38}
-    Floor {I, R38}
+    Bank : Bank Name {I, R38}
+    Floor : Level Name {I, R38}
     Calling up : Boolean
     Calling down : Boolean
 --
 class Shaft
 attributes
     ID : Shaft ID {I}
-    Number : Ordinal {I2, OR57}
-    Bank {R1}
+    Bank : Bank Name {R1}
     In service : Boolean
 --
 class Shaft Level
 attributes
-    Floor {I, R28}
-    Shaft {I, R28}
+    Floor : Level Name {I, R28}
+    Shaft : Shaft ID {I, R28}
 --
 class Top Bank Level
 attributes
-    Bank {I, R38, R5}
-    Floor {I, R38}
+    Bank : Bank Name {I, R38, R5}
+    Floor : Level Name {I, R38}
     Calling down : Boolean
 --
 class Transfer
 attributes
-    Shaft {I, R53}
-    Destination floor {R53}
+    Shaft : Shaft ID {I, R53}
+    Destination floor : Level Name {R53}
 --
 relationships
     R1
@@ -180,12 +174,5 @@ relationships
     is going to, 1c Accessible Shaft Level
     1 Transfer
     Transfer.Shaft -> Cabin.Shaft
-    Transfer.Destination floor -> Accessible Shaft Level.Floor
---
-    R55
-    is higher than, 1c Floor
-    is lower than, 1c Floor
-    1 Floor Order
-    Floor Order.Lower floor -> Floor.Name
-    Floor Order.Higher floor -> Floor.Name
+    Transfer.(Shaft, Destination floor) -> Accessible Shaft Level.(Shaft, Floor)
 --
