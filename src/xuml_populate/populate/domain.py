@@ -89,15 +89,11 @@ class Domain:
 
             Relvar.printall(mmdb)
             # Insert methods
-            if self.parse_actions:
-                _logger.info("Populating methods")
-                for m_parse in subsys_parse['methods'].values():
-                    # All classes must be populated first, so that parameter types in signatures can be resolved
-                    # as class or non-class types
-                    Method(domain=domain, subsys=subsys.name, m_parse=m_parse)
-
-            else:
-                _logger.info("Action parsing off: Not parsing and populating method/EE ops text")
+            _logger.info("Populating methods")
+            for m_parse in subsys_parse['methods'].values():
+                # All classes must be populated first, so that parameter types in signatures can be resolved
+                # as class or non-class types
+                Method(domain=domain, subsys=subsys.name, m_parse=m_parse, parse_actions=parse_actions)
 
             # Insert state machines
             _logger.info("Populating state models")

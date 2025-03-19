@@ -28,7 +28,7 @@ class Method:
     """
     Populate all relevant Method relvars
     """
-    def __init__(self, domain: str, subsys: str, m_parse):
+    def __init__(self, domain: str, subsys: str, m_parse, parse_actions: bool):
         """
         Populate a method
 
@@ -55,7 +55,7 @@ class Method:
         anum = Activity.populate_method(tr=tr_Method, action_text=m_parse.activity,
                                         cname=class_name,
                                         method=m_parse.method,
-                                        subsys=subsys, domain=domain)
+                                        subsys=subsys, domain=domain, parse_actions=parse_actions)
 
         # Populate the executing instance (me) flow
         self.me_flow = Flow.populate_instance_flow(cname=class_name, anum=anum, domain=domain,
