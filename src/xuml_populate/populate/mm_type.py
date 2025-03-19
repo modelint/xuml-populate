@@ -108,6 +108,7 @@ class MMtype:
         R = f"Name:<{name}>, Domain:<{domain}>"
         result = Relation.restrict(mmdb, restriction=R, relation="Type").body
         if not result:
+            # TODO: This is happening for some reason, but doesn't seem to be an error
             _logger.error("Scalar dummy UNRESOLVED not found during depopulate")
         # Depopulate scalar
         Transaction.open(mmdb, tr_Scalar_Delete)

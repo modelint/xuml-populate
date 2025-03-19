@@ -8,11 +8,13 @@ import logging
 # Model Integration
 from xsm_parser.state_model_parser import StateModel_a
 from pyral.relvar import Relvar
+from pyral.relation import Relation
 from pyral.transaction import Transaction
+
 
 # xUML Populate
 from xuml_populate.config import mmdb
-from xuml_populate.exceptions.mp_exceptions import MismatchedStateSignature
+from xuml_populate.exceptions.mp_exceptions import MismatchedStateSignature, BadStateModelName
 from xuml_populate.populate.flow import Flow
 from xuml_populate.populate.signature import Signature
 from xuml_populate.populate.activity import Activity
@@ -21,7 +23,8 @@ from xuml_populate.populate.mmclass_nt import (State_Model_i, Lifecycle_i, Non_D
                                                Deletion_State_i, Initial_Pseudo_State_i, State_Signature_i,
                                                Initial_Transition_i, Event_Response_i, Transition_i, Non_Transition_i,
                                                Event_Specification_i, Monomorphic_Event_Specification_i,
-                                               Monomorphic_Event_i, Effective_Event_i, Event_i, Parameter_i)
+                                               Monomorphic_Event_i, Effective_Event_i, Event_i, Parameter_i, Assigner_i,
+                                               Multiple_Assigner_i, Single_Assigner_i)
 
 ISP = 'Initial_Pseudo_State'  # Name of initial pseudo state
 
@@ -38,7 +41,17 @@ class StateModel:
         """Constructor"""
 
         self.cname = sm.lifecycle
-        self.rnum = sm.assigner
+        self.rnum = sm.assigner_rnum
+        # Ensure that only cname or rnum is set
+        if not self.cname and not self.rnum:
+            msg = f"No state model rnum or class name specified"
+            _logger.exception(msg)
+            raise BadStateModelName(msg)
+        if self.cname and self.rnum:
+            msg = f"State model must be either lifecycle (cname) or assigner (rnum), not both"
+            _logger.exception(msg)
+            raise BadStateModelName(msg)
+        self.pclass = sm.assigner_pclass  # Establishes a multiple assigner with a partitioning class
         self.sm_name = self.cname if self.cname else self.rnum
         self.signums = {}  # Remember signature of each inserted state for processing transitions
         self.signatures = {}
@@ -55,59 +68,73 @@ class StateModel:
             Relvar.insert(db=mmdb, tr=tr_SM, relvar='Lifecycle', tuples=[
                 Lifecycle_i(Class=self.cname, Domain=sm.domain)
             ])
-            # Populate the states
-            for s in sm.states:
-                # Create Real State and all associated model elements
-                Relvar.insert(db=mmdb, tr=tr_SM, relvar='State', tuples=[
-                    State_i(Name=s.state.name, State_model=self.cname, Domain=sm.domain)
-                ])
-                # Create its Activity
-                anum = Activity.populate_state(tr=tr_SM,
-                                               state=s.state.name, subsys=subsys, actions=s.activity,
-                                               state_model=self.cname, domain=sm.domain,
-                                               parse_actions=self.parse_actions
-                                               )
-                # Signature
-                sig_params = frozenset(s.state.signature)
-                if sig_params not in self.signatures:
-                    # Add new signature if it doesn't exist
-                    # First create signature superclass instance in Activity subsystem
-                    signum = Signature.populate(tr=tr_SM, subsys=subsys, domain=sm.domain)
-                    self.signatures[sig_params] = signum  # Save the SIGnum as a value, keyed to the frozen params
-                    Relvar.insert(db=mmdb, tr=tr_SM, relvar='State_Signature', tuples=[
-                        State_Signature_i(SIGnum=signum, State_model=self.cname, Domain=sm.domain)
-                    ])
-                    # Now we need to create Data Flows and Parameters
-                    for p in s.state.signature:
-                        # Create a Data flow
-                        # Populate the Parameter's type if it hasn't already been populated
-                        MMtype.populate_unknown(name=p.type, domain=sm.domain)
-                        input_fid = Flow.populate_data_flow_by_type(mm_type=p.type, anum=anum,
-                                                                    domain=sm.domain, label=None).fid
-                        Relvar.insert(db=mmdb, tr=tr_SM, relvar='Parameter', tuples=[
-                            Parameter_i(Name=p.name, Signature=signum, Domain=sm.domain,
-                                        Input_flow=input_fid, Activity=anum, Type=p.type)
-                        ])
-                else:
-                    # Otherwise, just get the id of the matching signature
-                    signum = self.signatures[sig_params]
-                Relvar.insert(db=mmdb, tr=tr_SM, relvar='Real_State', tuples=[
-                    Real_State_i(Name=s.state.name, State_model=self.cname, Domain=sm.domain, Signature=signum,
-                                 Activity=anum)
-                ])
-                # We need to look up the sid when matching events on incoming transitions
-                self.signums[s.state.name] = signum
-                if not s.state.deletion:
-                    Relvar.insert(db=mmdb, tr=tr_SM, relvar='Non_Deletion_State', tuples=[
-                        Non_Deletion_State_i(Name=s.state.name, State_model=self.cname, Domain=sm.domain)
-                    ])
-                else:
-                    Relvar.insert(db=mmdb, tr=tr_SM, relvar='Deletion_State', tuples=[
-                        Deletion_State_i(Name=s.state.name, Class=self.cname, Domain=sm.domain)
-                    ])
         else:  # Assigner state model
-            # TODO: Handle assigner state models
             _logger.info(f"Populating Assigner [{self.rnum}]")
+            Relvar.insert(db=mmdb, tr=tr_SM, relvar='Assigner', tuples=[
+                Assigner_i(Rnum=self.rnum, Domain=sm.domain)
+            ])
+            if self.pclass:
+                # Multiple assigner with a partitioning class
+                Relvar.insert(db=mmdb, tr=tr_SM, relvar='Multiple_Assigner', tuples=[
+                    Multiple_Assigner_i(Rnum=self.rnum, Partitioning_class=self.pclass, Domain=sm.domain)
+                ])
+            else:
+                # Single assigner
+                Relvar.insert(db=mmdb, tr=tr_SM, relvar='Single_Assigner', tuples=[
+                    Single_Assigner_i(Rnum=self.rnum, Domain=sm.domain)
+                ])
+
+        # Populate the states
+        for s in sm.states:
+            # Create Real State and all associated model elements
+            Relvar.insert(db=mmdb, tr=tr_SM, relvar='State', tuples=[
+                State_i(Name=s.state.name, State_model=self.sm_name, Domain=sm.domain)
+            ])
+            # Create its Activity
+            anum = Activity.populate_state(tr=tr_SM,
+                                           state=s.state.name, subsys=subsys, actions=s.activity,
+                                           state_model=self.sm_name, domain=sm.domain,
+                                           parse_actions=self.parse_actions
+                                           )
+            # Signature
+            sig_params = frozenset(s.state.signature)
+            if sig_params not in self.signatures:
+                # Add new signature if it doesn't exist
+                # First create signature superclass instance in Activity subsystem
+                signum = Signature.populate(tr=tr_SM, subsys=subsys, domain=sm.domain)
+                self.signatures[sig_params] = signum  # Save the SIGnum as a value, keyed to the frozen params
+                Relvar.insert(db=mmdb, tr=tr_SM, relvar='State_Signature', tuples=[
+                    State_Signature_i(SIGnum=signum, State_model=self.sm_name, Domain=sm.domain)
+                ])
+                # Now we need to create Data Flows and Parameters
+                for p in s.state.signature:
+                    # Create a Data flow
+                    # Populate the Parameter's type if it hasn't already been populated
+                    MMtype.populate_unknown(name=p.type, domain=sm.domain)
+                    input_fid = Flow.populate_data_flow_by_type(mm_type=p.type, anum=anum,
+                                                                domain=sm.domain, label=None).fid
+                    Relvar.insert(db=mmdb, tr=tr_SM, relvar='Parameter', tuples=[
+                        Parameter_i(Name=p.name, Signature=signum, Domain=sm.domain,
+                                    Input_flow=input_fid, Activity=anum, Type=p.type)
+                    ])
+            else:
+                # Otherwise, just get the id of the matching signature
+                signum = self.signatures[sig_params]
+            Relvar.insert(db=mmdb, tr=tr_SM, relvar='Real_State', tuples=[
+                Real_State_i(Name=s.state.name, State_model=self.sm_name, Domain=sm.domain, Signature=signum,
+                             Activity=anum)
+            ])
+            # We need to look up the sid when matching events on incoming transitions
+            self.signums[s.state.name] = signum
+            if self.rnum or self.cname and not s.state.deletion:
+                # Assigner cannot have a Deletion State
+                Relvar.insert(db=mmdb, tr=tr_SM, relvar='Non_Deletion_State', tuples=[
+                    Non_Deletion_State_i(Name=s.state.name, State_model=self.sm_name, Domain=sm.domain)
+                ])
+            else:
+                Relvar.insert(db=mmdb, tr=tr_SM, relvar='Deletion_State', tuples=[
+                    Deletion_State_i(Name=s.state.name, Class=self.cname, Domain=sm.domain)
+                ])
 
         # Populate the events
         # TODO: Handle polymorphic events

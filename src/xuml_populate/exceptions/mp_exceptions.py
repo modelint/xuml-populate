@@ -14,6 +14,9 @@ class MPException(Exception):
 class MDPopulationException(MPException):
     pass
 
+class BadStateModelName(MPException):
+    pass
+
 class MultipleDomainsException(MPException):
     def __str__(self):
         return f'{pre}Only one domain may be loaded at a time.{post}'

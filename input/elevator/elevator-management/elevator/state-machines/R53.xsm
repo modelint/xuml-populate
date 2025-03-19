@@ -8,7 +8,7 @@ metadata
     Copyright notice > MIT
     Organization logo > mint
 domain Elevator Management
-relationship R53
+relationship R53 / Shaft
 events
     Service requested
     No destination
