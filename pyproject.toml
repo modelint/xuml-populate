@@ -15,7 +15,7 @@ classifiers = [
     "Programming Language :: Python :: 3",
 ]
 keywords = ["shlaer-mellor", "metamodel", "executable uml", "mbse", "xuml", "xtuml", "platform independent", "sysml"]
-dependencies = ["xcm-parser", "xsm-parser", "op-parser", "mtd-parser", "mi-pyral", "scrall", 'tomli; python_version < "3.11"']
+dependencies = ["pyYAML", "xcm-parser", "xsm-parser", "op-parser", "mtd-parser", "mi-pyral", "scrall", 'tomli; python_version < "3.11"']
 requires-python = ">=3.11"
 
 [project.optional-dependencies]
