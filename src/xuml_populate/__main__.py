@@ -9,9 +9,14 @@ import argparse
 from pathlib import Path
 from xuml_populate.system import System
 from xuml_populate import version
+import atexit
 
 _logpath = Path("repo_pop.log")
 _progname = 'Blueprint model repository populator'
+
+def clean_up():
+    """Normal and exception exit activities"""
+    _logpath.unlink(missing_ok=True)
 
 
 def get_logger():
@@ -28,6 +33,8 @@ def parse(cl_input):
                         help='Name of the system package')
     parser.add_argument('-D', '--debug', action='store_true',
                         help='Debug mode'),
+    parser.add_argument('-L', '--log', action='store_true',
+                        help='Generate a diagnostic log file')
     parser.add_argument('-A', '--actions', action='store_true',
                         help='Parse actions'),
     parser.add_argument('-V', '--version', action='store_true',
@@ -42,6 +49,10 @@ def main():
 
     # Parse the command line args
     args = parse(sys.argv[1:])
+
+    if not args.log:
+        # If no log file is requested, remove the log file before termination
+        atexit.register(clean_up)
 
     if args.version:
         # Just print the version and quit
