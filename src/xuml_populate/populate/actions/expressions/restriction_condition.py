@@ -243,7 +243,7 @@ class RestrictCondition:
                 case 'MATH_a':
                     text += cls.walk_criteria(operands=o.operands, operator=o.op, attr=attr_set)
                 case 'UNARY_a':
-                    print()
+                    pass # TODO: tbd
                 case 'INST_PROJ_a':
                     match type(o.iset).__name__:
                         case 'N_a':

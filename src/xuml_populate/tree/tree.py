@@ -23,7 +23,7 @@ def extract(tree: List) -> (List[str], bool):
     pop = []  # population
     # If there are no sublists in the node, it is a terminal node and we can just return its contents
     if not any(isinstance(n, list) for n in tree):
-        print("Terminal node")
+        # print("Terminal node")
         return tree, True
     # Step through each node
     for i, n in enumerate(tree):
@@ -40,9 +40,9 @@ def extract(tree: List) -> (List[str], bool):
                 # [ 'n0', 'n1' ]. This keeps us from ending up with a childless parent.
                 if len(tree) == 2 and len(tree[1]) == 1:
                     tree[1] = tree[1][0]
-                print()
+                # print()
             break  # Once we process a nested node, we don't go any further
-    print()
+    # print()
     return pop, False  # This is not a terminal node
 
 
@@ -54,4 +54,4 @@ if not any(isinstance(n, list) for n in pattern):
 else:
     while len(pattern) > 0 and any(isinstance(n, list) for n in pattern):
         lineages.append(extract(pattern)[0])
-print()
+# print()

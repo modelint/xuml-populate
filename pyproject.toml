@@ -23,7 +23,7 @@ build = ["build", "twine"]
 dev = ["bump2version", "pytest"]
 
 [project.scripts]
-makemodeldb = "xuml_populate.__main__:main"
+modeldb = "xuml_populate.__main__:main"
 
 [project.urls]
 repository    = "https://github.com/modelint/xuml-populate"

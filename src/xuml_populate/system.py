@@ -32,7 +32,7 @@ class System:
     We then proceed to populate each modeled domain in the repository.
     """
 
-    def __init__(self, name: str, system_path: Path, parse_actions: bool = False):
+    def __init__(self, name: str, system_path: Path, parse_actions: bool = False, display=False):
         """
         Parse and otherwise process the contents of each modeled domain in the system.
         Then populate the content of each domain into the metamodel database.
@@ -48,6 +48,7 @@ class System:
         self.content = {}  # Parsed content for all files in the system package
         self.mmdb_path = Path(__file__).parent / "populate" / _mmdb_fname  # Path to the serialized repository db
         self.system_name = system_path.stem.title()
+        self.display=display
 
         # Process each domain folder in the system package
         for domain_path in system_path.iterdir():
@@ -150,7 +151,7 @@ class System:
 
         # Populate each domain into the metamodel db
         for domain_name, domain_parse in self.content.items():
-            Domain(domain=domain_name, content=domain_parse, parse_actions=self.parse_actions)
+            Domain(domain=domain_name, content=domain_parse, parse_actions=self.parse_actions, display=self.display)
 
         # Save the populated metamodel
-        Database.save(db=mmdb, fname=f"{self.name}_pop.ral")
+        Database.save(db=mmdb, fname=f"mmdb_{self.name}.ral")

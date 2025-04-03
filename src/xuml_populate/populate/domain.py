@@ -34,7 +34,7 @@ class Domain:
     """
     Populate all relevant Domain relvars
     """
-    def __init__(self, domain: str, content: Dict, parse_actions: bool):
+    def __init__(self, domain: str, content: Dict, parse_actions: bool, display=False):
         """
         Insert all user model elements in this Domain into the corresponding Metamodel classes.
 
@@ -87,7 +87,7 @@ class Domain:
                 EE.populate(ee_name=ee_name, subsys=subsys.name,
                             domain=domain, op_parse=op_parse)
 
-            Relvar.printall(mmdb)
+            # Relvar.printall(mmdb)
             # Insert methods
             _logger.info("Populating methods")
             for m_parse in subsys_parse['methods'].values():
@@ -107,7 +107,8 @@ class Domain:
         Lineage.Derive(domain=domain)
         #
         # Print out the populated metamodel
-        Relvar.printall(mmdb)
+        if display:
+            Relvar.printall(mmdb)
         #
         # Populate actions for all Activities
         if self.parse_actions:

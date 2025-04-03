@@ -162,7 +162,8 @@ class TableExpr:
                         cls.action_inputs[aid] = {input_flow.fid}
                         cls.action_outputs[aid] = {component_flow.fid}
                     case 'Extend':
-                        print()
+                        pass
+                        # print()
                     case _:
                         raise UndefinedHeaderExpressionOp
                 pass

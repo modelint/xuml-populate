@@ -177,7 +177,7 @@ class Activity:
                 # for xunit in aparse[0]:
                 for count, xunit in enumerate(aparse[0]):  # Use count for debugging
                     c = count+1
-                    print(f"Processing statement: {c}")
+                    # print(f"Processing statement: {c}")
                     match type(xunit).__name__:
                         case 'Execution_Unit_a':
                             boundary_actions = ExecutionUnit.process_method_statement_set(

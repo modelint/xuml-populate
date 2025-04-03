@@ -10,6 +10,18 @@ states and transitions, actions and all other model components.
 
 Here we support the Shlaer-Mellor variant of Executable UML exclusively.
 
+## Command usage
+
+`% modeldb -s elevator`
+
+Assuming your system is named 'elevator' and is in the current working directory with the internal structure defined below, will output a file named `mmdb_elevator.ral`. This *.ral file is a text file serialization of a TclRAL database.
+
+Your user model is loaded into the Shlaer-Mellor Metamodel and, if there are no errors, you know you have a Shlaer-Mellor Executable Model that doesn't break any of the rules defined by the metamodel.
+
+You can load and view it using TclRAL or PyRAL or feed it to other downstream Blueprint tools such as the
+Model Executor which among its tasks will generate a user model database.
+
+
 ## Input to the populator
 
 Each system is defined in a single package broken down into standard hierarchy of folders like so:
