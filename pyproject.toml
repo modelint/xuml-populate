@@ -1,0 +1,30 @@
+[build-system]
+requires      = ["setuptools>=61.0.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "xcm-populate"
+version = "0.1.0"
+description = "Populates the SM Metamodel schema with a user model and outputs this as a TclRAL *.ral database"
+readme = "README.md"
+authors = [{ name = "Leon Starr", email = "leon_starr@modelint.com" }]
+license = { file = "LICENSE" }
+classifiers = [
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+]
+keywords = ["shlaer-mellor", "metamodel", "executable uml", "mbse", "xuml", "xtuml", "platform independent", "sysml"]
+dependencies = ["xcm-parser", "xsm-parser", "op-parser", "mtd-parser", "mi-pyral", "scrall", 'tomli; python_version < "3.11"']
+requires-python = ">=3.11"
+
+[project.optional-dependencies]
+build = ["build", "twine"]
+dev = ["bump2version", "pytest"]
+
+[project.scripts]
+makemodeldb = "xuml_populate.__main__:main"
+
+[project.urls]
+repository    = "https://github.com/modelint/xuml-populate"
+documentation = "https://github.com/modelint/xuml-populate/wiki"

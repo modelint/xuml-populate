@@ -1,0 +1,2 @@
+include src/xuml_populate/log.conf
+include src/xuml_populate/populate/mmdb.ral
