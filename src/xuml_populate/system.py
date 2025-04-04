@@ -3,7 +3,7 @@
 # System
 import logging
 from pathlib import Path
-import yaml
+# import yaml
 
 # Model Integration
 from xcm_parser.class_model_parser import ClassModelParser
