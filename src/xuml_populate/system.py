@@ -80,13 +80,14 @@ class System:
                     # Create dictionary key for domain content
                     self.content[domain_name] = {'alias': domain_alias, 'subsystems': {}}
 
+                    # TODO: Do we need this?
                     # Parse the domain's types.yaml file with all of the domain specific types (data types)
                     # Load domain specific types
-                    try:
-                        with open(domain_path / "types.yaml", 'r') as file:
-                            self.content[domain_name]['types'] = yaml.safe_load(file)
-                    except FileNotFoundError:
-                        _logger.error(f"No types.yaml file found for domain at: {domain_path}")
+                    # try:
+                    #     with open(domain_path / "types.yaml", 'r') as file:
+                    #         self.content[domain_name]['types'] = yaml.safe_load(file)
+                    # except FileNotFoundError:
+                    #     _logger.error(f"No types.yaml file found for domain at: {domain_path}")
 
                 # Get this subsystem name from the parse
                 subsys_name = cm_parse.subsystem['name']
@@ -99,36 +100,45 @@ class System:
 
                 # Load and parse all the methods for the current subsystem folder
                 method_path = subsys_path / "methods"
-                # Find all class folders in the current subsystem methods directory
-                class_folders = [f for f in method_path.iterdir() if f.is_dir()]
-                for class_folder in class_folders:
-                    # Process each method file in this class folder
-                    for method_file in class_folder.glob("*.mtd"):
-                        method_name = method_file.stem
-                        _logger.info(f"Processing method: [{method_file}]")
-                        # Parse the method file and insert it in the subsystem subsys_parse
-                        mtd_parse = MethodParser.parse_file(method_file, debug=False)
-                        self.content[domain_name]['subsystems'][subsys_name]['methods'][method_name] = mtd_parse
+                if method_path.is_dir():
+                    # Find all class folders in the current subsystem methods directory
+                    class_folders = [f for f in method_path.iterdir() if f.is_dir()]
+                    for class_folder in class_folders:
+                        # Process each method file in this class folder
+                        for method_file in class_folder.glob("*.mtd"):
+                            method_name = method_file.stem
+                            _logger.info(f"Processing method: [{method_file}]")
+                            # Parse the method file and insert it in the subsystem subsys_parse
+                            mtd_parse = MethodParser.parse_file(method_file, debug=False)
+                            self.content[domain_name]['subsystems'][subsys_name]['methods'][method_name] = mtd_parse
+                else:
+                    _logger.info("No method dir")
 
                 # Load and parse the current subsystem's state models (state machines)
                 sm_path = subsys_path / "state-machines"
-                for sm_file in sm_path.glob("*.xsm"):
-                    sm_name = sm_file.stem
-                    _logger.info(f"Processing state model: [{sm_file}]")
-                    # Parse the state model
-                    sm_parse = StateModelParser.parse_file(file_input=sm_file, debug=False)
-                    self.content[domain_name]['subsystems'][subsys_name]['state_models'][sm_name] = sm_parse
+                if sm_path.is_dir():
+                    for sm_file in sm_path.glob("*.xsm"):
+                        sm_name = sm_file.stem
+                        _logger.info(f"Processing state model: [{sm_file}]")
+                        # Parse the state model
+                        sm_parse = StateModelParser.parse_file(file_input=sm_file, debug=False)
+                        self.content[domain_name]['subsystems'][subsys_name]['state_models'][sm_name] = sm_parse
+                else:
+                    _logger.info("No state-machines dir")
 
                 # Load and parse the external entity operations
                 ext_path = subsys_path / "external"
-                for ee_path in ext_path.iterdir():
-                    ee_name = ee_path.name
-                    self.content[domain_name]['subsystems'][subsys_name]['external'][ee_name] = {}
-                    for op_file in ee_path.glob("*.op"):
-                        op_name = op_file.stem
-                        _logger.info(f"Processing ee operation: [{op_file}]")
-                        op_parse = OpParser.parse_file(file_input=op_file, debug=False)
-                        self.content[domain_name]['subsystems'][subsys_name]['external'][ee_name][op_name] = op_parse
+                if ext_path.is_dir():
+                    for ee_path in ext_path.iterdir():
+                        ee_name = ee_path.name
+                        self.content[domain_name]['subsystems'][subsys_name]['external'][ee_name] = {}
+                        for op_file in ee_path.glob("*.op"):
+                            op_name = op_file.stem
+                            _logger.info(f"Processing ee operation: [{op_file}]")
+                            op_parse = OpParser.parse_file(file_input=op_file, debug=False)
+                            self.content[domain_name]['subsystems'][subsys_name]['external'][ee_name][op_name] = op_parse
+                else:
+                    _logger.info("No external dir")
 
         self.populate()
 
