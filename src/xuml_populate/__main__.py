@@ -54,14 +54,14 @@ def main():
     # Parse the command line args
     args = parse(sys.argv[1:])
 
-    if not args.log:
-        # If no log file is requested, remove the log file before termination
-        atexit.register(clean_up)
-
     if args.version:
         # Just print the version and quit
         print(f'{_progname} version: {version}')
         sys.exit(0)
+
+    if not args.log:
+        # If no log file is requested, remove the log file before termination
+        atexit.register(clean_up)
 
     # System package specified
     if args.system:
