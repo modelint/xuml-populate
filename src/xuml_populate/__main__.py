@@ -11,7 +11,7 @@ from xuml_populate.system import System
 from xuml_populate import version
 import atexit
 
-_logpath = Path("repo_pop.log")
+_logpath = Path("modeldb.log")
 _progname = 'Blueprint model repository populator'
 
 def clean_up():
@@ -41,6 +41,8 @@ def parse(cl_input):
                         help='Parse actions'),
     parser.add_argument('-V', '--version', action='store_true',
                         help='Print the current version of the repo populator')
+    parser.add_argument('-v', '--verbose', action='store_true',
+                        help='Verbose messages')
     return parser.parse_args(cl_input)
 
 
@@ -67,7 +69,8 @@ def main():
         s = System(name=system_pkg_path.stem, system_path=system_pkg_path, parse_actions=args.actions, display=args.display)
 
     logger.info("No problemo")  # We didn't die on an exception, basically
-    print("\nNo problemo")
+    if args.verbose:
+        print("\nNo problemo")
 
 
 if __name__ == "__main__":
