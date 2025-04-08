@@ -105,5 +105,6 @@ class InstanceAssignment:
         ])
 
         Transaction.execute(mmdb, tr_Migrate)  # LHS labeled instance flow
+        pass
 
         return Boundary_Actions(ain={initial_aid}, aout={final_aid})

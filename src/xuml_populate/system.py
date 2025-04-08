@@ -3,6 +3,7 @@
 # System
 import logging
 from pathlib import Path
+from contextlib import redirect_stdout
 # import yaml
 
 # Model Integration
@@ -52,6 +53,15 @@ class System:
 
         # Process each domain folder in the system package
         for domain_path in system_path.iterdir():
+            # First make sure it is really a domain folder, or at least a folder
+            # For example, on mac OS we sometimes trip on a .DS_Store file and, if so, we want to ignore it
+            if domain_path.name.startswith('.'):
+                _logger.warning(f"Path: {domain_path} is hidden -- skipping")
+                continue
+
+            if not domain_path.is_dir():
+                _logger.warning(f"Path: {domain_path} is not a directory -- skipping")
+                continue
             # File names may differ from the actual model element name due to case and delimiter differences
             # For example, the domain name `Elevator Management` may have the file name `elevator-management`
             # The domain name will be in the parsed content, but it is convenient to use the file names as keys
@@ -59,7 +69,6 @@ class System:
             domain_name = None  # Domain name is unknown until the class model is parsed
             _logger.info(f"Processing domain: [{domain_path}]")
 
-            # Populate each subsystem of this domain
             subsys_folders = [f for f in domain_path.iterdir() if f.is_dir()]
             for subsys_path in subsys_folders:
 
@@ -164,4 +173,11 @@ class System:
             Domain(domain=domain_name, content=domain_parse, parse_actions=self.parse_actions, display=self.display)
 
         # Save the populated metamodel
-        Database.save(db=mmdb, fname=f"mmdb_{self.name}.ral")
+        saved_mmdb_name = f"mmdb_{self.name}.ral"
+        Database.save(db=mmdb, fname=saved_mmdb_name)
+
+        # Output a text file of the populated mmdb
+        mmdb_printout = f"mmdb_{self.name}.txt"
+        with open(mmdb_printout, 'w') as f:
+            with redirect_stdout(f):
+                Relvar.printall(db=mmdb)

@@ -111,7 +111,8 @@ class Domain:
             Relvar.printall(mmdb)
         #
         # Populate actions for all Activities
-        if self.parse_actions:
-            Activity.process_execution_units()
+        Activity.process_execution_units()
+        # if self.parse_actions:
+        #     Activity.process_execution_units()
         pass
         #

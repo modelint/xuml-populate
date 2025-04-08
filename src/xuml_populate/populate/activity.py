@@ -58,10 +58,12 @@ class Activity:
         else:
             cls.methods[cname][method] = {'anum': Anum, 'domain': domain, 'text': action_text, 'parse': None}
         # Parse the scrall and save for later population
-        if parse_actions:
-            cls.methods[cname][method]['parse'] = ScrallParser.parse_text(scrall_text=action_text, debug=False)
-        else:
-            cls.methods[cname][method]['parse'] = None
+        cls.methods[cname][method]['parse'] = ScrallParser.parse_text(scrall_text=action_text, debug=False)
+        pass
+        # if parse_actions:
+        #     cls.methods[cname][method]['parse'] = ScrallParser.parse_text(scrall_text=action_text, debug=False)
+        # else:
+        #     cls.methods[cname][method]['parse'] = None
         return Anum
 
     @classmethod
