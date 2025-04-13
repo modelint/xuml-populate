@@ -234,7 +234,7 @@ class Flow:
 
     @classmethod
     def populate_data_flow_by_type(cls, label: Optional[str], mm_type: str, anum: str,
-                                   domain: str) -> Flow_ap:
+                                   domain: str, activity_tr: str = None) -> Flow_ap:
         """
         Populate an instance of Data Flow and determine its subclasses based on the supplied
         Class, Scalar, or Table Type.
@@ -243,23 +243,27 @@ class Flow:
         :param mm_type: A Class, Scalar, or Table Type
         :param anum:
         :param domain:
+        :param activity_tr: Incorporate this in the activity population transaction if provided
         :return: The generated flow id
         """
+        tr = tr_Inst_Flow if not activity_tr else activity_tr
         # For now we distinguish only between class and scalar types
         # Is the type a Class Type?
         R = f"Name:<{mm_type}>, Domain:<{domain}>"
-        r_result = Relation.restrict(mmdb, relation='Class', restriction=R)
+        r_result = Relation.restrict(db=mmdb, relation='Class', restriction=R)
         if r_result.body:
             # It's a class type, create a multiple instance flow
-            flow = cls.populate_instance_flow(cname=mm_type, anum=anum, domain=domain, label=label)
+            flow = cls.populate_instance_flow(cname=mm_type, anum=anum, domain=domain, label=label,
+                                              activity_tr=tr)
         else:
             # It's a scalar type
             flow = cls.populate_scalar_flow(scalar_type=mm_type, anum=anum, domain=domain,
-                                            label=label)
+                                            label=label, activity_tr=tr)
         return flow
 
     @classmethod
-    def populate_scalar_flow(cls, scalar_type: str, anum: str, domain: str, label: Optional[str] = None) -> Flow_ap:
+    def populate_scalar_flow(cls, scalar_type: str, anum: str, domain: str, label: Optional[str] = None,
+                             activity_tr: str = None) -> Flow_ap:
         """
         Populate an instance of Scalar flow
 
@@ -267,48 +271,63 @@ class Flow:
         :param anum: The anum of the enclosing Activity
         :param domain: The name of the domain
         :param label: If provided, a labeled flow is populated
+        :param activity_tr: Incorporate this in the activity population transaction if provided
         :return: A Flow_ap summary of the key flow characteristics
         """
-        Transaction.open(mmdb, tr_Scalar_Flow)
+        tr = tr_Inst_Flow if not activity_tr else activity_tr
+        # See comment in populate_instance_flow
+        if not activity_tr:
+            Transaction.open(db=mmdb, name=tr)
 
-        flow_id = cls.populate_data_flow(tr=tr_Scalar_Flow, anum=anum, domain=domain, label=label)
-        Relvar.insert(mmdb, tr=tr_Scalar_Flow, relvar='Scalar_Flow', tuples=[
+        flow_id = cls.populate_data_flow(tr=tr, anum=anum, domain=domain, label=label)
+        Relvar.insert(db=mmdb, tr=tr, relvar='Scalar_Flow', tuples=[
             Scalar_Flow_i(ID=flow_id, Activity=anum, Domain=domain, Type=scalar_type)
         ])
-        Transaction.execute(mmdb, tr_Scalar_Flow)
+        if not activity_tr:
+            Transaction.execute(db=mmdb, name=tr)
+
         return Flow_ap(fid=flow_id, content=Content.SCALAR, tname=scalar_type, max_mult=None)
 
     @classmethod
-    def populate_instance_flow(cls, cname: str, anum: str, domain: str,
-                               label: Optional[str] = None, single: bool = False) -> Flow_ap:
+    def populate_instance_flow(cls, cname: str, anum: str, domain: str, label: Optional[str] = None,
+                               single: bool = False, activity_tr: str = None) -> Flow_ap:
         """
         Populate an instance of Scalar flow
 
-        :param label: If provided, a labeled flow is populated
         :param cname: The class name which establishes the Type
+        :param label: If provided, a labeled flow is populated
         :param anum: The anum of the enclosing Activity
         :param domain: The name of the domain
         :param single: If true, Single vs Multiple Instance Flow which is assumed by default
+        :param activity_tr: Incorporate this in the activity population transaction if provided
         :return: A Flow_ap summary of the key flow characteristics
         """
-        Transaction.open(mmdb, tr_Inst_Flow)
+        # When an Activity is being populated, it may require certain Flows, the 'me' initial
+        # executing instance Flow, for example. In this case, the Activity has a transaction open
+        # and, until this outer transaction closes, the Activity does not yet exist. In this case,
+        # we use the activity transaction, otherwise we create a new one locally
+        tr = tr_Inst_Flow if not activity_tr else activity_tr
+        if not activity_tr:
+            Transaction.open(db=mmdb, name=tr)
 
-        flow_id = cls.populate_non_scalar_flow(tr=tr_Inst_Flow, anum=anum, domain=domain, label=label)
-        Relvar.insert(mmdb, tr=tr_Inst_Flow, relvar='Instance_Flow', tuples=[
+        flow_id = cls.populate_non_scalar_flow(tr=tr, anum=anum, domain=domain, label=label)
+        Relvar.insert(db=mmdb, tr=tr, relvar='Instance_Flow', tuples=[
             Instance_Flow_i(ID=flow_id, Activity=anum, Domain=domain, Class=cname)
         ])
         if single:
             max_mult = MaxMult.ONE
-            Relvar.insert(mmdb, tr=tr_Inst_Flow, relvar='Single_Instance_Flow', tuples=[
+            Relvar.insert(db=mmdb, tr=tr, relvar='Single_Instance_Flow', tuples=[
                 Single_Instance_Flow_i(ID=flow_id, Activity=anum, Domain=domain)
             ])
         else:
             max_mult = MaxMult.MANY
-            Relvar.insert(mmdb, tr=tr_Inst_Flow, relvar='Multiple_Instance_Flow', tuples=[
+            Relvar.insert(db=mmdb, tr=tr, relvar='Multiple_Instance_Flow', tuples=[
                 Multiple_Instance_Flow_i(ID=flow_id, Activity=anum, Domain=domain)
             ])
 
-        Transaction.execute(mmdb, tr_Inst_Flow)
+        if not activity_tr:
+            Transaction.execute(db=mmdb, name=tr)
+
         return Flow_ap(fid=flow_id, content=Content.INSTANCE, tname=cname, max_mult=max_mult)
 
     @classmethod
@@ -323,7 +342,7 @@ class Flow:
         :return: The Flow ID
         """
         fid = cls.populate_data_flow(tr=tr, anum=anum, domain=domain, label=label)
-        Relvar.insert(mmdb, tr=tr, relvar='Non_Scalar_Flow', tuples=[
+        Relvar.insert(db=mmdb, tr=tr, relvar='Non_Scalar_Flow', tuples=[
             Non_Scalar_Flow_i(ID=fid, Activity=anum, Domain=domain)
         ])
         return fid
@@ -333,7 +352,7 @@ class Flow:
         """
         """
         fid = cls.populate_flow(tr=tr, anum=anum, domain=domain, label=label)
-        Relvar.insert(mmdb, tr=tr, relvar='Data_Flow', tuples=[
+        Relvar.insert(db=mmdb, tr=tr, relvar='Data_Flow', tuples=[
             Data_Flow_i(ID=fid, Activity=anum, Domain=domain)
         ])
         return fid
@@ -352,15 +371,15 @@ class Flow:
         :return: Summary of the populated flow
         """
         flow_id = cls.populate_non_scalar_flow(tr=tr_Rel_Flow, anum=anum, domain=domain, label=label)
-        Relvar.insert(mmdb, tr=tr_Rel_Flow, relvar='Relation_Flow', tuples=[
+        Relvar.insert(db=mmdb, tr=tr_Rel_Flow, relvar='Relation_Flow', tuples=[
             Relation_Flow_i(ID=flow_id, Activity=anum, Domain=domain, Type=table_name)
         ])
         if is_tuple:
-            Relvar.insert(mmdb, tr=tr_Rel_Flow, relvar='Tuple_Flow', tuples=[
+            Relvar.insert(db=mmdb, tr=tr_Rel_Flow, relvar='Tuple_Flow', tuples=[
                 Tuple_Flow_i(ID=flow_id, Activity=anum, Domain=domain)
             ])
         else:
-            Relvar.insert(mmdb, tr=tr_Rel_Flow, relvar='Table_Flow', tuples=[
+            Relvar.insert(db=mmdb, tr=tr_Rel_Flow, relvar='Table_Flow', tuples=[
                 Table_Flow_i(ID=flow_id, Activity=anum, Domain=domain)
             ])
         return Flow_ap(fid=flow_id, content=Content.RELATION, tname=table_name,
@@ -383,10 +402,10 @@ class Flow:
         """
         # Since we are making a copy, we know that the Table (Type) must already exist, so we skip the Table creation
         # / verification step and just populate the Relation Flow.
-        Transaction.open(mmdb, tr_Rel_Flow)
+        Transaction.open(db=mmdb, name=tr_Rel_Flow)
         rflow = cls.populate_relation_flow(table_name=ref_flow.tname, anum=anum, domain=domain,
                                            is_tuple=(ref_flow.max_mult == MaxMult.ONE), label=label)
-        Transaction.execute(mmdb, tr_Rel_Flow)
+        Transaction.execute(db=mmdb, name=tr_Rel_Flow)
         return rflow
 
     @classmethod
@@ -433,17 +452,17 @@ class Flow:
         # Populate Flow instance
         cls.flow_id_ctr[activity_id] += 1  # Increment the flow id counter for this anum
         fid = f"F{cls.flow_id_ctr[activity_id]}"
-        Relvar.insert(mmdb, tr=tr, relvar='Flow', tuples=[
+        Relvar.insert(db=mmdb, tr=tr, relvar='Flow', tuples=[
             Flow_i(ID=fid, Activity=anum, Domain=domain)
         ])
 
         # If a label has been defined, populate it
         if label:
-            Relvar.insert(mmdb, tr=tr, relvar='Labeled_Flow', tuples=[
+            Relvar.insert(db=mmdb, tr=tr, relvar='Labeled_Flow', tuples=[
                 Labeled_Flow_i(Name=label, ID=fid, Activity=anum, Domain=domain)
             ])
         else:
-            Relvar.insert(mmdb, tr=tr, relvar='Unlabeled_Flow', tuples=[
+            Relvar.insert(db=mmdb, tr=tr, relvar='Unlabeled_Flow', tuples=[
                 Unlabeled_Flow_i(ID=fid, Activity=anum, Domain=domain)
             ])
 

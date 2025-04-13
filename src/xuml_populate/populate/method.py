@@ -22,6 +22,7 @@ _logger = logging.getLogger(__name__)
 # Transactions
 tr_Method = "Method"
 tr_Parameter = "Parameter"
+tr_OutputFlow = "OutputFlow"
 
 
 class Method:
@@ -59,7 +60,7 @@ class Method:
 
         # Populate the executing instance (me) flow
         self.me_flow = Flow.populate_instance_flow(cname=class_name, anum=anum, domain=domain,
-                                                  label='me', single=True)
+                                                   label='me', single=True, activity_tr=tr_Method)
         _logger.info(f"INSERT Instance Flow (method me): [{domain}:{class_name}:{m_parse.method}:"
                      f"{self.me_flow.fid}]")
         Relvar.insert(db=mmdb, tr=tr_Method, relvar='Method', tuples=[
@@ -79,7 +80,7 @@ class Method:
             Transaction.open(db=mmdb, name=tr_Parameter)
 
             input_fid = Flow.populate_data_flow_by_type(mm_type=p['type'], anum=anum,
-                                                        domain=domain, label=p['name']).fid
+                                                        domain=domain, label=p['name'],activity_tr=tr_Parameter).fid
 
             _logger.info(f"INSERT Scalar Flow (method input): ["
                          f"{domain}:{class_name}:{m_parse.method}:^{p['name']}:{input_fid}]")
@@ -92,9 +93,13 @@ class Method:
 
         # Add output flow
         if m_parse.flow_out:
+            Transaction.open(db=mmdb, name=tr_OutputFlow)
+            _logger.info("Transaction open: Populating method")
             # Populate Synchronous Output and an associated output Data Flow
             output_fid = Flow.populate_data_flow_by_type(label=None, mm_type=m_parse.flow_out,
-                                                         anum=anum, domain=domain).fid
+                                                         anum=anum, domain=domain,
+                                                         activity_tr=tr_OutputFlow).fid
+            Transaction.execute(db=mmdb, name=tr_OutputFlow)
             # No transaction needed since a single tuple is inserted for this feature
             Relvar.insert(db=mmdb, relvar='Synchronous_Output', tuples=[
                 Synchronous_Output_i(Anum=anum, Domain=domain,

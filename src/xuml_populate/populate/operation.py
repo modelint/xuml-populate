@@ -79,26 +79,26 @@ class Operation:
             # Populate the Parameter's type if it hasn't already been populated
             MMtype.populate_unknown(name=p['type'], domain=domain)
             _logger.info("Transaction open: Populating operation parameter")
-            Transaction.open(mmdb, tr_Parameter)
+            Transaction.open(db=mmdb, name=tr_Parameter)
             input_fid = Flow.populate_data_flow_by_type(mm_type=p['type'], anum=anum,
-                                                        domain=domain, label=None).fid
-            Relvar.insert(mmdb, tr=tr_Parameter, relvar='Parameter', tuples=[
+                                                        domain=domain, label=None, activity_tr=tr_Parameter).fid
+            Relvar.insert(db=mmdb, tr=tr_Parameter, relvar='Parameter', tuples=[
                 Parameter_i(Name=p['name'], Signature=signum, Domain=domain,
                             Input_flow=input_fid, Activity=anum, Type=p['type'])
             ])
-            Transaction.execute(mmdb, tr_Parameter)
+            Transaction.execute(db=mmdb, name=tr_Parameter)
             logging.info("Transaction closed: Parameter")
 
         # Add output flow
         if parsed_op.flow_out:
             # Populate Synchronous Output and an associated output Data Flow
-            Transaction.open(mmdb, tr_Output)
+            Transaction.open(db=mmdb, name=tr_Output)
             of_id = Flow.populate_data_flow_by_type(label=None, mm_type=parsed_op.flow_out,
-                                                    anum=anum, domain=domain).fid
-            Relvar.insert(mmdb, tr=tr_Output, relvar='Synchronous_Output', tuples=[
+                                                    anum=anum, domain=domain, activity_tr=tr_Output).fid
+            Relvar.insert(db=mmdb, tr=tr_Output, relvar='Synchronous_Output', tuples=[
                 Synchronous_Output_i(Anum=anum, Domain=domain,
                                      Output_flow=of_id, Type=parsed_op.flow_out)
             ])
-            Transaction.execute(mmdb, tr_Output)
+            Transaction.execute(db=mmdb, name=tr_Output)
 
         return tr_Op

@@ -65,7 +65,10 @@ To_Association_Class_Hop_i = namedtuple('To_Association_Class_Hop_i', 'Number Pa
 Traverse_Action_i = namedtuple('Traverse_Action_i', 'ID Activity Domain Path Source_flow Destination_flow')
 
 # Action subsystem
-Action_i = namedtuple('Action_i', 'ID Activity Domain')
+Action_i = namedtuple('Action_i', 'ID Activity Domain Wave')
+Action_Input_i = namedtuple('Action_Input_i', 'Flow Action Activity Domain')
+Action_Output_i = namedtuple('Action_Output_i', 'Flow Activity Domain Action')
+Wave_i = namedtuple('Wave_i', 'Number Activity Domain')
 
 # Relationship subsystem
 Association_i = namedtuple('Association_i', 'Rnum Domain')

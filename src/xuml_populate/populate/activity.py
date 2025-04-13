@@ -21,6 +21,15 @@ from xuml_populate.populate.mmclass_nt import (Activity_i, Asynchronous_Activity
 
 _logger = logging.getLogger(__name__)
 
+# Temporarily silence the noisy scrall visitor logger
+null_handler = logging.NullHandler()
+# print(logging.root.manager.loggerDict.keys())
+slogger = logging.getLogger("scrall.parse.visitor")
+slogger.handlers.clear()
+slogger.addHandler(null_handler)
+slogger.propagate = False
+
+
 class Activity:
     """
     Create an Activity relation
@@ -48,6 +57,7 @@ class Activity:
         :param action_text: Unparsed scrall text
         :param subsys: The subsystem name
         :param domain: The domain name
+        :param parse_actions:
         :return: The Activity number (Anum)
         """
         cls.domain = domain
@@ -115,14 +125,14 @@ class Activity:
     def populate_state(cls, tr: str, state: str, state_model: str, actions: str,
                        subsys: str, domain: str, parse_actions: bool) -> str:
         """
-        :param tr:
-        :param state:
-        :param state_model:
+        :param tr:  Name of the transaction
+        :param state: State name
+        :param state_model:  State model name
         :param actions:
         :param subsys:
         :param domain:
         :param parse_actions:
-        :return:
+        :return: Anum
         """
 
         # Parse scrall in this state and add it to temporary sm dictionary
@@ -171,26 +181,32 @@ class Activity:
                 method_path = f"{cls.domain}:{class_name}:{method_name}.mtd"
 
                 aparse = activity_data['parse']
-                activity_data = Activity_ap(anum=activity_data['anum'], domain=cls.domain,
-                                            cname=class_name, sname=None, eename=None, opname=method_name,
-                                            xiflow=xi_flow_id, activity_path=method_path, scrall_text=aparse[1])
+                activity_detail = Activity_ap(anum=activity_data['anum'], domain=cls.domain,
+                                              cname=class_name, sname=None, eename=None, opname=method_name,
+                                              xiflow=xi_flow_id, activity_path=method_path, scrall_text=aparse[1])
                 seq_flows = {}
                 seq_labels = set()
                 # for xunit in aparse[0]:
                 for count, xunit in enumerate(aparse[0]):  # Use count for debugging
-                    c = count+1
+                    c = count + 1
                     # print(f"Processing statement: {c}")
-                    match type(xunit).__name__:
-                        case 'Execution_Unit_a':
-                            boundary_actions = ExecutionUnit.process_method_statement_set(
-                                activity_data=activity_data, statement_set=xunit.statement_set)
-                        case 'Output_Flow_a':
-                            ExecutionUnit.process_synch_output(activity_data=activity_data, synch_output=xunit)
-                            pass
-                        case _:
-                            _logger.error(f"Execution unit [{xunit}] is neither a statement set nor a "
-                                              f"synch output flow")
-                            raise ActionException
+                    if type(xunit.statement_set.statement).__name__ == 'Output_Flow_a':
+                        ExecutionUnit.process_synch_output(activity_data=activity_detail,
+                                                           synch_output=xunit.statement_set.statement)
+                    else:
+                        boundary_actions = ExecutionUnit.process_method_statement_set(
+                            activity_data=activity_detail, statement_set=xunit.statement_set)
+                    # match type(xunit).__name__:
+                    #     case 'Execution_Unit_a':
+                    #         boundary_actions = ExecutionUnit.process_method_statement_set(
+                    #             activity_data=activity_data, statement_set=xunit.statement_set)
+                    #     case 'Output_Flow_a':
+                    #         ExecutionUnit.process_synch_output(activity_data=activity_data, synch_output=xunit)
+                    #         pass
+                    #     case _:
+                    #         _logger.error(f"Execution unit [{xunit}] is neither a statement set nor a "
+                    #                           f"synch output flow")
+                    #         raise ActionException
                     # Obtain set of initial and terminal action ids
 
                     # Process any input or output tokens

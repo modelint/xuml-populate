@@ -9,7 +9,7 @@ from scrall.parse.visitor import PATH_a
 from pyral.relvar import Relvar
 from pyral.relation import Relation
 from pyral.transaction import Transaction
-from xuml_populate.populate.mmclass_nt import Action_i
+from xuml_populate.populate.mmclass_nt import Action_i, Wave_i
 from collections import namedtuple
 
 
@@ -42,8 +42,18 @@ class Action:
         # Now populate an instance of Action
         _logger.info("Transaction open: Action")
 
+        # Verify that there is at least one Wave defined on the enclosing Activity
+        R = f"Activity:<{anum}>, Domain:<{domain}>"
+        result = Relation.restrict(db=mmdb, relation='Wave', restriction=R)
+        if not result.body:
+            # Create the inital Wave 1. Additional waves may be created later as a result
+            # of performing a sequential execution analysis on the entire Activity
+            Relvar.insert(db=mmdb, tr=tr, relvar='Wave', tuples=[
+                Wave_i(Number=1, Activity=anum, Domain=domain)
+            ])
+
         # Populate the Statement superclass
-        Relvar.insert(mmdb, tr=tr, relvar='Action', tuples=[
-            Action_i(ID=actn_id, Activity=anum, Domain=domain)
+        Relvar.insert(db=mmdb, tr=tr, relvar='Action', tuples=[
+            Action_i(ID=actn_id, Activity=anum, Domain=domain, Wave=1)
         ])
         return actn_id
