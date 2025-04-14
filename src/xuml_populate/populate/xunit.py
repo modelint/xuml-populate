@@ -42,6 +42,11 @@ class ExecutionUnit:
                                                         iset_components=synch_output.output.components,
                                                         activity_data=activity_data)
                 pass
+            case 'INST_PROJ_a':
+                _, _, output_flow = InstanceSet.process(input_instance_flow=xi_instance_flow,
+                                                        iset_components=synch_output.output.iset.components,
+                                                        activity_data=activity_data)
+                pass
             case _:
                 pass
         # b, f = ScalarExpr.process(mmdb, rhs=synch_output.output, input_instance_flow=xi_instance_flow,
