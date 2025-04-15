@@ -3,6 +3,7 @@
 import logging
 from xuml_populate.config import mmdb
 from xuml_populate.populate.actions.expressions.instance_set import InstanceSet
+from xuml_populate.populate.actions.expressions.class_accessor import ClassAccessor
 from xuml_populate.populate.flow import Flow
 from xuml_populate.populate.actions.rename_action import RenameAction
 from xuml_populate.populate.actions.aparse_types import Flow_ap, MaxMult, Content, Activity_ap, Boundary_Actions
@@ -99,17 +100,18 @@ class TableExpr:
                 R = f"Name:<{texpr.table.name}>, Activity:<{cls.anum}>, Domain:<{cls.domain}>"
                 result = Relation.restrict(mmdb, relation='Labeled_Flow', restriction=R)
                 if result.body:
-                    # Name corresponds to some Labled Flow instance
+                    # Name corresponds to some Labeled Flow instance
                     label_fid = result.body[0]['ID']
                     component_flow = Flow.lookup_data(fid=label_fid, anum=cls.anum, domain=cls.domain)
                 else:
                     # Not a Labled Flow instance
-                    # Is it a class name? If so, create a multiple instance flow and set component flow
-                    R = f"Name:<{texpr.table.name}>, Domain:<{cls.domain}>"
-                    result = Relation.restrict(mmdb, relation='Class', restriction=R)
-                    if result.body:
-                        component_flow = Flow.populate_instance_flow(cname=texpr.table.name, anum=cls.anum,
-                                                                     domain=cls.domain, label=None)
+                    # Is it a class name?  If so, we'll need a Class Accessor populated if we don't have one already
+                    class_flow = ClassAccessor.populate(name=texpr.table.name, anum=cls.anum, domain=cls.domain)
+                    if class_flow:
+                        # We have a Class Accessor either previously or just now populated
+                        # Set its output flow to the current component output
+                        component_flow = Flow_ap(fid=class_flow, content=Content.INSTANCE,
+                                                 tname=texpr.table.name, max_mult=MaxMult.MANY)
                     else:
                         # Neither labeled flow or class
                         # TODO: check for other possible cases

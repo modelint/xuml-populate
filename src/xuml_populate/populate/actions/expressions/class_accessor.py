@@ -36,7 +36,7 @@ class ClassAccessor:
         if not result.body:
             return None
 
-        # Return flow id of exsiting Class Accessor
+        # Return flow id of existing Class Accessor
         R = f"Class:<{name}>, Activity:<{anum}>, Domain:<{domain}>"
         result = Relation.restrict(mmdb, relation='Class_Accessor', restriction=R)
         if result.body:
