@@ -14,6 +14,9 @@ class ActionException(Exception):
 class UndefinedMethod(ActionException):
     pass
 
+class UndefinedSynchOutputExecutionUnit(ActionException):
+    pass
+
 class UndefinedAttribute(ActionException):
     pass
 

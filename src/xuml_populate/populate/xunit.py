@@ -1,14 +1,24 @@
 """ xunit.py - Process a Scrall Execution Unit"""
 
+# System
 import logging
-from xuml_populate.config import mmdb
+from typing import List
+
+# Model Integration
 from scrall.parse.visitor import Output_Flow_a
+from pyral.relvar import Relvar
+
+# Xuml Populate
+from xuml_populate.config import mmdb
 from xuml_populate.populate.actions.aparse_types import Flow_ap, Content, MaxMult
 from xuml_populate.populate.statement import Statement
 from xuml_populate.populate.actions.aparse_types import Activity_ap
 from xuml_populate.populate.actions.expressions.instance_set import InstanceSet
 from xuml_populate.populate.actions.expressions.scalar_expr import ScalarExpr
-from typing import List
+from xuml_populate.populate.mmclass_nt import Synchronous_Output_i
+from xuml_populate.exceptions.action_exceptions import *
+
+tr_OutputFlow = "OutputFlow"
 
 _logger = logging.getLogger(__name__)
 
@@ -46,12 +56,21 @@ class ExecutionUnit:
                 _, _, output_flow = InstanceSet.process(input_instance_flow=xi_instance_flow,
                                                         iset_components=synch_output.output.iset.components,
                                                         activity_data=activity_data)
-                pass
             case _:
-                pass
+                # Unexpected or unimplemented synch output case
+                msg = f"No case for synch output exec unit type: [{type(synch_output.output).__name__}]"
+                _logger.error(msg)
+                raise UndefinedSynchOutputExecutionUnit(msg)
         # b, f = ScalarExpr.process(mmdb, rhs=synch_output.output, input_instance_flow=xi_instance_flow,
         #                           activity_data=activity_data)
-        pass
+
+        # Populate the output flow (no transaction required)
+        Relvar.insert(db=mmdb, relvar='Synchronous_Output', tuples=[
+            Synchronous_Output_i(Anum=activity_data.anum, Domain=activity_data.domain,
+                                 Output_flow=output_flow.fid, Type=output_flow.tname)
+        ])
+        _logger.info(f"INSERT Synchronous operation output flow): ["
+                     f"{activity_data.domain}:{activity_data.cname}:{activity_data.opname}:^{output_flow.fid}]")
 
     @classmethod
     def process_state_statement_set(cls):

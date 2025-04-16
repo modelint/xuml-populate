@@ -91,19 +91,4 @@ class Method:
             Transaction.execute(db=mmdb, name=tr_Parameter)  # Method parameter
             _logger.info("Transaction closed: Populating parameter")
 
-        # Add output flow
-        if m_parse.flow_out:
-            Transaction.open(db=mmdb, name=tr_OutputFlow)
-            _logger.info("Transaction open: Populating method")
-            # Populate Synchronous Output and an associated output Data Flow
-            output_fid = Flow.populate_data_flow_by_type(label=None, mm_type=m_parse.flow_out,
-                                                         anum=anum, domain=domain,
-                                                         activity_tr=tr_OutputFlow).fid
-            Transaction.execute(db=mmdb, name=tr_OutputFlow)
-            # No transaction needed since a single tuple is inserted for this feature
-            Relvar.insert(db=mmdb, relvar='Synchronous_Output', tuples=[
-                Synchronous_Output_i(Anum=anum, Domain=domain,
-                                     Output_flow=output_fid, Type=m_parse.flow_out)
-            ])
-            _logger.info(f"INSERT Flow (method output): ["
-                         f"{domain}:{class_name}:{m_parse.method}:^{output_fid}]")
+        # Output flow (created by output flow action when it is populated)
