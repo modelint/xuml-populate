@@ -19,7 +19,7 @@ from collections import namedtuple
 
 
 # Computation subsystem
-Computation_i = namedtuple('Computation_i', 'ID Activity Domain Operator')
+Computation_Action_i = namedtuple('Computation_Action_i', 'ID Activity Domain Operator')
 Operand_i = namedtuple('Operand_i', 'Flow Activity Domain Computation')
 Computed_Result_i = namedtuple('Computed_Result_i', 'Computation Activity Domain Flow')
 

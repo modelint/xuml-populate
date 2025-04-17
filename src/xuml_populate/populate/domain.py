@@ -112,6 +112,7 @@ class Domain:
         #
         # Populate actions for all Activities
         Activity.process_execution_units()
+        Activity.pop_flow_dependencies()
         # if self.parse_actions:
         #     Activity.process_execution_units()
         pass

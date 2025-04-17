@@ -17,6 +17,9 @@ class UndefinedMethod(ActionException):
 class UndefinedSynchOutputExecutionUnit(ActionException):
     pass
 
+class MethodXIFlowNotPopulated(ActionException):
+    pass
+
 class UndefinedAttribute(ActionException):
     pass
 

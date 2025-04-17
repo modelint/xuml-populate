@@ -4,6 +4,7 @@ anum.py – Populate an Activity
 
 # System
 import logging
+from typing import NamedTuple
 
 # Model Integration
 from pyral.relvar import Relvar
@@ -15,7 +16,7 @@ from xuml_populate.config import mmdb
 from xuml_populate.populate.element import Element
 from xuml_populate.populate.actions.aparse_types import Activity_ap, Boundary_Actions
 from xuml_populate.populate.xunit import ExecutionUnit
-from xuml_populate.exceptions.action_exceptions import ActionException
+from xuml_populate.exceptions.action_exceptions import ActionException, MethodXIFlowNotPopulated
 from xuml_populate.populate.mmclass_nt import (Activity_i, Asynchronous_Activity_i, State_Activity_i,
                                                Synchronous_Activity_i)
 
@@ -28,6 +29,31 @@ slogger = logging.getLogger("scrall.parse.visitor")
 slogger.handlers.clear()
 slogger.addHandler(null_handler)
 slogger.propagate = False
+
+
+# TODO: This can be generated later by make_repo, ensure each name ends with 'Action'
+class UsageAttrs(NamedTuple):
+    cname: str
+    id_attr: str | None
+    in_attr: str | None
+    out_attr: str | None
+
+
+flow_attrs = [
+    UsageAttrs(cname='Select_Action', id_attr='ID', in_attr='Input_flow', out_attr=None),
+    UsageAttrs(cname='Traverse_Action', id_attr='ID', in_attr='Source_flow', out_attr='Destination_flow'),
+    UsageAttrs(cname='Many_Select', id_attr='ID', in_attr=None, out_attr='Output_flow'),
+    UsageAttrs(cname='Single_Select', id_attr='ID', in_attr=None, out_attr='Output_flow'),
+    UsageAttrs(cname='Table_Action', id_attr='ID', in_attr='Input_a_flow', out_attr='Output_flow'),
+    UsageAttrs(cname='Set_Action', id_attr='ID', in_attr='Input_b_flow', out_attr=None),
+    UsageAttrs(cname='Read_Action', id_attr='ID', in_attr='Instance_flow', out_attr=None),
+    UsageAttrs(cname='Attribute_Read_Access', id_attr='Read_action', in_attr=None, out_attr='Output_flow'),
+    UsageAttrs(cname='Comparison_Criterion', id_attr='Action', in_attr=None, out_attr='Value'),
+    UsageAttrs(cname='Switched_Data_Flow', id_attr=None, in_attr='Input_flow', out_attr='Output_flow'),
+    UsageAttrs(cname='Case', id_attr='Switch_action', in_attr=None, out_attr='Flow'),
+    UsageAttrs(cname='Control_Dependency', id_attr='Action', in_attr='Control_flow', out_attr=None),
+    UsageAttrs(cname='Extract_Action', id_attr='ID', in_attr='Input_tuple', out_attr='Output_scalar'),
+]
 
 
 class Activity:
@@ -152,6 +178,83 @@ class Activity:
             State_Activity_i(Anum=Anum, State=state, State_model=state_model, Domain=domain)
         ])
         return Anum
+
+    @classmethod
+    def pop_flow_dependencies(cls):
+        """
+        For each activity, determine the flow dependencies among its actions and populate the Flow Dependency class
+        """
+        # Flow_Dep from_action, to_action, available,
+        _logger.info("Populating flow dependencies")
+        for class_name, method_data in cls.methods.items():
+            for method_name, activity_data in method_data.items():
+
+                # Initialize dict with key for each flow, status to be determined
+                R = f"Domain:<{cls.domain}>"
+                result = Relation.restrict(db=mmdb, relation='Flow', restriction=R)
+                flow_path = {f['ID']: {'source': set(), 'dest': set(), 'merge': None, 'available': False,
+                                       'conditional': False} for f in result.body}
+
+                # Now proceed through each flow usage class (actions, cases, etc)
+                for flow_header in flow_attrs:
+                    # Get all instances below the flow_header
+                    R = f"Domain:<{cls.domain}>"
+                    result = Relation.restrict(db=mmdb, relation=flow_header.cname, restriction=R)
+                    flow_usage_instances = result.body
+
+                    for flow_usage in flow_usage_instances:  # For each instance of this usage
+                        if flow_header.id_attr:
+                            # If the header specifies an action id
+                            if flow_header.in_attr:
+                                # Header specifies an input flow, thus a destination action
+                                input_flow = flow_usage[flow_header.in_attr]
+                                if input_flow in flow_path[input_flow]['dest']:
+                                    pass  # Dest added previously
+                                flow_path[input_flow]['dest'].add(flow_usage[flow_header.id_attr])
+                            if flow_header.out_attr:
+                                output_flow = flow_usage[flow_header.out_attr]
+                                if output_flow in flow_path[output_flow]['source']:
+                                    pass # Source added previously
+                                flow_path[output_flow]['source'].add(flow_usage[flow_header.id_attr])
+                                if flow_header.cname == 'Case':
+                                    flow_path[output_flow]['conditional'] = True
+                        else:
+                            # Usage does not specify any action (conditional)
+                            input_flow = flow_usage[flow_header.in_attr]
+                            merge_flow = flow_usage[flow_header.out_attr]
+                            flow_path[input_flow]['merge'] = merge_flow
+
+                # Mark all flows in method that are available in the first wave of execution
+
+                # The single executing instance flow is available
+                R = f"Anum:<{activity_data['anum']}>, Domain:<{cls.domain}>"
+                result = Relation.restrict(db=mmdb, relation='Method', restriction=R)
+                if not result.body:
+                    msg = f"No executing instance populated for method: {cls.domain}::{class_name}.{method_name}"
+                    _logger.error(msg)
+                    raise MethodXIFlowNotPopulated(msg)
+                method_xi_flow = result.body[0]['Executing_instance_flow']
+                flow_path[method_xi_flow]['available'] = True
+
+                # All method parameter flows are available
+                R = f"Activity:<{activity_data['anum']}>, Domain:<{cls.domain}>"
+                result = Relation.restrict(db=mmdb, relation='Parameter', restriction=R)
+                for pflow in result.body:
+                    flow_path[pflow['Input_flow']]['available'] = True
+
+                # All class accessor flows are available
+                R = f"Activity:<{activity_data['anum']}>, Domain:<{cls.domain}>"
+                result = Relation.restrict(db=mmdb, relation='Class_Accessor', restriction=R)
+                for ca_flow in result.body:
+                    flow_path[ca_flow['Output_flow']]['available'] = True
+
+
+                pass
+
+
+            pass  # Method
+        pass  # Populate
+
 
     @classmethod
     def process_execution_units(cls):
