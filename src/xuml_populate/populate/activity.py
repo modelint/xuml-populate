@@ -18,7 +18,7 @@ from xuml_populate.populate.actions.aparse_types import Activity_ap, Boundary_Ac
 from xuml_populate.populate.xunit import ExecutionUnit
 from xuml_populate.exceptions.action_exceptions import ActionException, MethodXIFlowNotPopulated
 from xuml_populate.populate.mmclass_nt import (Activity_i, Asynchronous_Activity_i, State_Activity_i,
-                                               Synchronous_Activity_i)
+                                               Synchronous_Activity_i, Flow_Dependency_i)
 
 _logger = logging.getLogger(__name__)
 
@@ -48,7 +48,7 @@ flow_attrs = [
     UsageAttrs(cname='Set_Action', id_attr='ID', in_attr='Input_b_flow', out_attr=None),
     UsageAttrs(cname='Read_Action', id_attr='ID', in_attr='Instance_flow', out_attr=None),
     UsageAttrs(cname='Attribute_Read_Access', id_attr='Read_action', in_attr=None, out_attr='Output_flow'),
-    UsageAttrs(cname='Comparison_Criterion', id_attr='Action', in_attr=None, out_attr='Value'),
+    UsageAttrs(cname='Comparison_Criterion', id_attr='Action', in_attr='Value', out_attr=None),
     UsageAttrs(cname='Switched_Data_Flow', id_attr=None, in_attr='Input_flow', out_attr='Output_flow'),
     UsageAttrs(cname='Case', id_attr='Switch_action', in_attr=None, out_attr='Flow'),
     UsageAttrs(cname='Control_Dependency', id_attr='Action', in_attr='Control_flow', out_attr=None),
@@ -248,7 +248,23 @@ class Activity:
                 for ca_flow in result.body:
                     flow_path[ca_flow['Output_flow']]['available'] = True
 
+                # Resolve any merged flows into the data switch output
+                for f,p in flow_path.items():
+                    if p['merge']:
+                        p['dest'].update(flow_path[p['merge']]['dest'])
 
+                for f,p in flow_path.items():
+                    if not (p['source'] and p['dest']):
+                        continue
+                    for source_action in p['source']:
+                        for dest_action in p['dest']:
+                            Relvar.insert(db=mmdb, relvar='Flow_Dependency', tuples=[
+                                Flow_Dependency_i(From_action=source_action, To_action=dest_action,
+                                                  Activity=activity_data['anum'], Domain=cls.domain, Flow=f,
+                                                  Conditional=p['conditional'], Merge=bool(p['merge']))
+                            ])
+                        pass
+                    pass
                 pass
 
 
