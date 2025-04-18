@@ -42,19 +42,9 @@ class Action:
         # Now populate an instance of Action
         _logger.info("Transaction open: Action")
 
-        # TODO: Shouldn't need this with Wave Assignment created later
-        # # Verify that there is at least one Wave defined on the enclosing Activity
-        # R = f"Activity:<{anum}>, Domain:<{domain}>"
-        # result = Relation.restrict(db=mmdb, relation='Wave', restriction=R)
-        # if not result.body:
-        #     # Create the inital Wave 1. Additional waves may be created later as a result
-        #     # of performing a sequential execution analysis on the entire Activity
-        #     Relvar.insert(db=mmdb, tr=tr, relvar='Wave', tuples=[
-        #         Wave_i(Number=1, Activity=anum, Domain=domain)
-        #     ])
 
         # Populate the Statement superclass
         Relvar.insert(db=mmdb, tr=tr, relvar='Action', tuples=[
-            Action_i(ID=actn_id, Activity=anum, Domain=domain, Wave=1)
+            Action_i(ID=actn_id, Activity=anum, Domain=domain)
         ])
         return actn_id

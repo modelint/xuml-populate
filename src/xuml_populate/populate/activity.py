@@ -271,6 +271,40 @@ class Activity:
             pass  # Method
         pass  # Populate
 
+    @classmethod
+    def assign_waves(cls):
+        """
+        For each activity, assign each action to a Wave
+        """
+        # Flow_Dep from_action, to_action, available,
+        _logger.info("Populating flow dependencies")
+        for class_name, method_data in cls.methods.items():
+            for method_name, activity_data in method_data.items():
+                current_wave_number = 1
+                waves = dict()
+
+                # Identify all actions in the first Wave
+                # These are all actions driven only by the xi_inst_flow (executing instance), class accessor flows,
+                # and parameter input flows.
+                # In fact, we can just find all actions in the flow dependency graph that have no inputs
+
+                # Get the ids of all Actions
+                R = f"Activity:<{activity_data['anum']}>, Domain:<{cls.domain}>"
+                Relation.restrict(db=mmdb, relation='Action', restriction=R)
+                Relation.project(db=mmdb, attributes=("ID",), svar_name="all_action_ids")
+                # Get the ids of all destination Actions in Flow Dependency
+                R = f"Activity:<{activity_data['anum']}>, Domain:<{cls.domain}>"
+                Relation.restrict(db=mmdb, relation='Flow_Dependency', restriction=R)
+                Relation.project(db=mmdb, attributes=("To_action",), svar_name="to_action_ids")
+                # Subtract the destination action ids from all action ids to get those actions that are not
+                # destinations of any flow dependency.  These are the actions that should execute in the first wave
+                # since they do not require any flow input from another action.
+                Relation.rename(db=mmdb, names={"To_action": "ID"}, svar_name="to_action_ids")  # headers must match
+                result = Relation.subtract(db=mmdb, rname1="all_action_ids", rname2="to_action_ids")
+                waves[current_wave_number] = [t['ID'] for t in result.body]
+
+
+                pass
 
     @classmethod
     def process_execution_units(cls):
