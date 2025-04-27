@@ -8,6 +8,7 @@ from typing import NamedTuple
 from pyral.relvar import Relvar
 from pyral.relation import Relation
 from scrall.parse.parser import ScrallParser
+from pyral.rtypes import JoinCmd, ProjectCmd, SetCompareCmd, SetOp, Attribute, SumExpr
 
 # xUML Populate
 from xuml_populate.config import mmdb
@@ -54,14 +55,13 @@ class MethodActivity:
         self.activity_data = activity_data
         self.method_data = method_data
         self.domain = domain
-        self.wave = 1  # Initialize wave counter
+        self.wave_ctr = 1  # Initialize wave counter
         self.waves = dict()
+        self.xactions = None
 
         self.pop_xunits()
         self.pop_flow_dependencies()
         self.assign_waves()
-
-    def next_xactions(self):
         pass
 
     def assign_waves(self):
@@ -69,28 +69,86 @@ class MethodActivity:
         For each activity, assign each action to a Wave
         """
         # Flow_Dep from_action, to_action, available,
-        _logger.info("Populating flow dependencies")
+        _logger.info("Assigning actions to waves")
 
-        # Identify all actions in the first Wave
-        # These are all actions driven only by the xi_inst_flow (executing instance), class accessor flows,
-        # and parameter input flows.
-        # In fact, we can just find all actions in the flow dependency graph that have no inputs
+        # For the first wave, we can execute each Action that are not the destination
+        # of a Flow.
 
-        # Get the ids of all Actions
+        # Get the ids of all Actions in this Activity
         R = f"Activity:<{self.activity_data['anum']}>, Domain:<{self.domain}>"
         Relation.restrict(db=mmdb, relation='Action', restriction=R)
         Relation.project(db=mmdb, attributes=("ID",), svar_name="all_action_ids")
-        # Get the ids of all destination Actions in Flow Dependency
+        Relation.print(db=mmdb, variable_name="all_action_ids")
+
+        # Get the ids of all flow destination Actions
         R = f"Activity:<{self.activity_data['anum']}>, Domain:<{self.domain}>"
         Relation.restrict(db=mmdb, relation='Flow_Dependency', restriction=R)
         Relation.project(db=mmdb, attributes=("To_action",), svar_name="to_action_ids")
+        Relation.print(db=mmdb, variable_name="to_action_ids")
+
         # Subtract the destination action ids from all action ids to get those actions that are not
         # destinations of any flow dependency.  These are the actions that should execute in the first wave
         # since they do not require any flow input from another action.
         Relation.rename(db=mmdb, names={"To_action": "ID"}, svar_name="to_action_ids")  # headers must match
-        result = Relation.subtract(db=mmdb, rname1="all_action_ids", rname2="to_action_ids")
-        self.waves[self.wave] = [t['ID'] for t in result.body]
+        self.xactions = Relation.subtract(db=mmdb, rname1="all_action_ids", rname2="to_action_ids",
+                                          svar_name="xactions")
+        Relation.print(db=mmdb, variable_name="xactions")
 
+        self.waves[1] = [t['ID'] for t in self.xactions.body]
+
+        # Check for any remaining actions
+        result = Relation.subtract(db=mmdb, rname1="all_action_ids", rname2="xactions", svar_name="remain")
+        Relation.print(db=mmdb, variable_name="remain")
+
+        unexecuted_actions = bool(result.body)
+
+        while unexecuted_actions:
+
+            self.wave_ctr += 1
+            print(f"Wave --- [{self.wave_ctr}] ---")
+
+            # Find all downstream dependencies
+            Relation.rename(db=mmdb, names={"ID": "From_action"}, relation="xactions", svar_name="xactions")
+            Relation.print(db=mmdb, variable_name="xactions")
+            Relation.print(db=mmdb, variable_name="Flow_Dependency")
+            Relation.join(db=mmdb, rname1="Flow_Dependency", rname2="xactions")
+            Relation.project(db=mmdb, attributes=("To_action",), svar_name="downstream")
+            Relation.print(db=mmdb, variable_name="downstream")
+
+            # Find all required upstream inputs for the downstream actions
+            Relation.join(db=mmdb, rname1="Flow_Dependency", rname2="downstream", svar_name="required_inputs")
+            Relation.print(db=mmdb, variable_name="required_inputs")
+
+            # Add a boolean attribute named Can_execute
+            # For each downstream action (per To_action) join it back to required inputs, projecting on the From_action
+            # This yields the set of upstream executed actions for that one downstream action
+            # Then test to see if this set is a subset of the xactions
+            # If so, the downstream action has all dependencies fulfilled and can now execute (true)
+            # Otherwise, there are some required input actions that have not just executed
+
+            sum_expr = Relation.build_expr(commands=[
+                JoinCmd(rname1="s", rname2="required_inputs", attrs=None),
+                ProjectCmd(attributes=("From_action",), relation=None),
+                SetCompareCmd(rname2="xactions", op=SetOp.subset, rname1=None)
+            ])
+
+            result = Relation.summarize(db=mmdb, relation="required_inputs", per_attrs=("To_action",),
+                                        summaries=(
+                                            SumExpr(attr=Attribute(name="Can_execute", type="boolean"), expr=sum_expr),),
+                                        svar_name="executable")
+            Relation.print(db=mmdb, variable_name="executable")
+            R = f"Can_execute:<{1}>"
+            Relation.restrict(db=mmdb, relation='executable', restriction=R)
+            result = Relation.project(db=mmdb, attributes=('To_action',))
+            self.waves[self.wave_ctr] = [t['To_action'] for t in result.body]
+
+            Relation.rename(db=mmdb, names={"To_action": "ID"}, svar_name="xactions")
+            Relation.print(db=mmdb, variable_name="xactions")
+
+            # Check for any remaining actions
+            result = Relation.subtract(db=mmdb, rname1="remain", rname2="xactions", svar_name="remain")
+            Relation.print(db=mmdb, variable_name="remain")
+            pass
 
         pass
 
