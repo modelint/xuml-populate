@@ -8,7 +8,7 @@ from typing import NamedTuple
 from pyral.relvar import Relvar
 from pyral.relation import Relation
 from scrall.parse.parser import ScrallParser
-from pyral.rtypes import JoinCmd, ProjectCmd, SetCompareCmd, SetOp, Attribute, SumExpr
+from pyral.rtypes import JoinCmd, ProjectCmd, SetCompareCmd, SetOp, Attribute, SumExpr, RelationValue
 
 # xUML Populate
 from xuml_populate.config import mmdb
@@ -64,94 +64,96 @@ class MethodActivity:
         self.assign_waves()
         pass
 
+    def initially_enabled_flows(self):
+        """
+        Create relation with all initially available flow IDs.
+
+        These are all parameter flows, the executing instance flow, and the optional output flow
+        """
+        # Get the executing instance flow (probably always F1, but just to be safe...)
+        R = f"Anum:<{self.activity_data['anum']}>, Domain:<{self.domain}>"
+        Relation.restrict(db=mmdb, relation='Method', restriction=R)
+        Relation.project(db=mmdb, attributes=("Executing_instance_flow",))
+        Relation.rename(db=mmdb, names={"Executing_instance_flow": "Flow"}, svar_name="xi_flow")
+        Relation.print(db=mmdb, variable_name="xi_flow")
+
+        # Get the parameter input flows, if any
+        R = f"Activity:<{self.activity_data['anum']}>, Domain:<{self.domain}>"
+        Relation.restrict(db=mmdb, relation='Parameter', restriction=R)
+        Relation.project(db=mmdb, attributes=("Input_flow",))
+        Relation.rename(db=mmdb, names={"Input_flow": "Flow"}, svar_name="param_flows")
+        Relation.print(db=mmdb, variable_name="param_flows")
+
+        # Get any class accessor flows
+        R = f"Activity:<{self.activity_data['anum']}>, Domain:<{self.domain}>"
+        Relation.restrict(db=mmdb, relation='Class_Accessor', restriction=R)
+        Relation.project(db=mmdb, attributes=("Output_flow",))
+        Relation.rename(db=mmdb, names={"Output_flow": "Flow"}, svar_name="class_flows")
+        Relation.print(db=mmdb, variable_name="class_flows")
+
+        Relation.union(db=mmdb, relations=("xi_flow", "param_flows", "class_flows"), svar_name="enabled_flows")
+        Relation.print(db=mmdb, variable_name="enabled_flows")
+
+    def initially_executable_actions(self) -> RelationValue:
+        """
+        Identify all actions that can be executed in the first wave.
+
+        These are the actions that do not depend on any flows output by other actions.
+        """
+        # Get the ids of all Actions in this Activity
+        R = f"Activity:<{self.activity_data['anum']}>, Domain:<{self.domain}>"
+        Relation.restrict(db=mmdb, relation='Action', restriction=R)
+        Relation.project(db=mmdb, attributes=("ID",), svar_name="all_action_ids")
+
+        # Get all downstream actions (actions that require input from other actions)
+        R = f"Activity:<{self.activity_data['anum']}>, Domain:<{self.domain}>"
+        Relation.restrict(db=mmdb, relation='Flow_Dependency', restriction=R)
+        Relation.project(db=mmdb, attributes=("To_action",))
+        Relation.rename(db=mmdb, names={"To_action": "ID"}, svar_name="downstream_actions")
+        ia = Relation.subtract(db=mmdb, rname1="all_action_ids", rname2="downstream_actions", svar_name="initial_actions")
+        Relation.print(db=mmdb, variable_name="initial_actions")
+        return ia
+
     def assign_waves(self):
         """
         For each activity, assign each action to a Wave
         """
         # Flow_Dep from_action, to_action, available,
         _logger.info("Assigning actions to waves")
+        self.initially_enabled_flows()
+        initial_actions = self.initially_executable_actions()
 
-        # For the first wave, we can execute each Action that are not the destination
-        # of a Flow.
-
-        # Get the ids of all Actions in this Activity
-        R = f"Activity:<{self.activity_data['anum']}>, Domain:<{self.domain}>"
-        Relation.restrict(db=mmdb, relation='Action', restriction=R)
-        Relation.project(db=mmdb, attributes=("ID",), svar_name="all_action_ids")
-        Relation.print(db=mmdb, variable_name="all_action_ids")
-
-        # Initialize available flows
-        # Get all the flow IDs for this Activity
-        R = f"Activity:<{self.activity_data['anum']}>, Domain:<{self.domain}>"
-        Relation.restrict(db=mmdb, relation='Flow', restriction=R)
-        Relation.project(db=mmdb, attributes=("ID", ), svar_name="all_flows")
-        Relation.print(db=mmdb, variable_name="all_flows")
-        # Remove any Switched Data Flows since we evaluate dependencies directly from the switch inputs to the
-        # destination actions with the Switched Data Flow being transparent
-        R = f"Activity:<{self.activity_data['anum']}>, Domain:<{self.domain}>"
-        Relation.restrict(db=mmdb, relation='Switched_Data_Flow', restriction=R)
-        Relation.project(db=mmdb, attributes=("Output_flow",))
-        Relation.rename(db=mmdb, names={"Output_flow": "ID"}, svar_name="switched_data_flows")
-        Relation.subtract(db=mmdb, rname1="all_flows", rname2="switched_data_flows",
-                          svar_name="all_unswitched_flows")
-        Relation.print(db=mmdb, variable_name="all_unswitched_flows")
-        # Remove any Switched Data Flows since we evaluate dependencies directly from the switch inputs to the
-
-        # Get the IDs of all action generated flows (non-initial flows like me, class-accessor, parameter)
-        R = f"Activity:<{self.activity_data['anum']}>, Domain:<{self.domain}>"
-        Relation.restrict(db=mmdb, relation='Flow_Dependency', restriction=R)
-        Relation.print(db=mmdb)
-        Relation.project(db=mmdb, attributes=("Flow", ), svar_name="action_output_flows")
-        Relation.print(db=mmdb, variable_name="action_output_flows")
-
-        # Initial flow IDs obtained by subtracting action generated flows from all flows
-        Relation.rename(db=mmdb, names={"Flow": "ID"}, svar_name="action_output_flows")
-        Relation.subtract(db=mmdb, rname2="action_output_flows", rname1="all_unswitched_flows", svar_name="enabled_flows")
-        Relation.print(db=mmdb, variable_name="enabled_flows")  # Flows enabled prior to Activity execution
-
-        # Get the ids of all flow destination Actions
-        R = f"Activity:<{self.activity_data['anum']}>, Domain:<{self.domain}>"
-        Relation.restrict(db=mmdb, relation='Flow_Dependency', restriction=R)
-        Relation.project(db=mmdb, attributes=("To_action",), svar_name="to_action_ids")
-        Relation.print(db=mmdb, variable_name="to_action_ids")
-
-        # Subtract the destination action ids from all action ids to get those actions that are not
-        # destinations of any flow dependency.  These are the actions that should execute in the first wave
-        # since they do not require any flow input from another action.
-        Relation.rename(db=mmdb, names={"To_action": "ID"}, svar_name="to_action_ids")  # headers must match
-        self.xactions = Relation.subtract(db=mmdb, rname1="all_action_ids", rname2="to_action_ids",
-                                          svar_name="xactions")
-        Relation.print(db=mmdb, variable_name="xactions")
-
-        self.waves[1] = [t['ID'] for t in self.xactions.body]
+        self.waves[1] = [t['ID'] for t in initial_actions.body]
 
         # Check for any remaining actions
-        result = Relation.subtract(db=mmdb, rname1="all_action_ids", rname2="xactions", svar_name="remain")
-        Relation.print(db=mmdb, variable_name="remain")
+        unexecuted_actions = Relation.subtract(db=mmdb, rname1="all_action_ids", rname2="initial_actions",
+                                               svar_name="unexecuted_actions")
+        Relation.print(db=mmdb, variable_name="unexecuted_actions")
 
         # Mark enabled flows
         Relation.join(db=mmdb, rname2="Flow_Dependency", rname1="xactions", attrs={"ID": "From_action"})
         Relation.project(db=mmdb, attributes=("Flow",), svar_name="enabled_flows")
         Relation.print(db=mmdb, variable_name="enabled_flows")
 
-        unexecuted_actions = bool(result.body)
+        # Actions remaining that have not been assigned to a wave?
+        unassigned_actions = bool(unexecuted_actions.body)
 
-        while unexecuted_actions:
+        while unassigned_actions:
 
             self.wave_ctr += 1
             print(f"Wave --- [{self.wave_ctr}] ---")
 
             # Find all downstream dependencies
-            Relation.rename(db=mmdb, names={"ID": "From_action"}, relation="xactions", svar_name="xactions")
-            Relation.print(db=mmdb, variable_name="xactions")
-            Relation.print(db=mmdb, variable_name="Flow_Dependency")
-            Relation.join(db=mmdb, rname1="Flow_Dependency", rname2="xactions")
-            Relation.project(db=mmdb, attributes=("To_action",), svar_name="downstream")
-            Relation.print(db=mmdb, variable_name="downstream")
+            # Relation.rename(db=mmdb, names={"ID": "From_action"}, relation="xactions", svar_name="xactions")
+            # Relation.print(db=mmdb, variable_name="xactions")
+            # Relation.print(db=mmdb, variable_name="Flow_Dependency")
+            # Relation.join(db=mmdb, rname1="Flow_Dependency", rname2="xactions")
+            # Relation.project(db=mmdb, attributes=("To_action",), svar_name="downstream")
+            # Relation.print(db=mmdb, variable_name="downstream")
 
             # Find all required upstream inputs for the downstream actions
-            Relation.join(db=mmdb, rname1="Flow_Dependency", rname2="downstream", svar_name="required_inputs")
-            Relation.print(db=mmdb, variable_name="required_inputs")
+            # Relation.join(db=mmdb, rname1="Flow_Dependency", rname2="downstream", svar_name="required_inputs")
+            # Relation.print(db=mmdb, variable_name="required_inputs")
 
             # Add a boolean attribute named Can_execute
             # For each downstream action (per To_action) join it back to required inputs, projecting on the From_action
@@ -160,17 +162,39 @@ class MethodActivity:
             # If so, the downstream action has all dependencies fulfilled and can now execute (true)
             # Otherwise, there are some required input actions that have not just executed
 
+            # Get the ids of all flow destination Actions
+            R = f"Activity:<{self.activity_data['anum']}>, Domain:<{self.domain}>"
+            Relation.restrict(db=mmdb, relation='Flow_Dependency', restriction=R)
+            Relation.project(db=mmdb, attributes=("To_action", "Flow"), svar_name="required_inputs")
+            Relation.print(db=mmdb, variable_name="required_inputs")
+
+            Relation.join(db=mmdb, rname1="required_inputs", rname2="enabled_flows", svar_name="enabled_actions")
+            Relation.print(db=mmdb, variable_name="enabled_actions")
+
+
+
             sum_expr = Relation.build_expr(commands=[
-                JoinCmd(rname1="s", rname2="required_inputs", attrs=None),
+                # JoinCmd(rname1="s", rname2="required_inputs", attrs=None),
                 ProjectCmd(attributes=("From_action",), relation=None),
                 SetCompareCmd(rname2="xactions", op=SetOp.subset, rname1=None)
             ])
 
-            result = Relation.summarize(db=mmdb, relation="required_inputs", per_attrs=("To_action",),
+            result = Relation.summarize(db=mmdb, relation="remain", per_attrs=("ID",),
                                         summaries=(
                                             SumExpr(attr=Attribute(name="Can_execute", type="boolean"), expr=sum_expr),),
                                         svar_name="executable")
             Relation.print(db=mmdb, variable_name="executable")
+            # sum_expr = Relation.build_expr(commands=[
+            #     JoinCmd(rname1="s", rname2="required_inputs", attrs=None),
+            #     ProjectCmd(attributes=("From_action",), relation=None),
+            #     SetCompareCmd(rname2="xactions", op=SetOp.subset, rname1=None)
+            # ])
+            #
+            # result = Relation.summarize(db=mmdb, relation="required_inputs", per_attrs=("To_action",),
+            #                             summaries=(
+            #                                 SumExpr(attr=Attribute(name="Can_execute", type="boolean"), expr=sum_expr),),
+            #                             svar_name="executable")
+            # Relation.print(db=mmdb, variable_name="executable")
             R = f"Can_execute:<{1}>"
             Relation.restrict(db=mmdb, relation='executable', restriction=R)
             result = Relation.project(db=mmdb, attributes=('To_action',))
