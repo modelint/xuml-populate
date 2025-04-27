@@ -80,6 +80,35 @@ class MethodActivity:
         Relation.project(db=mmdb, attributes=("ID",), svar_name="all_action_ids")
         Relation.print(db=mmdb, variable_name="all_action_ids")
 
+        # Initialize available flows
+        # Get all the flow IDs for this Activity
+        R = f"Activity:<{self.activity_data['anum']}>, Domain:<{self.domain}>"
+        Relation.restrict(db=mmdb, relation='Flow', restriction=R)
+        Relation.project(db=mmdb, attributes=("ID", ), svar_name="all_flows")
+        Relation.print(db=mmdb, variable_name="all_flows")
+        # Remove any Switched Data Flows since we evaluate dependencies directly from the switch inputs to the
+        # destination actions with the Switched Data Flow being transparent
+        R = f"Activity:<{self.activity_data['anum']}>, Domain:<{self.domain}>"
+        Relation.restrict(db=mmdb, relation='Switched_Data_Flow', restriction=R)
+        Relation.project(db=mmdb, attributes=("Output_flow",))
+        Relation.rename(db=mmdb, names={"Output_flow": "ID"}, svar_name="switched_data_flows")
+        Relation.subtract(db=mmdb, rname1="all_flows", rname2="switched_data_flows",
+                          svar_name="all_unswitched_flows")
+        Relation.print(db=mmdb, variable_name="all_unswitched_flows")
+        # Remove any Switched Data Flows since we evaluate dependencies directly from the switch inputs to the
+
+        # Get the IDs of all action generated flows (non-initial flows like me, class-accessor, parameter)
+        R = f"Activity:<{self.activity_data['anum']}>, Domain:<{self.domain}>"
+        Relation.restrict(db=mmdb, relation='Flow_Dependency', restriction=R)
+        Relation.print(db=mmdb)
+        Relation.project(db=mmdb, attributes=("Flow", ), svar_name="action_output_flows")
+        Relation.print(db=mmdb, variable_name="action_output_flows")
+
+        # Initial flow IDs obtained by subtracting action generated flows from all flows
+        Relation.rename(db=mmdb, names={"Flow": "ID"}, svar_name="action_output_flows")
+        Relation.subtract(db=mmdb, rname2="action_output_flows", rname1="all_unswitched_flows", svar_name="enabled_flows")
+        Relation.print(db=mmdb, variable_name="enabled_flows")  # Flows enabled prior to Activity execution
+
         # Get the ids of all flow destination Actions
         R = f"Activity:<{self.activity_data['anum']}>, Domain:<{self.domain}>"
         Relation.restrict(db=mmdb, relation='Flow_Dependency', restriction=R)
@@ -99,6 +128,11 @@ class MethodActivity:
         # Check for any remaining actions
         result = Relation.subtract(db=mmdb, rname1="all_action_ids", rname2="xactions", svar_name="remain")
         Relation.print(db=mmdb, variable_name="remain")
+
+        # Mark enabled flows
+        Relation.join(db=mmdb, rname2="Flow_Dependency", rname1="xactions", attrs={"ID": "From_action"})
+        Relation.project(db=mmdb, attributes=("Flow",), svar_name="enabled_flows")
+        Relation.print(db=mmdb, variable_name="enabled_flows")
 
         unexecuted_actions = bool(result.body)
 
