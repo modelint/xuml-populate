@@ -21,6 +21,8 @@ from xuml_populate.exceptions.action_exceptions import ActionException, MethodXI
 _logger = logging.getLogger(__name__)
 
 
+
+
 # TODO: This can be generated later by make_repo, ensure each name ends with 'Action'
 class UsageAttrs(NamedTuple):
     cname: str
@@ -45,6 +47,9 @@ flow_attrs = [
     UsageAttrs(cname='Extract_Action', id_attr='ID', in_attr='Input_tuple', out_attr='Output_scalar'),
 ]
 
+# For debugging
+from collections import namedtuple
+Action_i = namedtuple('Action_i', 'ID')
 
 class MethodActivity:
 
@@ -91,8 +96,8 @@ class MethodActivity:
         Relation.rename(db=mmdb, names={"Output_flow": "Flow"}, svar_name="class_flows")
         Relation.print(db=mmdb, variable_name="class_flows")
 
-        Relation.union(db=mmdb, relations=("xi_flow", "param_flows", "class_flows"), svar_name="enabled_flows")
-        Relation.print(db=mmdb, variable_name="enabled_flows")
+        Relation.union(db=mmdb, relations=("xi_flow", "param_flows", "class_flows"), svar_name="initially_enabled_flows")
+        Relation.print(db=mmdb, variable_name="initially_enabled_flows")
 
     def initially_executable_actions(self) -> RelationValue:
         """
@@ -107,12 +112,25 @@ class MethodActivity:
 
         # Get all downstream actions (actions that require input from other actions)
         R = f"Activity:<{self.activity_data['anum']}>, Domain:<{self.domain}>"
-        Relation.restrict(db=mmdb, relation='Flow_Dependency', restriction=R)
+        Relation.restrict(db=mmdb, relation='Flow_Dependency', restriction=R, svar_name="fd")
         Relation.project(db=mmdb, attributes=("To_action",))
         Relation.rename(db=mmdb, names={"To_action": "ID"}, svar_name="downstream_actions")
         ia = Relation.subtract(db=mmdb, rname1="all_action_ids", rname2="downstream_actions", svar_name="initial_actions")
         Relation.print(db=mmdb, variable_name="initial_actions")
         return ia
+
+    def enable_action_outputs(self, action_rname: str):
+        """
+        Return the Flow attribute relation for each action output flow enabled by action ID relation
+
+        :param action_rname:  An ID attribute relation for a set of wave assigned Actions
+        :return:
+        """
+        Relation.join(db=mmdb, rname1=action_rname, rname2="Flow_Dependency", attrs={"ID": "From_action"})
+        Relation.project(db=mmdb, attributes=("Flow",), svar_name="wave_enabled_flows")
+        Relation.print(db=mmdb, variable_name="wave_enabled_flows")
+        pass
+
 
     def assign_waves(self):
         """
@@ -125,10 +143,46 @@ class MethodActivity:
 
         self.waves[1] = [t['ID'] for t in initial_actions.body]
 
-        # Check for any remaining actions
+        # The initial actions are now considered to be executed
+        # So we need to enable the first set of action generated flows
+        self.enable_action_outputs(action_rname="initial_actions")
+
+        Relation.union(db=mmdb, relations=("initially_enabled_flows", "wave_enabled_flows" ), svar_name="all_enabled_flows")
+        Relation.print(db=mmdb, variable_name="all_enabled_flows")
+
+
+        # Find each downstream action whose input flows are all enabled
+        # Start with the set of unexecuted actions
+
+        # We subtract the initial actions from the set of all action ids to get the set of
+        # unexecuted actions
         unexecuted_actions = Relation.subtract(db=mmdb, rname1="all_action_ids", rname2="initial_actions",
                                                svar_name="unexecuted_actions")
         Relation.print(db=mmdb, variable_name="unexecuted_actions")
+
+        # Test with one action
+        Relation.create(db=mmdb, attrs=[Attribute(name="ID", type="string")],
+                        tuples=[Action_i(ID="ACTN7")], svar_name="test_action")
+
+        Relation.join(db=mmdb, rname1="fd", rname2="test_action", attrs={"To_action": "ID"})
+        Relation.project(db=mmdb, attributes=("Flow",))
+        Relation.print(db=mmdb)
+        c = Relation.set_compare(db=mmdb, rname2="all_enabled_flows", op=SetOp.subset)
+
+        sum_expr = Relation.build_expr(commands=[
+            JoinCmd(rname1="s", rname2="fd", attrs={"ID": "To_action"}),
+            ProjectCmd(attributes=("Flow",), relation=None),
+            SetCompareCmd(rname2="all_enabled_flows", op=SetOp.subset, rname1=None)
+        ])
+        result = Relation.summarize(db=mmdb, relation="unexecuted_actions", per_attrs=("ID",),
+                                    summaries=(
+                                        SumExpr(attr=Attribute(name="Can_execute", type="boolean"), expr=sum_expr),),
+                                    svar_name="executable")
+        Relation.print(db=mmdb, variable_name="executable")
+        pass
+
+
+
 
         # Mark enabled flows
         Relation.join(db=mmdb, rname2="Flow_Dependency", rname1="xactions", attrs={"ID": "From_action"})
