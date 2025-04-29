@@ -74,7 +74,7 @@ class System:
                 # The class file name must match the subsystem folder name
                 # Any other .xcm files will be ignored (only one class model recognized per subsystem)
                 cm_file_name = subsys_path.stem + ".xcm"
-                cm_path = subsys_path / cm_file_name
+                cm_path = subsys_path / "class-model" / cm_file_name
                 _logger.info(f"Processing class model: [{cm_path}]")
                 # Parse the class model
                 cm_parse = ClassModelParser.parse_file(file_input=cm_path, debug=False)
