@@ -29,7 +29,8 @@ Each system is defined in a single package broken down into standard hierarchy o
     system
         domain
             subsystem
-                classmodel.xcm
+                class-model
+                    classmodel.xcm
                 types.yaml
                 methods
                     m1.mtd
@@ -53,7 +54,8 @@ Here is a partial layout for The Elevator Case Study as an example:
     elevator-case-study // system
         elevator-management // application domain
             elevator // All defined in one subsystem
-                elevator.xcm // the class model
+                class-model
+                    elevator.xcm // the class model
                 methods // methods for all classes in subsystem
                     cabin // methods on 'cabin' class
                         ping.mtd // the ping method
@@ -76,9 +78,9 @@ Each modeled domain has its own folder. Above we just see one for the Elevator M
 
 Each domain requires at least one subsystem folder. Here we see only one and that is the Elevator domain.
 
-Within a subsystem folder there is one class model expressed as an .xcm (executable class model) file.
+Within a subsystem folder there is a class-model subfolder with one class model expressed as an .xcm (executable class model) file.
 
-The folders are optional and are:
+The following folders are optional:
 
 * external – external entities and their operations, one subfolder per external entity
 * methods – class methods each in a folder matching the class name with each method in a separate .mtd file
