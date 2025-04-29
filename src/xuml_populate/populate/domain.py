@@ -111,9 +111,7 @@ class Domain:
             Relvar.printall(mmdb)
         #
         # Populate actions for all Activities
-        Activity.process_execution_units()
-        Activity.pop_flow_dependencies()
-        Activity.assign_waves()
+        Activity.process_execution_units()  # TODO: For now, only methods
         # if self.parse_actions:
         #     Activity.process_execution_units()
         pass

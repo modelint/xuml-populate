@@ -14,7 +14,7 @@ from pyral.rtypes import JoinCmd, ProjectCmd, SetCompareCmd, SetOp, Attribute, S
 from xuml_populate.config import mmdb
 from xuml_populate.populate.actions.aparse_types import Activity_ap
 from xuml_populate.populate.xunit import ExecutionUnit
-from xuml_populate.populate.mmclass_nt import Flow_Dependency_i
+from xuml_populate.populate.mmclass_nt import Flow_Dependency_i, Wave_i, Wave_Assignment_i
 from xuml_populate.exceptions.action_exceptions import MethodXIFlowNotPopulated
 
 _logger = logging.getLogger(__name__)
@@ -54,6 +54,7 @@ class MethodActivity:
         self.name = name
         self.class_name = class_name
         self.activity_data = activity_data
+        self.anum = self.activity_data['anum']
         self.method_data = method_data
         self.domain = domain
         self.wave_ctr = 1  # Initialize wave counter
@@ -72,7 +73,18 @@ class MethodActivity:
         """
         Populate Wave and Wave Assignment class relvars
         """
-        pass
+        for wave_number, wave_actions in self.waves.items():
+            wave_tr = f"wave_{wave_number}"
+            Transaction.open(db=mmdb, name=wave_tr)
+            Relvar.insert(db=mmdb, relvar="Wave", tuples=[
+                Wave_i(Number=wave_number, Activity=self.anum, Domain=self.domain)
+            ], tr=wave_tr)
+            wa_tuples = [Wave_Assignment_i(Action=a, Activity=self.anum, Domain=self.domain, Wave=wave_number)
+                         for a in wave_actions]
+            Relvar.insert(db=mmdb, relvar="Wave_Assignment", tuples=wa_tuples, tr=wave_tr)
+            Transaction.execute(db=mmdb, name=wave_tr)
+        Relation.print(db=mmdb, variable_name="Wave")
+        Relation.print(db=mmdb, variable_name="Wave_Assignment")
 
     def initially_enabled_flows(self):
         """

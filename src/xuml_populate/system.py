@@ -4,14 +4,12 @@
 import logging
 from pathlib import Path
 from contextlib import redirect_stdout
-# import yaml
 
 # Model Integration
 from xcm_parser.class_model_parser import ClassModelParser
 from xsm_parser.state_model_parser import StateModelParser
 from op2_parser.op_parser import OpParser
 from mtd_parser.method_parser import MethodParser
-from pyral.database import Database
 from pyral.relvar import Relvar
 
 # xUML Populate
@@ -88,15 +86,6 @@ class System:
                     domain_alias = cm_parse.domain['alias']
                     # Create dictionary key for domain content
                     self.content[domain_name] = {'alias': domain_alias, 'subsystems': {}}
-
-                    # TODO: Do we need this?
-                    # Parse the domain's types.yaml file with all of the domain specific types (data types)
-                    # Load domain specific types
-                    # try:
-                    #     with open(domain_path / "types.yaml", 'r') as file:
-                    #         self.content[domain_name]['types'] = yaml.safe_load(file)
-                    # except FileNotFoundError:
-                    #     _logger.error(f"No types.yaml file found for domain at: {domain_path}")
 
                 # Get this subsystem name from the parse
                 subsys_name = cm_parse.subsystem['name']
