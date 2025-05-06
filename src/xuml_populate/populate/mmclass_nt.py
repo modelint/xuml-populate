@@ -65,7 +65,7 @@ To_Association_Class_Hop_i = namedtuple('To_Association_Class_Hop_i', 'Number Pa
 Traverse_Action_i = namedtuple('Traverse_Action_i', 'ID Activity Domain Path Source_flow Destination_flow')
 
 # Action subsystem
-Action_i = namedtuple('Action_i', 'ID Activity Domain')
+Action_i = namedtuple('Action_i', 'ID Activity Domain Type')
 Flow_Dependency_i = namedtuple('Flow_Dependency_i', 'From_action To_action Activity Domain Flow Conditional Merge')
 Wave_i = namedtuple('Wave_i', 'Number Activity Domain')
 Wave_Assignment_i = namedtuple('Wave_Assignment_i', 'Action Activity Domain Wave')

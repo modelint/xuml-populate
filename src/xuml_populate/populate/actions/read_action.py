@@ -59,15 +59,15 @@ class ReadAction:
         class_attrs = MMclass.header(cname=cname, domain=domain)
 
         # Populate the Action superclass instance and obtain its action_id
-        Transaction.open(mmdb, tr_Read)
-        action_id = Action.populate(tr=tr_Read, anum=anum, domain=domain)  # Transaction open
-        Relvar.insert(mmdb, tr=tr_Read, relvar='Read_Action', tuples=[
+        Transaction.open(db=mmdb, name=tr_Read)
+        action_id = Action.populate(tr=tr_Read, anum=anum, domain=domain, action_type="read")  # Transaction open
+        Relvar.insert(db=mmdb, tr=tr_Read, relvar='Read_Action', tuples=[
             Read_Action_i(ID=action_id, Activity=anum, Domain=domain, Instance_flow=input_single_instance_flow.fid)
         ])
         scalar_flows = []
         for a in attrs:
             of = Flow.populate_scalar_flow(scalar_type=class_attrs[a], anum=anum, domain=domain, label=None)
-            Relvar.insert(mmdb, tr=tr_Read, relvar='Attribute_Read_Access', tuples=[
+            Relvar.insert(db=mmdb, tr=tr_Read, relvar='Attribute_Read_Access', tuples=[
                 Attribute_Read_Access_i(Attribute=a, Class=cname, Read_action=action_id, Activity=anum,
                                         Domain=domain, Output_flow=of.fid)
             ])
@@ -75,5 +75,5 @@ class ReadAction:
 
             # output_flows[pa] = of
         # We now have a transaction with all select-action instances, enter into the metamodel db
-        Transaction.execute(mmdb, tr_Read)  # Select Action
+        Transaction.execute(db=mmdb, name=tr_Read)  # Select Action
         return action_id, tuple(scalar_flows)

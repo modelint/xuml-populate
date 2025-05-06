@@ -33,8 +33,6 @@ def parse(cl_input):
                         help='Name of the system package')
     parser.add_argument('-D', '--debug', action='store_true',
                         help='Debug mode'),
-    parser.add_argument('-d', '--display', action='store_true',
-                        help='Display the populated database on the console')
     parser.add_argument('-L', '--log', action='store_true',
                         help='Generate a diagnostic log file')
     parser.add_argument('-A', '--actions', action='store_true',
@@ -66,7 +64,8 @@ def main():
     # System package specified
     if args.system:
         system_pkg_path = Path(args.system).resolve()
-        s = System(name=system_pkg_path.stem, system_path=system_pkg_path, parse_actions=args.actions, display=args.display)
+        s = System(name=system_pkg_path.stem, system_path=system_pkg_path, parse_actions=args.actions,
+                   verbose=args.verbose)
 
     logger.info("No problemo")  # We didn't die on an exception, basically
     if args.verbose:

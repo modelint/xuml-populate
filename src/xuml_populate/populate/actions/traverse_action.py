@@ -59,8 +59,8 @@ class TraverseAction:
         """
         cls.name = cls.name.rstrip('/')  # Remove trailing '/' from the path name
         # Create a Traverse Action and Path
-        Transaction.open(mmdb, tr_Traverse)
-        cls.action_id = Action.populate(tr=tr_Traverse, anum=cls.anum, domain=cls.domain)
+        Transaction.open(db=mmdb, name=tr_Traverse)
+        cls.action_id = Action.populate(tr=tr_Traverse, anum=cls.anum, domain=cls.domain, action_type="traverse")
         # Create the Traverse action destination flow (the output for R930)
         cls.dest_fid = Flow.populate_instance_flow(cname=cls.dest_class, anum=cls.anum,
                                                    domain=cls.domain, label=None,
@@ -69,11 +69,11 @@ class TraverseAction:
         _logger.info(f"INSERT Traverse action output Flow: ["
                      f"{cls.domain}:{cls.dest_class}:{cls.activity_path.split(':')[-1]}"
                      f":{cls.dest_fid}]")
-        Relvar.insert(mmdb, tr=tr_Traverse, relvar='Traverse_Action', tuples=[
+        Relvar.insert(db=mmdb, tr=tr_Traverse, relvar='Traverse_Action', tuples=[
             Traverse_Action_i(ID=cls.action_id, Activity=cls.anum, Domain=cls.domain, Path=cls.name,
                               Source_flow=cls.input_instance_flow.fid, Destination_flow=cls.dest_fid)
         ])
-        Relvar.insert(mmdb, tr=tr_Traverse, relvar='Path', tuples=[
+        Relvar.insert(db=mmdb, tr=tr_Traverse, relvar='Path', tuples=[
             Path_i(Name=cls.name, Domain=cls.domain, Dest_class=cls.dest_class)
         ])
 
@@ -82,14 +82,14 @@ class TraverseAction:
         for number, h in enumerate(cls.hops, start=1):
             h.hoptype(number=number, to_class=h.to_class, rnum=h.rnum,
                       attrs=h.attrs)  # Call hop type method with hop type general and specific args
-        Transaction.execute(mmdb, tr_Traverse)
+        Transaction.execute(db=mmdb, name=tr_Traverse)
 
     @classmethod
     def validate_rel(cls, rnum: str):
         rel = f"Rnum:<{rnum}>, Domain:<{cls.domain}>"
         if not Relation.restrict(mmdb, restriction=rel, relation="Relationship").body:
             _logger.error(f"Undefined Rnum {rnum} in Domain {cls.domain}")
-            raise UndefinedRelationship(rnum, cls.domain)
+            raise UndefinedRelationship(rnum=rnum, domain=cls.domain)
 
     @classmethod
     def ordinal_hop(cls, cname: str, ascending: bool):
@@ -521,7 +521,6 @@ class TraverseAction:
 
         # Now we can populate the path
         cls.populate()
-        # Relvar.printall(mmdb)
 
         return cls.action_id, Flow_ap(fid=cls.dest_fid, content=Content.INSTANCE, tname=cls.dest_class,
                                       max_mult=cls.mult)

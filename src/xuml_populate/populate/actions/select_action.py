@@ -67,8 +67,8 @@ class SelectAction:
         """
         idcheck = {c.attr for c in attr_comparisons if c.op == '=='}
         R = f"Class:<{cls.input_instance_flow.tname}>, Domain:<{cls.domain}>"
-        Relation.restrict(mmdb, relation='Identifier_Attribute', restriction=R)
-        Relation.project(mmdb, attributes=('Identifier', 'Attribute',), svar_name='all_id_attrs')
+        Relation.restrict(db=mmdb, relation='Identifier_Attribute', restriction=R)
+        Relation.project(db=mmdb, attributes=('Identifier', 'Attribute',), svar_name='all_id_attrs')
         # We have created a named relation with a projection of each id_attr and its id_num
         # Now we must step through each id_num to see if we are selecting on any of them
         i = 1  # Start with inum 1 {I}, (identifier 1). Every class has at least this identifier
@@ -76,11 +76,11 @@ class SelectAction:
             # Step through every identifier of the class and see if there is a set of equivalence
             # comparisons that forms a superset of this identifier. If we are selecting at most one instance
             R = f"Identifier:<{str(i)}>"
-            t_id_n_attrs = Relation.restrict(mmdb, relation='all_id_attrs', restriction=R)
+            t_id_n_attrs = Relation.restrict(db=mmdb, relation='all_id_attrs', restriction=R)
             if not t_id_n_attrs.body:
                 # This i num is not defined on the class, no more i nums to check
                 break
-            t_id_n_attr_names = Relation.project(mmdb, attributes=('Attribute',))
+            t_id_n_attr_names = Relation.project(db=mmdb, attributes=('Attribute',))
             id_n_attr_names = {t['Attribute'] for t in t_id_n_attr_names.body}
             if not id_n_attr_names - idcheck:
                 # The set of identifier attributes for the current id number
@@ -109,20 +109,20 @@ class SelectAction:
                          f"{cls.input_instance_flow.tname}:{cls.activity_data.activity_path.split(':')[-1]}"
                          f":{cls.output_instance_flow}]")
             # Populate the Single Select subclass
-            Relvar.insert(mmdb, tr=tr_Select, relvar='Single_Select', tuples=[
+            Relvar.insert(db=mmdb, tr=tr_Select, relvar='Single_Select', tuples=[
                 Single_Select_i(ID=cls.action_id, Activity=cls.anum, Domain=cls.domain,
                                 Output_flow=cls.output_instance_flow.fid)
             ])
             if selection_idnum:
                 # Populate an Identifier Select subclass
-                Relvar.insert(mmdb, tr=tr_Select, relvar='Identifier_Select', tuples=[
+                Relvar.insert(db=mmdb, tr=tr_Select, relvar='Identifier_Select', tuples=[
                     Identifier_Select_i(ID=cls.action_id, Activity=cls.anum, Domain=cls.domain,
                                         Identifier=selection_idnum, Class=cls.input_instance_flow.tname)
                 ])
             else:
                 # Populate an Identifier Select subclass
                 # Note that if both ONE cardinality specified and identifier select, identifier select takes precedence
-                Relvar.insert(mmdb, tr=tr_Select, relvar='Zero_One_Cardinality_Select', tuples=[
+                Relvar.insert(db=mmdb, tr=tr_Select, relvar='Zero_One_Cardinality_Select', tuples=[
                     Zero_One_Cardinality_Select_i(ID=cls.action_id, Activity=cls.anum, Domain=cls.domain)
                 ])
         else:
@@ -135,7 +135,7 @@ class SelectAction:
                          f"{cls.input_instance_flow.tname}:{cls.activity_data.activity_path.split(':')[-1]}"
                          f":{cls.output_instance_flow}]")
             # Populate the Many Select subclass
-            Relvar.insert(mmdb, tr=tr_Select, relvar='Many_Select', tuples=[
+            Relvar.insert(db=mmdb, tr=tr_Select, relvar='Many_Select', tuples=[
                 Many_Select_i(ID=cls.action_id, Activity=cls.anum, Domain=cls.domain,
                               Output_flow=cls.output_instance_flow.fid)
             ])
@@ -159,9 +159,9 @@ class SelectAction:
         cls.input_instance_flow = input_instance_flow
 
         # Populate the Action superclass instance and obtain its action_id
-        Transaction.open(mmdb, tr_Select)
-        cls.action_id = Action.populate(tr=tr_Select, anum=cls.anum, domain=cls.domain)  # Transaction open
-        Relvar.insert(mmdb, tr=tr_Select, relvar='Select_Action', tuples=[
+        Transaction.open(db=mmdb, name=tr_Select)
+        cls.action_id = Action.populate(tr=tr_Select, anum=cls.anum, domain=cls.domain, action_type="select")  # Transaction open
+        Relvar.insert(db=mmdb, tr=tr_Select, relvar='Select_Action', tuples=[
             Select_Action_i(ID=cls.action_id, Activity=cls.anum, Domain=cls.domain, Input_flow=input_instance_flow.fid)
         ])
         cls.selection_parse = selection_parse
@@ -173,12 +173,12 @@ class SelectAction:
                                                                                     selection_parse=selection_parse,
                                                                                     activity_data=activity_data)
 
-        Relvar.insert(mmdb, tr=tr_Select, relvar='Class_Restriction_Condition', tuples=[
+        Relvar.insert(db=mmdb, tr=tr_Select, relvar='Class_Restriction_Condition', tuples=[
             Class_Restriction_Condition_i(Select_action=cls.action_id, Activity=cls.anum, Domain=cls.domain)
         ])
         # Create output flows
-        cls.populate_multiplicity_subclasses(selection_cardinality, attr_comparisons)
+        cls.populate_multiplicity_subclasses(selection_cardinality=selection_cardinality, attr_comparisons=attr_comparisons)
 
         # We now have a transaction with all select-action instances, enter into the metamodel db
-        Transaction.execute(mmdb, tr_Select)  # Select Action
+        Transaction.execute(db=mmdb, name=tr_Select)  # Select Action
         return cls.action_id, cls.output_instance_flow, sflows

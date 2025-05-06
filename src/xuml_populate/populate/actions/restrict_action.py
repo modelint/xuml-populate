@@ -44,8 +44,8 @@ class RestrictAction:
         anum = activity_data.anum
 
         # Populate the Action superclass instance and obtain its action_id
-        Transaction.open(mmdb, tr_Restrict_Action)
-        action_id = Action.populate(tr=tr_Restrict_Action, anum=anum, domain=domain)
+        Transaction.open(db=mmdb, name=tr_Restrict_Action)
+        action_id = Action.populate(tr=tr_Restrict_Action, anum=anum, domain=domain, action_type="restrict")
 
         # Populate the output Table Flow using same Table as input flow
         output_relation_flow = Flow.populate_relation_flow_by_reference(ref_flow=input_relation_flow, anum=anum,
@@ -59,19 +59,19 @@ class RestrictAction:
         # Restrict action does not use the returned cardinality since output is always a Table Flow
         # Nor does it use the comparision critieria to test for identifier selection
 
-        Relvar.insert(mmdb, tr=tr_Restrict_Action, relvar='Table_Restriction_Condition', tuples=[
+        Relvar.insert(db=mmdb, tr=tr_Restrict_Action, relvar='Table_Restriction_Condition', tuples=[
             Table_Restriction_Condition_i(Restrict_action=action_id, Activity=anum, Domain=domain)
         ])
-        Relvar.insert(mmdb, tr=tr_Restrict_Action, relvar='Relational_Action', tuples=[
+        Relvar.insert(db=mmdb, tr=tr_Restrict_Action, relvar='Relational_Action', tuples=[
             Relational_Action_i(ID=action_id, Activity=anum, Domain=domain)
         ])
-        Relvar.insert(mmdb, tr=tr_Restrict_Action, relvar='Table_Action', tuples=[
+        Relvar.insert(db=mmdb, tr=tr_Restrict_Action, relvar='Table_Action', tuples=[
             Table_Action_i(ID=action_id, Activity=anum, Domain=domain,
                            Input_a_flow=input_relation_flow.fid, Output_flow=output_relation_flow.fid)
         ])
-        Relvar.insert(mmdb, tr=tr_Restrict_Action, relvar='Restrict_Action', tuples=[
+        Relvar.insert(db=mmdb, tr=tr_Restrict_Action, relvar='Restrict_Action', tuples=[
             Restrict_Action_i(Action=action_id, Activity=anum, Domain=domain)
         ])
         # We now have a transaction with all select-action instances, enter into the metamodel db
-        Transaction.execute(mmdb, tr_Restrict_Action)  # Restrict Action
+        Transaction.execute(db=mmdb, name=tr_Restrict_Action)  # Restrict Action
         return action_id, output_relation_flow, sflows

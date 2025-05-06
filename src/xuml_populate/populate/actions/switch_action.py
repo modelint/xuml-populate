@@ -55,16 +55,16 @@ class SwitchAction:
         class_attrs = MMclass.header(cname=si_flow.tname, domain=domain)
 
         # Populate the Action superclass instance and obtain its action_id
-        Transaction.open(mmdb, tr_Switch)
-        action_id = Action.populate(tr=tr_Switch, anum=anum, domain=domain)  # Transaction open
-        Relvar.insert(mmdb, tr=tr_Switch, relvar='Read_Action', tuples=[
+        Transaction.open(db=mmdb, name=tr_Switch)
+        action_id = Action.populate(tr=tr_Switch, anum=anum, domain=domain, action_type="switch")  # Transaction open
+        Relvar.insert(db=mmdb, tr=tr_Switch, relvar='Read_Action', tuples=[
             Read_Action_i(ID=action_id, Activity=anum, Domain=domain, Instance_flow=input_single_instance_flow.fid)
         ])
         scalar_flows = []
         proj_attrs = [n.name for n in projection.attrs] if projection.expand != 'ALL' else list(class_attrs.keys())
         for pa in proj_attrs:
             of = Flow.populate_scalar_flow(scalar_type=class_attrs[pa], anum=anum, domain=domain, label=None)
-            Relvar.insert(mmdb, tr=tr_Switch, relvar='Attribute_Read_Access', tuples=[
+            Relvar.insert(db=mmdb, tr=tr_Switch, relvar='Attribute_Read_Access', tuples=[
                 Attribute_Read_Access_i(Attribute=pa, Class=si_flow.tname, Read_action=action_id, Activity=anum,
                                         Domain=domain, Output_flow=of.fid)
             ])
@@ -72,5 +72,5 @@ class SwitchAction:
 
             # output_flows[pa] = of
         # We now have a transaction with all select-action instances, enter into the metamodel db
-        Transaction.execute(mmdb, tr_Switch)  # Select Action
+        Transaction.execute(db=mmdb, name=tr_Switch)  # Select Action
         return action_id, scalar_flows

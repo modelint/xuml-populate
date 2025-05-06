@@ -48,10 +48,10 @@ class ProjectAction:
         for pattr in projection.attrs:
             if input_nsflow.content == Content.INSTANCE:
                 R = f"Name:<{pattr.name}>, Class:<{input_nsflow.tname}>, Domain:<{domain}>"
-                result = Relation.restrict(mmdb, relation='Attribute', restriction=R)
+                result = Relation.restrict(db=mmdb, relation='Attribute', restriction=R)
             else:
                 R = f"Name:<{pattr.name}>, Table:<{input_nsflow.tname}>, Domain:<{domain}>"
-                result = Relation.restrict(mmdb, relation='Table_Attribute', restriction=R)
+                result = Relation.restrict(db=mmdb, relation='Table_Attribute', restriction=R)
             if not result.body:
                 _logger.error(f"Attribute [{pattr.name}] in projection not defined on class [{input_nsflow.tname}]")
                 raise ProjectedAttributeNotDefined
@@ -60,22 +60,22 @@ class ProjectAction:
         output_rel_flow = Flow.populate_relation_flow_by_header(table_header=table_header, anum=anum, domain=domain,
                                                                 max_mult=input_nsflow.max_mult)
 
-        Transaction.open(mmdb, tr_Project)
-        action_id = Action.populate(tr=tr_Project, anum=anum, domain=domain)
-        Relvar.insert(mmdb, tr=tr_Project, relvar='Relational_Action', tuples=[
+        Transaction.open(db=mmdb, name=tr_Project)
+        action_id = Action.populate(tr=tr_Project, anum=anum, domain=domain, action_type="project")
+        Relvar.insert(db=mmdb, tr=tr_Project, relvar='Relational_Action', tuples=[
             Relational_Action_i(ID=action_id, Activity=anum, Domain=domain)
         ])
-        Relvar.insert(mmdb, tr=tr_Project, relvar='Table_Action', tuples=[
+        Relvar.insert(db=mmdb, tr=tr_Project, relvar='Table_Action', tuples=[
             Table_Action_i(ID=action_id, Activity=anum, Domain=domain, Input_a_flow=input_nsflow.fid,
                            Output_flow=output_rel_flow.fid)
         ])
-        Relvar.insert(mmdb, tr=tr_Project, relvar='Project_Action', tuples=[
+        Relvar.insert(db=mmdb, tr=tr_Project, relvar='Project_Action', tuples=[
             Project_Action_i(ID=action_id, Activity=anum, Domain=domain)
         ])
         for pattr in projection.attrs:
-            Relvar.insert(mmdb, tr=tr_Project, relvar='Projected_Attribute', tuples=[
+            Relvar.insert(db=mmdb, tr=tr_Project, relvar='Projected_Attribute', tuples=[
                 Projected_Attribute_i(Attribute=pattr.name, Non_scalar_type=ns_type, Project_action=action_id,
                                       Activity=anum, Domain=domain)
             ])
-        Transaction.execute(mmdb, tr_Project)
+        Transaction.execute(db=mmdb, name=tr_Project)
         return action_id, output_rel_flow

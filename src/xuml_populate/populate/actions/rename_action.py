@@ -47,18 +47,18 @@ class RenameAction:
                                                              max_mult=input_nsflow.max_mult)
 
         # Create the action
-        Transaction.open(mmdb, tr_Rename)
-        action_id = Action.populate(tr=tr_Rename, anum=anum, domain=domain)
-        Relvar.insert(mmdb, tr=tr_Rename, relvar='Relational_Action', tuples=[
+        Transaction.open(db=mmdb, name=tr_Rename)
+        action_id = Action.populate(tr=tr_Rename, anum=anum, domain=domain, action_type="rename")
+        Relvar.insert(db=mmdb, tr=tr_Rename, relvar='Relational_Action', tuples=[
             Relational_Action_i(ID=action_id, Activity=anum, Domain=domain)
         ])
-        Relvar.insert(mmdb, tr=tr_Rename, relvar='Table_Action', tuples=[
+        Relvar.insert(db=mmdb, tr=tr_Rename, relvar='Table_Action', tuples=[
             Table_Action_i(ID=action_id, Activity=anum, Domain=domain, Input_a_flow=input_nsflow.fid,
                            Output_flow=output_tflow.fid)
         ])
-        Relvar.insert(mmdb, tr=tr_Rename, relvar='Rename_Action', tuples=[
+        Relvar.insert(db=mmdb, tr=tr_Rename, relvar='Rename_Action', tuples=[
             Rename_Action_i(ID=action_id, Activity=anum, Domain=domain, From_attribute=from_attr,
                             From_non_scalar_type=input_nsflow.tname, To_attribute=to_attr, To_table=output_tflow.tname)
         ])
-        Transaction.execute(mmdb, tr_Rename)
+        Transaction.execute(db=mmdb, name=tr_Rename)
         return action_id, output_tflow

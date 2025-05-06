@@ -44,20 +44,20 @@ class ExtractAction:
         # Save attribute values that we will need when creating the various select subsystem
         # classes
 
-        tuple_header = NonScalarFlow.header(tuple_flow, domain)
+        tuple_header = NonScalarFlow.header(ns_flow=tuple_flow, domain=domain)
 
-        Transaction.open(mmdb, tr_Extract)
-        action_id = Action.populate(tr=tr_Extract, anum=anum, domain=domain)
+        Transaction.open(db=mmdb, name=tr_Extract)
+        action_id = Action.populate(tr=tr_Extract, anum=anum, domain=domain, action_type="extract")
 
         # Create the labeled Scalar Flow
         sflow = Flow.populate_scalar_flow(label=label, scalar_type=tuple_header[attr], anum=anum, domain=domain)
 
-        Relvar.insert(mmdb, tr=tr_Extract, relvar='Relational_Action', tuples=[
+        Relvar.insert(db=mmdb, tr=tr_Extract, relvar='Relational_Action', tuples=[
             Relational_Action_i(ID=action_id, Activity=anum, Domain=domain)
         ])
-        Relvar.insert(mmdb, tr=tr_Extract, relvar='Extract_Action', tuples=[
+        Relvar.insert(db=mmdb, tr=tr_Extract, relvar='Extract_Action', tuples=[
             Extract_Action_i(ID=action_id, Activity=anum, Domain=domain, Input_tuple=tuple_flow.fid,
                              Table=tuple_flow.tname, Attribute=attr, Output_scalar=sflow.fid)
         ])
-        Transaction.execute(mmdb, tr_Extract)
+        Transaction.execute(db=mmdb, name=tr_Extract)
         return sflow

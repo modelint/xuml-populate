@@ -83,8 +83,8 @@ class MethodActivity:
                          for a in wave_actions]
             Relvar.insert(db=mmdb, relvar="Wave_Assignment", tuples=wa_tuples, tr=wave_tr)
             Transaction.execute(db=mmdb, name=wave_tr)
-        Relation.print(db=mmdb, variable_name="Wave")
-        Relation.print(db=mmdb, variable_name="Wave_Assignment")
+        # Relation.print(db=mmdb, variable_name="Wave")
+        # Relation.print(db=mmdb, variable_name="Wave_Assignment")
 
     def initially_enabled_flows(self):
         """
@@ -105,7 +105,7 @@ class MethodActivity:
         Relation.project(db=mmdb, attributes=("Executing_instance_flow",))
         # Rename it to "Flow"
         Relation.rename(db=mmdb, names={"Executing_instance_flow": "Flow"}, svar_name="xi_flow")
-        Relation.print(db=mmdb, variable_name="xi_flow")
+        # Relation.print(db=mmdb, variable_name="xi_flow")
 
         # Get the parameter input flows for our Anum and Domain
         R = f"Activity:<{self.activity_data['anum']}>, Domain:<{self.domain}>"
@@ -114,7 +114,7 @@ class MethodActivity:
         Relation.project(db=mmdb, attributes=("Input_flow",))
         # Rename it to "Flow"
         Relation.rename(db=mmdb, names={"Input_flow": "Flow"}, svar_name="param_flows")
-        Relation.print(db=mmdb, variable_name="param_flows")
+        # Relation.print(db=mmdb, variable_name="param_flows")
 
         # Get any class accessor flows for our Anum and Domain
         R = f"Activity:<{self.activity_data['anum']}>, Domain:<{self.domain}>"
@@ -123,11 +123,11 @@ class MethodActivity:
         Relation.project(db=mmdb, attributes=("Output_flow",))
         # Rename it to "Flow"
         Relation.rename(db=mmdb, names={"Output_flow": "Flow"}, svar_name="class_flows")
-        Relation.print(db=mmdb, variable_name="class_flows")
+        # Relation.print(db=mmdb, variable_name="class_flows")
 
         # Now take the union of all three
         Relation.union(db=mmdb, relations=("xi_flow", "param_flows", "class_flows"), svar_name="wave_enabled_flows")
-        Relation.print(db=mmdb, variable_name="wave_enabled_flows")
+        # Relation.print(db=mmdb, variable_name="wave_enabled_flows")
 
     def initially_executable_actions(self) -> RelationValue:
         """
@@ -151,7 +151,7 @@ class MethodActivity:
 
         # Now subtract those downstream actions from the set of unexecuted_actions (all Actions at this point)
         ia = Relation.subtract(db=mmdb, rname1="unexecuted_actions", rname2="downstream_actions", svar_name="executable_actions")
-        Relation.print(db=mmdb, variable_name="executable_actions")
+        # Relation.print(db=mmdb, variable_name="executable_actions")
         # Here we are initializing a relation variable named "executable_actions" that will update for each new Wave
         # And in Wave 1, it is the set of initial actions
         return ia
@@ -166,7 +166,7 @@ class MethodActivity:
         # Lookup all Flow Dependencies where the source action is a From_action and collect the output Flows
         Relation.join(db=mmdb, rname1=source_action_relation, rname2="fd", attrs={"ID": "From_action"})
         Relation.project(db=mmdb, attributes=("Flow",), svar_name="wave_enabled_flows")
-        Relation.print(db=mmdb, variable_name="wave_enabled_flows")
+        # Relation.print(db=mmdb, variable_name="wave_enabled_flows")
 
     def assign_waves(self):
         """
@@ -193,7 +193,7 @@ class MethodActivity:
         R = f"Activity:<{self.activity_data['anum']}>, Domain:<{self.domain}>"
         Relation.restrict(db=mmdb, relation='Action', restriction=R)
         unex_actions = Relation.project(db=mmdb, attributes=("ID",), svar_name="unexecuted_actions")
-        Relation.print(db=mmdb, variable_name="unexecuted_actions")
+        # Relation.print(db=mmdb, variable_name="unexecuted_actions")
 
         while unex_actions.body:
             # The loop starts with Wave 1 and then repeats the else clause until all actions have been assigned
@@ -208,11 +208,11 @@ class MethodActivity:
                 # Initialize the completed_actions relational value to the set of executable_actions
                 # We have effectively simulated their execution
                 Relation.restrict(db=mmdb, relation="executable_actions", svar_name="completed_actions")
-                Relation.print(db=mmdb, variable_name="completed_actions")
+                # Relation.print(db=mmdb, variable_name="completed_actions")
                 # Initialize the enabled_flows relational value to this first set of wave_enabled_flows
                 # (the initially available flows)
                 Relation.restrict(db=mmdb, relation="wave_enabled_flows", svar_name="enabled_flows")
-                Relation.print(db=mmdb, variable_name="enabled_flows")
+                # Relation.print(db=mmdb, variable_name="enabled_flows")
 
                 # As we move through the remaining Waves we will keep updating the set of completed_actions
                 # and the set of enabled_flows until we get them all
@@ -228,7 +228,7 @@ class MethodActivity:
                 # all earlier enabled flows in the enabled_flows relation value
                 Relation.union(db=mmdb, relations=("enabled_flows", "wave_enabled_flows"),
                                svar_name="enabled_flows")
-                Relation.print(db=mmdb, variable_name="enabled_flows")
+                # Relation.print(db=mmdb, variable_name="enabled_flows")
 
                 # Now for the fun part:
                 # For each unexecuted Action, see if its total set of required input Flows is a subset
@@ -263,7 +263,7 @@ class MethodActivity:
                 Relation.restrict(db=mmdb, restriction=R)
                 # Just take the ID attributes.  After the restrict we don't need the extra boolean attribute anymore
                 xactions = Relation.project(db=mmdb, attributes=("ID",), svar_name="executable_actions")
-                Relation.print(db=mmdb, variable_name="executable_actions")
+                # Relation.print(db=mmdb, variable_name="executable_actions")
                 # And here we replace the set of completed_actions with our new batch of executable_actions
                 Relation.restrict(db=mmdb, relation="executable_actions", svar_name="completed_actions")
 
@@ -271,10 +271,10 @@ class MethodActivity:
             # Add all Action IDs in the executable_actions relation into the current Wave, and increment the counter
             self.waves[self.wave_ctr] = [t['ID'] for t in xactions.body]
             self.wave_ctr += 1
-            print(f"Wave --- [{self.wave_ctr}] ---")
+            # print(f"Wave --- [{self.wave_ctr}] ---")
             # Finally, remove the latest completed actions from the set of unexecuted_actions
             unex_actions = Relation.subtract(db=mmdb, rname1="unexecuted_actions", rname2="completed_actions", svar_name="unexecuted_actions")
-            Relation.print(db=mmdb, variable_name="unexecuted_actions")
+            # Relation.print(db=mmdb, variable_name="unexecuted_actions")
             # Rinse and repeat until all the actions are completed
         pass
 

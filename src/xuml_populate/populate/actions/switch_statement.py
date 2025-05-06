@@ -85,23 +85,23 @@ class SwitchStatement:
                 pass
             pass
         # Populate the Action superclass instance and obtain its action_id
-        Transaction.open(mmdb, tr_Switch)
-        action_id = Action.populate(tr=tr_Switch, anum=anum, domain=domain)  # Transaction open
-        Relvar.insert(mmdb, tr=tr_Switch, relvar='Switch_Action', tuples=[
+        Transaction.open(db=mmdb, name=tr_Switch)
+        action_id = Action.populate(tr=tr_Switch, anum=anum, domain=domain, action_type="switch")  # Transaction open
+        Relvar.insert(db=mmdb, tr=tr_Switch, relvar='Switch_Action', tuples=[
             Switch_Action_i(ID=action_id, Activity=anum, Domain=domain)
         ])
-        Relvar.insert(mmdb, tr=tr_Switch, relvar='Scalar_Switch_Action', tuples=[
+        Relvar.insert(db=mmdb, tr=tr_Switch, relvar='Scalar_Switch_Action', tuples=[
             Scalar_Switch_Action_i(ID=action_id, Activity=anum, Domain=domain,
                                    Scalar_input=scalar_input_flow.fid)
         ])
         for k, v in cactions.items():
             control_flow_fid = Flow.populate_control_flow(tr=tr_Switch, label=k, enabled_actions=v.target_actions,
                                                           anum=anum, domain=domain)
-            Relvar.insert(mmdb, tr=tr_Switch, relvar='Case', tuples=[
+            Relvar.insert(db=mmdb, tr=tr_Switch, relvar='Case', tuples=[
                 Case_i(Flow=control_flow_fid, Activity=anum, Domain=domain, Switch_action=action_id)
             ])
             for mv in v.match_values:
-                Relvar.insert(mmdb, tr=tr_Switch, relvar='Match_Value', tuples=[
+                Relvar.insert(db=mmdb, tr=tr_Switch, relvar='Match_Value', tuples=[
                     Match_Value_i(Case_flow=control_flow_fid, Activity=anum, Domain=domain, Value=mv)
                 ])
                 pass
@@ -131,12 +131,12 @@ class SwitchStatement:
         for mcl in multi_case_labels:
             output_flows[mcl] = Flow.populate_switch_output(label=mcl, ref_flow=mcl_flows[mcl][0],
                                                             anum=anum, domain=domain)
-            Relvar.insert(mmdb, tr=tr_Switch, relvar='Data_Flow_Switch', tuples=[
+            Relvar.insert(db=mmdb, tr=tr_Switch, relvar='Data_Flow_Switch', tuples=[
                 Data_Flow_Switch_i(Output_flow=output_flows[mcl].fid, Activity=anum, Domain=domain)
             ])
         for label, flows in mcl_flows.items():
             for f in flows:
-                Relvar.insert(mmdb, tr=tr_Switch, relvar='Switched_Data_Flow', tuples=[
+                Relvar.insert(db=mmdb, tr=tr_Switch, relvar='Switched_Data_Flow', tuples=[
                     Switched_Data_Flow_i(Input_flow=f.fid, Activity=anum, Domain=domain,
                                          Output_flow=output_flows[label].fid)
                 ])
@@ -145,7 +145,7 @@ class SwitchStatement:
         #     for lf in lfset:
         #         if lf.label in multi_case_labels:
         #             # Create the output flow
-        #             Relvar.insert(mmdb, tr=tr_Switch, relvar='Data_Flow', tuples=[
+        #             Relvar.insert(db=mmdb, tr=tr_Switch, relvar='Data_Flow', tuples=[
         #                 Table_i()
         #             ])
         #             pass
@@ -157,7 +157,7 @@ class SwitchStatement:
 
         # x = {i.label for f in cls.labeled_outputs.items() for i in f}
         # TODO: Create data flow switches
-        Transaction.execute(mmdb, tr_Switch)
+        Transaction.execute(db=mmdb, name=tr_Switch)
 
         # For a switch statement, the switch action is both the initial and output action
         # Initial, because the Switch Action is the one Action in the statement that does not

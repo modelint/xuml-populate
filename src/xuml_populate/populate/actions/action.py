@@ -23,12 +23,13 @@ class Action:
     next_action_id = {}
 
     @classmethod
-    def populate(cls, tr: str, anum: str, domain: str) -> str:
+    def populate(cls, tr: str, anum: str, domain: str, action_type: str) -> str:
         """
 
         :param tr: Open db transaction
         :param anum: The Activity Number
         :param domain: Name of the domain
+        :param action_type:  The subclass of this action
         :return: The action id
         """
         activity_key = f'{domain}:{anum}'  # combine attributes to get id
@@ -45,6 +46,6 @@ class Action:
 
         # Populate the Statement superclass
         Relvar.insert(db=mmdb, tr=tr, relvar='Action', tuples=[
-            Action_i(ID=actn_id, Activity=anum, Domain=domain)
+            Action_i(ID=actn_id, Activity=anum, Domain=domain, Type=action_type)
         ])
         return actn_id

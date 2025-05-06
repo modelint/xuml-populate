@@ -83,17 +83,17 @@ class SetAction:
                                                              max_mult=max_mult)
 
         # Create the action (trannsaction open)
-        Transaction.open(mmdb, tr_Set_Action)
-        cls.action_id = Action.populate(tr=tr_Set_Action, anum=anum, domain=domain)
-        Relvar.insert(mmdb, tr=tr_Set_Action, relvar='Relational_Action', tuples=[
+        Transaction.open(db=mmdb, name=tr_Set_Action)
+        cls.action_id = Action.populate(tr=tr_Set_Action, anum=anum, domain=domain, action_type="set")
+        Relvar.insert(db=mmdb, tr=tr_Set_Action, relvar='Relational_Action', tuples=[
             Relational_Action_i(ID=cls.action_id, Activity=anum, Domain=domain)
         ])
-        Relvar.insert(mmdb, tr=tr_Set_Action, relvar='Table_Action', tuples=[
+        Relvar.insert(db=mmdb, tr=tr_Set_Action, relvar='Table_Action', tuples=[
             Table_Action_i(ID=cls.action_id, Activity=anum, Domain=domain, Input_a_flow=a_input.fid,
                            Output_flow=output_tflow.fid)
         ])
-        Relvar.insert(mmdb, tr=tr_Set_Action, relvar='Set_Action', tuples=[
+        Relvar.insert(db=mmdb, tr=tr_Set_Action, relvar='Set_Action', tuples=[
             Set_Action_i(ID=cls.action_id, Operation=setop, Activity=anum, Domain=domain, Input_b_flow=b_input.fid)
         ])
-        Transaction.execute(mmdb, tr_Set_Action)
+        Transaction.execute(db=mmdb, name=tr_Set_Action)
         return cls.action_id, output_tflow
