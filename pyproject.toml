@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "xuml-populate"
-version = "0.2.0"
+version = "0.3.0"
 description = "Populates the SM Metamodel schema with a user model and outputs this as a TclRAL *.ral database"
 readme = "README.md"
 authors = [{ name = "Leon Starr", email = "leon_starr@modelint.com" }]
