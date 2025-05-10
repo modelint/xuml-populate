@@ -56,7 +56,8 @@ class InstanceSet:
                 case 'PATH_a':
                     # Path component
                     # Process the path to create the traverse action and obtain the resultant output instance flow
-                    aid, cls.component_flow = TraverseAction.build_path(input_instance_flow=cls.component_flow,
+                    traverse_action = TraverseAction()
+                    aid, cls.component_flow = traverse_action.build_path(input_instance_flow=cls.component_flow,
                                                                         path=comp, activity_data=activity_data)
                     # Data flow to/from actions within the instance_set
                     if first_action:

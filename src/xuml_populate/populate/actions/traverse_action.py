@@ -2,55 +2,163 @@
 traverse_action.py – Populate a traverse action instance in PyRAL
 """
 
+# System
 import logging
-from typing import Set, Dict, List, Optional
-from xuml_populate.config import mmdb
-from xuml_populate.exceptions.action_exceptions import UndefinedRelationship, IncompletePath, \
-    NoDestinationInPath, UndefinedClass, RelationshipUnreachableFromClass, HopToUnreachableClass, \
-    MissingTorPrefInAssociativeRel, NoSubclassInHop, SubclassNotInGeneralization, PerspectiveNotDefined, \
-    UndefinedAssociation, NeedPerspectiveOrClassToHop, NeedPerspectiveToHop, UnexpectedClassOrPerspectiveInPath
+from typing import Set, Dict, List, Optional, NamedTuple, Callable
+
+# Model Integration
 from scrall.parse.visitor import PATH_a
-from xuml_populate.populate.actions.action import Action
-from xuml_populate.populate.flow import Flow
-from xuml_populate.populate.actions.aparse_types import Flow_ap, MaxMult, Content, Activity_ap
-from xuml_populate.populate.mmclass_nt import Action_i, Traverse_Action_i, Path_i, Hop_i, Association_Class_Hop_i, \
-    Circular_Hop_i, Symmetric_Hop_i, Asymmetric_Circular_Hop_i, Ordinal_Hop_i, Straight_Hop_i, \
-    From_Asymmetric_Association_Class_Hop_i, From_Symmetric_Association_Class_Hop_i, To_Association_Class_Hop_i, \
-    Perspective_Hop_i, Generalization_Hop_i, To_Subclass_Hop_i, To_Superclass_Hop_i, Association_Hop_i
 from pyral.relvar import Relvar
 from pyral.relation import Relation
 from pyral.transaction import Transaction
-from collections import namedtuple
 
-# HopArgs = namedtuple('HopArgs', 'cname rnum attrs')
-Hop = namedtuple('Hop', 'hoptype to_class rnum attrs')
+# XUML_Populate
+from xuml_populate.config import mmdb
+from xuml_populate.populate.actions.action import Action
+from xuml_populate.populate.flow import Flow
+from xuml_populate.exceptions.action_exceptions import (UndefinedRelationship, IncompletePath,
+                                                        NoDestinationInPath, UndefinedClass,
+                                                        RelationshipUnreachableFromClass, HopToUnreachableClass,
+                                                        MissingTorPrefInAssociativeRel, NoSubclassInHop,
+                                                        SubclassNotInGeneralization, PerspectiveNotDefined,
+                                                        UndefinedAssociation, NeedPerspectiveOrClassToHop,
+                                                        NeedPerspectiveToHop, UnexpectedClassOrPerspectiveInPath)
+from xuml_populate.populate.actions.aparse_types import Flow_ap, MaxMult, Content, Activity_ap
+from xuml_populate.populate.mmclass_nt import (Action_i, Traverse_Action_i, Path_i, Hop_i, Association_Class_Hop_i,
+                                               Circular_Hop_i, Symmetric_Hop_i, Asymmetric_Circular_Hop_i,
+                                               Ordinal_Hop_i, Straight_Hop_i,
+                                               From_Asymmetric_Association_Class_Hop_i,
+                                               From_Symmetric_Association_Class_Hop_i, To_Association_Class_Hop_i,
+                                               Perspective_Hop_i, Generalization_Hop_i, To_Subclass_Hop_i,
+                                               To_Superclass_Hop_i, Association_Hop_i)
+
+class Hop(NamedTuple):
+    hoptype: Callable
+    to_class: str
+    rnum: str
+
 
 _logger = logging.getLogger(__name__)
 
 # Transactions
 tr_Traverse = "Traverse Action"
 
+
 class TraverseAction:
     """
     Create all relations for a Traverse Statement
     """
 
-    path_index = 0
-    path = None
-    name = None
-    input_instance_flow = None
-    id = None
-    dest_class = None  # End of path
-    class_cursor = None
-    rel_cursor = None
-    domain = None
-    hops = []
-    anum = None
-    action_id = None
-    mult = None  # Max mult of the current hop
-    dest_fid = None
-    activity_path = None
-    scrall_text = None
+    def __init__(self):
+        """
+
+        """
+        self.path_index = 0
+        self.path = None
+        self.name = None
+        self.input_instance_flow = None
+        self.id = None
+        self.dest_class = None  # End of path
+        self.class_cursor = None
+        self.rel_cursor = None
+        self.domain = None
+        self.hops = []
+        self.anum = None
+        self.action_id = None
+        self.mult = None  # Max mult of the current hop
+        self.dest_fid = None
+        self.activity_path = None
+        self.scrall_text = None
+
+    def build_path(self, input_instance_flow: Flow_ap, path: PATH_a, activity_data: Activity_ap) -> (str, Flow_ap):
+        """
+        Step through a path populating it along the way.
+
+        :param input_instance_flow: This is the source instance flow where the path begins
+        :param path: Parsed Scrall representing a Path
+        :param activity_data:
+        :return: The Traverse Action ID and the output instance flow id, its Class Type name and its maximum instance
+        multiplicity, 1 or M
+        """
+        self.path = path
+        self.hops = []
+        self.anum = activity_data.anum
+        self.input_instance_flow = input_instance_flow
+        self.class_cursor = input_instance_flow.tname  # Validation cursor is on this class now
+        self.domain = activity_data.domain
+        self.name = "/"  # The path text forms path name value
+        self.activity_path = activity_data.activity_path
+        self.scrall_text = activity_data.scrall_text
+        self.mult = input_instance_flow.max_mult
+
+        # Verify adequate path length
+        if len(path.hops) < 2:
+            raise IncompletePath(path)
+        # Path has at least 2 hop elements
+
+        # Validate destination class at the end of the path
+        terminal_hop = path.hops[-1]
+        if type(terminal_hop).__name__ != 'N_a':
+            # Destination class must a name
+            raise NoDestinationInPath(path)
+        self.dest_class = terminal_hop.name
+
+        # TODO: This comment paragraph seems out of date, no open transaction?
+        # We have an open transaction for the Statement superclass
+        # We must first add each HopArgs population to the transaction before
+        # determining the path_name, source, and destination flows which make it possible
+        # to add the Path and Traverse Statement population
+
+        # Valdiate path continuity
+        # Step through the path validating each relationship, phrase, and class
+        # Ensure that each step is reachable on the class model
+        self.path_index = 0
+        while self.path_index < len(path.hops) - 1:
+            hop = path.hops[self.path_index]
+
+            if type(hop).__name__ == 'N_a':
+                # This should be a perspective since flow names get eaten in the relationship hop handlers
+                # and a path cannot begin with a class name
+                # (any class name prefixing a path will have been processed to populate a labeled instance flow earlier)
+                if not self.resolve_perspective(phrase=hop.name) and not self.resolve_ordinal_perspective(
+                        perspective=hop.name):
+                    raise UnexpectedClassOrPerspectiveInPath(name=hop.name, path=path)
+
+            elif type(hop).__name__ == 'R_a':
+                self.rel_cursor = hop.rnum
+                self.name += self.rel_cursor + '/'
+                # This is either an Association, Generalization, or Ordinal Relationship
+                # Determine the type and call the corresponding hop populator
+
+                # First we look for any References to or from the class cursor
+                R = f"(From_class:<{self.class_cursor}> OR To_class:<{self.class_cursor}>), Rnum:<{hop.rnum}>, " \
+                    f"Domain:<{self.domain}>"
+                ref_r = Relation.restrict(db=mmdb, restriction=R, relation="Reference")
+                if ref_r.body:
+                    P = ('Ref', 'From_class', 'To_class')
+                    refs = Relation.project(db=mmdb, attributes=P, svar_name='rhop').body
+
+                    # Generalization
+                    if refs[0]['Ref'] == 'G':
+                        self.hop_generalization(refs=refs)
+                    else:
+                        self.hop_association(refs=refs)
+                else:
+                    # The perspective must be specified in the next hop
+                    self.path_index += 1
+                    self.resolve_ordinal_perspective(perspective=self.path.hops[self.path_index].name)
+
+            self.path_index += 1
+
+        if self.dest_class != self.class_cursor:
+            # Path does not reach destination
+            pass
+
+        # Now we can populate the path
+        self.populate()
+
+        return self.action_id, Flow_ap(fid=self.dest_fid, content=Content.INSTANCE, tname=self.dest_class,
+                                       max_mult=self.mult)
 
     @classmethod
     def populate(cls):
@@ -132,25 +240,23 @@ class TraverseAction:
             Hop_i(Number=number, Path=cls.name, Domain=cls.domain, Rnum=rnum, Class_step=to_class)
         ])
 
-    @classmethod
-    def straight_hop(cls, number: int, rnum: str, to_class: str, attrs: Optional[Dict] = None):
+    def straight_hop(self, number: int, rnum: str, to_class: str):
         """
         Populate an instance of Straight HopArgs
 
         :param number:  Value (1, 2, 3... ) establishing order within a Path, See Hop.Number in the class model
         :param to_class: Hop over to this class
         :param rnum: Across this association
-        :param attrs:  Unused, but required in signature
         """
         _logger.info("ACTION:Traverse - Populating a straight hop")
-        Relvar.insert(mmdb, tr=tr_Traverse, relvar='Straight_Hop', tuples=[
-            Straight_Hop_i(Number=number, Path=cls.name, Domain=cls.domain)
+        Relvar.insert(db=mmdb, tr=tr_Traverse, relvar='Straight_Hop', tuples=[
+            Straight_Hop_i(Number=number, Path=self.name, Domain=self.domain)
         ])
-        Relvar.insert(mmdb, tr=tr_Traverse, relvar='Association_Hop', tuples=[
-            Association_Hop_i(Number=number, Path=cls.name, Domain=cls.domain)
+        Relvar.insert(db=mmdb, tr=tr_Traverse, relvar='Association_Hop', tuples=[
+            Association_Hop_i(Number=number, Path=self.name, Domain=self.domain)
         ])
-        Relvar.insert(mmdb, tr=tr_Traverse, relvar='Hop', tuples=[
-            Hop_i(Number=number, Path=cls.name, Domain=cls.domain, Rnum=rnum, Class_step=to_class)
+        Relvar.insert(db=mmdb, tr=tr_Traverse, relvar='Hop', tuples=[
+            Hop_i(Number=number, Path=self.name, Domain=self.domain, Rnum=rnum, Class_step=to_class)
         ])
 
     @classmethod
@@ -222,8 +328,7 @@ class TraverseAction:
         cls.ordinal_hop(cname=cls.class_cursor, ascending=orel['Ascending_perspective'] == perspective)
         return True
 
-    @classmethod
-    def hop_generalization(cls, refs: List[Dict[str, str]]):
+    def hop_generalization(self, refs: List[Dict[str, str]]):
         """
         Populate a Generalization HopArgs
 
@@ -237,24 +342,23 @@ class TraverseAction:
         if len(refs) > 1:
             # We are hopping from the super_class to a subclass
             P = ("From_class",)
-            sub_tuples = Relation.project(mmdb, attributes=P, relation="rhop").body
+            sub_tuples = Relation.project(db=mmdb, attributes=P, relation="rhop").body
             subclasses = {s['From_class'] for s in sub_tuples}
             # The subclass must be specified in the next hop
-            cls.path_index += 1
-            next_hop = cls.path.hops[cls.path_index]
+            self.path_index += 1
+            next_hop = self.path.hops[self.path_index]
             if next_hop.name not in subclasses:
-                raise NoSubclassInHop(superclass=super_class, rnum=cls.rel_cursor, domain=cls.domain)
-            cls.class_cursor = next_hop.name
-            cls.to_subclass_hop(sub_class=cls.class_cursor)
+                raise NoSubclassInHop(superclass=super_class, rnum=self.rel_cursor, domain=self.domain)
+            self.class_cursor = next_hop.name
+            self.to_subclass_hop(sub_class=self.class_cursor)
             return
         else:
             # # Superclass to subclass
-            cls.class_cursor = super_class
-            cls.to_superclass_hop()
+            self.class_cursor = super_class
+            self.to_superclass_hop()
             return
 
-    @classmethod
-    def hop_association(cls, refs: List[Dict[str, str]]):
+    def hop_association(self, refs: List[Dict[str, str]]):
         """
         Populate hop across the association
 
@@ -270,8 +374,8 @@ class TraverseAction:
                     # So we need to assume that the next hop is a perspective.
                     # We advance to the next hop in the path and then resolve the perspective
                     # (If it isn't a perspective, an exception will be raised in the perspective resolveer)
-                    cls.path_index += 1
-                    cls.resolve_perspective(phrase=cls.path.hops[cls.path_index])
+                    self.path_index += 1
+                    self.resolve_perspective(phrase=cls.path.hops[cls.path_index])
                 else:
                     # Add a straight hop to the hop list and update the class_cursor to either the to or from class
                     # whichever does not match the class_cursor
@@ -280,15 +384,15 @@ class TraverseAction:
                     # We need to look up the Perspective to get the multiplicity
                     # Since this is an R ref (no association class) we just need to specify the
                     # rnum, domain, and viewed class which will be the updated class cursor
-                    cls.class_cursor = to_class if to_class != cls.class_cursor else from_class
-                    R = f"Rnum:<{cls.rel_cursor}>, Domain:<{cls.domain}>, Viewed_class:<{cls.class_cursor}>"
-                    result = Relation.restrict(mmdb, relation='Perspective', restriction=R)
-                    if not result.body:
+                    self.class_cursor = to_class if to_class != self.class_cursor else from_class
+                    R = f"Rnum:<{self.rel_cursor}>, Domain:<{self.domain}>, Viewed_class:<{self.class_cursor}>"
+                    persp_r = Relation.restrict(db=mmdb, relation='Perspective', restriction=R)
+                    if not persp_r.body:
                         # TODO: raise exception
                         return False
-                    cls.mult = MaxMult.ONE if result.body[0]['Multiplicity'] == '1' else MaxMult.MANY
-                    cls.hops.append(
-                        Hop(hoptype=cls.straight_hop, to_class=cls.class_cursor, rnum=cls.rel_cursor, attrs=None))
+                    self.mult = MaxMult.ONE if persp_r.body[0]['Multiplicity'] == '1' else MaxMult.MANY
+                    self.hops.append(
+                        Hop(hoptype=self.straight_hop, to_class=self.class_cursor, rnum=self.rel_cursor))
                 return
 
             if ref == 'T' or ref == 'P':
@@ -299,84 +403,84 @@ class TraverseAction:
                 # to classes (same class may be on each side in a reflexive)
                 # Then we look ahead for the next step which MUST be either a class name
                 # or a perspective
-                cls.path_index += 1
-                next_hop = cls.path.hops[cls.path_index]
+                self.path_index += 1
+                next_hop = self.path.hops[self.path_index]
                 # The next hop must be either a class name or a perspective phrase on the current rel
                 if type(next_hop).__name__ == 'R_a':
                     # In other words, it cannot be an rnum
-                    raise NeedPerspectiveOrClassToHop(cls.rel_cursor, domain=cls.domain)
+                    raise NeedPerspectiveOrClassToHop(rnum=self.rel_cursor, domain=self.domain)
                 # Is the next hop the association class?
                 if next_hop.name == from_class:
-                    cls.class_cursor = from_class
+                    self.class_cursor = from_class
                     # Update multiplicty
                     # First check multiplicity on to_class perspective (same as ref)
-                    R = f"Rnum:<{cls.rel_cursor}>, Domain:<{cls.domain}>, Side:<{ref}>"
-                    result = Relation.restrict(mmdb, relation='Perspective', restriction=R)
+                    R = f"Rnum:<{self.rel_cursor}>, Domain:<{self.domain}>, Side:<{ref}>"
+                    result = Relation.restrict(db=mmdb, relation='Perspective', restriction=R)
                     if not result.body:
                         # TODO: raise exception
                         return False
                     # Set multiplicity based on the perspective
-                    cls.mult = MaxMult.ONE if result.body[0]['Multiplicity'] == '1' else MaxMult.MANY
+                    self.mult = MaxMult.ONE if result.body[0]['Multiplicity'] == '1' else MaxMult.MANY
                     # If multiplicity has been set to 1, but associative multiplicty is M, we need to set it as M
-                    R = f"Rnum:<{cls.rel_cursor}>, Domain:<{cls.domain}>, Class:<{cls.class_cursor}>"
-                    result = Relation.restrict(mmdb, relation='Association_Class', restriction=R)
+                    R = f"Rnum:<{self.rel_cursor}>, Domain:<{self.domain}>, Class:<{self.class_cursor}>"
+                    result = Relation.restrict(db=mmdb, relation='Association_Class', restriction=R)
                     if not result.body:
                         # TODO: raise exception
                         return False
                     associative_mult = result.body[0]['Multiplicity']
                     # Associative mult of M overrides a single mult
-                    cls.mult = MaxMult.MANY if associative_mult == 'M' else cls.mult
+                    self.mult = MaxMult.MANY if associative_mult == 'M' else self.mult
 
-                    cls.name += cls.class_cursor + '/'
-                    cls.hops.append(
-                        Hop(hoptype=cls.to_association_class, to_class=cls.class_cursor, rnum=cls.rel_cursor,
-                            attrs=None))
+                    self.name += self.class_cursor + '/'
+                    self.hops.append(
+                        Hop(hoptype=self.to_association_class, to_class=self.class_cursor, rnum=self.rel_cursor)
+                    )
                     return
                 elif next_hop.name == to_class:
                     # Asymmetric reflexive hop requires a perspective phrase
-                    raise NeedPerspectiveToHop(cls.rel_cursor, domain=cls.domain)
+                    raise NeedPerspectiveToHop(rnum=self.rel_cursor, domain=self.domain)
 
                 else:
                     # Get the To class of the other (T or P) reference
                     other_ref_name = 'P' if ref == 'T' else 'T'
-                    R = f"Ref:<{other_ref_name}>, Rnum:<{cls.rel_cursor}>, Domain:<{cls.domain}>"
+                    R = f"Ref:<{other_ref_name}>, Rnum:<{self.rel_cursor}>, Domain:<{self.domain}>"
                     other_ref = Relation.restrict(restriction=R, relation="Reference").body
                     if not other_ref:
                         # The model must be currupted somehow
-                        raise MissingTorPrefInAssociativeRel(rnum=cls.rel_cursor, domain=cls.domain)
+                        raise MissingTorPrefInAssociativeRel(rnum=self.rel_cursor, domain=self.domain)
                     other_participating_class = other_ref[0]['To_class']
                     if next_hop.name == other_participating_class:
-                        cls.class_cursor = next_hop.name
-                        cls.straight_hop()
+                        self.class_cursor = next_hop.name
+                        self.straight_hop()
                         return
                     else:
                         # Next hop must be a perspective
-                        cls.resolve_perspective(phrase=next_hop.name)
+                        self.resolve_perspective(phrase=next_hop.name)
                         return
 
         # T and P reference
         else:
             # Current hop is from an association class
-            cls.path_index += 1
-            next_hop = cls.path.hops[cls.path_index]
+            self.path_index += 1
+            next_hop = self.path.hops[self.path_index]
             # Does the next hop match either of the participating classes
             particip_classes = {refs[0]['To_class'], refs[1]['To_class']}
             if next_hop.name in particip_classes:
                 # The particpating class is explicitly named
-                cls.class_cursor = next_hop.name
-                R = f"Viewed_class:<{cls.class_cursor}>, Rnum:<{cls.rel_cursor}>, Domain:<{cls.domain}>"
-                Relation.restrict(mmdb, relation='Perspective', restriction=R)
+                self.class_cursor = next_hop.name
+                R = f"Viewed_class:<{self.class_cursor}>, Rnum:<{self.rel_cursor}>, Domain:<{self.domain}>"
+                Relation.restrict(db=mmdb, relation='Perspective', restriction=R)
                 P = ('Side',)
-                side = Relation.project(mmdb, attributes=P).body[0]['Side']
-                cls.from_asymmetric_association_class(side=side)
-                cls.hops.append(
-                    Hop(hoptype=cls.from_asymmetric_association_class, to_class=cls.class_cursor,
-                        rnum=cls.rel_cursor, attrs=None)
+                side = Relation.project(db=mmdb, attributes=P).body[0]['Side']
+                self.from_asymmetric_association_class(side=side)
+                self.hops.append(
+                    Hop(hoptype=self.from_asymmetric_association_class, to_class=self.class_cursor,
+                        rnum=self.rel_cursor, attrs=None)
                 )
                 return
             else:
                 # The next hop needs to be a perspective
-                cls.resolve_perspective(phrase=next_hop.name)
+                self.resolve_perspective(phrase=next_hop.name)
                 return
 
     @classmethod
@@ -440,94 +544,3 @@ class TraverseAction:
                 # TODO: Supply params below
                 cls.straight_hop()
             return True  # Non-reflexive hop to a participating class
-
-    @classmethod
-    def build_path(cls, input_instance_flow: Flow_ap, path: PATH_a,
-                   activity_data: Activity_ap) -> (str, Flow_ap):
-        """
-        Step through a path populating it along the way.
-
-        :param input_instance_flow: This is the source instance flow where the path begins
-        :param path: Parsed Scrall representing a Path
-        :param activity_data:
-        :return: The Traverse Action ID and the output instance flow id, its Class Type name and its maximum instance
-        multiplicity, 1 or M
-        """
-        cls.path = path
-        cls.hops = []
-        cls.anum = activity_data.anum
-        cls.input_instance_flow = input_instance_flow
-        cls.class_cursor = input_instance_flow.tname  # Validation cursor is on this class now
-        cls.domain = activity_data.domain
-        cls.name = "/"  # The path text forms path name value
-        cls.activity_path = activity_data.activity_path
-        cls.scrall_text = activity_data.scrall_text
-        cls.mult = input_instance_flow.max_mult
-
-        # Verify adequate path length
-        if len(path.hops) < 2:
-            raise IncompletePath(path)
-        # Path has at least 2 hop elements
-
-        # Validate destination class at the end of the path
-        terminal_hop = path.hops[-1]
-        if type(terminal_hop).__name__ != 'N_a':
-            # Destination class must a name
-            raise NoDestinationInPath(path)
-        cls.dest_class = terminal_hop.name
-
-        # We have an open transaction for the Statement superclass
-        # We must first add each HopArgs population to the transaction before
-        # determining the path_name, source, and destination flows which make it possible
-        # to add the Path and Traverse Statement population
-
-        # Valdiate path continuity
-        # Step through the path validating each relationship, phrase, and class
-        # Ensure that each step is reachable on the class model
-        cls.path_index = 0
-        while cls.path_index < len(path.hops) - 1:
-            hop = path.hops[cls.path_index]
-
-            if type(hop).__name__ == 'N_a':
-                # This should be a perspective since flow names get eaten in the relationship hop handlers
-                # and a path cannot begin with a class name
-                # (any class name prefixing a path will have been processed to populate a labeled instance flow earlier)
-                if not cls.resolve_perspective(phrase=hop.name) and not cls.resolve_ordinal_perspective(
-                        perspective=hop.name):
-                    raise UnexpectedClassOrPerspectiveInPath(name=hop.name, path=path)
-
-            elif type(hop).__name__ == 'R_a':
-                cls.rel_cursor = hop.rnum
-                cls.name += cls.rel_cursor + '/'
-                # This is either an Association, Generalization, or Ordinal Relationship
-                # Determine the type and call the corresponding hop populator
-
-                # First we look for any References to or from the class cursor
-                R = f"(From_class:<{cls.class_cursor}> OR To_class:<{cls.class_cursor}>), Rnum:<{hop.rnum}>, " \
-                    f"Domain:<{cls.domain}>"
-                if Relation.restrict(mmdb, restriction=R, relation="Reference").body:
-                    P = ('Ref', 'From_class', 'To_class')
-                    refs = Relation.project(mmdb, attributes=P, svar_name='rhop').body
-
-                    # Generalization
-                    if refs[0]['Ref'] == 'G':
-                        cls.hop_generalization(refs)
-                    else:
-                        cls.hop_association(refs)
-                else:
-                    # The perspective must be specified in the next hop
-                    cls.path_index += 1
-                    cls.resolve_ordinal_perspective(perspective=cls.path.hops[cls.path_index].name)
-
-            cls.path_index += 1
-
-        if cls.dest_class != cls.class_cursor:
-            # Path does not reach destination
-            pass
-
-
-        # Now we can populate the path
-        cls.populate()
-
-        return cls.action_id, Flow_ap(fid=cls.dest_fid, content=Content.INSTANCE, tname=cls.dest_class,
-                                      max_mult=cls.mult)
