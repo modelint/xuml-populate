@@ -5,6 +5,8 @@ traverse_action.py – Populate a traverse action instance in PyRAL
 # System
 import logging
 from typing import Set, Dict, List, NamedTuple, Callable
+from enum import Enum
+
 
 # Model Integration
 from scrall.parse.visitor import PATH_a
@@ -31,13 +33,8 @@ from xuml_populate.populate.mmclass_nt import (Action_i, Traverse_Action_i, Path
                                                From_Symmetric_Association_Class_Hop_i, To_Association_Class_Hop_i,
                                                Perspective_Hop_i, Generalization_Hop_i, To_Subclass_Hop_i,
                                                To_Superclass_Hop_i, Association_Hop_i)
-
-
-class Hop(NamedTuple):
-    hoptype: Callable
-    to_class: str
-    rnum: str
-
+from xuml_populate.populate.actions.hop_types import (AggregationType, Hop, SymmetricHop, AsymmetricCircularHop,
+                                                      OrdinalHop, FromAsymAssocHop)
 
 _logger = logging.getLogger(__name__)
 
