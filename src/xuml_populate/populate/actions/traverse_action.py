@@ -114,6 +114,7 @@ class TraverseAction:
         :return:
         """
         _logger.info("ACTION:Traverse - Populating a from asymmetric assoc class hop")
+        pass
 
     @classmethod
     def to_association_class(cls, number: int, rnum: str, to_class: str, attrs: Optional[Dict]):
@@ -368,6 +369,10 @@ class TraverseAction:
                 P = ('Side',)
                 side = Relation.project(mmdb, attributes=P).body[0]['Side']
                 cls.from_asymmetric_association_class(side=side)
+                cls.hops.append(
+                    Hop(hoptype=cls.from_asymmetric_association_class, to_class=cls.class_cursor,
+                        rnum=cls.rel_cursor, attrs=None)
+                )
                 return
             else:
                 # The next hop needs to be a perspective
@@ -449,6 +454,7 @@ class TraverseAction:
         multiplicity, 1 or M
         """
         cls.path = path
+        cls.hops = []
         cls.anum = activity_data.anum
         cls.input_instance_flow = input_instance_flow
         cls.class_cursor = input_instance_flow.tname  # Validation cursor is on this class now
@@ -518,6 +524,7 @@ class TraverseAction:
         if cls.dest_class != cls.class_cursor:
             # Path does not reach destination
             pass
+
 
         # Now we can populate the path
         cls.populate()
