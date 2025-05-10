@@ -4,7 +4,7 @@ traverse_action.py – Populate a traverse action instance in PyRAL
 
 # System
 import logging
-from typing import Set, Dict, List, Optional, NamedTuple, Callable
+from typing import Set, Dict, List, NamedTuple, Callable
 
 # Model Integration
 from scrall.parse.visitor import PATH_a
@@ -31,6 +31,7 @@ from xuml_populate.populate.mmclass_nt import (Action_i, Traverse_Action_i, Path
                                                From_Symmetric_Association_Class_Hop_i, To_Association_Class_Hop_i,
                                                Perspective_Hop_i, Generalization_Hop_i, To_Subclass_Hop_i,
                                                To_Superclass_Hop_i, Association_Hop_i)
+
 
 class Hop(NamedTuple):
     hoptype: Callable
@@ -103,12 +104,6 @@ class TraverseAction:
             raise NoDestinationInPath(path)
         self.dest_class = terminal_hop.name
 
-        # TODO: This comment paragraph seems out of date, no open transaction?
-        # We have an open transaction for the Statement superclass
-        # We must first add each HopArgs population to the transaction before
-        # determining the path_name, source, and destination flows which make it possible
-        # to add the Path and Traverse Statement population
-
         # Valdiate path continuity
         # Step through the path validating each relationship, phrase, and class
         # Ensure that each step is reachable on the class model
@@ -160,37 +155,38 @@ class TraverseAction:
         return self.action_id, Flow_ap(fid=self.dest_fid, content=Content.INSTANCE, tname=self.dest_class,
                                        max_mult=self.mult)
 
-    @classmethod
-    def populate(cls):
+    def populate(self):
         """
         Populate the Traverse Statement, Path and all Hops
         """
-        cls.name = cls.name.rstrip('/')  # Remove trailing '/' from the path name
+        self.name = self.name.rstrip('/')  # Remove trailing '/' from the path name
         # Create a Traverse Action and Path
         Transaction.open(db=mmdb, name=tr_Traverse)
-        cls.action_id = Action.populate(tr=tr_Traverse, anum=cls.anum, domain=cls.domain, action_type="traverse")
+        _logger.info(f"OPEN > {mmdb}:{tr_Traverse}")
+        self.action_id = Action.populate(tr=tr_Traverse, anum=self.anum, domain=self.domain, action_type="traverse")
         # Create the Traverse action destination flow (the output for R930)
-        cls.dest_fid = Flow.populate_instance_flow(cname=cls.dest_class, anum=cls.anum,
-                                                   domain=cls.domain, label=None,
-                                                   single=True if cls.mult == MaxMult.ONE else False).fid
+        self.dest_fid = Flow.populate_instance_flow(cname=self.dest_class, anum=self.anum,
+                                                    domain=self.domain, label=None,
+                                                    single=True if self.mult == MaxMult.ONE else False).fid
 
         _logger.info(f"INSERT Traverse action output Flow: ["
-                     f"{cls.domain}:{cls.dest_class}:{cls.activity_path.split(':')[-1]}"
-                     f":{cls.dest_fid}]")
+                     f"{self.domain}:{self.dest_class}:{self.activity_path.split(':')[-1]}"
+                     f":{self.dest_fid}]")
         Relvar.insert(db=mmdb, tr=tr_Traverse, relvar='Traverse_Action', tuples=[
-            Traverse_Action_i(ID=cls.action_id, Activity=cls.anum, Domain=cls.domain, Path=cls.name,
-                              Source_flow=cls.input_instance_flow.fid, Destination_flow=cls.dest_fid)
+            Traverse_Action_i(ID=self.action_id, Activity=self.anum, Domain=self.domain, Path=self.name,
+                              Source_flow=self.input_instance_flow.fid, Destination_flow=self.dest_fid)
         ])
         Relvar.insert(db=mmdb, tr=tr_Traverse, relvar='Path', tuples=[
-            Path_i(Name=cls.name, Domain=cls.domain, Dest_class=cls.dest_class)
+            Path_i(Name=self.name, Domain=self.domain, Dest_class=self.dest_class)
         ])
 
         # Get the next action ID
         # Then process each hop
-        for number, h in enumerate(cls.hops, start=1):
-            h.hoptype(number=number, to_class=h.to_class, rnum=h.rnum,
-                      attrs=h.attrs)  # Call hop type method with hop type general and specific args
+        for number, h in enumerate(self.hops, start=1):
+            # Call method to populate this particular kind of type of hop (straight, gen, to assoc, etc)
+            h.hoptype(number=number, to_class=h.to_class, rnum=h.rnum)
         Transaction.execute(db=mmdb, name=tr_Traverse)
+        _logger.info(f"EXECUTED > {mmdb}:{tr_Traverse}")
 
     @classmethod
     def validate_rel(cls, rnum: str):
@@ -215,29 +211,48 @@ class TraverseAction:
     def from_symmetric_association_class(cls, rnum: str):
         _logger.info("ACTION:Traverse - Populating a from symmetric assoc class hop")
 
-    @classmethod
-    def from_asymmetric_association_class(cls, side: str):
+    def from_asymmetric_association_class(self, number: int, rnum: str, to_class: str, side: str):
         """
         :param side: Perspective side (T or P)
         :return:
         """
-        _logger.info("ACTION:Traverse - Populating a from asymmetric assoc class hop")
-        pass
+        _logger.info("ACTION:Traverse - Populating a From Asymmetric Assoc Class Hop")
+        Relvar.insert(db=mmdb, tr=tr_Traverse, relvar='From_Asymmetric_Association_Class_Hop', tuples=[
+            From_Asymmetric_Association_Class_Hop_i(Number=number, Path=self.name, Domain=self.name)
+        ])
+        Relvar.insert(db=mmdb, tr=tr_Traverse, relvar='Association_Class_Hop', tuples=[
+            Association_Class_Hop_i(Number=number, Path=self.name, Domain=self.domain)
+        ])
+        Relvar.insert(db=mmdb, tr=tr_Traverse, relvar='Association_Hop', tuples=[
+            Association_Hop_i(Number=number, Path=self.name, Domain=self.domain)
+        ])
+        Relvar.insert(db=mmdb, tr=tr_Traverse, relvar='Hop', tuples=[
+            Hop_i(Number=number, Path=self.name, Domain=self.domain, Rnum=rnum, Class_step=to_class)
+        ])
+        Relvar.insert(db=mmdb, tr=tr_Traverse, relvar='Perspective_Hop', tuples=[
+            Perspective_Hop_i(Number=number, Path=self.name, Domain=self.domain, Side=side, Rnum=rnum)
+        ])
 
-    @classmethod
-    def to_association_class(cls, number: int, rnum: str, to_class: str, attrs: Optional[Dict]):
-        _logger.info("ACTION:Traverse - Populating a to association class hop")
-        Relvar.insert(mmdb, tr=tr_Traverse, relvar='To_Association_Class_Hop', tuples=[
-            To_Association_Class_Hop_i(Number=number, Path=cls.name, Domain=cls.domain)
+    def to_association_class(self, number: int, rnum: str, to_class: str):
+        """
+
+        :param number:
+        :param rnum:
+        :param to_class:
+        :return:
+        """
+        _logger.info("ACTION:Traverse - Populating a To Association Class Hop")
+        Relvar.insert(db=mmdb, tr=tr_Traverse, relvar='To_Association_Class_Hop', tuples=[
+            To_Association_Class_Hop_i(Number=number, Path=self.name, Domain=self.domain)
         ])
-        Relvar.insert(mmdb, tr=tr_Traverse, relvar='Association_Class_Hop', tuples=[
-            Association_Class_Hop_i(Number=number, Path=cls.name, Domain=cls.domain)
+        Relvar.insert(db=mmdb, tr=tr_Traverse, relvar='Association_Class_Hop', tuples=[
+            Association_Class_Hop_i(Number=number, Path=self.name, Domain=self.domain)
         ])
-        Relvar.insert(mmdb, tr=tr_Traverse, relvar='Association_Hop', tuples=[
-            Association_Hop_i(Number=number, Path=cls.name, Domain=cls.domain)
+        Relvar.insert(db=mmdb, tr=tr_Traverse, relvar='Association_Hop', tuples=[
+            Association_Hop_i(Number=number, Path=self.name, Domain=self.domain)
         ])
-        Relvar.insert(mmdb, tr=tr_Traverse, relvar='Hop', tuples=[
-            Hop_i(Number=number, Path=cls.name, Domain=cls.domain, Rnum=rnum, Class_step=to_class)
+        Relvar.insert(db=mmdb, tr=tr_Traverse, relvar='Hop', tuples=[
+            Hop_i(Number=number, Path=self.name, Domain=self.domain, Rnum=rnum, Class_step=to_class)
         ])
 
     def straight_hop(self, number: int, rnum: str, to_class: str):
@@ -375,7 +390,7 @@ class TraverseAction:
                     # We advance to the next hop in the path and then resolve the perspective
                     # (If it isn't a perspective, an exception will be raised in the perspective resolveer)
                     self.path_index += 1
-                    self.resolve_perspective(phrase=cls.path.hops[cls.path_index])
+                    self.resolve_perspective(phrase=self.path.hops[self.path_index])
                 else:
                     # Add a straight hop to the hop list and update the class_cursor to either the to or from class
                     # whichever does not match the class_cursor
@@ -412,22 +427,22 @@ class TraverseAction:
                 # Is the next hop the association class?
                 if next_hop.name == from_class:
                     self.class_cursor = from_class
-                    # Update multiplicty
+                    # Update multiplicity
                     # First check multiplicity on to_class perspective (same as ref)
                     R = f"Rnum:<{self.rel_cursor}>, Domain:<{self.domain}>, Side:<{ref}>"
-                    result = Relation.restrict(db=mmdb, relation='Perspective', restriction=R)
-                    if not result.body:
+                    persp_r = Relation.restrict(db=mmdb, relation='Perspective', restriction=R)
+                    if not persp_r.body:
                         # TODO: raise exception
                         return False
                     # Set multiplicity based on the perspective
-                    self.mult = MaxMult.ONE if result.body[0]['Multiplicity'] == '1' else MaxMult.MANY
+                    self.mult = MaxMult.ONE if persp_r.body[0]['Multiplicity'] == '1' else MaxMult.MANY
                     # If multiplicity has been set to 1, but associative multiplicty is M, we need to set it as M
                     R = f"Rnum:<{self.rel_cursor}>, Domain:<{self.domain}>, Class:<{self.class_cursor}>"
-                    result = Relation.restrict(db=mmdb, relation='Association_Class', restriction=R)
-                    if not result.body:
+                    assoc_class_r = Relation.restrict(db=mmdb, relation='Association_Class', restriction=R)
+                    if not assoc_class_r.body:
                         # TODO: raise exception
                         return False
-                    associative_mult = result.body[0]['Multiplicity']
+                    associative_mult = assoc_class_r.body[0]['Multiplicity']
                     # Associative mult of M overrides a single mult
                     self.mult = MaxMult.MANY if associative_mult == 'M' else self.mult
 
@@ -472,11 +487,13 @@ class TraverseAction:
                 Relation.restrict(db=mmdb, relation='Perspective', restriction=R)
                 P = ('Side',)
                 side = Relation.project(db=mmdb, attributes=P).body[0]['Side']
-                self.from_asymmetric_association_class(side=side)
                 self.hops.append(
                     Hop(hoptype=self.from_asymmetric_association_class, to_class=self.class_cursor,
-                        rnum=self.rel_cursor, attrs=None)
+                        rnum=self.rel_cursor)
                 )
+                # TODO: Some hops will require other attributes such as Side, Aggregation, Ascending
+                # TODO: So we need a dictionary or union of tuples or some such mechanism
+                # TODO: So that we can define all kinds of hops
                 return
             else:
                 # The next hop needs to be a perspective
