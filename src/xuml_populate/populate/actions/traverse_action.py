@@ -7,7 +7,6 @@ import logging
 from typing import Set, Dict, List, NamedTuple, Callable
 from enum import Enum
 
-
 # Model Integration
 from scrall.parse.visitor import PATH_a
 from pyral.relvar import Relvar
@@ -181,41 +180,40 @@ class TraverseAction:
         # Then process each hop
         for number, h in enumerate(self.hops, start=1):
             # Call method to populate this particular kind of type of hop (straight, gen, to assoc, etc)
-            h.hoptype(number=number, to_class=h.to_class, rnum=h.rnum)
+            params = vars(h).copy()
+            params.pop("hoptype")
+            params["number"] = number
+            h.hoptype(**params)
+            # h.hoptype(number=number, to_class=h.to_class, rnum=h.rnum)
         Transaction.execute(db=mmdb, name=tr_Traverse)
         _logger.info(f"EXECUTED > {mmdb}:{tr_Traverse}")
 
-    @classmethod
-    def validate_rel(cls, rnum: str):
-        rel = f"Rnum:<{rnum}>, Domain:<{cls.domain}>"
-        if not Relation.restrict(mmdb, restriction=rel, relation="Relationship").body:
-            _logger.error(f"Undefined Rnum {rnum} in Domain {cls.domain}")
-            raise UndefinedRelationship(rnum=rnum, domain=cls.domain)
+    def validate_rel(self, rnum: str):
+        rel = f"Rnum:<{rnum}>, Domain:<{self.domain}>"
+        if not Relation.restrict(db=mmdb, restriction=rel, relation="Relationship").body:
+            _logger.error(f"Undefined Rnum {rnum} in Domain {self.domain}")
+            raise UndefinedRelationship(rnum=rnum, domain=self.domain)
 
-    @classmethod
     def ordinal_hop(cls, cname: str, ascending: bool):
         _logger.info("ACTION:Traverse - Populating an ordinal hop")
 
-    @classmethod
     def symmetric_hop(cls, cname: str):
         _logger.info("ACTION:Traverse - Populating a circular symmetric hop")
 
-    @classmethod
-    def asymmetric_circular_hop(cls, cname: str, side: str):
+    def asymmetric_circular_hop(self, cname: str, side: str):
         _logger.info("ACTION:Traverse - Populating an asymmetric circular hop")
 
-    @classmethod
-    def from_symmetric_association_class(cls, rnum: str):
+    def from_symmetric_association_class(self, *, number: int, run: str, rnum: str):
         _logger.info("ACTION:Traverse - Populating a from symmetric assoc class hop")
 
-    def from_asymmetric_association_class(self, number: int, rnum: str, to_class: str, side: str):
+    def from_asymmetric_association_class(self, *, number: int, rnum: str, to_class: str, side: str):
         """
         :param side: Perspective side (T or P)
         :return:
         """
         _logger.info("ACTION:Traverse - Populating a From Asymmetric Assoc Class Hop")
         Relvar.insert(db=mmdb, tr=tr_Traverse, relvar='From_Asymmetric_Association_Class_Hop', tuples=[
-            From_Asymmetric_Association_Class_Hop_i(Number=number, Path=self.name, Domain=self.name)
+            From_Asymmetric_Association_Class_Hop_i(Number=number, Path=self.name, Domain=self.domain)
         ])
         Relvar.insert(db=mmdb, tr=tr_Traverse, relvar='Association_Class_Hop', tuples=[
             Association_Class_Hop_i(Number=number, Path=self.name, Domain=self.domain)
@@ -230,7 +228,7 @@ class TraverseAction:
             Perspective_Hop_i(Number=number, Path=self.name, Domain=self.domain, Side=side, Rnum=rnum)
         ])
 
-    def to_association_class(self, number: int, rnum: str, to_class: str):
+    def to_association_class(self, *, number: int, rnum: str, to_class: str):
         """
 
         :param number:
@@ -252,7 +250,7 @@ class TraverseAction:
             Hop_i(Number=number, Path=self.name, Domain=self.domain, Rnum=rnum, Class_step=to_class)
         ])
 
-    def straight_hop(self, number: int, rnum: str, to_class: str):
+    def straight_hop(self, *, number: int, rnum: str, to_class: str):
         """
         Populate an instance of Straight HopArgs
 
@@ -271,27 +269,23 @@ class TraverseAction:
             Hop_i(Number=number, Path=self.name, Domain=self.domain, Rnum=rnum, Class_step=to_class)
         ])
 
-    @classmethod
-    def to_superclass_hop(cls):
+    def to_superclass_hop(self):
         _logger.info("ACTION:Traverse - Populating a to superclass hop")
 
-    @classmethod
-    def to_subclass_hop(cls, sub_class: str):
+    def to_subclass_hop(self, sub_class: str):
         _logger.info("ACTION:Traverse - Populating a to subclass hop")
 
-    @classmethod
-    def is_assoc_class(cls, cname: str, rnum: str) -> bool:
+    def is_assoc_class(self, cname: str, rnum: str) -> bool:
         """
         Returns true
         :param cname: Class to investigate
         :param rnum: Class participates in this association
         :return: True of the class is an association class formalizing the specified association
         """
-        r = f"Class:<{cname}>, Rnum:<{rnum}>, Domain:<{cls.domain}>"
-        return bool(Relation.restrict(mmdb, restriction=r, relation="Association_Class").body)
+        r = f"Class:<{cname}>, Rnum:<{rnum}>, Domain:<{self.domain}>"
+        return bool(Relation.restrict(db=mmdb, restriction=r, relation="Association_Class").body)
 
-    @classmethod
-    def is_reflexive(cls, rnum: str) -> int:
+    def is_reflexive(self, rnum: str) -> int:
         """
         Is this a reflexive association and, if so, how many perspectives does it have?
         An association with both a T and P perspective is an asymmetric association while
@@ -301,18 +295,17 @@ class TraverseAction:
         :return: Zero if non-reflexive, 1 if symmetric and 2 if assymmetric reflexive
         """
         # Get all perspectives defined on rnum
-        R = f"Rnum:<{rnum}>, Domain:<{cls.domain}>"
-        perspectives = Relation.restrict(mmdb, restriction=R, relation="Perspective")
+        R = f"Rnum:<{rnum}>, Domain:<{self.domain}>"
+        perspectives = Relation.restrict(db=mmdb, restriction=R, relation="Perspective")
         if not perspectives.body:
             # Every association relationship defines at least one perspective
-            raise UndefinedAssociation(rnum, cls.domain)
-        vclasses = Relation.project(mmdb, attributes=('Viewed_class',)).body
+            raise UndefinedAssociation(rnum=rnum, domain=self.domain)
+        vclasses = Relation.project(db=mmdb, attributes=('Viewed_class',)).body
         # Reflexive if there is both viewed classes are the same (only 1)
         # So, if reflexive, return 1 (S - Symmetric) or 2 (T,P - Assymetric), otherwise 0, non-reflexive
         return len(perspectives.body) if len(vclasses) == 1 else 0
 
-    @classmethod
-    def reachable_classes(cls, rnum: str) -> Set[str]:
+    def reachable_classes(self, rnum: str) -> Set[str]:
         """
         Return a set of all classes reachable on the provided relationship
 
@@ -320,24 +313,23 @@ class TraverseAction:
         :return:
         """
         reachable_classes = set()
-        R = f"Rnum:<{rnum}>, Domain:<{cls.domain}>"
-        refs = Relation.restrict(mmdb, restriction=R, relation="Reference").body
+        R = f"Rnum:<{rnum}>, Domain:<{self.domain}>"
+        refs = Relation.restrict(db=mmdb, restriction=R, relation="Reference").body
         for ref in refs:
             reachable_classes.add(ref['To_class'])
             reachable_classes.add(ref['From_class'])
         return reachable_classes
 
-    @classmethod
-    def resolve_ordinal_perspective(cls, perspective: str) -> bool:
+    def resolve_ordinal_perspective(self, perspective: str) -> bool:
         # Search for ordinal rel with the supplied perspective
         # TODO: Update metamodel with two additional identifiers
-        R = f"Ranked_class:<{cls.class_cursor}>, Domain:<{cls.domain}>, " \
+        R = f"Ranked_class:<{self.class_cursor}>, Domain:<{self.domain}>, " \
             f"(Ascending_perspective:<{perspective}> OR Descending_perspective:<{perspective}>)"
-        orel = Relation.restrict(mmdb, restriction=R, relation="Ordinal_Relationship").body[0]
+        orel = Relation.restrict(db=mmdb, restriction=R, relation="Ordinal_Relationship").body[0]
         if not orel:
             return False
-        cls.rel_cursor = orel['Rnum']
-        cls.ordinal_hop(cname=cls.class_cursor, ascending=orel['Ascending_perspective'] == perspective)
+        self.rel_cursor = orel['Rnum']
+        self.ordinal_hop(cname=self.class_cursor, ascending=orel['Ascending_perspective'] == perspective)
         return True
 
     def hop_generalization(self, refs: List[Dict[str, str]]):
@@ -485,41 +477,37 @@ class TraverseAction:
                 P = ('Side',)
                 side = Relation.project(db=mmdb, attributes=P).body[0]['Side']
                 self.hops.append(
-                    Hop(hoptype=self.from_asymmetric_association_class, to_class=self.class_cursor,
-                        rnum=self.rel_cursor)
+                    FromAsymAssocHop(hoptype=self.from_asymmetric_association_class, to_class=self.class_cursor,
+                                     rnum=self.rel_cursor, side=side)
                 )
-                # TODO: Some hops will require other attributes such as Side, Aggregation, Ascending
-                # TODO: So we need a dictionary or union of tuples or some such mechanism
-                # TODO: So that we can define all kinds of hops
                 return
             else:
                 # The next hop needs to be a perspective
                 self.resolve_perspective(phrase=next_hop.name)
                 return
 
-    @classmethod
-    def resolve_perspective(cls, phrase: str) -> bool:
+    def resolve_perspective(self, phrase: str) -> bool:
         """
         Populate hop across the association perspective
 
         :param phrase:  Perspective phrase text such as 'travels along'
         """
         # Find phrase and ensure that it is on an association that involves the class cursor
-        R = f"Phrase:<{phrase}>, Domain:<{cls.domain}>"
-        r_result = Relation.restrict(mmdb, relation='Perspective', restriction=R)
+        R = f"Phrase:<{phrase}>, Domain:<{self.domain}>"
+        r_result = Relation.restrict(db=mmdb, relation='Perspective', restriction=R)
         if not r_result.body:
             return False
         P = ('Side', 'Rnum', 'Viewed_class')
-        p_result = Relation.project(mmdb, attributes=P)
+        p_result = Relation.project(db=mmdb, attributes=P)
         side, rnum, viewed_class = map(p_result.body[0].get, P)
-        cls.rel_cursor = rnum
+        self.rel_cursor = rnum
 
         # The next hop may be a class name that matches the viewed class
         # If so, we can move the path index forward so that we don't process that class as a separate hop
         try:
-            next_hop = cls.path.hops[cls.path_index + 1]
+            next_hop = self.path.hops[self.path_index + 1]
             if next_hop.name == viewed_class:
-                cls.path_index += 1
+                self.path_index += 1
         except (IndexError, AttributeError) as e:
             # We're already processing the last hop in the path, so don't bother advancing the path index or the
             # next hop is an rnum and not a name in which case we certainly don't want to advance the path index
@@ -528,33 +516,33 @@ class TraverseAction:
         # We found the perspective
         # Now we decide which kind of hop to populate
         # We start by asking, "Is this association reflexive?"
-        if symmetry := cls.is_reflexive(rnum):
+        if symmetry := self.is_reflexive(rnum):
             # Symmetry is zero if non-reflexive, otherwise 1:symmetric, 2:asymmetric
             # So it must be either 1 or 2
-            if cls.class_cursor == viewed_class:
+            if self.class_cursor == viewed_class:
                 # The class_cursor is one of the participating classes, i.e. not the association class
                 # So it is a Circular HopArgs from-to the same class
                 if symmetry == 1:
                     # Populate a symmetric hop
-                    cls.symmetric_hop(viewed_class)
+                    self.symmetric_hop(viewed_class)
                 else:
                     # Populate an asymmetric hop
-                    cls.asymmetric_circular_hop(viewed_class, side)
+                    self.asymmetric_circular_hop(cname=viewed_class, side=side)
                 return True  # Circular hop populated
             else:
                 # The class_cursor must be the association class
                 if symmetry == 1:
-                    cls.from_symmetric_association_class(rnum)
+                    self.from_symmetric_association_class(rnum=rnum)
                 else:
-                    cls.from_asymmetric_association_class(side)
+                    self.from_asymmetric_association_class(side=side)
                 return True  # From assoc class hop populated
         else:  # Non-reflexive association (non-circular hop)
             # We are either hopping from the association class to a viewed class or
             # from the other participating class to the viewed class
-            if cls.is_assoc_class(cname=cls.class_cursor, rnum=rnum):
-                cls.from_asymmetric_association_class(side)
+            if self.is_assoc_class(cname=self.class_cursor, rnum=rnum):
+                self.from_asymmetric_association_class(side=side)
             else:
-                cls.class_cursor = viewed_class
+                self.class_cursor = viewed_class
                 # TODO: Supply params below
-                cls.straight_hop()
+                self.straight_hop()
             return True  # Non-reflexive hop to a participating class
