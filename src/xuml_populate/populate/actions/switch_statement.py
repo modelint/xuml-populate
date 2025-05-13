@@ -86,7 +86,8 @@ class SwitchStatement:
             pass
         # Populate the Action superclass instance and obtain its action_id
         Transaction.open(db=mmdb, name=tr_Switch)
-        action_id = Action.populate(tr=tr_Switch, anum=anum, domain=domain, action_type="switch")  # Transaction open
+        action_id = Action.populate(tr=tr_Switch, anum=anum, domain=domain, action_type="scalar switch")  # Transaction open
+        # TODO: It appears that the Subclass Switch Action has is not yet populated/implemented
         Relvar.insert(db=mmdb, tr=tr_Switch, relvar='Switch_Action', tuples=[
             Switch_Action_i(ID=action_id, Activity=anum, Domain=domain)
         ])
