@@ -204,6 +204,7 @@ class RestrictCondition:
                         if scalar == 'Boolean':
                             # Populate a simple equivalence criterion
                             cls.pop_boolean_equivalence_criterion(not_op=False, attr=o.name, value="true")
+                            text += f"{o.name} == true"
                         else:
                             # Populate a comparison
                             cls.pop_xi_comparison_criterion(attr=o.name)
@@ -336,7 +337,7 @@ class RestrictCondition:
         # Consider case where there is a single boolean value critieria such as:
         #   shaft aslevs( Stop requested )
         # The implication is that we are selecting on: Stop requested == true
-        # So elaborate the parse elminating our shorhand
+        # So elaborate the parse elminating our shorthand
         cardinality = 'ONE' if selection_parse.card == '1' else 'ALL'
         if type(criteria).__name__ == 'N_a':
             cls.expression = cls.walk_criteria(operands=[criteria])
@@ -348,7 +349,7 @@ class RestrictCondition:
         # Populate the Restriction Condition class
         Relvar.insert(mmdb, tr=tr, relvar='Restriction_Condition', tuples=[
             Restriction_Condition_i(Action=cls.action_id, Activity=cls.anum, Domain=cls.domain,
-                                    Expression=cls.expression, Selection_cardinality=cardinality
+                                    Expression=cls.expression.strip(), Selection_cardinality=cardinality
                                     )
         ])
         return cardinality, cls.comparison_criteria, cls.input_scalar_flows
