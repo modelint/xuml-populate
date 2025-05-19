@@ -70,7 +70,7 @@ class RestrictAction:
                            Input_a_flow=input_relation_flow.fid, Output_flow=output_relation_flow.fid)
         ])
         Relvar.insert(db=mmdb, tr=tr_Restrict_Action, relvar='Restrict_Action', tuples=[
-            Restrict_Action_i(Action=action_id, Activity=anum, Domain=domain)
+            Restrict_Action_i(ID=action_id, Activity=anum, Domain=domain)
         ])
         # We now have a transaction with all select-action instances, enter into the metamodel db
         Transaction.execute(db=mmdb, name=tr_Restrict_Action)  # Restrict Action
