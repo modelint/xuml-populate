@@ -15,7 +15,7 @@ from xuml_populate.populate.actions.read_action import ReadAction
 from xuml_populate.populate.actions.extract_action import ExtractAction
 from xuml_populate.exceptions.action_exceptions import ComparingNonAttributeInSelection, NoInputInstanceFlow
 from xuml_populate.populate.mmclass_nt import Restriction_Condition_i, Equivalence_Criterion_i, \
-    Comparison_Criterion_i, Ranking_Criterion_i, Criterion_i, Table_Restriction_Condition_i
+    Comparison_Criterion_i, Criterion_i, Table_Restriction_Condition_i
 from xuml_populate.populate.flow import Flow
 from pyral.relvar import Relvar
 from pyral.relation import Relation
@@ -92,19 +92,6 @@ class RestrictCondition:
         ])
         cls.comparison_criteria.append(Attribute_Comparison(attr, op))
 
-    @classmethod
-    def pop_ranking_criterion(cls, order: str, attr: str):
-        """
-
-        :param order:
-        :param attr:
-        :return:
-        """
-        criterion_id = cls.pop_criterion(attr)
-        Relvar.insert(mmdb, tr=cls.tr, relvar='Ranking_Criterion', tuples=[
-            Ranking_Criterion_i(ID=criterion_id, Action=cls.action_id, Activity=cls.anum, Attribute=attr,
-                                Order=order, Domain=cls.domain)
-        ])
 
     @classmethod
     def pop_criterion(cls, attr: str) -> int:
@@ -196,7 +183,7 @@ class RestrictCondition:
                         # this sort of thing common.
 
                         # In all of these cases we must have an Attribute of a Class, but we verify that here
-                        scalar = Attribute.scalar(name=o.name, cname=cls.input_nsflow.tname, domain=cls.domain)
+                        scalar = Attribute.scalar(name=o.name, tname=cls.input_nsflow.tname, domain=cls.domain)
                         # An exception is raised in the above if the Attribute is undefined
 
                         # Now we check the Scalar (Type) to determine whether we populate an Equivalence or
@@ -215,7 +202,7 @@ class RestrictCondition:
                         # And that since the attribute hasn't been set yet, this must be the left side of the
                         # comparison and, hence, the attribute
                         # We verify this:
-                        scalar = Attribute.scalar(name=o.name, cname=cls.input_nsflow.tname, domain=cls.domain)
+                        scalar = Attribute.scalar(name=o.name, tname=cls.input_nsflow.tname, domain=cls.domain)
                         # The criterion is populated when the second operand is processed, so all we need to do
                         # now is to remember the Attribute name
                         attr_set = Attribute_ap(o.name, scalar)
@@ -338,7 +325,7 @@ class RestrictCondition:
         #   shaft aslevs( Stop requested )
         # The implication is that we are selecting on: Stop requested == true
         # So elaborate the parse elminating our shorthand
-        cardinality = 'ONE' if selection_parse.card == '1' else 'ALL'
+        cardinality = 'ONE' if selection_parse.card == '1' and not selection_parse.rankr else 'ALL'
         if type(criteria).__name__ == 'N_a':
             cls.expression = cls.walk_criteria(operands=[criteria])
             # criteria = BOOL_a(op='==', operands=[criteria, N_a(name='true')])

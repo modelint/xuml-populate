@@ -12,7 +12,7 @@ from xuml_populate.populate.flow import Flow
 from xuml_populate.populate.actions.expressions.restriction_condition import RestrictCondition
 from xuml_populate.populate.mmclass_nt import Select_Action_i, Single_Select_i, Identifier_Select_i, \
     Zero_One_Cardinality_Select_i, Many_Select_i, Restrict_Action_i, Restriction_Condition_i, \
-    Equivalence_Criterion_i, Comparison_Criterion_i, Ranking_Criterion_i, Projected_Attribute_i, \
+    Equivalence_Criterion_i, Comparison_Criterion_i, Projected_Attribute_i, \
     Class_Restriction_Condition_i, Criterion_i
 from pyral.relvar import Relvar
 from pyral.relation import Relation

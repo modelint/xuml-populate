@@ -28,23 +28,32 @@ class Attribute:
     participating_ids = None
 
     @classmethod
-    def scalar(cls, name: str, cname: str, domain: str) -> str:
+    def scalar(cls, name: str, tname: str, domain: str) -> str:
         """
         Returns the name of the Scalar (Type) of the specified Attribute.
 
         Raises an exception if the Attribute is not defined on the specified Class.
 
         :param name:  Attribute name
-        :param cname:  Class name
+        :param tname:  Table (possibly Class) name
         :param domain:  Domain name
         :return: Name of Attribute's Scalar (Type)
         """
-        R = f"Name:<{name}>, Class:<{cname}>, Domain:<{domain}>"
-        result = Relation.restrict(mmdb, relation='Attribute', restriction=R)
-        if not result.body:
-            _logger.error(f"Undefined attribute: [{name}:{cname}:{domain}]")
+        R = f"Name:<{name}>, Non_scalar_type:<{tname}>, Domain:<{domain}>"
+        model_attr_r = Relation.restrict(db=mmdb, relation='Model Attribute', restriction=R, svar_name="model_attr_rv")
+        if not model_attr_r.body:
+            _logger.error(f"Undefined attribute: [{name}:{tname}:{domain}]")
             raise UndefinedAttribute
-        return result.body[0]['Scalar']
+        class_attr_r = Relation.semijoin(db=mmdb, rname1="model_attr_rv", rname2="Attribute",
+                                         attrs={"Name":"Name", "Non_scalar_type":"Class", "Domain":"Domain"})
+        if class_attr_r.body:
+            return class_attr_r.body[0]['Scalar']
+
+        table_attr_r = Relation.semijoin(db=mmdb, rname1="model_attr_rv", rname2="Table_Attribute",
+                                         attrs={"Name":"Name", "Non_scalar_type":"Table", "Domain":"Domain"})
+        if table_attr_r.body:
+            return table_attr_r.body[0]['Scalar']
+
 
     @classmethod
     def populate(cls, tr: str, domain: str, cname: str, class_identifiers: Set[int], record):
