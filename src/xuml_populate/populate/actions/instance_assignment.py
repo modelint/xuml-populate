@@ -66,9 +66,10 @@ class InstanceAssignment:
         :param activity_data: The enveloping anum
         :param case_prefix:
         """
-        lhs = inst_assign.lhs
-        assign_zero_one = True if inst_assign.card == '1' else False
-        rhs = inst_assign.rhs
+        lhs = inst_assign.lhs  # Left hand side of assignment
+        assign_zero_one = True if inst_assign.card == '1' else False  # Do we flow out one or many instances?
+        rhs = inst_assign.rhs  # Right hand sid of assignment
+
         # The executing instance is by nature a single instance flow
         xi_instance_flow = Flow_ap(fid=activity_data.xiflow, content=Content.INSTANCE, tname=activity_data.cname,
                                    max_mult=MaxMult.ONE)

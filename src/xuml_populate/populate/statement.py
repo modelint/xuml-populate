@@ -34,9 +34,9 @@ class Statement:
         Populate a Statement
 
         :param activity_data:
-        :param statement_parse:
+        :param statement_parse:  A single parsed statement for us to populate
         :param case_name:  Values matched by case concatenated into a string
-        :param case_outputs: Each output labeled data flow in the case
+        :param case_outputs: Each output labeled data flow in the case, if any
         :return:
         """
         statement_type = type(statement_parse).__name__

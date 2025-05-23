@@ -70,14 +70,14 @@ class TableAssignment:
 
         # Migrate the output_flow to a labeled flow
         _logger.info(f"Labeling output of table expression to [{lhs}]")
-        Transaction.open(mmdb, tr_Migrate)
+        Transaction.open(db=mmdb, name=tr_Migrate)
         # Delete the Unlabeled flow
-        Relvar.deleteone(mmdb, tr=tr_Migrate, relvar_name="Unlabeled_Flow",
+        Relvar.deleteone(db=mmdb, tr=tr_Migrate, relvar_name="Unlabeled_Flow",
                          tid={"ID": output_flow.fid, "Activity": activity_data.anum, "Domain": activity_data.domain})
         # Insert the labeled flow
-        Relvar.insert(mmdb, tr=tr_Migrate, relvar='Labeled_Flow', tuples=[
+        Relvar.insert(db=mmdb, tr=tr_Migrate, relvar='Labeled_Flow', tuples=[
             Labeled_Flow_i(ID=output_flow.fid, Activity=activity_data.anum, Domain=activity_data.domain,
                            Name=output_flow_label)
         ])
-        Transaction.execute(mmdb, tr_Migrate)
+        Transaction.execute(db=mmdb, name=tr_Migrate)
         return bactions

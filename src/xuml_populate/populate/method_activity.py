@@ -389,14 +389,16 @@ class MethodActivity:
                                       xiflow=xi_flow_id, activity_path=method_path, scrall_text=aparse[1])
         seq_flows = {}
         seq_labels = set()
-        # for xunit in aparse[0]:
+
+        # Here we process each statement set in the Method (Activity)
         for count, xunit in enumerate(aparse[0]):  # Use count for debugging
             c = count + 1
-            # print(f"Processing statement: {c}")
             if type(xunit.statement_set.statement).__name__ == 'Output_Flow_a':
+                # This is the statement set that returns the Method's value
                 ExecutionUnit.process_synch_output(activity_data=activity_detail,
                                                    synch_output=xunit.statement_set.statement)
             else:
+                # This is a statement set that does not return the Method's value
                 boundary_actions = ExecutionUnit.process_method_statement_set(
                     activity_data=activity_detail, statement_set=xunit.statement_set)
 

@@ -101,8 +101,8 @@ class ExecutionUnit:
         The second list is each action that does not provide any data input
         to any other action in the execution unit. These are terminal actions.
 
-        :param activity_data:
-        :param statements:
+        :param activity_data:  Info about the activity and its unparsed text. Useful for providing helpful error msgs
+        :param statement_set:  The statement set we are populating
         :return: Tuple with a list of initial and terminal actions
         """
         single_statement = statement_set.statement
@@ -115,11 +115,11 @@ class ExecutionUnit:
             raise Exception
 
         if single_statement:
-            boundary_actions = Statement.populate(activity_data, statement_parse=single_statement)
+            boundary_actions = Statement.populate(activity_data=activity_data, statement_parse=single_statement)
 
             pass
         elif block:
-            pass
+            pass  # TODO: Implement this when we have an example
         else:
             # Parsing error, neither were specified
             raise Exception

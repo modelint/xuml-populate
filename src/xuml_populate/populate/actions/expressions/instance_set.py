@@ -27,7 +27,7 @@ class InstanceSet:
     in the same Activity. An exception is thrown if there is any inconsistency.
     """
 
-    component_flow = None  # Output flow from the most recenlty populated component
+    component_flow = None  # Output flow from the most recently populated component
     initial_action = None  # The first action in the chain
     final_action = None  # The last action in the chain
 
