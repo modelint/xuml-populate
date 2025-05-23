@@ -219,7 +219,7 @@ class RestrictCondition:
                             cls.pop_boolean_equivalence_criterion(not_op=False, attr=attr_set, value=n)
                         else:
                             # It must be the name of a scalar flow that should have been set with some value
-                            cls.pop_comparison_criterion(scalar_flow_label=o.name, attr=attr_set, op=operator)
+                            cls.pop_comparison_criterion(scalar_flow_label=o.name, attr=attr_set.name, op=operator)
 
                         # Update the text expression
                         if not attr_set:
