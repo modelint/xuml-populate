@@ -334,7 +334,7 @@ class RestrictCondition:
             cls.expression = cls.walk_criteria(operands=criteria.operands, operator=criteria.op)
         # Walk the parse tree and save all attributes, ops, values, and input scalar flows
         # Populate the Restriction Condition class
-        Relvar.insert(mmdb, tr=tr, relvar='Restriction_Condition', tuples=[
+        Relvar.insert(db=mmdb, tr=tr, relvar='Restriction_Condition', tuples=[
             Restriction_Condition_i(Action=cls.action_id, Activity=cls.anum, Domain=cls.domain,
                                     Expression=cls.expression.strip(), Selection_cardinality=cardinality
                                     )

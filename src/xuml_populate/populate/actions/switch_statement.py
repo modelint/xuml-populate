@@ -40,7 +40,7 @@ class SwitchStatement:
         Populate the Switch Action and its Cases
 
         :param sw_parse:  The parsed switch action group
-        :param activity_data:
+        :param activity_data: For descriptive error messages
         """
         anum = activity_data.anum
         domain = activity_data.domain

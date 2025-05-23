@@ -98,7 +98,7 @@ class TableExpr:
             case 'N_a' | 'IN_a':
                 # Is the name an existing Labeled Flow?
                 R = f"Name:<{texpr.table.name}>, Activity:<{cls.anum}>, Domain:<{cls.domain}>"
-                result = Relation.restrict(mmdb, relation='Labeled_Flow', restriction=R)
+                result = Relation.restrict(db=mmdb, relation='Labeled_Flow', restriction=R)
                 if result.body:
                     # Name corresponds to some Labeled Flow instance
                     label_fid = result.body[0]['ID']

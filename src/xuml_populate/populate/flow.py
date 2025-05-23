@@ -402,6 +402,7 @@ class Flow:
         """
         # Since we are making a copy, we know that the Table (Type) must already exist, so we skip the Table creation
         # / verification step and just populate the Relation Flow.
+        # TODO: Log this
         Transaction.open(db=mmdb, name=tr_Rel_Flow)
         rflow = cls.populate_relation_flow(table_name=ref_flow.tname, anum=anum, domain=domain,
                                            is_tuple=(ref_flow.max_mult == MaxMult.ONE), label=label)
