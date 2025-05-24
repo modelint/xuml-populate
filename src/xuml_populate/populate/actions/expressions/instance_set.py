@@ -8,6 +8,7 @@ from xuml_populate.populate.mm_class import MMclass
 from xuml_populate.populate.flow import Flow
 from xuml_populate.populate.actions.select_action import SelectAction
 from xuml_populate.populate.actions.restrict_action import RestrictAction
+from xuml_populate.populate.actions.rank_restrict_action import RankRestrictAction
 from xuml_populate.populate.actions.aparse_types import Flow_ap, MaxMult, Content, Activity_ap
 from pyral.relation import Relation
 from pyral.transaction import Transaction
@@ -100,7 +101,8 @@ class InstanceSet:
                         pass  # TODO: Exception (can't be scalar)
                     cls.final_action = aid
                 case 'Rank_Selection_a':
-                    pass
+                    aid, cls.component_flow, sflows = RankRestrictAction.populate(
+                        input_relation_flow = cls.component_flow, selection_parse = comp, activity_data = activity_data)
                 case _:
                     raise Exception
         return cls.initial_action, cls.final_action, cls.component_flow
