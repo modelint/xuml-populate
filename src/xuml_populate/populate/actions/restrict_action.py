@@ -14,7 +14,7 @@ from xuml_populate.populate.mmclass_nt import (Relational_Action_i, Table_Action
 from pyral.relvar import Relvar
 from pyral.relation import Relation  # Here for debugging
 from pyral.transaction import Transaction
-from scrall.parse.visitor import Selection_a
+from scrall.parse.visitor import Criteria_Selection_a, Rank_Selection_a
 
 _logger = logging.getLogger(__name__)
 
@@ -28,7 +28,7 @@ class RestrictAction:
     """
 
     @classmethod
-    def populate(cls, input_relation_flow: Flow_ap, selection_parse: Selection_a,
+    def populate(cls, input_relation_flow: Flow_ap, selection_parse: Criteria_Selection_a,
                  activity_data: Activity_ap) -> (str, Flow_ap, Set[Flow_ap]):
         """
         Populate the Restrict Action

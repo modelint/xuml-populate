@@ -93,19 +93,19 @@ class InstanceAssignment:
             pass
 
         # Migrate the RHS output to a labeled flow using the output flow label
-        Transaction.open(mmdb, tr_Migrate)  # LHS labeled instance flow
+        Transaction.open(db=mmdb, name=tr_Migrate)  # LHS labeled instance flow
 
         # Delete the Unlabeled flow
-        Relvar.deleteone(mmdb, tr=tr_Migrate, relvar_name="Unlabeled_Flow",
+        Relvar.deleteone(db=mmdb, tr=tr_Migrate, relvar_name="Unlabeled_Flow",
                          tid={"ID": iset_instance_flow.fid, "Activity": activity_data.anum,
                               "Domain": activity_data.domain})
         # Insert the labeled flow
-        Relvar.insert(mmdb, tr=tr_Migrate, relvar='Labeled_Flow', tuples=[
+        Relvar.insert(db=mmdb, tr=tr_Migrate, relvar='Labeled_Flow', tuples=[
             Labeled_Flow_i(ID=iset_instance_flow.fid, Activity=activity_data.anum, Domain=activity_data.domain,
                            Name=output_flow_label)
         ])
 
-        Transaction.execute(mmdb, tr_Migrate)  # LHS labeled instance flow
+        Transaction.execute(db=mmdb, name=tr_Migrate)  # LHS labeled instance flow
         pass
 
         return Boundary_Actions(ain={initial_aid}, aout={final_aid})

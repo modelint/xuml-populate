@@ -86,7 +86,7 @@ class InstanceSet:
                             raise NoClassOrInstanceFlowForInstanceSetName(path=activity_data.activity_path,
                                                                           text=activity_data.scrall_text,
                                                                           x=iset_components.X)
-                case 'Selection_a':
+                case 'Criteria_Selection_a':
                     # Process to populate a select action, the output type does not change
                     # since we are selecting on a known class
                     aid, cls.component_flow, sflows = SelectAction.populate(

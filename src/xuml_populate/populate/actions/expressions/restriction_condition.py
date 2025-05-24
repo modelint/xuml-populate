@@ -19,7 +19,7 @@ from xuml_populate.populate.mmclass_nt import Restriction_Condition_i, Equivalen
 from xuml_populate.populate.flow import Flow
 from pyral.relvar import Relvar
 from pyral.relation import Relation
-from scrall.parse.visitor import N_a, BOOL_a, Op_a, Selection_a
+from scrall.parse.visitor import N_a, BOOL_a, Op_a, Criteria_Selection_a
 
 _logger = logging.getLogger(__name__)
 
@@ -86,7 +86,7 @@ class RestrictCondition:
         if not sflow:
             raise ActionException  # TODO: Make specific
         criterion_id = cls.pop_criterion(attr)
-        Relvar.insert(mmdb, tr=cls.tr, relvar='Comparison_Criterion', tuples=[
+        Relvar.insert(db=mmdb, tr=cls.tr, relvar='Comparison_Criterion', tuples=[
             Comparison_Criterion_i(ID=criterion_id, Action=cls.action_id, Activity=cls.anum, Attribute=attr,
                                    Comparison=op, Value=sflow.fid, Domain=cls.domain)
         ])
@@ -294,7 +294,7 @@ class RestrictCondition:
         return text
 
     @classmethod
-    def process(cls, tr: str, action_id: str, input_nsflow: Flow_ap, selection_parse: Selection_a,
+    def process(cls, tr: str, action_id: str, input_nsflow: Flow_ap, selection_parse: Criteria_Selection_a,
                 activity_data: Activity_ap) -> (str, List[Attribute_Comparison], Set[Flow_ap]):
         """
         Break down criteria into a set of attribute comparisons and validate the components of a Select Action that
