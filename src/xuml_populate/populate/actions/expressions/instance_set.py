@@ -7,6 +7,7 @@ from xuml_populate.populate.actions.expressions.class_accessor import ClassAcces
 from xuml_populate.populate.mm_class import MMclass
 from xuml_populate.populate.flow import Flow
 from xuml_populate.populate.actions.select_action import SelectAction
+from xuml_populate.populate.actions.restrict_action import RestrictAction
 from xuml_populate.populate.actions.aparse_types import Flow_ap, MaxMult, Content, Activity_ap
 from pyral.relation import Relation
 from pyral.transaction import Transaction
@@ -89,10 +90,17 @@ class InstanceSet:
                 case 'Criteria_Selection_a':
                     # Process to populate a select action, the output type does not change
                     # since we are selecting on a known class
-                    aid, cls.component_flow, sflows = SelectAction.populate(
-                        input_instance_flow=cls.component_flow, selection_parse=comp, activity_data=activity_data)
-
+                    if cls.component_flow.content == Content.INSTANCE:
+                        aid, cls.component_flow, sflows = SelectAction.populate(
+                            input_instance_flow=cls.component_flow, selection_parse=comp, activity_data=activity_data)
+                    elif cls.component_flow.content == Content.RELATION:
+                        aid, cls.component_flow, sflows = RestrictAction.populate(
+                            input_relation_flow=cls.component_flow, selection_parse=comp, activity_data=activity_data)
+                    else:
+                        pass  # TODO: Exception (can't be scalar)
                     cls.final_action = aid
+                case 'Rank_Selection_a':
+                    pass
                 case _:
                     raise Exception
         return cls.initial_action, cls.final_action, cls.component_flow

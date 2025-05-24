@@ -74,6 +74,4 @@ class RestrictAction:
         ])
         # We now have a transaction with all select-action instances, enter into the metamodel db
         Transaction.execute(db=mmdb, name=tr_Restrict_Action)  # Restrict Action
-        if selection_parse.rankr:
-            pass  # Flow into a Ranked Restrict which needs to be populated
         return action_id, output_relation_flow, sflows
