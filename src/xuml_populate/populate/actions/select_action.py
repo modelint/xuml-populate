@@ -3,21 +3,18 @@ select_action.py – Populate a selection action instance in PyRAL
 """
 
 import logging
-from typing import Optional, Set, List
+from typing import Set, List
 from xuml_populate.config import mmdb
-from xuml_populate.populate.actions.aparse_types import Flow_ap, MaxMult, Content, Activity_ap, Attribute_Comparison
-from xuml_populate.exceptions.action_exceptions import ComparingNonAttributeInSelection, NoInputInstanceFlow
+from xuml_populate.populate.actions.aparse_types import Flow_ap, MaxMult, Activity_ap, Attribute_Comparison
 from xuml_populate.populate.actions.action import Action
 from xuml_populate.populate.flow import Flow
 from xuml_populate.populate.actions.expressions.restriction_condition import RestrictCondition
-from xuml_populate.populate.mmclass_nt import Select_Action_i, Single_Select_i, Identifier_Select_i, \
-    Zero_One_Cardinality_Select_i, Many_Select_i, Restrict_Action_i, Restriction_Condition_i, \
-    Equivalence_Criterion_i, Comparison_Criterion_i, Projected_Attribute_i, \
-    Class_Restriction_Condition_i, Criterion_i
+from xuml_populate.populate.mmclass_nt import (Select_Action_i, Single_Select_i, Identifier_Select_i,
+                                               Zero_One_Cardinality_Select_i, Many_Select_i,
+                                               Class_Restriction_Condition_i)
 from pyral.relvar import Relvar
 from pyral.relation import Relation
 from pyral.transaction import Transaction
-from scrall.parse.visitor import N_a, BOOL_a, Op_a
 
 _logger = logging.getLogger(__name__)
 
@@ -160,7 +157,8 @@ class SelectAction:
 
         # Populate the Action superclass instance and obtain its action_id
         Transaction.open(db=mmdb, name=tr_Select)
-        cls.action_id = Action.populate(tr=tr_Select, anum=cls.anum, domain=cls.domain, action_type="select")  # Transaction open
+        cls.action_id = Action.populate(tr=tr_Select, anum=cls.anum, domain=cls.domain,
+                                        action_type="select")  # Transaction open
         Relvar.insert(db=mmdb, tr=tr_Select, relvar='Select_Action', tuples=[
             Select_Action_i(ID=cls.action_id, Activity=cls.anum, Domain=cls.domain, Input_flow=input_instance_flow.fid)
         ])
@@ -168,7 +166,8 @@ class SelectAction:
         # Walk through the criteria parse tree storing any attributes or input flows
         # Also check to see if we are selecting on an identifier
 
-        selection_cardinality, attr_comparisons, sflows = RestrictCondition.process(tr=tr_Select, action_id=cls.action_id,
+        selection_cardinality, attr_comparisons, sflows = RestrictCondition.process(tr=tr_Select,
+                                                                                    action_id=cls.action_id,
                                                                                     input_nsflow=input_instance_flow,
                                                                                     selection_parse=selection_parse,
                                                                                     activity_data=activity_data)
@@ -177,7 +176,8 @@ class SelectAction:
             Class_Restriction_Condition_i(Select_action=cls.action_id, Activity=cls.anum, Domain=cls.domain)
         ])
         # Create output flows
-        cls.populate_multiplicity_subclasses(selection_cardinality=selection_cardinality, attr_comparisons=attr_comparisons)
+        cls.populate_multiplicity_subclasses(selection_cardinality=selection_cardinality,
+                                             attr_comparisons=attr_comparisons)
 
         # We now have a transaction with all select-action instances, enter into the metamodel db
         Transaction.execute(db=mmdb, name=tr_Select)  # Select Action

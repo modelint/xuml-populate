@@ -325,7 +325,7 @@ class RestrictCondition:
         #   shaft aslevs( Stop requested )
         # The implication is that we are selecting on: Stop requested == true
         # So elaborate the parse elminating our shorthand
-        cardinality = 'ONE' if selection_parse.card == '1' and not selection_parse.rankr else 'ALL'
+        cardinality = selection_parse.card
         if type(criteria).__name__ == 'N_a':
             cls.expression = cls.walk_criteria(operands=[criteria])
             # criteria = BOOL_a(op='==', operands=[criteria, N_a(name='true')])

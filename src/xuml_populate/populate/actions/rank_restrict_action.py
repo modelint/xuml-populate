@@ -57,12 +57,10 @@ class RankRestrictAction:
             Table_Action_i(ID=action_id, Activity=anum, Domain=domain,
                            Input_a_flow=input_relation_flow.fid, Output_flow=output_relation_flow.fid)
         ])
-        attr = selection_parse.attr[0].name
-        card = "ONE" if selection_parse.card == "1" else "ALL"  # TODO: Put this in a dict somewhere
         Relvar.insert(db=mmdb, tr=tr_Rank_Restrict_Action, relvar='Rank_Restrict_Action', tuples=[
             Rank_Restrict_Action_i(ID=action_id, Activity=anum, Domain=domain,
-                                   Attribute=attr, Non_scalar_type=input_relation_flow.tname,
-                                   Selection_cardinality=card, Extent=selection_parse.rankr)
+                                   Attribute=selection_parse.attr, Non_scalar_type=input_relation_flow.tname,
+                                   Selection_cardinality=selection_parse.card, Extent=selection_parse.rankr)
         ])
         # We now have a transaction with all select-action instances, enter into the metamodel db
         Transaction.execute(db=mmdb, name=tr_Rank_Restrict_Action)  # Restrict Action
