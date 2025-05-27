@@ -103,6 +103,7 @@ class InstanceSet:
                 case 'Rank_Selection_a':
                     aid, cls.component_flow, sflows = RankRestrictAction.populate(
                         input_relation_flow = cls.component_flow, selection_parse = comp, activity_data = activity_data)
+                    cls.final_action = aid
                 case _:
                     raise Exception
         return cls.initial_action, cls.final_action, cls.component_flow

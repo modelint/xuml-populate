@@ -51,7 +51,7 @@ class RestrictAction:
         output_relation_flow = Flow.populate_relation_flow_by_reference(ref_flow=input_relation_flow, anum=anum,
                                                                         domain=domain)
 
-        # Walk through the critieria parse tree storing any attributes or input flows
+        # Walk through the criteria parse tree storing any attributes or input flows
         _, _, sflows = RestrictCondition.process(tr=tr_Restrict_Action, action_id=action_id,
                                                  input_nsflow=input_relation_flow,
                                                  selection_parse=selection_parse, activity_data=activity_data)
