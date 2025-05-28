@@ -61,11 +61,13 @@ class SelectAction:
         ])
         # Walk through the criteria parse tree storing any attributes or input flows
         # Also check to see if we are selecting on an identifier
-
-        self.selection_cardinality, self.attr_comparisons, self.sflows = RestrictCondition.process(
-            tr=tr_Select, action_id=self.action_id, input_nsflow=self.input_instance_flow,
-            selection_parse=self.selection_parse, activity_data=self.activity_data
+        RestrictCondition(tr=tr_Select, action_id=self.action_id,
+                          input_nsflow=self.input_instance_flow,
+                          selection_parse=self.selection_parse,
+                          activity_data=self.activity_data
         )
+        # returned values not used? selection_cardinality, attr_comparisons, sflows =
+
 
         Relvar.insert(db=mmdb, tr=tr_Select, relvar='Class_Restriction_Condition', tuples=[
             Class_Restriction_Condition_i(Select_action=self.action_id, Activity=self.anum, Domain=self.domain)
