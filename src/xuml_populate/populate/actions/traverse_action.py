@@ -43,69 +43,72 @@ tr_Traverse = "Traverse Action"
 
 class TraverseAction:
     """
-    Create all relations for a Traverse Statement
+    Populate a Traverse Action given a parsed Path and an already populated input Instance Flow.
+
+    Ensure that the Path is well-formed and consistent with the Domain's Class Model.
+
+    Populate an output Instance Flow produced by this Traverse Action.
     """
 
-    def __init__(self):
+    def __init__(self, input_instance_flow: Flow_ap, path: PATH_a, activity_data: Activity_ap):
         """
-
-        """
-        self.path_index = 0
-        self.path = None
-        self.name = None
-        self.input_instance_flow = None
-        self.id = None
-        self.dest_class = None  # End of path
-        self.class_cursor = None
-        self.rel_cursor = None
-        self.domain = None
-        self.hops = []
-        self.anum = None
-        self.action_id = None
-        self.mult = None  # Max mult of the current hop
-        self.dest_fid = None
-        self.activity_path = None
-        self.scrall_text = None
-
-    def build_path(self, input_instance_flow: Flow_ap, path: PATH_a, activity_data: Activity_ap) -> (str, Flow_ap):
-        """
-        Step through a path populating it along the way.
+        Initialize the python attributes required to manage validation and population.
 
         :param input_instance_flow: This is the source instance flow where the path begins
         :param path: Parsed Scrall representing a Path
         :param activity_data:
+        """
+        # Save parameter values
+        self.input_instance_flow = input_instance_flow
+        self.path = path
+        self.anum = activity_data.anum
+        self.domain = activity_data.domain
+        self.activity_path = activity_data.activity_path
+        self.scrall_text = activity_data.scrall_text
+        self.mult = input_instance_flow.max_mult  # Will be updated as the max mult of the current hop
+
+        # Initialize tracking attributes
+        self.path_index = 0
+        self.name = None
+        self.id = None
+        self.dest_class = None  # End of path
+        self.class_cursor = None
+        self.rel_cursor = None
+        self.hops = []
+        self.action_id = None
+        self.dest_fid = None
+
+        self.output_flow = self.build_path()
+
+    def build_path(self) -> Flow_ap:
+        """
+        Step through a path populating it along the way.
+
         :return: The Traverse Action ID and the output instance flow id, its Class Type name and its maximum instance
         multiplicity, 1 or M
         """
-        self.path = path
         self.hops = []
-        self.anum = activity_data.anum
-        self.input_instance_flow = input_instance_flow
-        self.class_cursor = input_instance_flow.tname  # Validation cursor is on this class now
-        self.domain = activity_data.domain
+        self.class_cursor = self.input_instance_flow.tname  # Validation cursor is on this class now
         self.name = "/"  # The path text forms path name value
-        self.activity_path = activity_data.activity_path
-        self.scrall_text = activity_data.scrall_text
-        self.mult = input_instance_flow.max_mult
 
         # Verify adequate path length
-        if len(path.hops) < 2:
-            raise IncompletePath(path)
+        if len(self.path.hops) < 2:
+            raise IncompletePath(self.path)
         # Path has at least 2 hop elements
 
         # Validate destination class at the end of the path
-        terminal_hop = path.hops[-1]
+        terminal_hop = self.path.hops[-1]
         if type(terminal_hop).__name__ != 'N_a':
             # Destination class must a name
-            raise NoDestinationInPath(path)
+            raise NoDestinationInPath(self.path)
         self.dest_class = terminal_hop.name
 
         # Valdiate path continuity
         # Step through the path validating each relationship, phrase, and class
         # Ensure that each step is reachable on the class model
         self.path_index = 0
-        while self.path_index < len(path.hops) - 1:
-            hop = path.hops[self.path_index]
+        while self.path_index < len(self.path.hops) - 1:
+            hop = self.path.hops[self.path_index]
 
             if type(hop).__name__ == 'N_a':
                 # This should be a perspective since flow names get eaten in the relationship hop handlers
@@ -113,7 +116,7 @@ class TraverseAction:
                 # (any class name prefixing a path will have been processed to populate a labeled instance flow earlier)
                 if not self.resolve_perspective(phrase=hop.name) and not self.resolve_ordinal_perspective(
                         perspective=hop.name):
-                    raise UnexpectedClassOrPerspectiveInPath(name=hop.name, path=path)
+                    raise UnexpectedClassOrPerspectiveInPath(name=hop.name, path=self.path)
 
             elif type(hop).__name__ == 'R_a':
                 self.rel_cursor = hop.rnum
@@ -148,8 +151,8 @@ class TraverseAction:
         # Now we can populate the path
         self.populate()
 
-        return self.action_id, Flow_ap(fid=self.dest_fid, content=Content.INSTANCE, tname=self.dest_class,
-                                       max_mult=self.mult)
+        return Flow_ap(fid=self.dest_fid, content=Content.INSTANCE, tname=self.dest_class, max_mult=self.mult)
+
 
     def populate(self):
         """
