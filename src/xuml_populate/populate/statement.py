@@ -3,15 +3,13 @@ statement.py – Populate all actions in a Scrall statement
 """
 
 import logging
-from xuml_populate.config import mmdb
-from pyral.relation import Relation
 from xuml_populate.populate.actions.instance_assignment import InstanceAssignment
 from xuml_populate.populate.actions.table_assignment import TableAssignment
 from xuml_populate.populate.actions.scalar_assignment import ScalarAssignment
 from xuml_populate.populate.actions.switch_statement import SwitchStatement
 from xuml_populate.populate.actions.aparse_types import Activity_ap, Boundary_Actions, Labeled_Flow
 from collections import namedtuple
-from typing import Dict, Set, List
+from typing import Set
 
 _logger = logging.getLogger(__name__)
 

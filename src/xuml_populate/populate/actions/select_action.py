@@ -3,7 +3,7 @@ select_action.py – Populate a selection action instance in PyRAL
 """
 
 import logging
-from typing import Set, List
+from typing import List
 from xuml_populate.config import mmdb
 from xuml_populate.populate.actions.aparse_types import Flow_ap, MaxMult, Activity_ap, Attribute_Comparison
 from xuml_populate.populate.actions.action import Action
@@ -26,22 +26,57 @@ class SelectAction:
     Create all relations for a Select Statement
     """
 
-    input_instance_flow = None  # We are selecting instances from this instance flow
-    output_instance_flow = None
-    anum = None
-    expression = None
-    comparison_criteria = []
-    equivalence_criteria = []
-    restriction_text = ""
-    cardinality = None
-    action_id = None
-    domain = None  # in this domain
-    criterion_ctr = 0
-    max_mult = None
-    activity_data = None
+    def __init__(self, input_instance_flow: Flow_ap, selection_parse, activity_data: Activity_ap):
+        """
 
-    @classmethod
-    def identifier_selection(cls, attr_comparisons: List[Attribute_Comparison]) -> int:
+        :param input_instance_flow: The source flow into this selection
+        :param selection_parse:  The parsed Scrall select action group
+        :param activity_data:
+        """
+        self.input_instance_flow = input_instance_flow  # We are selecting instances from this instance flow
+        self.selection_parse = selection_parse
+        self.activity_data = activity_data
+        self.domain = activity_data.domain
+        self.anum = activity_data.anum
+
+        self.attr_comparisons: List[Attribute_Comparison]
+
+        self.expression = None
+        self.comparison_criteria = []
+        self.equivalence_criteria = []
+        self.restriction_text = ""
+        self.criterion_ctr = 0
+        self.max_mult : MaxMult
+
+        # Save attribute values that we will need when creating the various select subsystem
+        # classes
+
+        # Populate the Action superclass instance and obtain its action_id
+        Transaction.open(db=mmdb, name=tr_Select)
+        self.action_id = Action.populate(tr=tr_Select, anum=self.anum, domain=self.domain,
+                                         action_type="select")  # Transaction open
+        Relvar.insert(db=mmdb, tr=tr_Select, relvar='Select_Action', tuples=[
+            Select_Action_i(ID=self.action_id, Activity=self.anum, Domain=self.domain,
+                            Input_flow=self.input_instance_flow.fid)
+        ])
+        # Walk through the criteria parse tree storing any attributes or input flows
+        # Also check to see if we are selecting on an identifier
+
+        self.selection_cardinality, self.attr_comparisons, self.sflows = RestrictCondition.process(
+            tr=tr_Select, action_id=self.action_id, input_nsflow=self.input_instance_flow,
+            selection_parse=self.selection_parse, activity_data=self.activity_data
+        )
+
+        Relvar.insert(db=mmdb, tr=tr_Select, relvar='Class_Restriction_Condition', tuples=[
+            Class_Restriction_Condition_i(Select_action=self.action_id, Activity=self.anum, Domain=self.domain)
+        ])
+        # Create output flows
+        self.max_mult, self.output_instance_flow = self.populate_multiplicity_subclasses()
+
+        # We now have a transaction with all select-action instances, enter into the metamodel db
+        Transaction.execute(db=mmdb, name=tr_Select)  # Select Action
+
+    def identifier_selection(self) -> int:
         """
         | Determine whether we are selecting based on an identifier match.
         An identifier match supplies one value per identifier attribute for some identifier defined on
@@ -62,8 +97,8 @@ class SelectAction:
          | you may select multiple instances since a Shaft intersects multiple Floors
          :returns: An identifier number 1,2, ... or 0 if none found
         """
-        idcheck = {c.attr for c in attr_comparisons if c.op == '=='}
-        R = f"Class:<{cls.input_instance_flow.tname}>, Domain:<{cls.domain}>"
+        idcheck = {c.attr for c in self.attr_comparisons if c.op == '=='}
+        R = f"Class:<{self.input_instance_flow.tname}>, Domain:<{self.domain}>"
         Relation.restrict(db=mmdb, relation='Identifier_Attribute', restriction=R)
         Relation.project(db=mmdb, attributes=('Identifier', 'Attribute',), svar_name='all_id_attrs')
         # We have created a named relation with a projection of each id_attr and its id_num
@@ -87,98 +122,53 @@ class SelectAction:
             i += 1  # Increment to the next I num (I1, I2, etc)
         return 0
 
-    @classmethod
-    def populate_multiplicity_subclasses(cls, selection_cardinality: str, attr_comparisons: List[Attribute_Comparison]):
+    def populate_multiplicity_subclasses(self) -> (MaxMult, Flow_ap):
         """
         Determine multiplicity of output and populate the relevant Select Action subclasses
         """
         # Determine if this should be an Identifier Select subclass that yields at most one instance
-        selection_idnum = cls.identifier_selection(attr_comparisons)
-        if selection_idnum or selection_cardinality == 'ONE':
-            cls.max_mult = MaxMult.ONE
+        selection_idnum = self.identifier_selection()
+        if selection_idnum or self.selection_cardinality == 'ONE':
+            max_mult = MaxMult.ONE
             # Populate a single instance flow for the selection output
-            cls.output_instance_flow = Flow.populate_instance_flow(cname=cls.input_instance_flow.tname,
-                                                     anum=cls.anum, domain=cls.domain,
-                                                     label=None, single=True)
-            # cls.output_instance_flow = Flow_ap(fid=output_fid, content=Content.INSTANCE,
-            #                                    tname=cls.input_instance_flow.tname, max_mult=cls.max_mult)
-            _logger.info(f"INSERT Select action output single instance Flow: [{cls.domain}:"
-                         f"{cls.input_instance_flow.tname}:{cls.activity_data.activity_path.split(':')[-1]}"
-                         f":{cls.output_instance_flow}]")
+            output_instance_flow = Flow.populate_instance_flow(
+                cname=self.input_instance_flow.tname, anum=self.anum, domain=self.domain,
+                label=None, single=True
+            )
+            _logger.info(f"INSERT Select action output single instance Flow: [{self.domain}:"
+                         f"{self.input_instance_flow.tname}:{self.activity_data.activity_path.split(':')[-1]}"
+                         f":{output_instance_flow}]")
             # Populate the Single Select subclass
             Relvar.insert(db=mmdb, tr=tr_Select, relvar='Single_Select', tuples=[
-                Single_Select_i(ID=cls.action_id, Activity=cls.anum, Domain=cls.domain,
-                                Output_flow=cls.output_instance_flow.fid)
+                Single_Select_i(ID=self.action_id, Activity=self.anum, Domain=self.domain,
+                                Output_flow=output_instance_flow.fid)
             ])
             if selection_idnum:
                 # Populate an Identifier Select subclass
                 Relvar.insert(db=mmdb, tr=tr_Select, relvar='Identifier_Select', tuples=[
-                    Identifier_Select_i(ID=cls.action_id, Activity=cls.anum, Domain=cls.domain,
-                                        Identifier=selection_idnum, Class=cls.input_instance_flow.tname)
+                    Identifier_Select_i(ID=self.action_id, Activity=self.anum, Domain=self.domain,
+                                        Identifier=selection_idnum, Class=self.input_instance_flow.tname)
                 ])
             else:
                 # Populate an Identifier Select subclass
                 # Note that if both ONE cardinality specified and identifier select, identifier select takes precedence
                 Relvar.insert(db=mmdb, tr=tr_Select, relvar='Zero_One_Cardinality_Select', tuples=[
-                    Zero_One_Cardinality_Select_i(ID=cls.action_id, Activity=cls.anum, Domain=cls.domain)
+                    Zero_One_Cardinality_Select_i(ID=self.action_id, Activity=self.anum, Domain=self.domain)
                 ])
         else:
             # Many select with Multiple Instance Flow output
-            cls.max_mult = MaxMult.MANY
-            cls.output_instance_flow = Flow.populate_instance_flow(cname=cls.input_instance_flow.tname,
-                                                                   anum=cls.anum,
-                                                                   domain=cls.domain, label=None, single=False)
-            _logger.info(f"INSERT Select action output multiple instance Flow: [{cls.domain}:"
-                         f"{cls.input_instance_flow.tname}:{cls.activity_data.activity_path.split(':')[-1]}"
-                         f":{cls.output_instance_flow}]")
+            max_mult = MaxMult.MANY
+            output_instance_flow = Flow.populate_instance_flow(
+                cname=self.input_instance_flow.tname, anum=self.anum,
+                domain=self.domain, label=None, single=False
+            )
+            _logger.info(f"INSERT Select action output multiple instance Flow: [{self.domain}:"
+                         f"{self.input_instance_flow.tname}:{self.activity_data.activity_path.split(':')[-1]}"
+                         f":{output_instance_flow}]")
             # Populate the Many Select subclass
             Relvar.insert(db=mmdb, tr=tr_Select, relvar='Many_Select', tuples=[
-                Many_Select_i(ID=cls.action_id, Activity=cls.anum, Domain=cls.domain,
-                              Output_flow=cls.output_instance_flow.fid)
+                Many_Select_i(ID=self.action_id, Activity=self.anum, Domain=self.domain,
+                              Output_flow=output_instance_flow.fid)
             ])
+        return max_mult, output_instance_flow
 
-    @classmethod
-    def populate(cls, input_instance_flow: Flow_ap, selection_parse, activity_data: Activity_ap) -> (
-            str, Flow_ap, Set[Flow_ap]):
-        """
-        Populate the Select Statement
-
-        :param input_instance_flow: The source flow into this selection
-        :param selection_parse:  The parsed Scrall select action group
-        :param activity_data:
-        :return: The select action id, the output flow, and any scalar flows input for attribute comparison
-        """
-        # Save attribute values that we will need when creating the various select subsystem
-        # classes
-        cls.domain = activity_data.domain
-        cls.anum = activity_data.anum
-        cls.activity_data = activity_data
-        cls.input_instance_flow = input_instance_flow
-
-        # Populate the Action superclass instance and obtain its action_id
-        Transaction.open(db=mmdb, name=tr_Select)
-        cls.action_id = Action.populate(tr=tr_Select, anum=cls.anum, domain=cls.domain,
-                                        action_type="select")  # Transaction open
-        Relvar.insert(db=mmdb, tr=tr_Select, relvar='Select_Action', tuples=[
-            Select_Action_i(ID=cls.action_id, Activity=cls.anum, Domain=cls.domain, Input_flow=input_instance_flow.fid)
-        ])
-        cls.selection_parse = selection_parse
-        # Walk through the criteria parse tree storing any attributes or input flows
-        # Also check to see if we are selecting on an identifier
-
-        selection_cardinality, attr_comparisons, sflows = RestrictCondition.process(tr=tr_Select,
-                                                                                    action_id=cls.action_id,
-                                                                                    input_nsflow=input_instance_flow,
-                                                                                    selection_parse=selection_parse,
-                                                                                    activity_data=activity_data)
-
-        Relvar.insert(db=mmdb, tr=tr_Select, relvar='Class_Restriction_Condition', tuples=[
-            Class_Restriction_Condition_i(Select_action=cls.action_id, Activity=cls.anum, Domain=cls.domain)
-        ])
-        # Create output flows
-        cls.populate_multiplicity_subclasses(selection_cardinality=selection_cardinality,
-                                             attr_comparisons=attr_comparisons)
-
-        # We now have a transaction with all select-action instances, enter into the metamodel db
-        Transaction.execute(db=mmdb, name=tr_Select)  # Select Action
-        return cls.action_id, cls.output_instance_flow, sflows

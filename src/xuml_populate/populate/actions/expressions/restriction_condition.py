@@ -45,6 +45,54 @@ class RestrictCondition:
     input_scalar_flows = None
 
     @classmethod
+    def process(cls, tr: str, action_id: str, input_nsflow: Flow_ap, selection_parse: Criteria_Selection_a,
+                activity_data: Activity_ap) -> (str, List[Attribute_Comparison], Set[Flow_ap]):
+        """
+        Break down criteria into a set of attribute comparisons and validate the components of a Select Action that
+        must be populated into the metamodel.
+         | These components are:
+        * Restriction Criterian (Comparison or Ranking)
+        * Scalar Flow inputs to any Comparison Criterion
+
+        Sift through criteria to ensure that each terminal is either an attribute, input flow, or value.
+        :param tr:  The select or restrict action transaction
+        :param action_id:
+        :param input_nsflow:
+        :param activity_data:
+        :param selection_parse:
+        :return: Selection cardinality, attribute comparisons, and a set of scalar flows input for attribute comparison
+        """
+        cls.action_id = action_id
+        cls.anum = activity_data.anum
+        cls.domain = activity_data.domain
+        cls.activity_data = activity_data
+        cls.tr = tr
+        cls.comparison_criteria = []
+        cls.input_scalar_flows = set()
+
+        cls.input_nsflow = input_nsflow
+        criteria = selection_parse.criteria
+        # Consider case where there is a single boolean value critieria such as:
+        #   shaft aslevs( Stop requested )
+        # The implication is that we are selecting on: Stop requested == true
+        # So elaborate the parse elminating our shorthand
+        cardinality = selection_parse.card
+        if type(criteria).__name__ == 'N_a':
+            cls.expression = cls.walk_criteria(operands=[criteria])
+            # criteria = BOOL_a(op='==', operands=[criteria, N_a(name='true')])
+            # Name only (no explicit operator or operand)
+        else:
+            cls.expression = cls.walk_criteria(operands=criteria.operands, operator=criteria.op)
+        # Walk the parse tree and save all attributes, ops, values, and input scalar flows
+        # Populate the Restriction Condition class
+        Relvar.insert(db=mmdb, tr=tr, relvar='Restriction_Condition', tuples=[
+            Restriction_Condition_i(Action=cls.action_id, Activity=cls.anum, Domain=cls.domain,
+                                    Expression=cls.expression.strip(), Selection_cardinality=cardinality
+                                    )
+        ])
+        return cardinality, cls.comparison_criteria, cls.input_scalar_flows
+
+    @classmethod
     def pop_xi_comparison_criterion(cls, attr: str):
         """
         Let's say that we are performing a select/restrict on some Class and comparing the value of some
@@ -292,51 +340,3 @@ class RestrictCondition:
                 case _:
                     raise Exception
         return text
-
-    @classmethod
-    def process(cls, tr: str, action_id: str, input_nsflow: Flow_ap, selection_parse: Criteria_Selection_a,
-                activity_data: Activity_ap) -> (str, List[Attribute_Comparison], Set[Flow_ap]):
-        """
-        Break down criteria into a set of attribute comparisons and validate the components of a Select Action that
-        must be populated into the metamodel.
-         | These components are:
-        * Restriction Criterian (Comparison or Ranking)
-        * Scalar Flow inputs to any Comparison Criterion
-
-        Sift through criteria to ensure that each terminal is either an attribute, input flow, or value.
-        :param tr:  The select or restrict action transaction
-        :param action_id:
-        :param input_nsflow:
-        :param activity_data:
-        :param selection_parse:
-        :return: Selection cardinality, attribute comparisons, and a set of scalar flows input for attribute comparison
-        """
-        cls.action_id = action_id
-        cls.anum = activity_data.anum
-        cls.domain = activity_data.domain
-        cls.activity_data = activity_data
-        cls.tr = tr
-        cls.comparison_criteria = []
-        cls.input_scalar_flows = set()
-
-        cls.input_nsflow = input_nsflow
-        criteria = selection_parse.criteria
-        # Consider case where there is a single boolean value critieria such as:
-        #   shaft aslevs( Stop requested )
-        # The implication is that we are selecting on: Stop requested == true
-        # So elaborate the parse elminating our shorthand
-        cardinality = selection_parse.card
-        if type(criteria).__name__ == 'N_a':
-            cls.expression = cls.walk_criteria(operands=[criteria])
-            # criteria = BOOL_a(op='==', operands=[criteria, N_a(name='true')])
-            # Name only (no explicit operator or operand)
-        else:
-            cls.expression = cls.walk_criteria(operands=criteria.operands, operator=criteria.op)
-        # Walk the parse tree and save all attributes, ops, values, and input scalar flows
-        # Populate the Restriction Condition class
-        Relvar.insert(db=mmdb, tr=tr, relvar='Restriction_Condition', tuples=[
-            Restriction_Condition_i(Action=cls.action_id, Activity=cls.anum, Domain=cls.domain,
-                                    Expression=cls.expression.strip(), Selection_cardinality=cardinality
-                                    )
-        ])
-        return cardinality, cls.comparison_criteria, cls.input_scalar_flows

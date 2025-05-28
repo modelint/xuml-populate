@@ -72,10 +72,8 @@ class TableExpr:
         cls.action_outputs = {}  # ID's of all Action output Data Flows
         cls.action_inputs = {}  # ID's of all Action input Data Flows
 
-        of = cls.walk(texpr=rhs, input_nsflow=input_instance_flow)
+        final_output_flow = cls.walk(texpr=rhs, input_nsflow=input_instance_flow)
         # If tuple output has been specified, for a tuple assignment for example, tighten the max multiplicity to one
-        final_output_flow = Flow_ap(fid=of.fid, content=of.content, tname=of.tname,
-                                    max_mult=MaxMult.ONE if tuple_output else of.max_mult)  #TODO:  Why not just return of?  See trace comment -- It is a FLow_ap(...)
 
         all_ins = {v for s in cls.action_inputs.values() for v in s}
         all_outs = {v for s in cls.action_outputs.values() for v in s}
@@ -179,9 +177,9 @@ class TableExpr:
                 cls.action_inputs[aid] = {input_flow.fid}.union({f.fid for f in input_sflows})
                 cls.action_outputs[aid] = {component_flow.fid}
             elif input_flow.content == Content.INSTANCE:
-                aid, component_flow, input_sflows = SelectAction.populate(input_instance_flow=input_flow,
-                                                                          selection_parse=texpr.selection,
-                                                                          activity_data=cls.activity_data)
+                select_action = SelectAction(input_instance_flow=input_flow, selection_parse=texpr.selection,
+                                             activity_data=cls.activity_data)
+                aid, component_flow, input_sflows = select_action
                 cls.action_inputs[aid] = {input_flow.fid}.union({f.fid for f in input_sflows})
                 cls.action_outputs[aid] = {component_flow.fid}
             else:
