@@ -101,11 +101,25 @@ class InstanceSet:
                             input_relation_flow=cls.component_flow, selection_parse=comp, activity_data=activity_data)
                     else:
                         pass  # TODO: Exception (can't be scalar)
-                    cls.final_action = aid
+                    # Data flow to/from actions within the instance_set
+                    if first_action:
+                        # For the first component, there can be dflow input from another action
+                        cls.initial_action = aid
+                        first_action = False  # The first action has been encountered and recognized as initial
+                    if count == len(iset_components) - 1:
+                        # For the last component, there can be no dflow output to another action
+                        cls.final_action = aid
                 case 'Rank_Selection_a':
                     aid, cls.component_flow, sflows = RankRestrictAction.populate(
                         input_relation_flow = cls.component_flow, selection_parse = comp, activity_data = activity_data)
-                    cls.final_action = aid
+                    # Data flow to/from actions within the instance_set
+                    if first_action:
+                        # For the first component, there can be dflow input from another action
+                        cls.initial_action = aid
+                        first_action = False  # The first action has been encountered and recognized as initial
+                    if count == len(iset_components) - 1:
+                        # For the last component, there can be no dflow output to another action
+                        cls.final_action = aid
                 case _:
                     raise Exception
         return cls.initial_action, cls.final_action, cls.component_flow

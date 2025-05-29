@@ -52,9 +52,9 @@ class RestrictAction:
                                                                         domain=domain)
 
         # Walk through the criteria parse tree storing any attributes or input flows
-        _, _, sflows = RestrictCondition.process(tr=tr_Restrict_Action, action_id=action_id,
-                                                 input_nsflow=input_relation_flow,
-                                                 selection_parse=selection_parse, activity_data=activity_data)
+        rcond = RestrictCondition(tr=tr_Restrict_Action, action_id=action_id, input_nsflow=input_relation_flow,
+                                  selection_parse=selection_parse, activity_data=activity_data)
+        sflows = rcond.input_scalar_flows
         # The first two return values are relevant only to instance selection (Select Action)
         # Restrict action does not use the returned cardinality since output is always a Table Flow
         # Nor does it use the comparision critieria to test for identifier selection
