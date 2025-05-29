@@ -179,7 +179,9 @@ class TableExpr:
             elif input_flow.content == Content.INSTANCE:
                 select_action = SelectAction(input_instance_flow=input_flow, selection_parse=texpr.selection,
                                              activity_data=cls.activity_data)
-                aid, component_flow, input_sflows = select_action
+                aid = select_action.action_id
+                component_flow = select_action.output_instance_flow
+                input_sflows = select_action.sflows
                 cls.action_inputs[aid] = {input_flow.fid}.union({f.fid for f in input_sflows})
                 cls.action_outputs[aid] = {component_flow.fid}
             else:
