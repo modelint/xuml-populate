@@ -64,10 +64,7 @@ class RestrictCondition:
         self.input_scalar_flows = set()
         self.input_nsflow = input_nsflow
         self.expression = ""
-
-        self.comparison_criteria = None
         self.criterion_ctr = 0
-        self.input_scalar_flows = None
 
         criteria = selection_parse.criteria
         # Consider case where there is a single boolean value critieria such as:
