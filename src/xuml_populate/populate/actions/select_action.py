@@ -21,6 +21,7 @@ _logger = logging.getLogger(__name__)
 # Transactions
 tr_Select = "Select Action"
 
+
 class SelectAction:
     """
     Create all relations for a Select Statement
@@ -46,7 +47,7 @@ class SelectAction:
         self.equivalence_criteria = []
         self.restriction_text = ""
         self.criterion_ctr = 0
-        self.max_mult : MaxMult
+        self.max_mult: MaxMult
 
         # Save attribute values that we will need when creating the various select subsystem
         # classes
@@ -61,13 +62,14 @@ class SelectAction:
         ])
         # Walk through the criteria parse tree storing any attributes or input flows
         # Also check to see if we are selecting on an identifier
-        RestrictCondition(tr=tr_Select, action_id=self.action_id,
-                          input_nsflow=self.input_instance_flow,
-                          selection_parse=self.selection_parse,
-                          activity_data=self.activity_data
-        )
-        # returned values not used? selection_cardinality, attr_comparisons, sflows =
-
+        rcond = RestrictCondition(tr=tr_Select, action_id=self.action_id,
+                                  input_nsflow=self.input_instance_flow,
+                                  selection_parse=self.selection_parse,
+                                  activity_data=self.activity_data
+                                  )
+        self.attr_comparisons = rcond.comparison_criteria
+        self.selection_cardinality = rcond.cardinality
+        self.sflows = rcond.input_scalar_flows
 
         Relvar.insert(db=mmdb, tr=tr_Select, relvar='Class_Restriction_Condition', tuples=[
             Class_Restriction_Condition_i(Select_action=self.action_id, Activity=self.anum, Domain=self.domain)
@@ -173,4 +175,3 @@ class SelectAction:
                               Output_flow=output_instance_flow.fid)
             ])
         return max_mult, output_instance_flow
-

@@ -74,7 +74,7 @@ class RestrictCondition:
         #   shaft aslevs( Stop requested )
         # The implication is that we are selecting on: Stop requested == true
         # So elaborate the parse elminating our shorthand
-        cardinality = selection_parse.card
+        self.cardinality = selection_parse.card
         if type(criteria).__name__ == 'N_a':
             self.walk_criteria(operands=[criteria])
             # criteria = BOOL_a(op='==', operands=[criteria, N_a(name='true')])
@@ -85,7 +85,7 @@ class RestrictCondition:
         # Populate the Restriction Condition class
         Relvar.insert(db=mmdb, tr=tr, relvar='Restriction_Condition', tuples=[
             Restriction_Condition_i(Action=self.action_id, Activity=self.anum, Domain=self.domain,
-                                    Expression=self.expression.strip(), Selection_cardinality=cardinality
+                                    Expression=self.expression.strip(), Selection_cardinality=self.cardinality
                                     )
         ])
         # return cardinality, self.comparison_criteria, self.input_scalar_flows
