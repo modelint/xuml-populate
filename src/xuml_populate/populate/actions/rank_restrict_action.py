@@ -20,18 +20,16 @@ _logger = logging.getLogger(__name__)
 # Transactions
 tr_Rank_Restrict_Action = "Rank Restrict Action"
 
-
 class RankRestrictAction:
     """
     Create all relations for a Restrict Action
     """
 
-    @classmethod
-    def populate(cls, input_relation_flow: Flow_ap, selection_parse: Rank_Selection_a,
-                 activity_data: Activity_ap) -> (str, Flow_ap, Set[Flow_ap]):
+    def __init__(self, input_relation_flow: Flow_ap, selection_parse: Rank_Selection_a,
+                 activity_data: Activity_ap):
         """
         Populate the Rank Restrict Action
-
+         -> (str, Flow_ap, Set[Flow_ap])
         :param input_relation_flow: The source table flow into this restriction
         :param selection_parse:  The parsed Scrall select action group
         :param activity_data:
@@ -44,24 +42,24 @@ class RankRestrictAction:
 
         # Populate the Action superclass instance and obtain its action_id
         Transaction.open(db=mmdb, name=tr_Rank_Restrict_Action)
-        action_id = Action.populate(tr=tr_Rank_Restrict_Action, anum=anum, domain=domain, action_type="rank restrict")
+        self.action_id = Action.populate(tr=tr_Rank_Restrict_Action, anum=anum, domain=domain, action_type="rank restrict")
 
         # Populate the output Table Flow using same Table as input flow
-        output_relation_flow = Flow.populate_relation_flow_by_reference(ref_flow=input_relation_flow, anum=anum,
-                                                                        domain=domain)
+        # TODO: This is a tuple flow if the cardinality is one
+        self.output_relation_flow = Flow.populate_relation_flow_by_reference(
+            ref_flow=input_relation_flow, anum=anum, domain=domain, tuple_flow=selection_parse.card == 'ONE')
 
         Relvar.insert(db=mmdb, tr=tr_Rank_Restrict_Action, relvar='Relational_Action', tuples=[
-            Relational_Action_i(ID=action_id, Activity=anum, Domain=domain)
+            Relational_Action_i(ID=self.action_id, Activity=anum, Domain=domain)
         ])
         Relvar.insert(db=mmdb, tr=tr_Rank_Restrict_Action, relvar='Table_Action', tuples=[
-            Table_Action_i(ID=action_id, Activity=anum, Domain=domain,
-                           Input_a_flow=input_relation_flow.fid, Output_flow=output_relation_flow.fid)
+            Table_Action_i(ID=self.action_id, Activity=anum, Domain=domain,
+                           Input_a_flow=input_relation_flow.fid, Output_flow=self.output_relation_flow.fid)
         ])
         Relvar.insert(db=mmdb, tr=tr_Rank_Restrict_Action, relvar='Rank_Restrict_Action', tuples=[
-            Rank_Restrict_Action_i(ID=action_id, Activity=anum, Domain=domain,
+            Rank_Restrict_Action_i(ID=self.action_id, Activity=anum, Domain=domain,
                                    Attribute=selection_parse.attr, Non_scalar_type=input_relation_flow.tname,
                                    Selection_cardinality=selection_parse.card, Extent=selection_parse.rankr)
         ])
         # We now have a transaction with all select-action instances, enter into the metamodel db
         Transaction.execute(db=mmdb, name=tr_Rank_Restrict_Action)  # Restrict Action
-        return action_id, output_relation_flow, None

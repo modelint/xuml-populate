@@ -94,11 +94,21 @@ class InstanceSet:
                     # Process to populate a select action, the output type does not change
                     # since we are selecting on a known class
                     if cls.component_flow.content == Content.INSTANCE:
-                        aid, cls.component_flow, sflows = SelectAction.populate(
-                            input_instance_flow=cls.component_flow, selection_parse=comp, activity_data=activity_data)
+                        sa = SelectAction(
+                            input_instance_flow=cls.component_flow, selection_parse=comp,
+                            activity_data=activity_data
+                        )
+                        aid = sa.action_id
+                        cls.component_flow = sa.output_instance_flow
+                        sflows = sa.sflows
                     elif cls.component_flow.content == Content.RELATION:
-                        aid, cls.component_flow, sflows = RestrictAction.populate(
-                            input_relation_flow=cls.component_flow, selection_parse=comp, activity_data=activity_data)
+                        ra = RestrictAction(
+                            input_relation_flow=cls.component_flow, selection_parse=comp,
+                            activity_data=activity_data
+                        )
+                        aid = ra.action_id
+                        cls.component_flow = ra.output_relation_flow
+                        sflows = ra.sflows
                     else:
                         pass  # TODO: Exception (can't be scalar)
                     # Data flow to/from actions within the instance_set
@@ -110,8 +120,10 @@ class InstanceSet:
                         # For the last component, there can be no dflow output to another action
                         cls.final_action = aid
                 case 'Rank_Selection_a':
-                    aid, cls.component_flow, sflows = RankRestrictAction.populate(
-                        input_relation_flow = cls.component_flow, selection_parse = comp, activity_data = activity_data)
+                    ranksel = RankRestrictAction(input_relation_flow=cls.component_flow, selection_parse=comp,
+                                                 activity_data = activity_data)
+                    aid = ranksel.action_id
+                    cls.component_flow = ranksel.output_relation_flow
                     # Data flow to/from actions within the instance_set
                     if first_action:
                         # For the first component, there can be dflow input from another action

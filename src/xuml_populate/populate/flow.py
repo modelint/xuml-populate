@@ -386,7 +386,7 @@ class Flow:
                        max_mult=MaxMult.ONE if is_tuple else MaxMult.MANY)
 
     @classmethod
-    def populate_relation_flow_by_reference(cls, ref_flow: Flow_ap, anum: str, domain: str,
+    def populate_relation_flow_by_reference(cls, ref_flow: Flow_ap, anum: str, domain: str, tuple_flow: bool = False,
                                             label: Optional[str] = None) -> Flow_ap:
         """
         Given an existing Relation Flow, create another with the same properties.
@@ -398,14 +398,16 @@ class Flow:
         :param label: optional label
         :param anum: The anum number
         :param domain: The domain name
+        :param tuple_flow:  If True, disregard the reference cardinality and force a tuple result
         :return: Summary of duplicated flow
         """
         # Since we are making a copy, we know that the Table (Type) must already exist, so we skip the Table creation
         # / verification step and just populate the Relation Flow.
         # TODO: Log this
         Transaction.open(db=mmdb, name=tr_Rel_Flow)
+        set_tuple = True if tuple_flow else ref_flow.max_mult == MaxMult.ONE
         rflow = cls.populate_relation_flow(table_name=ref_flow.tname, anum=anum, domain=domain,
-                                           is_tuple=(ref_flow.max_mult == MaxMult.ONE), label=label)
+                                           is_tuple=set_tuple, label=label)
         Transaction.execute(db=mmdb, name=tr_Rel_Flow)
         return rflow
 

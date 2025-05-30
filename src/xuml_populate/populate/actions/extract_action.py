@@ -27,9 +27,8 @@ class ExtractAction:
     """
     Create all relations for an Extract Action
     """
-    @classmethod
-    def populate(cls, tuple_flow: Flow_ap, attr: str, anum: str,
-                 domain: str, activity_data: Activity_ap, label: str = None) -> Flow_ap:
+    def __init__(self, tuple_flow: Flow_ap, attr: str, anum: str,
+                 domain: str, activity_data: Activity_ap, label: str = None):
         """
         Populate the Extract Action
 
@@ -39,7 +38,6 @@ class ExtractAction:
         :param domain: Domain
         :param activity_data:
         :param label:  Name (label) of the output Scalar Flow
-        :return: Set action scalar flow
         """
         # Save attribute values that we will need when creating the various select subsystem
         # classes
@@ -50,14 +48,13 @@ class ExtractAction:
         action_id = Action.populate(tr=tr_Extract, anum=anum, domain=domain, action_type="extract")
 
         # Create the labeled Scalar Flow
-        sflow = Flow.populate_scalar_flow(label=label, scalar_type=tuple_header[attr], anum=anum, domain=domain)
+        self.output_sflow = Flow.populate_scalar_flow(label=label, scalar_type=tuple_header[attr], anum=anum, domain=domain)
 
         Relvar.insert(db=mmdb, tr=tr_Extract, relvar='Relational_Action', tuples=[
             Relational_Action_i(ID=action_id, Activity=anum, Domain=domain)
         ])
         Relvar.insert(db=mmdb, tr=tr_Extract, relvar='Extract_Action', tuples=[
             Extract_Action_i(ID=action_id, Activity=anum, Domain=domain, Input_tuple=tuple_flow.fid,
-                             Table=tuple_flow.tname, Attribute=attr, Output_scalar=sflow.fid)
+                             Table=tuple_flow.tname, Attribute=attr, Output_scalar=self.output_sflow.fid)
         ])
         Transaction.execute(db=mmdb, name=tr_Extract)
-        return sflow

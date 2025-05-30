@@ -199,10 +199,11 @@ class RestrictCondition:
                                         # For attribute comparison, there can only be one extracted attribute
                                         raise ActionException
                                     attr_to_extract = o.projection.attrs[0].name
-                                    sflow = ExtractAction.populate(tuple_flow=ns_flow,
-                                                                   attr=attr_to_extract, anum=self.anum,
-                                                                   domain=self.domain, activity_data=self.activity_data,
-                                                                   )  # Select Action transaction is open
+                                    extract_action = ExtractAction(
+                                        tuple_flow=ns_flow, attr=attr_to_extract, anum=self.anum,
+                                        domain=self.domain, activity_data=self.activity_data
+                                    )  # Select Action transaction is open
+                                    sflow = extract_action.output_sflow
                                 # Now populate a comparison criterion
                                 self.pop_comparison_criterion(attr=o.projection.attrs[0].name, scalar_flow=sflow, op=operator)
                                 text += "<projection>"

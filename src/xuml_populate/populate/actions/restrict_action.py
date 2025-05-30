@@ -27,16 +27,14 @@ class RestrictAction:
     Create all relations for a Restrict Action
     """
 
-    @classmethod
-    def populate(cls, input_relation_flow: Flow_ap, selection_parse: Criteria_Selection_a,
-                 activity_data: Activity_ap) -> (str, Flow_ap, Set[Flow_ap]):
+    def __init__(self, input_relation_flow: Flow_ap, selection_parse: Criteria_Selection_a,
+                 activity_data: Activity_ap):
         """
         Populate the Restrict Action
 
         :param input_relation_flow: The source table flow into this restriction
         :param selection_parse:  The parsed Scrall select action group
         :param activity_data:
-        :return: The select action id, the output flow, and any scalar flows input for attribute comparison
         """
         # Save attribute values that we will need when creating the various select subsystem
         # classes
@@ -45,33 +43,32 @@ class RestrictAction:
 
         # Populate the Action superclass instance and obtain its action_id
         Transaction.open(db=mmdb, name=tr_Restrict_Action)
-        action_id = Action.populate(tr=tr_Restrict_Action, anum=anum, domain=domain, action_type="restrict")
+        self.action_id = Action.populate(tr=tr_Restrict_Action, anum=anum, domain=domain, action_type="restrict")
 
         # Populate the output Table Flow using same Table as input flow
-        output_relation_flow = Flow.populate_relation_flow_by_reference(ref_flow=input_relation_flow, anum=anum,
-                                                                        domain=domain)
+        self.output_relation_flow = Flow.populate_relation_flow_by_reference(ref_flow=input_relation_flow, anum=anum,
+                                                                             domain=domain)
 
         # Walk through the criteria parse tree storing any attributes or input flows
-        rcond = RestrictCondition(tr=tr_Restrict_Action, action_id=action_id, input_nsflow=input_relation_flow,
+        rcond = RestrictCondition(tr=tr_Restrict_Action, action_id=self.action_id, input_nsflow=input_relation_flow,
                                   selection_parse=selection_parse, activity_data=activity_data)
-        sflows = rcond.input_scalar_flows
+        self.sflows = rcond.input_scalar_flows
         # The first two return values are relevant only to instance selection (Select Action)
         # Restrict action does not use the returned cardinality since output is always a Table Flow
         # Nor does it use the comparision critieria to test for identifier selection
 
         Relvar.insert(db=mmdb, tr=tr_Restrict_Action, relvar='Table_Restriction_Condition', tuples=[
-            Table_Restriction_Condition_i(Restrict_action=action_id, Activity=anum, Domain=domain)
+            Table_Restriction_Condition_i(Restrict_action=self.action_id, Activity=anum, Domain=domain)
         ])
         Relvar.insert(db=mmdb, tr=tr_Restrict_Action, relvar='Relational_Action', tuples=[
-            Relational_Action_i(ID=action_id, Activity=anum, Domain=domain)
+            Relational_Action_i(ID=self.action_id, Activity=anum, Domain=domain)
         ])
         Relvar.insert(db=mmdb, tr=tr_Restrict_Action, relvar='Table_Action', tuples=[
-            Table_Action_i(ID=action_id, Activity=anum, Domain=domain,
-                           Input_a_flow=input_relation_flow.fid, Output_flow=output_relation_flow.fid)
+            Table_Action_i(ID=self.action_id, Activity=anum, Domain=domain,
+                           Input_a_flow=input_relation_flow.fid, Output_flow=self.output_relation_flow.fid)
         ])
         Relvar.insert(db=mmdb, tr=tr_Restrict_Action, relvar='Restrict_Action', tuples=[
-            Restrict_Action_i(ID=action_id, Activity=anum, Domain=domain)
+            Restrict_Action_i(ID=self.action_id, Activity=anum, Domain=domain)
         ])
         # We now have a transaction with all select-action instances, enter into the metamodel db
         Transaction.execute(db=mmdb, name=tr_Restrict_Action)  # Restrict Action
-        return action_id, output_relation_flow, sflows
