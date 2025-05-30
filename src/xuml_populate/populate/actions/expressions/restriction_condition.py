@@ -239,7 +239,7 @@ class RestrictCondition:
                     pass
                 case _:
                     raise Exception
-        self.expression = text
+        return text
 
     def pop_xi_comparison_criterion(self, attr: str):
         """
