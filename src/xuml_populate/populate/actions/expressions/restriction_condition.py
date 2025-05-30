@@ -73,11 +73,13 @@ class RestrictCondition:
         # So elaborate the parse elminating our shorthand
         self.cardinality = selection_parse.card
         if type(criteria).__name__ == 'N_a':
-            self.walk_criteria(operands=[criteria])
+            self.expression = self.walk_criteria(operands=[criteria])
+            pass
             # criteria = BOOL_a(op='==', operands=[criteria, N_a(name='true')])
             # Name only (no explicit operator or operand)
         else:
-            self.walk_criteria(operands=criteria.operands, operator=criteria.op)
+            self.expression = self.walk_criteria(operands=criteria.operands, operator=criteria.op)
+            pass
         # Walk the parse tree and save all attributes, ops, values, and input scalar flows
         # Populate the Restriction Condition class
         Relvar.insert(db=mmdb, tr=tr, relvar='Restriction_Condition', tuples=[
@@ -99,7 +101,7 @@ class RestrictCondition:
         :return: Flattened selection expression as a string
         """
         attr_set = attr  # Has an attribute been set for this invocation?
-        text = f" {'' if not operator else operator} "  # Flatten operator into temporary string
+        text = ""
         assert len(operands) <= 2
         for o in operands:
             match type(o).__name__:
@@ -111,13 +113,15 @@ class RestrictCondition:
                         # We assume that attribute names are capitalized so the name doubling shorthand for
                         # params only works if this convention is followed.
                         Attribute.scalar(name=o.name.capitalize(), tname=self.input_nsflow.tname, domain=self.domain)
-                        self.pop_xi_comparison_criterion(attr=o.name)
+                        criterion_id = self.pop_xi_comparison_criterion(attr=o.name)
                     else:
                         # We know this is not an Attribute since it is a scalar flow label coming in as a Parameter
-                        self.pop_comparison_criterion(attr=attr_set.name, op=operator, scalar_flow_label=o.name)
-                    text += f" {o.name}"
+                        criterion_id = self.pop_comparison_criterion(attr=attr_set.name, op=operator, scalar_flow_label=o.name)
+                    text += f" {criterion_id}"
                 case 'N_a':
                     if not operator or operator in {'AND', 'OR'}:
+                        if operator in {'AND', 'OR'}:
+                            text += f" {operator}"
                         # This covers shorthand cases like:
                         #     ( Inservice ) -> Boolean equivalence: ( Inservice == True )
                         #     ( Held AND Blocked ) ->   same: ( Held == True AND Blocked == True )
@@ -137,11 +141,11 @@ class RestrictCondition:
                         # Comparison Criterion
                         if scalar == 'Boolean':
                             # Populate a simple equivalence criterion
-                            self.pop_boolean_equivalence_criterion(not_op=False, attr=o.name, value="true")
-                            text += f"{o.name} == true"
+                            criterion_id = self.pop_boolean_equivalence_criterion(not_op=False, attr=o.name, value="true")
                         else:
                             # Populate a comparison
-                            self.pop_xi_comparison_criterion(attr=o.name)
+                            criterion_id = self.pop_xi_comparison_criterion(attr=o.name)
+                        text += f" {criterion_id}"
                     elif not attr_set:
                         # We know that the operator is a comparison op (==, >=, etc) which means that
                         # the first operand is an Attribute and the second is a scalar expression
@@ -159,24 +163,22 @@ class RestrictCondition:
                         if o.name.startswith('_'):
                             # This name is an enum value
                             # TODO: Validate the enum value as a member of the Attribute's Scalar
-                            self.pop_equivalence_criterion(attr=attr_set.name, op=operator, value=o.name,
+                            criterion_id = self.pop_equivalence_criterion(attr=attr_set.name, op=operator, value=o.name,
                                                           scalar=attr_set.scalar)
                         elif (n := o.name.lower()) in {'true', 'false'}:
                             # This name is a boolean value
-                            self.pop_boolean_equivalence_criterion(not_op=False, attr=attr_set, value=n)
+                            criterion_id = self.pop_boolean_equivalence_criterion(not_op=False, attr=attr_set, value=n)
                         else:
                             # It must be the name of a scalar flow that should have been set with some value
-                            self.pop_comparison_criterion(scalar_flow_label=o.name, attr=attr_set.name, op=operator)
+                            criterion_id = self.pop_comparison_criterion(scalar_flow_label=o.name, attr=attr_set.name, op=operator)
+                        text += f" {criterion_id}"
 
-                        # Update the text expression
-                        if not attr_set:
-                            text = f"{o.name} {text}"
-                        else:
-                            text = f"{text} {o.name}"
                 case 'BOOL_a':
-                    text += self.walk_criteria(operands=o.operands, operator=o.op, attr=attr_set)
+                    criterion_id = self.walk_criteria(operands=o.operands, operator=o.op, attr=attr_set)
+                    text += f" {criterion_id}"
                 case 'MATH_a':
-                    text += self.walk_criteria(operands=o.operands, operator=o.op, attr=attr_set)
+                    criterion_id = self.walk_criteria(operands=o.operands, operator=o.op, attr=attr_set)
+                    text += f" {criterion_id}"
                 case 'UNARY_a':
                     pass # TODO: tbd
                 case 'INST_PROJ_a':
@@ -205,8 +207,8 @@ class RestrictCondition:
                                     )  # Select Action transaction is open
                                     sflow = extract_action.output_sflow
                                 # Now populate a comparison criterion
-                                self.pop_comparison_criterion(attr=o.projection.attrs[0].name, scalar_flow=sflow, op=operator)
-                                text += "<projection>"
+                                criterion_id = self.pop_comparison_criterion(attr=o.projection.attrs[0].name, scalar_flow=sflow, op=operator)
+                                text += f" {criterion_id}"
                             else:
                                 # This must be a Scalar Flow
                                 # TODO: check need for mmdb param
@@ -218,21 +220,8 @@ class RestrictCondition:
                         case 'IN_a':
                             pass
                         case 'INST_a':
-                            i = o.iset.components
-                            if len(i) == 1:
-                                match type(i[0]).__name__:
-                                    case 'Order_name_a':
-                                        # This is a Ranking Criterion
-                                        attr_name = i[0].name.name
-                                        order = i[0].order
-                                        self.pop_ranking_criterion(order=order, attr=attr_name)
-                                        attr_set = attr_name
-                                        text = f"{order.upper()}({attr_name}) " + text
-                                        pass
-                                    case _:
-                                        raise ActionException
-                            else:
-                                raise ActionException
+                            pass
+                            # TODO: create what's needed when we hit this case (previously order expr)
                         case _:
                             raise ActionException
                     # TODO: Now process the projection
@@ -241,7 +230,7 @@ class RestrictCondition:
                     raise Exception
         return text
 
-    def pop_xi_comparison_criterion(self, attr: str):
+    def pop_xi_comparison_criterion(self, attr: str) -> int:
         """
         Let's say that we are performing a select/restrict on some Class and comparing the value of some
         attribute named X on that Class. If the executing instance (xi) also has an attribute named X,
@@ -259,17 +248,17 @@ class RestrictCondition:
                                             anum=self.anum, domain=self.domain)
         assert len(read_flows) == 1
         # Since we are reading a single attribute, assume only one output flow
-        self.pop_comparison_criterion(attr=attr, op='==', scalar_flow=read_flows[0])
+        return self.pop_comparison_criterion(attr=attr, op='==', scalar_flow=read_flows[0])
 
     def pop_comparison_criterion(self, attr: str, op: str, scalar_flow_label: Optional[str] = None,
-                                 scalar_flow: Optional[Flow_ap] = None):
+                                 scalar_flow: Optional[Flow_ap] = None) -> int:
         """
 
         :param attr:
         :param op:
         :param scalar_flow_label:
         :param scalar_flow:
-        :return:
+        :return: criterion id
         """
         if not scalar_flow:
             if not scalar_flow_label:
@@ -286,12 +275,13 @@ class RestrictCondition:
                                    Comparison=op, Value=sflow.fid, Domain=self.domain)
         ])
         self.comparison_criteria.append(Attribute_Comparison(attr, op))
+        return criterion_id
 
     def pop_criterion(self, attr: str) -> int:
         """
 
         :param attr:
-        :return:
+        :return: criterion id
         """
         self.criterion_ctr += 1
         criterion_id = self.criterion_ctr
@@ -301,7 +291,7 @@ class RestrictCondition:
         ])
         return criterion_id
 
-    def pop_equivalence_criterion(self, attr: str, op: str, value: str, scalar: str):
+    def pop_equivalence_criterion(self, attr: str, op: str, value: str, scalar: str) -> int:
         """
         Populates either a boolean or enum equivalence
 
@@ -318,8 +308,9 @@ class RestrictCondition:
                                     Attribute=attr, Domain=self.domain, Operation=op,
                                     Value=value, Scalar=scalar)
         ])
+        return criterion_id
 
-    def pop_boolean_equivalence_criterion(self, not_op: bool, attr: str, value: str):
+    def pop_boolean_equivalence_criterion(self, not_op: bool, attr: str, value: str) -> int:
         """
         An Equivalence Criterion is populated when a boolean value is compared
         against an Attribute typed Boolean
@@ -327,6 +318,7 @@ class RestrictCondition:
         :param not_op: True if attribute preceded by NOT operator in expression
         :param attr: Attribute name
         :param value:  Attribute is compared to either "true" / "false"
+        :return: criterion id
         """
-        self.pop_equivalence_criterion(attr=attr, op="ne" if not_op else "eq", value=value, scalar="Boolean")
+        return self.pop_equivalence_criterion(attr=attr, op="ne" if not_op else "eq", value=value, scalar="Boolean")
 
