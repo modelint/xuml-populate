@@ -66,7 +66,7 @@ Traverse_Action_i = namedtuple('Traverse_Action_i', 'ID Activity Domain Path Sou
 
 # Action subsystem
 Action_i = namedtuple('Action_i', 'ID Activity Domain Type')
-Flow_Dependency_i = namedtuple('Flow_Dependency_i', 'From_action To_action Activity Domain Flow Conditional Merge')
+Flow_Dependency_i = namedtuple('Flow_Dependency_i', 'From_action To_action Activity Domain Flow')
 Wave_i = namedtuple('Wave_i', 'Number Activity Domain')
 Wave_Assignment_i = namedtuple('Wave_Assignment_i', 'Action Activity Domain Wave')
 

@@ -286,9 +286,7 @@ class MethodActivity:
         # Initialize dict with key for each flow, status to be determined
         R = f"Activity:<{self.anum}>, Domain:<{self.domain}>"
         flow_r = Relation.restrict(db=mmdb, relation='Flow', restriction=R)
-        # TODO: Not sure we need the dest, merge, or conditional attributes
-        flow_path = {f['ID']: {'source': set(), 'dest': set(), 'merge': None, 'available': False,
-                               'conditional': False} for f in flow_r.body}
+        flow_path = {f['ID']: {'source': set(), 'dest': set(), 'available': False} for f in flow_r.body}
 
         # Now proceed through each flow usage class (actions, cases, etc)
         for flow_header in flow_attrs:
@@ -298,27 +296,18 @@ class MethodActivity:
             flow_usage_instances = flow_usage_r.body
 
             for flow_usage in flow_usage_instances:  # For each instance of this usage
-                if flow_header.id_attr:
-                    # If the header specifies an action id
-                    if flow_header.in_attr:
-                        # Header specifies an input flow, thus a destination action
-                        input_flow = flow_usage[flow_header.in_attr]
-                        if input_flow in flow_path[input_flow]['dest']:
-                            pass  # Dest added previously
-                        flow_path[input_flow]['dest'].add(flow_usage[flow_header.id_attr])
-                    if flow_header.out_attr:
-                        output_flow = flow_usage[flow_header.out_attr]
-                        if output_flow in flow_path[output_flow]['source']:
-                            pass  # Source added previously
-                        flow_path[output_flow]['source'].add(flow_usage[flow_header.id_attr])
-                        if flow_header.cname == 'Case':
-                            flow_path[output_flow]['conditional'] = True
-                else:
-                    # Usage does not specify any action (conditional)
+                # If the header specifies an action id
+                if flow_header.in_attr:
+                    # Header specifies an input flow, thus a destination action
                     input_flow = flow_usage[flow_header.in_attr]
-                    pass
-                    # merge_flow = flow_usage[flow_header.out_attr]
-                    # flow_path[input_flow]['merge'] = merge_flow
+                    if input_flow in flow_path[input_flow]['dest']:
+                        pass  # Dest added previously
+                    flow_path[input_flow]['dest'].add(flow_usage[flow_header.id_attr])
+                if flow_header.out_attr:
+                    output_flow = flow_usage[flow_header.out_attr]
+                    if output_flow in flow_path[output_flow]['source']:
+                        pass  # Source added previously
+                    flow_path[output_flow]['source'].add(flow_usage[flow_header.id_attr])
 
         # Mark all flows in method that are available in the first wave of execution
 
@@ -344,11 +333,6 @@ class MethodActivity:
         for ca_flow in result.body:
             flow_path[ca_flow['Output_flow']]['available'] = True
 
-        # Resolve any merged flows into the data switch output
-        for f, p in flow_path.items():
-            if p['merge']:
-                p['dest'].update(flow_path[p['merge']]['dest'])
-
         for f, p in flow_path.items():
             if not (p['source'] and p['dest']):
                 continue
@@ -356,8 +340,7 @@ class MethodActivity:
                 for dest_action in p['dest']:
                     Relvar.insert(db=mmdb, relvar='Flow_Dependency', tuples=[
                         Flow_Dependency_i(From_action=source_action, To_action=dest_action,
-                                          Activity=self.activity_data['anum'], Domain=self.domain, Flow=f,
-                                          Conditional=p['conditional'], Merge=bool(p['merge']))
+                                          Activity=self.activity_data['anum'], Domain=self.domain, Flow=f)
                     ])
                 pass
             pass
