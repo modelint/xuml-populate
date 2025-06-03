@@ -37,7 +37,8 @@ flow_attrs = [
     UsageAttrs(cname='Read_Action', id_attr='ID', in_attr='Instance_flow', out_attr=None),
     UsageAttrs(cname='Attribute_Read_Access', id_attr='Read_action', in_attr=None, out_attr='Output_flow'),
     UsageAttrs(cname='Comparison_Criterion', id_attr='Action', in_attr='Value', out_attr=None),
-    UsageAttrs(cname='Gate_Input', id_attr=None, in_attr='Input_flow', out_attr='Output_flow'),
+    UsageAttrs(cname='Gate_Action', id_attr='ID', in_attr=None, out_attr='Output_flow'),
+    UsageAttrs(cname='Gate_Input', id_attr='Gate_action', in_attr='Input_flow', out_attr=None),
     UsageAttrs(cname='Case', id_attr='Switch_action', in_attr=None, out_attr='Flow'),
     UsageAttrs(cname='Control_Dependency', id_attr='Action', in_attr='Control_flow', out_attr=None),
     UsageAttrs(cname='Extract_Action', id_attr='ID', in_attr='Input_tuple', out_attr='Output_scalar'),
@@ -283,18 +284,18 @@ class MethodActivity:
         For each method activity, determine the flow dependencies among its actions and populate the Flow Dependency class
         """
         # Initialize dict with key for each flow, status to be determined
-        R = f"Domain:<{self.domain}>"
-        result = Relation.restrict(db=mmdb, relation='Flow', restriction=R)
+        R = f"Activity:<{self.anum}>, Domain:<{self.domain}>"
+        flow_r = Relation.restrict(db=mmdb, relation='Flow', restriction=R)
         # TODO: Not sure we need the dest, merge, or conditional attributes
         flow_path = {f['ID']: {'source': set(), 'dest': set(), 'merge': None, 'available': False,
-                               'conditional': False} for f in result.body}
+                               'conditional': False} for f in flow_r.body}
 
         # Now proceed through each flow usage class (actions, cases, etc)
         for flow_header in flow_attrs:
             # Get all instances below the flow_header
-            R = f"Domain:<{self.domain}>"
-            result = Relation.restrict(db=mmdb, relation=flow_header.cname, restriction=R)
-            flow_usage_instances = result.body
+            R = f"Activity:<{self.anum}>, Domain:<{self.domain}>"
+            flow_usage_r = Relation.restrict(db=mmdb, relation=flow_header.cname, restriction=R)
+            flow_usage_instances = flow_usage_r.body
 
             for flow_usage in flow_usage_instances:  # For each instance of this usage
                 if flow_header.id_attr:
@@ -315,8 +316,9 @@ class MethodActivity:
                 else:
                     # Usage does not specify any action (conditional)
                     input_flow = flow_usage[flow_header.in_attr]
-                    merge_flow = flow_usage[flow_header.out_attr]
-                    flow_path[input_flow]['merge'] = merge_flow
+                    pass
+                    # merge_flow = flow_usage[flow_header.out_attr]
+                    # flow_path[input_flow]['merge'] = merge_flow
 
         # Mark all flows in method that are available in the first wave of execution
 

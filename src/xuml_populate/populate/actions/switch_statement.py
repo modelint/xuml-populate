@@ -126,22 +126,23 @@ class SwitchStatement:
                 raise ActionException
             pass
         pass
-        # Data Flow Switch
+        # Gate Action
         # Create an output Data Flow for each multi case label
         output_flows = {}
+
+        # Populate the Gate Action and get an action id
+        gate_aid = Action.populate(tr=tr_Switch, anum=anum, domain=domain, action_type="gate")
         for mcl in multi_case_labels:
             output_flows[mcl] = Flow.populate_switch_output(label=mcl, ref_flow=mcl_flows[mcl][0],
                                                             anum=anum, domain=domain)
-            # Populate the Gate Action and get an action id
-            gate_aid = Action.populate(tr=tr_Switch, anum=anum, domain=domain, action_type="gate")
             Relvar.insert(db=mmdb, tr=tr_Switch, relvar='Gate Action', tuples=[
                 Gate_Action_i(ID=gate_aid, Output_flow=output_flows[mcl].fid, Activity=anum, Domain=domain)
-            ])
+        ])
         for label, flows in mcl_flows.items():
             for f in flows:
                 Relvar.insert(db=mmdb, tr=tr_Switch, relvar='Gate Input', tuples=[
                     Gate_Input_i(Input_flow=f.fid, Activity=anum, Domain=domain,
-                                 Output_flow=output_flows[label].fid)
+                                 Gate_action=gate_aid)
                 ])
 
         # for sc, lfset in cls.labeled_outputs.items():
