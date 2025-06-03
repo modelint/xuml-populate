@@ -37,7 +37,7 @@ flow_attrs = [
     UsageAttrs(cname='Read_Action', id_attr='ID', in_attr='Instance_flow', out_attr=None),
     UsageAttrs(cname='Attribute_Read_Access', id_attr='Read_action', in_attr=None, out_attr='Output_flow'),
     UsageAttrs(cname='Comparison_Criterion', id_attr='Action', in_attr='Value', out_attr=None),
-    UsageAttrs(cname='Switched_Data_Flow', id_attr=None, in_attr='Input_flow', out_attr='Output_flow'),
+    UsageAttrs(cname='Gate_Input', id_attr=None, in_attr='Input_flow', out_attr='Output_flow'),
     UsageAttrs(cname='Case', id_attr='Switch_action', in_attr=None, out_attr='Flow'),
     UsageAttrs(cname='Control_Dependency', id_attr='Action', in_attr='Control_flow', out_attr=None),
     UsageAttrs(cname='Extract_Action', id_attr='ID', in_attr='Input_tuple', out_attr='Output_scalar'),

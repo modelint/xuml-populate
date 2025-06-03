@@ -12,7 +12,7 @@ from scrall.parse.visitor import Switch_a
 from xuml_populate.populate.mmclass_nt import (Switch_Action_i, Scalar_Switch_Action_i, Case_i, Match_Value_i,
                                                Control_Dependency_i, Result_i, Sequence_Flow_i,
                                                Decision_Input_i, Decision_Action_i,
-                                               Subclass_Switch_Action_i, Switched_Data_Flow_i, Data_Flow_Switch_i)
+                                               Subclass_Switch_Action_i, Gate_Action_i, Gate_Input_i)
 from pyral.relvar import Relvar
 from pyral.relation import Relation  # Keep here for debugging
 from pyral.transaction import Transaction
@@ -132,14 +132,16 @@ class SwitchStatement:
         for mcl in multi_case_labels:
             output_flows[mcl] = Flow.populate_switch_output(label=mcl, ref_flow=mcl_flows[mcl][0],
                                                             anum=anum, domain=domain)
-            Relvar.insert(db=mmdb, tr=tr_Switch, relvar='Data_Flow_Switch', tuples=[
-                Data_Flow_Switch_i(Output_flow=output_flows[mcl].fid, Activity=anum, Domain=domain)
+            # Populate the Gate Action and get an action id
+            gate_aid = Action.populate(tr=tr_Switch, anum=anum, domain=domain, action_type="gate")
+            Relvar.insert(db=mmdb, tr=tr_Switch, relvar='Gate Action', tuples=[
+                Gate_Action_i(ID=gate_aid, Output_flow=output_flows[mcl].fid, Activity=anum, Domain=domain)
             ])
         for label, flows in mcl_flows.items():
             for f in flows:
-                Relvar.insert(db=mmdb, tr=tr_Switch, relvar='Switched_Data_Flow', tuples=[
-                    Switched_Data_Flow_i(Input_flow=f.fid, Activity=anum, Domain=domain,
-                                         Output_flow=output_flows[label].fid)
+                Relvar.insert(db=mmdb, tr=tr_Switch, relvar='Gate Input', tuples=[
+                    Gate_Input_i(Input_flow=f.fid, Activity=anum, Domain=domain,
+                                 Output_flow=output_flows[label].fid)
                 ])
 
         # for sc, lfset in cls.labeled_outputs.items():
