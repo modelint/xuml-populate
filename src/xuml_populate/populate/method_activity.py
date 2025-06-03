@@ -285,6 +285,7 @@ class MethodActivity:
         # Initialize dict with key for each flow, status to be determined
         R = f"Domain:<{self.domain}>"
         result = Relation.restrict(db=mmdb, relation='Flow', restriction=R)
+        # TODO: Not sure we need the dest, merge, or conditional attributes
         flow_path = {f['ID']: {'source': set(), 'dest': set(), 'merge': None, 'available': False,
                                'conditional': False} for f in result.body}
 
