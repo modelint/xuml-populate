@@ -14,6 +14,7 @@ from scrall.parse.parser import ScrallParser
 # xUML Populate
 from xuml_populate.config import mmdb
 from xuml_populate.populate.method_activity import MethodActivity
+from xuml_populate.populate.state_activity import StateActivity
 from xuml_populate.populate.element import Element
 from xuml_populate.populate.actions.aparse_types import Activity_ap
 from xuml_populate.populate.mmclass_nt import (Activity_i, Asynchronous_Activity_i, State_Activity_i,
@@ -62,11 +63,14 @@ class Activity:
         """
         cls.domain = domain
         Anum = cls.populate(tr=tr, action_text=action_text, subsys=subsys, domain=domain, synchronous=True)
-        if cname not in cls.methods:
-            cls.methods[cname] = {
-                method: {'anum': Anum, 'domain': domain, 'text': action_text, 'parse': None}}
-        else:
-            cls.methods[cname][method] = {'anum': Anum, 'domain': domain, 'text': action_text, 'parse': None}
+        cls.methods.setdefault(cname, {})[method] = {
+            'anum': Anum, 'domain': domain, 'text': action_text, 'parse': None
+        }
+        # if cname not in cls.methods:
+        #     cls.methods[cname] = {
+        #         method: {'anum': Anum, 'domain': domain, 'text': action_text, 'parse': None}}
+        # else:
+        #     cls.methods[cname][method] = {'anum': Anum, 'domain': domain, 'text': action_text, 'parse': None}
         # Parse the scrall and save for later population
         cls.methods[cname][method]['parse'] = ScrallParser.parse_text(scrall_text=action_text, debug=False)
         pass
@@ -143,11 +147,11 @@ class Activity:
             parsed_activity = ScrallParser.parse_text(scrall_text=action_text, debug=False)
         else:
             parsed_activity = None
-        cls.sm[state_model][state] = parsed_activity  # To subsys_parse parsed actions for debugging
         # cls.populate_activity(text=action_text, pa=parsed_activity)
 
         # Create the Susbystem Element and obtain a unique Anum
         Anum = cls.populate(tr=tr, action_text=action_text, subsys=subsys, domain=domain, synchronous=False)
+        cls.sm[state_model][state] = {'anum': Anum, 'parse': parsed_activity[0], 'text': action_text, 'domain': domain}
         Relvar.insert(db=mmdb, tr=tr, relvar='State_Activity', tuples=[
             State_Activity_i(Anum=Anum, State=state, State_model=state_model, Domain=domain)
         ])
@@ -165,9 +169,13 @@ class Activity:
 
                 ma = MethodActivity(name=method_name, class_name=class_name, method_data=method_data,
                                     activity_data=activity_data, domain=cls.domain)
+                pass
         pass
         for class_name, sm in cls.sm.items():
-            pass
+            for state_name, activity_parse in sm.items():
+                sa = StateActivity(state_name=state_name, class_name=class_name,
+                                   activity_data=activity_parse, domain=cls.domain)
+                pass
 
     # TODO: Populate all state activities
     # TODO: Populate all operation activities
