@@ -37,7 +37,7 @@ transitions
 --
 state Registering floor call( dir: Direction )
 activity
-    *Floor Service( Direction: in.dir ) me, /R3/Bank Level
+    *Floor Service( Direction: ^dir ) &R49 me, /R3/Bank Level
     Floor call registered -> me
 transitions
     Floor call registered > Requesting service
@@ -77,8 +77,8 @@ transitions
 --
 state Clear floor request( dir: Direction )
 activity
-    Clear floor request( in.dir ) -> /R49/Bank Level
-    !* /R49/Floor Service( Direction: in.dir )
+    Clear floor request( ^dir ) -> /R49/Bank Level
+    !* /R49/Floor Service( Direction: ^dir )
     Check stop request -> me
 transitions
     Check stop request > Clear stop request

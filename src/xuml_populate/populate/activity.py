@@ -166,6 +166,8 @@ class Activity:
                 ma = MethodActivity(name=method_name, class_name=class_name, method_data=method_data,
                                     activity_data=activity_data, domain=cls.domain)
         pass
+        for class_name, sm in cls.sm.items():
+            pass
 
     # TODO: Populate all state activities
     # TODO: Populate all operation activities
