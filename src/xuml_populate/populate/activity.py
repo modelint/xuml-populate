@@ -6,19 +6,23 @@ anum.py – Populate an Activity
 import logging
 from typing import NamedTuple
 
+
 # Model Integration
 from pyral.relvar import Relvar
 from pyral.relation import Relation
 from scrall.parse.parser import ScrallParser
 
 # xUML Populate
+from xuml_populate.pop_types import SMType
 from xuml_populate.config import mmdb
+from xuml_populate.populate.flow import Flow
 from xuml_populate.populate.method_activity import MethodActivity
 from xuml_populate.populate.state_activity import StateActivity
 from xuml_populate.populate.element import Element
 from xuml_populate.populate.actions.aparse_types import Activity_ap
 from xuml_populate.populate.mmclass_nt import (Activity_i, Asynchronous_Activity_i, State_Activity_i,
-                                               Synchronous_Activity_i)
+                                               Synchronous_Activity_i, Lifecycle_Activity_i,
+                                               Multiple_Assigner_Activity_i, Single_Assigner_Activity_i)
 
 _logger = logging.getLogger(__name__)
 
@@ -126,12 +130,13 @@ class Activity:
         return Anum
 
     @classmethod
-    def populate_state(cls, tr: str, state: str, state_model: str, actions: str,
+    def populate_state(cls, tr: str, state: str, state_model: str, sm_type: SMType, actions: str,
                        subsys: str, domain: str, parse_actions: bool) -> str:
         """
         :param tr:  Name of the transaction
         :param state: State name
         :param state_model:  State model name
+        :param sm_type:  Lifecycle, Single or Multiple assigner
         :param actions:
         :param subsys:
         :param domain:
@@ -151,10 +156,29 @@ class Activity:
 
         # Create the Susbystem Element and obtain a unique Anum
         Anum = cls.populate(tr=tr, action_text=action_text, subsys=subsys, domain=domain, synchronous=False)
-        cls.sm[state_model][state] = {'anum': Anum, 'parse': parsed_activity[0], 'text': action_text, 'domain': domain}
+        cls.sm[state_model][state] = {'anum': Anum, 'sm_type': sm_type, 'parse': parsed_activity[0],
+                                      'text': action_text, 'domain': domain}
         Relvar.insert(db=mmdb, tr=tr, relvar='State_Activity', tuples=[
-            State_Activity_i(Anum=Anum, State=state, State_model=state_model, Domain=domain)
+            State_Activity_i(Anum=Anum, Domain=domain)
         ])
+        match sm_type:
+            case SMType.LIFECYCLE:
+                # Populate the executing instance (me) flow
+                xi_flow = Flow.populate_instance_flow(cname=state_model, anum=Anum, domain=domain,
+                                                      label='me', single=True, activity_tr=tr)
+                Relvar.insert(db=mmdb, tr=tr, relvar='Lifecycle_Activity', tuples=[
+                    Lifecycle_Activity_i(Anum=Anum, Domain=domain, Executing_instance_flow=xi_flow.fid)
+                ])
+            case SMType.MA:
+                # Populate the executing instance (me) flow
+                partition_flow = Flow.populate_instance_flow(cname=state_model, anum=Anum, domain=domain,
+                                                             label='partition_instance', single=True, activity_tr=tr)
+                Relvar.insert(db=mmdb, tr=tr, relvar='Multiple_Assigner_Activity', tuples=[
+                    Multiple_Assigner_Activity_i(Anum=Anum, Domain=domain,
+                                                 Partitioning_instance_flow=partition_flow.fid)
+                ])
+            case SMType.SA:
+                Single_Assigner_Activity_i(Anum=Anum, Domain=domain)
         return Anum
 
 
@@ -171,9 +195,9 @@ class Activity:
                                     activity_data=activity_data, domain=cls.domain)
                 pass
         pass
-        for class_name, sm in cls.sm.items():
+        for state_model, sm in cls.sm.items():
             for state_name, activity_parse in sm.items():
-                sa = StateActivity(state_name=state_name, class_name=class_name,
+                sa = StateActivity(state_name=state_name, state_model=state_model,
                                    activity_data=activity_parse, domain=cls.domain)
                 pass
 

@@ -4,6 +4,7 @@ state_model.py – Process parsed lifecycle to p
 
 # System
 import logging
+from enum import Enum
 
 # Model Integration
 from xsm_parser.state_model_parser import StateModel_a
@@ -13,6 +14,7 @@ from pyral.transaction import Transaction
 
 
 # xUML Populate
+from xuml_populate.pop_types import SMType
 from xuml_populate.config import mmdb
 from xuml_populate.exceptions.mp_exceptions import MismatchedStateSignature, BadStateModelName
 from xuml_populate.populate.flow import Flow
@@ -30,7 +32,6 @@ ISP = 'Initial_Pseudo_State'  # Name of initial pseudo state
 
 _logger = logging.getLogger(__name__)
 tr_SM = 'State Model'
-
 
 class StateModel:
     """
@@ -64,6 +65,7 @@ class StateModel:
             State_Model_i(Name=self.sm_name, Domain=sm.domain)
         ])
         if self.cname:  # Lifecycle state model
+            self.sm_type = SMType.LIFECYCLE
             _logger.info(f"Populating Lifecycle [{self.cname}]")
             Relvar.insert(db=mmdb, tr=tr_SM, relvar='Lifecycle', tuples=[
                 Lifecycle_i(Class=self.cname, Domain=sm.domain)
@@ -75,11 +77,13 @@ class StateModel:
             ])
             if self.pclass:
                 # Multiple assigner with a partitioning class
+                self.sm_type = SMType.MA
                 Relvar.insert(db=mmdb, tr=tr_SM, relvar='Multiple_Assigner', tuples=[
                     Multiple_Assigner_i(Rnum=self.rnum, Partitioning_class=self.pclass, Domain=sm.domain)
                 ])
             else:
                 # Single assigner
+                self.sm_type = SMType.SA
                 Relvar.insert(db=mmdb, tr=tr_SM, relvar='Single_Assigner', tuples=[
                     Single_Assigner_i(Rnum=self.rnum, Domain=sm.domain)
                 ])
@@ -94,7 +98,8 @@ class StateModel:
             anum = Activity.populate_state(tr=tr_SM,
                                            state=s.state.name, subsys=subsys, actions=s.activity,
                                            state_model=self.sm_name, domain=sm.domain,
-                                           parse_actions=self.parse_actions
+                                           parse_actions=self.parse_actions,
+                                           sm_type=self.sm_type
                                            )
             # Signature
             sig_params = frozenset(s.state.signature)

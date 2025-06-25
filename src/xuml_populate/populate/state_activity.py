@@ -12,6 +12,7 @@ from pyral.rtypes import JoinCmd, ProjectCmd, SetCompareCmd, SetOp, Attribute, S
 
 # xUML Populate
 from xuml_populate.config import mmdb
+from xuml_populate.pop_types import SMType
 from xuml_populate.populate.actions.aparse_types import Activity_ap
 from xuml_populate.populate.xunit import ExecutionUnit
 from xuml_populate.populate.mmclass_nt import Flow_Dependency_i, Wave_i, Wave_Assignment_i
@@ -50,10 +51,10 @@ Action_i = namedtuple('Action_i', 'ID')
 
 class StateActivity:
 
-    def __init__(self, state_name: str, class_name: str, activity_data, domain: str):
+    def __init__(self, state_name: str, state_model: str, activity_data, domain: str):
 
         self.state_name = state_name
-        self.class_name = class_name
+        self.state_model = state_model
         self.activity_text = activity_data['text']
         self.anum = activity_data['anum']
         self.activity_parse = activity_data['parse']
@@ -61,6 +62,7 @@ class StateActivity:
         self.wave_ctr = 1  # Initialize wave counter
         self.waves = dict()
         self.xactions = None
+        self.sm_type = activity_data["sm_type"]
         #
         self.pop_xunits()
         # self.pop_flow_dependencies()
@@ -351,18 +353,18 @@ class StateActivity:
 
     def pop_xunits(self):
 
-        _logger.info(f"Populating method execution units: {self.class_name}.{self.name}")
+        _logger.info(f"Populating state activity execution units: {self.state_model}")
         # Look up signature
-        R = f"Method:<{self.name}>, Class:<{self.class_name}>, Domain:<{self.domain}>"
-        result = Relation.restrict(db=mmdb, relation='Method_Signature', restriction=R)
+        R = f"State_model:<{self.state_model}>, Domain:<{self.domain}>"
+        result = Relation.restrict(db=mmdb, relation='State_Signature', restriction=R)
         if not result.body:
             # TODO: raise exception here
             pass
         signum = result.body[0]['SIGnum']
 
         # Look up xi flow
-        R = f"Name:<{self.name}>, Class:<{self.class_name}>, Domain:<{self.domain}>"
-        result = Relation.restrict(db=mmdb, relation='Method', restriction=R)
+        R = f"Anum:<{self.anum}>, Domain:<{self.domain}>"
+        result = Relation.restrict(db=mmdb, relation='Lifecycle Activity', restriction=R)
         if not result.body:
             # TODO: raise exception here
             pass
@@ -379,14 +381,8 @@ class StateActivity:
         # Here we process each statement set in the Method (Activity)
         for count, xunit in enumerate(aparse[0]):  # Use count for debugging
             c = count + 1
-            if type(xunit.statement_set.statement).__name__ == 'Output_Flow_a':
-                # This is the statement set that returns the Method's value
-                ExecutionUnit.process_synch_output(activity_data=activity_detail,
-                                                   synch_output=xunit.statement_set.statement)
-            else:
-                # This is a statement set that does not return the Method's value
-                boundary_actions = ExecutionUnit.process_method_statement_set(
-                    activity_data=activity_detail, statement_set=xunit.statement_set)
+            boundary_actions = ExecutionUnit.process_method_statement_set(
+                activity_data=activity_detail, statement_set=xunit.statement_set)
 
             # Process any input or output tokens
             # if output_tk not in seq_flows:
