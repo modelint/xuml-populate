@@ -23,7 +23,8 @@ Attribute_Comparison = namedtuple('Attribute_Comparison', 'attr op')
 """ An attribute compared in a selection phrase """
 Boundary_Actions = namedtuple("Boundary_Actions", "ain aout")
 """ Initial actions not dependent on any data flow input and output actions that do not flow to any other action"""
-Activity_ap = namedtuple("Activity_ap", "anum domain cname sname eename opname xiflow activity_path scrall_text")
+Activity_ap = namedtuple("Activity_ap", "anum domain cname sname smtype eename opname xiflow piflow "
+                                        "activity_path scrall_text")
 """ Activity identification and diagnostic data """
 
 class Flow_ap(NamedTuple):

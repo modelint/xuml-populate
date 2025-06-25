@@ -64,6 +64,7 @@ class StateActivity:
         self.xactions = None
         self.sm_type = activity_data["sm_type"]
         #
+        Relvar.printall(db=mmdb)
         self.pop_xunits()
         # self.pop_flow_dependencies()
         # self.assign_waves()
@@ -362,24 +363,38 @@ class StateActivity:
             pass
         signum = result.body[0]['SIGnum']
 
-        # Look up xi flow
-        R = f"Anum:<{self.anum}>, Domain:<{self.domain}>"
-        result = Relation.restrict(db=mmdb, relation='Lifecycle Activity', restriction=R)
-        if not result.body:
-            # TODO: raise exception here
-            pass
-        xi_flow_id = result.body[0]['Executing_instance_flow']
-        method_path = f"{self.domain}:{self.class_name}:{self.name}.mtd"
+        xi_flow_id = None
+        pi_flow_id = None
+        match self.sm_type:
+            case SMType.LIFECYCLE:
+                # Look up xi flow
+                R = f"Anum:<{self.anum}>, Domain:<{self.domain}>"
+                result = Relation.restrict(db=mmdb, relation='Lifecycle Activity', restriction=R)
+                if not result.body:
+                    # TODO: raise exception here
+                    pass
+                xi_flow_id = result.body[0]['Executing_instance_flow']
+            case SMType.MA:
+                R = f"Anum:<{self.anum}>, Domain:<{self.domain}>"
+                result = Relation.restrict(db=mmdb, relation='Multiple Assigner Activity', restriction=R)
+                if not result.body:
+                    # TODO: raise exception here
+                    pass
+                pi_flow_id = result.body[0]['Paritioning_instance_flow']
+            case SMType.SA:
+                pass  # No xi or pi flow (cannot reference self)
 
-        aparse = self.activity_data['parse']
-        activity_detail = Activity_ap(anum=self.activity_data['anum'], domain=self.domain,
-                                      cname=self.class_name, sname=None, eename=None, opname=self.name,
-                                      xiflow=xi_flow_id, activity_path=method_path, scrall_text=aparse[1])
+        state_path = f"{self.domain}:{self.state_model}.xsm"
+
+        activity_detail = Activity_ap(anum=self.anum, domain=self.domain,
+                                      cname=None, sname=None, smtype=self.sm_type, eename=None, opname=None,
+                                      xiflow=xi_flow_id, piflow=pi_flow_id,
+                                      activity_path=state_path, scrall_text=self.activity_text)
         seq_flows = {}
         seq_labels = set()
 
-        # Here we process each statement set in the Method (Activity)
-        for count, xunit in enumerate(aparse[0]):  # Use count for debugging
+        # Here we process each statement set in the State Activity
+        for count, xunit in enumerate(self.activity_parse):  # Use count for debugging
             c = count + 1
             boundary_actions = ExecutionUnit.process_method_statement_set(
                 activity_data=activity_detail, statement_set=xunit.statement_set)
