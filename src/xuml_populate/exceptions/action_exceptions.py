@@ -17,6 +17,12 @@ class UndefinedMethod(ActionException):
 class UndefinedSynchOutputExecutionUnit(ActionException):
     pass
 
+class MultipleAssignerPIFlowNotPopulated(ActionException):
+    pass
+
+class LifecycleXIFlowNotPopulated(ActionException):
+    pass
+
 class MethodXIFlowNotPopulated(ActionException):
     pass
 

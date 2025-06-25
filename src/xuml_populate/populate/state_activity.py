@@ -16,7 +16,8 @@ from xuml_populate.pop_types import SMType
 from xuml_populate.populate.actions.aparse_types import Activity_ap
 from xuml_populate.populate.xunit import ExecutionUnit
 from xuml_populate.populate.mmclass_nt import Flow_Dependency_i, Wave_i, Wave_Assignment_i
-from xuml_populate.exceptions.action_exceptions import MethodXIFlowNotPopulated
+from xuml_populate.exceptions.action_exceptions import MethodXIFlowNotPopulated, LifecycleXIFlowNotPopulated, \
+    MultipleAssignerPIFlowNotPopulated
 
 _logger = logging.getLogger(__name__)
 
@@ -64,12 +65,12 @@ class StateActivity:
         self.xactions = None
         self.sm_type = activity_data["sm_type"]
         #
-        Relvar.printall(db=mmdb)
         self.pop_xunits()
-        # self.pop_flow_dependencies()
+        self.pop_flow_dependencies()
         # self.assign_waves()
         # self.populate_waves()
 
+        Relvar.printall(db=mmdb)
         # Now we can populate the Wave and Wave Assignment relvars
         pass
 
@@ -284,7 +285,7 @@ class StateActivity:
 
     def pop_flow_dependencies(self):
         """
-        For each method activity, determine the flow dependencies among its actions and populate the Flow Dependency class
+        For each state activity, determine the flow dependencies among its actions and populate the Flow Dependency class
         """
         # Initialize dict with key for each flow, status to be determined
         R = f"Activity:<{self.anum}>, Domain:<{self.domain}>"
@@ -315,23 +316,34 @@ class StateActivity:
         # Mark all flows in method that are available in the first wave of execution
 
         # The single executing instance flow is available
-        R = f"Anum:<{self.activity_data['anum']}>, Domain:<{self.domain}>"
-        result = Relation.restrict(db=mmdb, relation='Method', restriction=R)
-        if not result.body:
-            msg = f"No executing instance populated for method: {self.domain}::{self.class_name}.{self.name}"
-            _logger.error(msg)
-            raise MethodXIFlowNotPopulated(msg)
-        method_xi_flow = result.body[0]['Executing_instance_flow']
-        flow_path[method_xi_flow]['available'] = True
+        if self.sm_type == SMType.LIFECYCLE:
+            R = f"Anum:<{self.anum}>, Domain:<{self.domain}>"
+            result = Relation.restrict(db=mmdb, relation='Lifecycle Activity', restriction=R)
+            if not result.body:
+                msg = f"No executing instance populated for state: {self.domain}::{self.state_model}.{self.state_name}"
+                _logger.error(msg)
+                raise LifecycleXIFlowNotPopulated(msg)
+            state_xi_flow = result.body[0]['Executing_instance_flow']
+            flow_path[state_xi_flow]['available'] = True
 
-        # All method parameter flows are available
-        R = f"Activity:<{self.activity_data['anum']}>, Domain:<{self.domain}>"
+        if self.sm_type == SMType.MA:
+            R = f"Anum:<{self.anum}>, Domain:<{self.domain}>"
+            result = Relation.restrict(db=mmdb, relation='Multiple Assigner Activity', restriction=R)
+            if not result.body:
+                msg = f"No partitioning instance populated for state: {self.domain}::{self.state_model}.{self.state_name}"
+                _logger.error(msg)
+                raise MultipleAssignerPIFlowNotPopulated(msg)
+            state_pi_flow = result.body[0]['Partitioning_instance_flow']
+            flow_path[state_pi_flow]['available'] = True
+
+        # All state parameter flows are available
+        R = f"Activity:<{self.anum}>, Domain:<{self.domain}>"
         result = Relation.restrict(db=mmdb, relation='Parameter', restriction=R)
         for pflow in result.body:
             flow_path[pflow['Input_flow']]['available'] = True
 
         # All class accessor flows are available
-        R = f"Activity:<{self.activity_data['anum']}>, Domain:<{self.domain}>"
+        R = f"Activity:<{self.anum}>, Domain:<{self.domain}>"
         result = Relation.restrict(db=mmdb, relation='Class_Accessor', restriction=R)
         for ca_flow in result.body:
             flow_path[ca_flow['Output_flow']]['available'] = True
@@ -343,7 +355,7 @@ class StateActivity:
                 for dest_action in p['dest']:
                     Relvar.insert(db=mmdb, relvar='Flow_Dependency', tuples=[
                         Flow_Dependency_i(From_action=source_action, To_action=dest_action,
-                                          Activity=self.activity_data['anum'], Domain=self.domain, Flow=f)
+                                          Activity=self.anum, Domain=self.domain, Flow=f)
                     ])
                 pass
             pass
