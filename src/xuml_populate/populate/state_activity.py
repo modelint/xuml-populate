@@ -67,8 +67,8 @@ class StateActivity:
         #
         self.pop_xunits()
         self.pop_flow_dependencies()
-        # self.assign_waves()
-        # self.populate_waves()
+        self.assign_waves()
+        self.populate_waves()
 
         Relvar.printall(db=mmdb)
         # Now we can populate the Wave and Wave Assignment relvars
@@ -195,7 +195,7 @@ class StateActivity:
         _logger.info("Assigning actions to waves")
 
         # Initialize the set of unexecuted Actions to be teh set of all Actions in this Activity
-        R = f"Activity:<{self.activity_data['anum']}>, Domain:<{self.domain}>"
+        R = f"Activity:<{self.anum}>, Domain:<{self.domain}>"
         Relation.restrict(db=mmdb, relation='Action', restriction=R)
         unex_actions = Relation.project(db=mmdb, attributes=("ID",), svar_name="unexecuted_actions")
         # Relation.print(db=mmdb, variable_name="unexecuted_actions")
