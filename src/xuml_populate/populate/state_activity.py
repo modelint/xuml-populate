@@ -399,7 +399,8 @@ class StateActivity:
         state_path = f"{self.domain}:{self.state_model}.xsm"
 
         activity_detail = Activity_ap(anum=self.anum, domain=self.domain,
-                                      cname=None, sname=None, smtype=self.sm_type, eename=None, opname=None,
+                                      cname=None, sname=self.state_name, state_model=self.state_model,
+                                      smtype=self.sm_type, eename=None, opname=None,
                                       xiflow=xi_flow_id, piflow=pi_flow_id,
                                       activity_path=state_path, scrall_text=self.activity_text)
         seq_flows = {}

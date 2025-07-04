@@ -1,0 +1,20 @@
+Boolean:
+  base : boolean
+  set : {}
+  unset : {}
+
+Direction:
+  base : enum
+  toggle : {}
+
+Count:
+  base : integer
+  increment : {}
+  decrement : {}
+  reset : {}
+
+Distance:
+  base : double
+
+Speed:
+  base : double

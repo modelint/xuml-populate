@@ -371,8 +371,9 @@ class MethodActivity:
 
         aparse = self.activity_data['parse']
         activity_detail = Activity_ap(anum=self.activity_data['anum'], domain=self.domain,
-                                      cname=self.class_name, sname=None, smtype=None, eename=None, opname=self.name,
-                                      xiflow=xi_flow_id, piflow=None, activity_path=method_path, scrall_text=aparse[1])
+                                      cname=self.class_name, sname=None, state_model=None, smtype=None, eename=None,
+                                      opname=self.name, xiflow=xi_flow_id, piflow=None,
+                                      activity_path=method_path, scrall_text=aparse[1])
         seq_flows = {}
         seq_labels = set()
 

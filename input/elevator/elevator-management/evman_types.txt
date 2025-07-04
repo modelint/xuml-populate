@@ -1,0 +1,219 @@
+
+-- Base_Type --
++----------+
+| Name     |
++==========+
+| String   |
+| Integer  |
+| Boolean  |
+| Rational |
+| Symbolic |
++----------+
+
+-- Boolean_Symbol_Pair --
++-------------+-------------+----------------+---------------+
+| Component   | User_type   | False_symbol   | True_symbol   |
++=============+=============+================+===============+
+| value       | Direction   | down           | up            |
++-------------+-------------+----------------+---------------+
+
+-- Component --
++--------+---------------+
+| Name   | User_type     |
++========+===============+
+| value  | Name          |
+| value  | Counter       |
+| value  | Level Name    |
+| value  | Distance      |
+| value  | Building Name |
+| value  | Bank Name     |
+| value  | Speed         |
+| value  | Duration      |
+| value  | Direction     |
++--------+---------------+
+
+-- Constraint --
++-------------+-------------+
+| Component   | User_type   |
++=============+=============+
+| value       | Name        |
+| value       | Counter     |
+| value       | Level Name  |
+| value       | Distance    |
+| value       | Duration    |
+| value       | Direction   |
++-------------+-------------+
+
+-- General_Rule --
++-------------+-------------+----------------+
+| Component   | User_type   | General_Rule   |
++=============+=============+================+
++-------------+-------------+----------------+
+
+-- Implementation --
++------------+-------------+-----------------+
+| Platform   | Base_type   | Physical_type   |
++============+=============+=================+
+| tclral     | String      | string          |
+| python     | String      | str             |
+| tclral     | Integer     | int             |
+| python     | Integer     | int             |
+| tclral     | Boolean     | boolean         |
+| python     | Boolean     | bool            |
+| tclral     | Rational    | double          |
+| python     | Rational    | float           |
+| tclral     | Symbolic    | string          |
+| python     | Symbolic    | enum            |
++------------+-------------+-----------------+
+
+-- Inheritance --
++---------------+------------------+
+| User_type     | Inherited_type   |
++===============+==================+
+| Name          | String           |
+| Counter       | Integer          |
+| Level Name    | String           |
+| Distance      | Rational         |
+| Building Name | Name             |
+| Bank Name     | Name             |
+| Speed         | Rational         |
+| Duration      | Rational         |
+| Direction     | Boolean          |
++---------------+------------------+
+
+-- Integer_Extent --
++-------------+-------------+---------+-------------+-------------+
+| Component   | User_type   |   Value | Direction   | Exclusive   |
++=============+=============+=========+=============+=============+
+| value       | Counter     |       0 | min         | False       |
++-------------+-------------+---------+-------------+-------------+
+
+-- Integer_Range --
++-------------+-------------+
+| Component   | User_type   |
++=============+=============+
+| value       | Counter     |
++-------------+-------------+
+
+-- Operand --
++------------+------------+--------+----------------+
+| Position   | Operator   | Type   | Operand_type   |
++============+============+========+================+
++------------+------------+--------+----------------+
+
+-- Operator --
++-----------+---------+
+| Name      | Type    |
++===========+=========+
+| set       | Boolean |
+| unset     | Boolean |
+| increment | Counter |
+| decrement | Counter |
+| reset     | Counter |
++-----------+---------+
+
+-- Operator_Exclusion --
++------------+------------------+------------+
+| Operator   | Inherited_type   | New_type   |
++============+==================+============+
++------------+------------------+------------+
+
+-- Platform --
++--------+
+| Name   |
++========+
+| tclral |
+| python |
++--------+
+
+-- Property --
++--------+--------+
+| Name   | Type   |
++========+========+
++--------+--------+
+
+-- Rational_Extent --
++-------------+-------------+---------+-------------+-------------+
+| Component   | User_type   |   Value | Direction   | Exclusive   |
++=============+=============+=========+=============+=============+
+| value       | Distance    |       0 | min         | False       |
+| value       | Duration    |       0 | min         | False       |
++-------------+-------------+---------+-------------+-------------+
+
+-- Rational_Range --
++-------------+-------------+
+| Component   | User_type   |
++=============+=============+
+| value       | Distance    |
+| value       | Duration    |
++-------------+-------------+
+
+-- Regular_Expression --
++-------------+-------------+---------------------------------+
+| Component   | User_type   | Regex                           |
++=============+=============+=================================+
+| value       | Name        | ^[A-Za-z0-9][A-Za-z0-9 ]{0,49}$ |
+| value       | Level Name  | ^[A-Za-z0-9][A-Za-z0-9]{0,25}$  |
++-------------+-------------+---------------------------------+
+
+-- Symbol --
++--------+-------------+-------------+
+| Name   | Component   | User_type   |
++========+=============+=============+
++--------+-------------+-------------+
+
+-- Symbol_Set --
++-------------+-------------+
+| Component   | User_type   |
++=============+=============+
++-------------+-------------+
+
+-- Type --
++---------------+
+| Name          |
++===============+
+| String        |
+| Integer       |
+| Boolean       |
+| Rational      |
+| Symbolic      |
+| Name          |
+| Counter       |
+| Level Name    |
+| Distance      |
+| Building Name |
+| Bank Name     |
+| Speed         |
+| Duration      |
+| Direction     |
++---------------+
+
+-- User_Type --
++---------------+------------+
+| Name          | Category   |
++===============+============+
+| Name          | utility    |
+| Counter       | utility    |
+| Level Name    | domain     |
+| Distance      | domain     |
+| Building Name | domain     |
+| Bank Name     | domain     |
+| Speed         | domain     |
+| Duration      | domain     |
+| Direction     | domain     |
++---------------+------------+
+
+-- Value_Subset --
++-------------+---------------+--------------------+
+| Component   | User_type     | Constrained_type   |
++=============+===============+====================+
+| value       | Name          | String             |
+| value       | Counter       | Integer            |
+| value       | Level Name    | String             |
+| value       | Distance      | Rational           |
+| value       | Building Name | Name               |
+| value       | Bank Name     | Name               |
+| value       | Speed         | Rational           |
+| value       | Duration      | Rational           |
+| value       | Direction     | Boolean            |
++-------------+---------------+--------------------+

@@ -20,6 +20,9 @@ class UndefinedSynchOutputExecutionUnit(ActionException):
 class MultipleAssignerPIFlowNotPopulated(ActionException):
     pass
 
+class CallFromUndefinedName(ActionException):
+    pass
+
 class LifecycleXIFlowNotPopulated(ActionException):
     pass
 

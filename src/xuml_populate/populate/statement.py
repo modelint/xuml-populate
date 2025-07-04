@@ -2,14 +2,18 @@
 statement.py – Populate all actions in a Scrall statement
 """
 
+# System
 import logging
+from collections import namedtuple
+from typing import Set
+
+# xuml Populate
+from xuml_populate.populate.actions.call_statement import CallStatement
 from xuml_populate.populate.actions.instance_assignment import InstanceAssignment
 from xuml_populate.populate.actions.table_assignment import TableAssignment
 from xuml_populate.populate.actions.scalar_assignment import ScalarAssignment
 from xuml_populate.populate.actions.switch_statement import SwitchStatement
 from xuml_populate.populate.actions.aparse_types import Activity_ap, Boundary_Actions, Labeled_Flow
-from collections import namedtuple
-from typing import Set
 
 _logger = logging.getLogger(__name__)
 
@@ -64,6 +68,9 @@ class Statement:
             case 'Switch_a':
                 boundary_actions = SwitchStatement.populate(activity_data=activity_data,
                                                             sw_parse=statement_parse)
+            case 'Call_a':
+                call_s = CallStatement(activity_data=activity_data, call_parse=statement_parse)
+                pass
             case _:
                 boundary_actions = None
                 # print()

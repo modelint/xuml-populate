@@ -148,6 +148,10 @@ Attribute_Write_Access_i = namedtuple('Attribute_Write_Access_i', 'Attribute Cla
 Read_Action_i = namedtuple('Read_Action_i', 'ID Activity Domain Instance_flow')
 Write_Action_i = namedtuple('Write_Action_i', 'ID Activity Domain Instance_flow')
 
+# Scalar Action subsystem
+Operand_Input_i = namedtuple('Operand_Input_i', 'Scalar_flow Activity Domain Action')
+Scalar_Action_i = namedtuple('Scalar_Action_i', 'ID Activity Domain Name')
+
 # Formalization subsystem
 Association_Class_Reference_i = namedtuple('Association_Class_Reference_i', 'Ref_type Association_class Participating_class Rnum Domain')
 Association_Reference_i = namedtuple('Association_Reference_i', 'Ref_type From_class To_class Rnum Domain Perspective')
