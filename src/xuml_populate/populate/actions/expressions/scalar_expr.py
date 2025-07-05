@@ -1,17 +1,22 @@
 """ sexpr.py -- Walk through a scalar expression and populate elements """
 
+# System
 import logging
 from typing import List
+
+# Model Integration
+from scrall.parse.visitor import Scalar_RHS_a, MATH_a, BOOL_a, INST_a, N_a, Projection_a, Op_chain_a, INST_PROJ_a
+from pyral.relation import Relation  # Keep for debugging
+
+# xUML Populate
 from xuml_populate.config import mmdb
 from xuml_populate.populate.actions.expressions.instance_set import InstanceSet
 from xuml_populate.populate.actions.read_action import ReadAction
+from xuml_populate.populate.actions.write_action import WriteAction
 from xuml_populate.exceptions.action_exceptions import ScalarOperationOrExpressionExpected
 from xuml_populate.populate.flow import Flow
 from xuml_populate.populate.actions.aparse_types import Flow_ap, MaxMult, Content, Activity_ap, Boundary_Actions
-from scrall.parse.visitor import Scalar_RHS_a, MATH_a, BOOL_a, INST_a, N_a, Projection_a, Op_chain_a, INST_PROJ_a
 from xuml_populate.populate.actions.project_action import ProjectAction
-
-from pyral.relation import Relation  # Keep for debugging
 
 _logger = logging.getLogger(__name__)
 
@@ -74,7 +79,7 @@ class ScalarExpr:
         pass
 
     @classmethod
-    def walk(cls, sexpr: INST_PROJ_a | MATH_a | BOOL_a | N_a, input_flow: Flow_ap) -> [Flow_ap]:
+    def walk(cls, sexpr: str | INST_PROJ_a | MATH_a | BOOL_a | N_a, input_flow: Flow_ap) -> [Flow_ap]:
         """
 
         :param sexpr:  Parsed scalar expression
@@ -83,6 +88,15 @@ class ScalarExpr:
         """
         component_flow = input_flow
         match type(sexpr).__name__:
+            case 'str':  # TRUE or FALSE string
+                # we are assigining either true or false to the lhs, component flow will be scalar
+                input_sflow = Flow.populate_scalar_flow(scalar_type="Boolean", anum=cls.anum, domain=cls.domain,
+                                                        label=None)
+                action_input = component_flow
+                WriteAction.populate(input_single_instance_flow=component_flow,
+                                     input_sflow=input_sflow, attr_name=None,
+                                     anum=cls.anum, domain=cls.domain)
+                pass
             case 'INST_PROJ_a':
                 action_input = component_flow
                 initial_aid, final_aid, component_flow = InstanceSet.process(input_instance_flow=action_input,

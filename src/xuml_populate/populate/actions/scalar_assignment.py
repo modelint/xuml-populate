@@ -1,8 +1,15 @@
 """
 scalar_assignment.py – Populate elements of a scalar assignment
 """
-
+# System
 import logging
+
+# Model Integration
+from scrall.parse.visitor import Scalar_Assignment_a
+from pyral.relvar import Relvar
+from pyral.transaction import Transaction
+
+# xUML populate
 from xuml_populate.config import mmdb
 from xuml_populate.populate.mmclass_nt import Labeled_Flow_i
 from xuml_populate.populate.actions.extract_action import ExtractAction
@@ -10,10 +17,6 @@ from xuml_populate.populate.ns_flow import NonScalarFlow
 from xuml_populate.populate.actions.aparse_types import Flow_ap, MaxMult, Content, Activity_ap, Boundary_Actions
 from xuml_populate.populate.actions.expressions.scalar_expr import ScalarExpr
 from xuml_populate.exceptions.action_exceptions import ScalarAssignmentFlowMismatch, ScalarAssignmentfromMultipleTuples
-from scrall.parse.visitor import Scalar_Assignment_a
-
-from pyral.relvar import Relvar
-from pyral.transaction import Transaction
 
 _logger = logging.getLogger(__name__)
 

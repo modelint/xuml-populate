@@ -30,7 +30,7 @@ transitions
 --
 state Registering stop
 activity
-    Stop requested.set
+    Stop requested = TRUE
     Stop registered -> me
 transitions
     Stop registered > Requesting service
@@ -64,7 +64,7 @@ activity
 
     Stop requested? {
         UI.Clear stop request( Floor, Shaft )
-        Stop requested.unset
+        Stop requested = FALSE
     }
 
     /R49/Floor Service? Opposite floor call pending -> :
