@@ -137,6 +137,7 @@ Multiple_Instance_Flow_i = namedtuple('Multiple_Instance_Flow_i', 'ID Activity D
 Non_Scalar_Flow_i = namedtuple('Non_Scalar_Flow_i', 'ID Activity Domain')
 Table_Flow_i = namedtuple('Table_Flow_i', 'ID Activity Domain')
 Scalar_Flow_i = namedtuple('Scalar_Flow_i', 'ID Activity Domain Type')
+Scalar_Value_i = namedtuple('Scalar_Value_i', 'Name Flow Activity Domain')
 Single_Instance_Flow_i = namedtuple('Single_Instance_Flow_i', 'ID Activity Domain')
 Relation_Flow_i = namedtuple('Relation_Flow_i', 'ID Activity Domain Type')
 Tuple_Flow_i = namedtuple('Tuple_Flow_i', 'ID Activity Domain')
