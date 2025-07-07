@@ -13,7 +13,7 @@ from xuml_populate.exceptions.action_exceptions import FlowException, ControlFlo
 from xuml_populate.populate.mmclass_nt import Data_Flow_i, Flow_i, \
     Multiple_Instance_Flow_i, Single_Instance_Flow_i, Instance_Flow_i, \
     Control_Flow_i, Non_Scalar_Flow_i, Scalar_Flow_i, Relation_Flow_i, Labeled_Flow_i, Unlabeled_Flow_i, \
-    Tuple_Flow_i, Table_Flow_i, Control_Dependency_i
+    Tuple_Flow_i, Table_Flow_i, Control_Dependency_i, Scalar_Value_i
 from xuml_populate.populate.actions.aparse_types import Flow_ap, MaxMult, Content
 
 # TODO: Add Table and Control Flow population
@@ -262,11 +262,12 @@ class Flow:
         return flow
 
     @classmethod
-    def populate_scalar_flow(cls, scalar_type: str, anum: str, domain: str, label: Optional[str] = None,
-                             activity_tr: str = None) -> Flow_ap:
+    def populate_scalar_flow(cls, scalar_type: str, anum: str, domain: str, value: Optional[str] = None,
+                             label: Optional[str] = None, activity_tr: str = None) -> Flow_ap:
         """
         Populate an instance of Scalar flow
 
+        :param value: A constant value that is preloaded into the flow, such as an enum, true/false, or selector op
         :param scalar_type: The name of the Scalar (Type)
         :param anum: The anum of the enclosing Activity
         :param domain: The name of the domain
@@ -280,9 +281,13 @@ class Flow:
             Transaction.open(db=mmdb, name=tr)
 
         flow_id = cls.populate_data_flow(tr=tr, anum=anum, domain=domain, label=label)
-        Relvar.insert(db=mmdb, tr=tr, relvar='Scalar_Flow', tuples=[
+        Relvar.insert(db=mmdb, tr=tr, relvar='Scalar Flow', tuples=[
             Scalar_Flow_i(ID=flow_id, Activity=anum, Domain=domain, Type=scalar_type)
         ])
+        if value:
+            Relvar.insert(db=mmdb, tr=tr, relvar='Scalar Value', tuples=[
+                Scalar_Value_i(Name=value, Flow=flow_id, Activity=anum, Domain=domain)
+            ])
         if not activity_tr:
             Transaction.execute(db=mmdb, name=tr)
 

@@ -58,6 +58,7 @@ class ScalarAssignment:
 
         bactions, scalar_flows = ScalarExpr.process(rhs=rhs, input_instance_flow=xi_flow,
                                                     activity_data=activity_data)
+        # Extract flow label names from the left hand side (flow names become label names)
         scalar_flow_labels = [n for n in lhs[0].name]
 
         # There must be a label on the LHS for each scalar output flow
@@ -77,15 +78,15 @@ class ScalarAssignment:
             sflow = scalar_flows[count]
             # Migrate the scalar_flow to a labeled flow
             _logger.info(f"Labeling output of scalar expression to [{lhs}]")
-            Transaction.open(mmdb, tr_Migrate)
+            Transaction.open(db=mmdb, name=tr_Migrate)
             # Delete the Unlabeled flow
-            Relvar.deleteone(mmdb, tr=tr_Migrate, relvar_name="Unlabeled_Flow",
+            Relvar.deleteone(db=mmdb, tr=tr_Migrate, relvar_name="Unlabeled_Flow",
                              tid={"ID": sflow.fid, "Activity": activity_data.anum, "Domain": activity_data.domain})
             # Insert the labeled flow
-            Relvar.insert(mmdb, tr=tr_Migrate, relvar='Labeled_Flow', tuples=[
+            Relvar.insert(db=mmdb, tr=tr_Migrate, relvar='Labeled_Flow', tuples=[
                 Labeled_Flow_i(ID=sflow.fid, Activity=activity_data.anum, Domain=activity_data.domain, Name=label)
             ])
-            Transaction.execute(mmdb, tr_Migrate)
+            Transaction.execute(db=mmdb, name=tr_Migrate)
         return bactions
 
         # Create one Extract Action per attribute, label pair

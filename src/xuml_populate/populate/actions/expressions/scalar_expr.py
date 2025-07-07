@@ -65,14 +65,15 @@ class ScalarExpr:
         cls.action_outputs = {}  # ID's of all Action output Data Flows
         cls.action_inputs = {}  # ID's of all Action input Data Flows
 
-        rhs = cls.walk(sexpr=rhs.expr, input_flow=input_instance_flow)
+        # Obtain one or more scalar flows from the right hand side that will flow values into the left hand side
+        rhs_sflows = cls.walk(sexpr=rhs.expr, input_flow=input_instance_flow)
 
         all_ins = {v for s in cls.action_inputs.values() for v in s}
         all_outs = {v for s in cls.action_outputs.values() for v in s}
         init_aids = {a for a in cls.action_inputs.keys() if not cls.action_inputs[a].intersection(all_outs)}
         final_aids = {a for a in cls.action_outputs.keys() if not cls.action_outputs[a].intersection(all_ins)}
 
-        return Boundary_Actions(ain=init_aids, aout=final_aids), rhs
+        return Boundary_Actions(ain=init_aids, aout=final_aids), rhs_sflows
 
     @classmethod
     def resolve_iset(cls, iset: INST_a, op_chain: Op_chain_a = None, projection: Projection_a = None) -> List[Flow_ap]:
@@ -91,7 +92,7 @@ class ScalarExpr:
             case 'str':  # TRUE or FALSE string
                 # we are assigining either true or false to the lhs, component flow will be scalar
                 input_sflow = Flow.populate_scalar_flow(scalar_type="Boolean", anum=cls.anum, domain=cls.domain,
-                                                        label=None)
+                                                        value=sexpr, label=None)
                 action_input = component_flow
                 WriteAction.populate(input_single_instance_flow=component_flow,
                                      input_sflow=input_sflow, attr_name=None,
