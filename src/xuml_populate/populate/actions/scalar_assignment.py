@@ -7,6 +7,7 @@ import logging
 # Model Integration
 from scrall.parse.visitor import Scalar_Assignment_a
 from pyral.relvar import Relvar
+from pyral.relation import Relation
 from pyral.transaction import Transaction
 
 # xUML populate
@@ -39,15 +40,15 @@ class ScalarAssignment:
     @classmethod
     def process(cls, activity_data: Activity_ap, scalar_assign_parse: Scalar_Assignment_a) -> Boundary_Actions:
         """
-        Given a parsed table assignment consisting of an LHS and an RHS, populate each component action
-        and return the resultant table flow
+        Given a parsed scalar assignment consisting of an LHS and an RHS, populate each component action
+        and return the boundary actions.
 
         We'll need an initial flow and we'll need to create intermediate instance flows to connect the components.
-        The final output flow must be a table flow. The associated Table determines the type of the
-        assignment. If the LHS spcifies an explicit Table, the resultant Table which must match.
+        The final output flow must be a scalar flow. The associated Scalar determines the type of the
+        assignment.
 
-        :param scalar_assign_parse: A parsed scalar assignment
         :param activity_data:
+        :param scalar_assign_parse: A parsed scalar assignment
         """
         lhs = scalar_assign_parse.lhs
         rhs = scalar_assign_parse.rhs
@@ -58,6 +59,23 @@ class ScalarAssignment:
 
         bactions, scalar_flows = ScalarExpr.process(rhs=rhs, input_instance_flow=xi_flow,
                                                     activity_data=activity_data)
+
+        # Where any actions populated for the RHS?
+        if not bactions.ain and not bactions.aout:
+            # There is always at least one Scalar Flow emanating from the RHS, but there is a case where
+            # the Scalar Flow isn't produced by any Action. And that happens when the value is explicitly written
+            # into the action language. We call this a Scalar Value (you can think of it as a constant) like
+            # TRUE, FALSE, or an enum value like _up or _down.
+            # For example: Stop requested = TRUE
+            if not scalar_flows:
+                # It's not an assigment if there is nothing to assign!
+                pass  # TODO: raise exception, the spice must flow
+            # WriteAction.populate(input_single_instance_flow=component_flow,
+            #                      input_sflow=input_sflow, attr_name=None,
+            #                      anum=cls.anum, domain=cls.domain)
+
+            pass
+
         # Extract flow label names from the left hand side (flow names become label names)
         scalar_flow_labels = [n for n in lhs[0].name]
 
@@ -75,15 +93,20 @@ class ScalarAssignment:
         # flow with the same number of attributes as the LHS. For now let's ignore explicit typing on the LHS
         # but we need to check that later.
         for count, label in enumerate(scalar_flow_labels):
+            # If the label is the name of an attribute of the executing instance, we need to write to that attribute
+            # and in this case, there is no need for a Labeled Flow
+            # TODO: What if the LHS is an attribute of some other instance/class?  ex: left traffic light.Signal = _go
+            # R = f"Attribute:<{label}, Class:<{}>, Domain:<{}>"
+            # attribute_r = Relation.
             sflow = scalar_flows[count]
             # Migrate the scalar_flow to a labeled flow
             _logger.info(f"Labeling output of scalar expression to [{lhs}]")
             Transaction.open(db=mmdb, name=tr_Migrate)
             # Delete the Unlabeled flow
-            Relvar.deleteone(db=mmdb, tr=tr_Migrate, relvar_name="Unlabeled_Flow",
+            Relvar.deleteone(db=mmdb, tr=tr_Migrate, relvar_name="Unlabeled Flow",
                              tid={"ID": sflow.fid, "Activity": activity_data.anum, "Domain": activity_data.domain})
             # Insert the labeled flow
-            Relvar.insert(db=mmdb, tr=tr_Migrate, relvar='Labeled_Flow', tuples=[
+            Relvar.insert(db=mmdb, tr=tr_Migrate, relvar='Labeled Flow', tuples=[
                 Labeled_Flow_i(ID=sflow.fid, Activity=activity_data.anum, Domain=activity_data.domain, Name=label)
             ])
             Transaction.execute(db=mmdb, name=tr_Migrate)
