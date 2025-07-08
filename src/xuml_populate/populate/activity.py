@@ -195,11 +195,11 @@ class Activity:
                                     activity_data=activity_data, domain=cls.domain)
                 pass
         pass
+        # Populate each State Activity
         for state_model, sm in cls.sm.items():
             for state_name, activity_parse in sm.items():
                 sa = StateActivity(state_name=state_name, state_model=state_model,
                                    activity_data=activity_parse, domain=cls.domain)
                 pass
 
-    # TODO: Populate all state activities
     # TODO: Populate all operation activities

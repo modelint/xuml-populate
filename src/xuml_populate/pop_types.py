@@ -6,3 +6,5 @@ class SMType(Enum):
     SA = 2
     MA = 3
 
+def snake(name: str) -> str:
+    return name.replace(' ', '_')

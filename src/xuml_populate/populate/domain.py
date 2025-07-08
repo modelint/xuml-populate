@@ -5,6 +5,7 @@ domain.py – Process parsed domain to populate the metamodel db
 # System
 import logging
 from typing import Dict
+from contextlib import redirect_stdout  # For diagnostics
 
 # Model Integration
 from pyral.transaction import Transaction
@@ -105,9 +106,14 @@ class Domain:
         # Reprinting these for lineage debugging purposes
         Lineage.Derive(domain=domain)
         #
+        # Intermediate printout for debugging
+        mmdb_printout = f"mmdb_preaction_{domain}.txt"
+        with open(mmdb_printout, 'w') as f:
+            with redirect_stdout(f):
+                Relvar.printall(db=mmdb)
         #
         # Populate actions for all Activities
-        Activity.process_execution_units()  # TODO: For now, only methods
+        Activity.process_execution_units()
         # if self.parse_actions:
         #     Activity.process_execution_units()
 

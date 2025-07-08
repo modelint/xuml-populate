@@ -12,12 +12,14 @@ from pyral.transaction import Transaction
 
 # xUML populate
 from xuml_populate.config import mmdb
+from xuml_populate.pop_types import SMType
 from xuml_populate.populate.mmclass_nt import Labeled_Flow_i
 from xuml_populate.populate.actions.extract_action import ExtractAction
 from xuml_populate.populate.ns_flow import NonScalarFlow
 from xuml_populate.populate.actions.aparse_types import Flow_ap, MaxMult, Content, Activity_ap, Boundary_Actions
 from xuml_populate.populate.actions.expressions.scalar_expr import ScalarExpr
 from xuml_populate.exceptions.action_exceptions import ScalarAssignmentFlowMismatch, ScalarAssignmentfromMultipleTuples
+from xuml_populate.populate.actions.write_action import WriteAction
 
 _logger = logging.getLogger(__name__)
 
@@ -27,7 +29,6 @@ tr_Migrate = "Migrate to Label"
 class ScalarAssignment:
     """
     Break down a scalar assignment statement into action semantics and populate them
-
     """
 
     input_instance_flow = None  # The instance flow feeding the next component on the RHS
@@ -53,11 +54,23 @@ class ScalarAssignment:
         lhs = scalar_assign_parse.lhs
         rhs = scalar_assign_parse.rhs
 
-        # The executing instance is by nature a single instance flow
-        xi_flow = Flow_ap(fid=activity_data.xiflow, content=Content.INSTANCE, tname=activity_data.cname,
-                          max_mult=MaxMult.ONE)
+        input_instance_flow = None
+        if activity_data.state_model:
+            match activity_data.smtype:
+                case SMType.LIFECYCLE:
+                    input_instance_flow = Flow_ap(fid=activity_data.xiflow, content=Content.INSTANCE,
+                                                  tname=activity_data.state_model, max_mult=MaxMult.ONE)
+                case SMType.MA:
+                    input_instance_flow = Flow_ap(fid=activity_data.piflow, content=Content.INSTANCE,
+                                                  tname=activity_data.cname, max_mult=MaxMult.ONE)
+                case SMType.SA:
+                    # A single assigner state machine has no executing instance and hence no xi_flow
+                    pass
+        elif activity_data.cname:
+            input_instance_flow = Flow_ap(fid=activity_data.xiflow, content=Content.INSTANCE,
+                                          tname=activity_data.cname, max_mult=MaxMult.ONE)
 
-        bactions, scalar_flows = ScalarExpr.process(rhs=rhs, input_instance_flow=xi_flow,
+        bactions, scalar_flows = ScalarExpr.process(rhs=rhs, input_instance_flow=input_instance_flow,
                                                     activity_data=activity_data)
 
         # Where any actions populated for the RHS?
@@ -70,10 +83,9 @@ class ScalarAssignment:
             if not scalar_flows:
                 # It's not an assigment if there is nothing to assign!
                 pass  # TODO: raise exception, the spice must flow
-            # WriteAction.populate(input_single_instance_flow=component_flow,
-            #                      input_sflow=input_sflow, attr_name=None,
-            #                      anum=cls.anum, domain=cls.domain)
 
+            # for n in lhs[0]:
+            #     pass
             pass
 
         # Extract flow label names from the left hand side (flow names become label names)
@@ -96,14 +108,23 @@ class ScalarAssignment:
             # If the label is the name of an attribute of the executing instance, we need to write to that attribute
             # and in this case, there is no need for a Labeled Flow
             # TODO: What if the LHS is an attribute of some other instance/class?  ex: left traffic light.Signal = _go
-            # R = f"Attribute:<{label}, Class:<{}>, Domain:<{}>"
-            # attribute_r = Relation.
+            class_name = activity_data.state_model
+            if not class_name:
+                class_name = activity_data.cname
+            if class_name:
+                R = f"Name:<{label}>, Class:<{class_name}>, Domain:<{activity_data.domain}>"
+                attribute_r = Relation.restrict(db=mmdb, relation="Attribute", restriction=R)
+                if attribute_r.body:
+                    WriteAction.populate(input_single_instance_flow=input_instance_flow,
+                                         input_sflow=scalar_flows[count], attr_name=label, anum=activity_data.anum,
+                                         domain=activity_data.domain)
+                    continue
             sflow = scalar_flows[count]
             # Migrate the scalar_flow to a labeled flow
             _logger.info(f"Labeling output of scalar expression to [{lhs}]")
             Transaction.open(db=mmdb, name=tr_Migrate)
             # Delete the Unlabeled flow
-            Relvar.deleteone(db=mmdb, tr=tr_Migrate, relvar_name="Unlabeled Flow",
+            Relvar.deleteone(db=mmdb, tr=tr_Migrate, relvar_name="Unlabeled_Flow",
                              tid={"ID": sflow.fid, "Activity": activity_data.anum, "Domain": activity_data.domain})
             # Insert the labeled flow
             Relvar.insert(db=mmdb, tr=tr_Migrate, relvar='Labeled Flow', tuples=[

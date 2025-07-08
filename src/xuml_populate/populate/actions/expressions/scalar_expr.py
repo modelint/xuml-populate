@@ -12,7 +12,6 @@ from pyral.relation import Relation  # Keep for debugging
 from xuml_populate.config import mmdb
 from xuml_populate.populate.actions.expressions.instance_set import InstanceSet
 from xuml_populate.populate.actions.read_action import ReadAction
-from xuml_populate.populate.actions.write_action import WriteAction
 from xuml_populate.exceptions.action_exceptions import ScalarOperationOrExpressionExpected
 from xuml_populate.populate.flow import Flow
 from xuml_populate.populate.actions.aparse_types import Flow_ap, MaxMult, Content, Activity_ap, Boundary_Actions

@@ -33,7 +33,7 @@ class WriteAction:
 
     @classmethod
     def populate(cls, input_single_instance_flow: Flow_ap, input_sflow: Flow_ap, attr_name: str,
-                 anum: str, domain: str) -> action_id:
+                 anum: str, domain: str) -> str:
         """
         Populate the Write Action
 
