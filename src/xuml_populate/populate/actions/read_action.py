@@ -79,6 +79,5 @@ class ReadAction:
             scalar_flows.append(of)
 
             # output_flows[pa] = of
-        # We now have a transaction with all select-action instances, enter into the metamodel db
-        Transaction.execute(db=mmdb, name=tr_Read)  # Select Action
+        Transaction.execute(db=mmdb, name=tr_Read)
         return action_id, tuple(scalar_flows)

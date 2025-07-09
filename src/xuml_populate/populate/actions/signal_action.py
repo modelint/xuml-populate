@@ -15,9 +15,12 @@ from pyral.transaction import Transaction
 from xuml_populate.config import mmdb
 from xuml_populate.populate.actions.aparse_types import Flow_ap, MaxMult, Content, Activity_ap
 from xuml_populate.populate.actions.action import Action
+from xuml_populate.pop_types import SMType
 from xuml_populate.populate.mm_class import MMclass
 from xuml_populate.populate.flow import Flow
-from xuml_populate.populate.mmclass_nt import Signal
+from xuml_populate.populate.mmclass_nt import (Signal_Action_i, Supplied_Parameter_Value_i,
+                                               Signal_Instance_Set_Action_i,
+                                               Delivery_Time_i, Absolute_Delivery_Time_i, Relative_Delivery_Time_i)
 
 _logger = logging.getLogger(__name__)
 
@@ -45,27 +48,45 @@ class SignalAction:
         self.parameter_values = None
         self.delay_sflow = None
         self.process()
+        self.action_id = None
 
-    # def process(self, dest_iflow: Flow_ap, parameter_values: Optional[Sequence[Flow_ap]],
-    #             delay_sflow: Optional[Flow_ap] = None):
-    def process(self):
+    def process(self) -> str:
         """
         Initialize with everything the Signal statement requires
-
-        Args:
-            dest_iflow: A signal is delivered to each instance in this flow
-            parameter_values: An optional sequence of Data Flows providing input for any parameters required by
-             the event
-            delay_sflow: A scalar value giving us either a duration or a specific point in time to deliver the signal
+        Returns:
+            str: The populated Signal action id
         """
+        dest_name = self.statement_parse.dest.target_iset.name
+        if dest_name == 'me':
+            if self.activity_data.xiflow:
+                dest_flow = Flow_ap(fid=self.activity_data.xiflow, content=Content.INSTANCE,
+                                    tname=self.activity_data.state_model, max_mult=MaxMult.ONE)
+            else:
+                dest_flow = None  # TODO: Handle SA, MA assigner 'me' destination cases
+        else:
+            pass  # TODO: Process an instance set
+
         # Populate the Action superclass instance and obtain its action_id
         Transaction.open(db=mmdb, name=tr_Signal)
-        action_id = Action.populate(tr=tr_Signal, anum=self.activity_data.anum, domain=self.activity_data.domain,
-                                    action_type="signal")  # Transaction open
+        self.action_id = Action.populate(tr=tr_Signal, anum=self.activity_data.anum, domain=self.activity_data.domain,
+                                         action_type="signal")  # Transaction open
         Relvar.insert(db=mmdb, tr=tr_Signal, relvar='Signal Action', tuples=[
-            Sign(Attribute=a, Class=cname, Read_action=action_id, Activity=anum,
-                                    Domain=domain, Output_flow=of.fid)
+            Signal_Action_i(Action=self.action_id, Activity=self.activity_data.anum, Domain=self.activity_data.domain,
+                            Event_spec=self.statement_parse.event, State_model=self.activity_data.state_model)
         ])
+        Relvar.insert(db=mmdb, tr=tr_Signal, relvar='Signal Instance Set Action', tuples=[
+            Signal_Instance_Set_Action_i(Action=self.action_id, Activity=self.activity_data.anum,
+                                         Domain=self.activity_data.domain, Instance_flow=dest_flow.fid)
+        ])
+        if self.statement_parse.supplied_params:
+            # TODO: Populate Supplied Parameter Value instances for each
+            pass
+        if self.statement_parse.dest.delay != 0:
+            # TODO: Populate Delivery Time
+            pass
+        Transaction.execute(db=mmdb, name=tr_Signal)
+        return self.action_id
+
 
         pass
         # self.dest_iflow = dest_iflow

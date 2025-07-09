@@ -379,7 +379,7 @@ class StateActivity:
         pi_flow_id = None
         match self.sm_type:
             case SMType.LIFECYCLE:
-                # Look up xi flow
+                # Look up the executign instance (xi) flow
                 R = f"Anum:<{self.anum}>, Domain:<{self.domain}>"
                 result = Relation.restrict(db=mmdb, relation='Lifecycle Activity', restriction=R)
                 if not result.body:
@@ -387,6 +387,7 @@ class StateActivity:
                     pass
                 xi_flow_id = result.body[0]['Executing_instance_flow']
             case SMType.MA:
+                # Look up the partitioning instance (pi) flow
                 R = f"Anum:<{self.anum}>, Domain:<{self.domain}>"
                 result = Relation.restrict(db=mmdb, relation='Multiple Assigner Activity', restriction=R)
                 if not result.body:
@@ -394,7 +395,7 @@ class StateActivity:
                     pass
                 pi_flow_id = result.body[0]['Paritioning_instance_flow']
             case SMType.SA:
-                pass  # No xi or pi flow (cannot reference self)
+                pass  # No xi or pi flow (rnum only, no associated instance)
 
         state_path = f"{self.domain}:{self.state_model}.xsm"
 
