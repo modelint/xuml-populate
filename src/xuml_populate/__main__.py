@@ -2,20 +2,24 @@
 Blueprint Model Repository Populator
 
 """
+# System
 import logging
 import logging.config
 import sys
 import argparse
 from pathlib import Path
+import atexit
+
+# xUML Populate
 from xuml_populate.system import System
 from xuml_populate import version
-import atexit
 
 _logpath = Path("modeldb.log")
 _progname = 'Blueprint model repository populator'
 
 def clean_up():
     """Normal and exception exit activities"""
+    # Delete the log file
     _logpath.unlink(missing_ok=True)
 
 

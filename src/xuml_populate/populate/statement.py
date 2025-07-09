@@ -9,6 +9,7 @@ from typing import Set
 
 # xuml Populate
 from xuml_populate.populate.actions.call_statement import CallStatement
+from xuml_populate.populate.actions.signal_action import SignalAction
 from xuml_populate.populate.actions.instance_assignment import InstanceAssignment
 from xuml_populate.populate.actions.table_assignment import TableAssignment
 from xuml_populate.populate.actions.scalar_assignment import ScalarAssignment
@@ -70,6 +71,10 @@ class Statement:
                                                             sw_parse=statement_parse)
             case 'Call_a':
                 call_s = CallStatement(activity_data=activity_data, call_parse=statement_parse)
+                pass
+            case 'Signal_a':
+                sig_s = SignalAction(activity_data=activity_data, statement_parse=statement_parse)
+                sig_s.process()
                 pass
             case _:
                 boundary_actions = None
