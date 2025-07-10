@@ -2,20 +2,24 @@
 instance_assignment.py – Break an instance set generator into one or more components
 """
 
+# System
 import logging
-from typing import Set, Dict, List, Optional
-from xuml_populate.config import mmdb
-from xuml_populate.populate.flow import Flow
-from xuml_populate.populate.mmclass_nt import Labeled_Flow_i
-from xuml_populate.populate.actions.expressions.instance_set import InstanceSet
-from xuml_populate.exceptions.action_exceptions import AssignZeroOneInstanceHasMultiple
-from xuml_populate.populate.actions.aparse_types import (Flow_ap, MaxMult, Content, Activity_ap, Boundary_Actions,
-                                                         Labeled_Flow)
-from scrall.parse.visitor import Inst_Assignment_a
+from typing import Set
 
+# Model Integration
+from scrall.parse.visitor import Inst_Assignment_a
 from pyral.transaction import Transaction
 from pyral.relation import Relation  # For debugging
 from pyral.relvar import Relvar
+
+# xUML Populate
+from xuml_populate.pop_types import SMType
+from xuml_populate.config import mmdb
+from xuml_populate.populate.mmclass_nt import Labeled_Flow_i
+from xuml_populate.populate.actions.expressions.instance_set import InstanceSet
+from xuml_populate.exceptions.action_exceptions import *
+from xuml_populate.populate.actions.aparse_types import (Flow_ap, MaxMult, Content, Activity_ap, Boundary_Actions,
+                                                         Labeled_Flow)
 
 _logger = logging.getLogger(__name__)
 
@@ -60,27 +64,35 @@ class InstanceAssignment:
         The final output flow must be an instance flow. The associated Class Type determines the type of the
         assignment which must match any explicit type.
 
-        :param case_outputs:
-        :param case_name:
-        :param inst_assign: The instance assignment statement parse
-        :param activity_data: The enveloping anum
-        :param case_prefix:
+        Args:
+            activity_data:  Activity data
+            inst_assign: Parsed instance assignment statement
+            case_name:  Name of case if we are executing this statement as part of a switch
+            case_outputs:  Labled flow named tuples for each output if executing as part of a switch
+
+        Returns:
+            Boundary_Actions:
         """
         lhs = inst_assign.lhs  # Left hand side of assignment
         assign_zero_one = True if inst_assign.card == '1' else False  # Do we flow out one or many instances?
         rhs = inst_assign.rhs  # Right hand sid of assignment
 
-        # The executing instance is by nature a single instance flow
-        xi_instance_flow = Flow_ap(fid=activity_data.xiflow, content=Content.INSTANCE, tname=activity_data.cname,
-                                   max_mult=MaxMult.ONE)
+        # If the Activity is a Method or a Lifecycle State Model State, define the executing instance flow
+        xi_instance_flow = None
+        if activity_data.cname or activity_data.smtype == SMType.LIFECYCLE:  # cname defined only on Methods
+            xi_instance_flow = Flow_ap(fid=activity_data.xiflow, content=Content.INSTANCE, tname=activity_data.cname,
+                                       max_mult=MaxMult.ONE)
 
         # Process the instance set expression in the RHS and obtain the generated instance flow
-        initial_aid, final_aid, iset_instance_flow = InstanceSet.process(input_instance_flow=xi_instance_flow,
-                                                                         iset_components=rhs.components,
-                                                                         activity_data=activity_data)
+        iset = InstanceSet(input_instance_flow=xi_instance_flow, iset_components=rhs.components,
+                           activity_data=activity_data)
+        initial_aid, final_aid, iset_instance_flow = iset.process()
 
         # Process LHS after all components have been processed
-        if assign_zero_one and iset_instance_flow.max_mult == MaxMult.ONE:
+        if assign_zero_one and iset_instance_flow.max_mult == MaxMult.MANY:
+            msg = (f"Cadinality missmatch on instance assignment operator. RHS yields many instances, but expecting"
+                   f"at most one in {activity_data.activity_path}")
+            _logger.error(msg)
             raise AssignZeroOneInstanceHasMultiple(path=activity_data.activity_path, text=activity_data.scrall_text,
                                                    x=inst_assign.X)
 
@@ -89,23 +101,24 @@ class InstanceAssignment:
         if case_name:
             case_outputs.add(Labeled_Flow(label=output_flow_label, flow=iset_instance_flow))
         if lhs.exp_type and lhs.exp_type != iset_instance_flow.tname:
-            # Raise assignment type mismatch exception
-            pass
+            msg = (f"Instance assigment type mismatch: {lhs.exp_type} assigned {iset_instance_flow.tname} in"
+                   f" {activity_data.activity_path}")
+            _logger.error(msg)
+            raise AssignmentOperatorMismatch
 
         # Migrate the RHS output to a labeled flow using the output flow label
         Transaction.open(db=mmdb, name=tr_Migrate)  # LHS labeled instance flow
 
         # Delete the Unlabeled flow
-        Relvar.deleteone(db=mmdb, tr=tr_Migrate, relvar_name="Unlabeled_Flow",
+        Relvar.deleteone(db=mmdb, tr=tr_Migrate, relvar_name="Unlabeled Flow",
                          tid={"ID": iset_instance_flow.fid, "Activity": activity_data.anum,
                               "Domain": activity_data.domain})
         # Insert the labeled flow
-        Relvar.insert(db=mmdb, tr=tr_Migrate, relvar='Labeled_Flow', tuples=[
+        Relvar.insert(db=mmdb, tr=tr_Migrate, relvar='Labeled Flow', tuples=[
             Labeled_Flow_i(ID=iset_instance_flow.fid, Activity=activity_data.anum, Domain=activity_data.domain,
                            Name=output_flow_label)
         ])
 
         Transaction.execute(db=mmdb, name=tr_Migrate)  # LHS labeled instance flow
-        pass
 
         return Boundary_Actions(ain={initial_aid}, aout={final_aid})

@@ -11,6 +11,12 @@ post = " --"
 class ActionException(Exception):
     pass
 
+class AssignmentOperatorMismatch(Exception):
+    pass
+
+class PathFromSelfOnAssigner(Exception):
+    pass
+
 class UndefinedMethod(ActionException):
     pass
 

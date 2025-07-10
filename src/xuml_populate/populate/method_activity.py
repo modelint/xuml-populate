@@ -3,6 +3,8 @@
 # System
 import logging
 from typing import NamedTuple
+# For debugging
+from collections import namedtuple
 
 # Model Integration
 from pyral.relvar import Relvar
@@ -44,13 +46,21 @@ flow_attrs = [
     UsageAttrs(cname='Extract_Action', id_attr='ID', in_attr='Input_tuple', out_attr='Output_scalar'),
 ]
 
-# For debugging
-from collections import namedtuple
 Action_i = namedtuple('Action_i', 'ID')
+
 
 class MethodActivity:
 
     def __init__(self, name: str, class_name: str, activity_data):
+        """
+        Populate the Method Activity and perform any pre-runtime analysis or organization helpful for runtime
+        execution.
+
+        Args:
+            name: The Method name
+            class_name: Method is defined on this class
+            activity_data: All the data, including parse, about this method
+        """
 
         self.name = name
         self.class_name = class_name
@@ -150,7 +160,8 @@ class MethodActivity:
         Relation.rename(db=mmdb, names={"To_action": "ID"}, svar_name="downstream_actions")
 
         # Now subtract those downstream actions from the set of unexecuted_actions (all Actions at this point)
-        ia = Relation.subtract(db=mmdb, rname1="unexecuted_actions", rname2="downstream_actions", svar_name="executable_actions")
+        ia = Relation.subtract(db=mmdb, rname1="unexecuted_actions", rname2="downstream_actions",
+                               svar_name="executable_actions")
         # Relation.print(db=mmdb, variable_name="executable_actions")
         # Here we are initializing a relation variable named "executable_actions" that will update for each new Wave
         # And in Wave 1, it is the set of initial actions
@@ -273,7 +284,8 @@ class MethodActivity:
             self.wave_ctr += 1
             # print(f"Wave --- [{self.wave_ctr}] ---")
             # Finally, remove the latest completed actions from the set of unexecuted_actions
-            unex_actions = Relation.subtract(db=mmdb, rname1="unexecuted_actions", rname2="completed_actions", svar_name="unexecuted_actions")
+            unex_actions = Relation.subtract(db=mmdb, rname1="unexecuted_actions", rname2="completed_actions",
+                                             svar_name="unexecuted_actions")
             # Relation.print(db=mmdb, variable_name="unexecuted_actions")
             # Rinse and repeat until all the actions are completed
         pass
@@ -373,8 +385,9 @@ class MethodActivity:
                                       cname=self.class_name, sname=None, state_model=None, smtype=None, eename=None,
                                       opname=self.name, xiflow=xi_flow_id, piflow=None,
                                       activity_path=method_path, scrall_text=aparse[1])
-        seq_flows = {}
-        seq_labels = set()
+
+        # seq_flows = {}  TODO: We don't appear to use these
+        # seq_labels = set()
 
         # Here we process each statement set in the Method (Activity)
         for count, xunit in enumerate(aparse[0]):  # Use count for debugging
@@ -387,6 +400,7 @@ class MethodActivity:
                 # This is a statement set that does not return the Method's value
                 boundary_actions = ExecutionUnit.process_method_statement_set(
                     activity_data=activity_detail, statement_set=xunit.statement_set)
+                pass
 
             # Process any input or output tokens
             # if output_tk not in seq_flows:

@@ -4,8 +4,7 @@ traverse_action.py – Populate a traverse action instance in PyRAL
 
 # System
 import logging
-from typing import Set, Dict, List, NamedTuple, Callable
-from enum import Enum
+from typing import Set, Dict, List
 
 # Model Integration
 from scrall.parse.visitor import PATH_a
@@ -54,11 +53,13 @@ class TraverseAction:
         """
         Initialize the python attributes required to manage validation and population.
 
-        :param input_instance_flow: This is the source instance flow where the path begins
-        :param path: Parsed Scrall representing a Path
-        :param activity_data:
+        Args:
+            input_instance_flow: This is the source instance flow where the path begins
+            path: Parsed Scrall representing a Path
+            activity_data:
         """
         # Save parameter values
+        self.actvity_data = activity_data
         self.input_instance_flow = input_instance_flow
         self.path = path
         self.anum = activity_data.anum
@@ -84,8 +85,10 @@ class TraverseAction:
         """
         Step through a path populating it along the way.
 
-        :return: The Traverse Action ID and the output instance flow id, its Class Type name and its maximum instance
-        multiplicity, 1 or M
+        Returns:
+            The Traverse Action ID and the output instance flow id, its Class Type name and its maximum instance
+            multiplicity, 1 or M
+
         """
         self.hops = []
         self.class_cursor = self.input_instance_flow.tname  # Validation cursor is on this class now
