@@ -71,10 +71,11 @@ class Statement:
                                                             sw_parse=statement_parse)
             case 'Call_a':
                 call_s = CallStatement(activity_data=activity_data, call_parse=statement_parse)
+                boundary_actions = None  # TODO: Check this
                 pass
             case 'Signal_a':
                 sig_s = SignalAction(activity_data=activity_data, statement_parse=statement_parse)
-                sig_s.process()
+                boundary_actions = sig_s.process()  # TODO: Check this
                 pass
             case _:
                 boundary_actions = None

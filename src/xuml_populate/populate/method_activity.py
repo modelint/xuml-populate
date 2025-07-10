@@ -50,14 +50,13 @@ Action_i = namedtuple('Action_i', 'ID')
 
 class MethodActivity:
 
-    def __init__(self, name: str, class_name: str, method_data, activity_data, domain: str):
+    def __init__(self, name: str, class_name: str, activity_data):
 
         self.name = name
         self.class_name = class_name
         self.activity_data = activity_data
-        self.anum = self.activity_data['anum']
-        self.method_data = method_data
-        self.domain = domain
+        self.anum = activity_data['anum']
+        self.domain = activity_data["domain"]
         self.wave_ctr = 1  # Initialize wave counter
         self.waves = dict()
         self.xactions = None

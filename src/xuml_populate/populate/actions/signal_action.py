@@ -86,10 +86,3 @@ class SignalAction:
             pass
         Transaction.execute(db=mmdb, name=tr_Signal)
         return self.action_id
-
-
-        pass
-        # self.dest_iflow = dest_iflow
-        # self.parameter_values = [] if parameter_values is None else parameter_values
-        # self.delay_sflow = delay_sflow
-

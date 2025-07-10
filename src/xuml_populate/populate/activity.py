@@ -190,9 +190,7 @@ class Activity:
         # Populate each (Method) Activity
         for class_name, method_data in cls.methods.items():
             for method_name, activity_data in method_data.items():
-
-                ma = MethodActivity(name=method_name, class_name=class_name, method_data=method_data,
-                                    activity_data=activity_data, domain=cls.domain)
+                ma = MethodActivity(name=method_name, class_name=class_name, activity_data=activity_data)
                 pass
         pass
         # Populate each State Activity
