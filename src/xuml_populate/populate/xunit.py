@@ -48,14 +48,16 @@ class ExecutionUnit:
                                    max_mult=MaxMult.ONE)
         match type(synch_output.output).__name__:
             case 'INST_a':
-                _, _, output_flow = InstanceSet.process(input_instance_flow=xi_instance_flow,
-                                                        iset_components=synch_output.output.components,
-                                                        activity_data=activity_data)
+                iset = InstanceSet(input_instance_flow=xi_instance_flow,
+                                   iset_components=synch_output.output.components,
+                                   activity_data=activity_data)
+                _, _, output_flow = iset.process()
                 pass
             case 'INST_PROJ_a':
-                _, _, output_flow = InstanceSet.process(input_instance_flow=xi_instance_flow,
-                                                        iset_components=synch_output.output.iset.components,
-                                                        activity_data=activity_data)
+                iset = InstanceSet(input_instance_flow=xi_instance_flow,
+                                    iset_components=synch_output.output.iset.components,
+                                    activity_data=activity_data)
+                _, _, output_flow = iset.process()
             case _:
                 # Unexpected or unimplemented synch output case
                 msg = f"No case for synch output exec unit type: [{type(synch_output.output).__name__}]"

@@ -400,7 +400,6 @@ class MethodActivity:
                 # This is a statement set that does not return the Method's value
                 boundary_actions = ExecutionUnit.process_method_statement_set(
                     activity_data=activity_detail, statement_set=xunit.statement_set)
-                pass
 
             # Process any input or output tokens
             # if output_tk not in seq_flows:
