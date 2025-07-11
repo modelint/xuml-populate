@@ -106,11 +106,11 @@ class Domain:
         # Reprinting these for lineage debugging purposes
         Lineage.Derive(domain=domain)
         #
-        # Intermediate printout for debugging
-        mmdb_printout = f"mmdb_preaction_{domain}.txt"
-        with open(mmdb_printout, 'w') as f:
-            with redirect_stdout(f):
-                Relvar.printall(db=mmdb)
+        # # Intermediate printout for debugging
+        # mmdb_printout = f"mmdb_preaction_{domain}.txt"
+        # with open(mmdb_printout, 'w') as f:
+        #     with redirect_stdout(f):
+        #         Relvar.printall(db=mmdb)
         #
         # Populate actions for all Activities
         Activity.process_execution_units()

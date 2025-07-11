@@ -3,6 +3,7 @@
 # System
 import logging
 from typing import NamedTuple
+from contextlib import redirect_stdout  # For diagnostics
 
 # Model Integration
 from pyral.relvar import Relvar
@@ -67,6 +68,13 @@ class StateActivity:
         #
         self.pop_xunits()
         self.pop_flow_dependencies()
+
+        # # Intermediate printout for debugging
+        mmdb_printout = f"mmdb_preaction_{domain}.txt"
+        with open(mmdb_printout, 'w') as f:
+            with redirect_stdout(f):
+                Relvar.printall(db=mmdb)
+
         self.assign_waves()
         self.populate_waves()
 

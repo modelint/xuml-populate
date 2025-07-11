@@ -76,7 +76,6 @@ class Statement:
             case 'Signal_a':
                 sig_s = SignalAction(activity_data=activity_data, statement_parse=statement_parse)
                 boundary_actions = sig_s.process()  # TODO: Check this
-                pass
             case _:
                 boundary_actions = None
                 # print()

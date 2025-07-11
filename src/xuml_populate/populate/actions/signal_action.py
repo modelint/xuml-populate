@@ -13,7 +13,7 @@ from pyral.transaction import Transaction
 
 # xUML populate
 from xuml_populate.config import mmdb
-from xuml_populate.populate.actions.aparse_types import Flow_ap, MaxMult, Content, Activity_ap
+from xuml_populate.populate.actions.aparse_types import Flow_ap, MaxMult, Content, Activity_ap, Boundary_Actions
 from xuml_populate.populate.actions.action import Action
 from xuml_populate.pop_types import SMType
 from xuml_populate.populate.mm_class import MMclass
@@ -33,7 +33,7 @@ class SignalAction:
     We'll implement the other subclasses of Signal Action later.
     """
     # TODO: Implement other Signal Action subclasses
-    def __init__(self, statement_parse:Signal_a, activity_data: Activity_ap):
+    def __init__(self, statement_parse: Signal_a, activity_data: Activity_ap):
         """
         Initialize with everything the Signal statement requires
 
@@ -41,20 +41,19 @@ class SignalAction:
             statement_parse: Parsed representation of the Signal statement
             activity_data: Collected info about the activity
         """
+        self.action_id = None
         self.statement_parse = statement_parse
         self.activity_data = activity_data
 
         self.dest_iflow = None
         self.parameter_values = None
         self.delay_sflow = None
-        self.process()
-        self.action_id = None
 
-    def process(self) -> str:
+    def process(self) -> Boundary_Actions:
         """
         Initialize with everything the Signal statement requires
         Returns:
-            str: The populated Signal action id
+            Boundary_Actions: The signal action id is both the initial and final action id
         """
         dest_name = self.statement_parse.dest.target_iset.name
         if dest_name == 'me':
@@ -85,4 +84,4 @@ class SignalAction:
             # TODO: Populate Delivery Time
             pass
         Transaction.execute(db=mmdb, name=tr_Signal)
-        return self.action_id
+        return Boundary_Actions(ain={self.action_id}, aout={self.action_id})
