@@ -34,110 +34,109 @@ class ScalarExpr:
     So we need to walk through the parse tree through the nested operations, possibly
     building instance sets.
     """
-    text = None  # A text representation of the expression
-    activity_data = None
-    component_flow = None
-    output_tflow_id = None
-    action_inputs = None
-    action_outputs = None
-    anum = None
-    domain = None
+    def __init__(self, rhs: Scalar_RHS_a, input_instance_flow: Flow_ap, activity_data: Activity_ap):
+        """
 
-    @classmethod
-    def process(cls, rhs: Scalar_RHS_a, input_instance_flow: Flow_ap,
-                activity_data: Activity_ap) -> (Boundary_Actions, List[Flow_ap]):
+        Args:
+            rhs: The right hand side of a table assignment
+            input_instance_flow:
+            activity_data:
+        """
+        self.rhs = rhs
+        self.activity_data = activity_data
+        self.input_instance_flow = input_instance_flow
+        self.anum = activity_data.anum
+        self.domain = activity_data.domain
+
+        self.action_outputs = {}  # ID's of all Action output Data Flows
+        self.action_inputs = {}  # ID's of all Action input Data Flows
+        self.text = None  # A text representation of the expression
+        self.component_flow = None
+        self.output_tflow_id = None
+
+    def process(self) -> (Boundary_Actions, List[Flow_ap]):
         """
         Walks through a scalar expression on the right hand side of a scalar assignment to
         obtain a tuple flow with one or more attributes. Each attribute value will be assigned.
         The order in which attributes are specified in the action language is returned along with
         the tuple flow.
 
-        :param rhs: The right hand side of a table assignment
-        :param input_instance_flow:
-        :param activity_data:
-        :return:  The output tuple flow and the attribute names as ordered in the RHS text expression
+        Returns:
+            The output tuple flow and the attribute names as ordered in the RHS text expression
         """
-        cls.domain = activity_data.domain
-        cls.anum = activity_data.anum
-        cls.activity_data = activity_data
-
-        cls.action_outputs = {}  # ID's of all Action output Data Flows
-        cls.action_inputs = {}  # ID's of all Action input Data Flows
-
         # Obtain one or more scalar flows from the right hand side that will flow values into the left hand side
-        rhs_sflows = cls.walk(sexpr=rhs.expr, input_flow=input_instance_flow)
+        rhs_sflows = self.walk(sexpr=self.rhs.expr, input_flow=self.input_instance_flow)
 
-        all_ins = {v for s in cls.action_inputs.values() for v in s}
-        all_outs = {v for s in cls.action_outputs.values() for v in s}
-        init_aids = {a for a in cls.action_inputs.keys() if not cls.action_inputs[a].intersection(all_outs)}
-        final_aids = {a for a in cls.action_outputs.keys() if not cls.action_outputs[a].intersection(all_ins)}
+        all_ins = {v for s in self.action_inputs.values() for v in s}
+        all_outs = {v for s in self.action_outputs.values() for v in s}
+        init_aids = {a for a in self.action_inputs.keys() if not self.action_inputs[a].intersection(all_outs)}
+        final_aids = {a for a in self.action_outputs.keys() if not self.action_outputs[a].intersection(all_ins)}
 
         return Boundary_Actions(ain=init_aids, aout=final_aids), rhs_sflows
 
-    @classmethod
-    def resolve_iset(cls, iset: INST_a, op_chain: Op_chain_a = None, projection: Projection_a = None) -> List[Flow_ap]:
+    def resolve_iset(self, iset: INST_a, op_chain: Op_chain_a = None, projection: Projection_a = None) -> List[Flow_ap]:
         pass
 
-    @classmethod
-    def walk(cls, sexpr: str | INST_PROJ_a | MATH_a | BOOL_a | N_a, input_flow: Flow_ap) -> [Flow_ap]:
+    def walk(self, sexpr: str | INST_PROJ_a | MATH_a | BOOL_a | N_a, input_flow: Flow_ap) -> [Flow_ap]:
         """
 
         :param sexpr:  Parsed scalar expression
         :param input_flow:
         :return:  Output scalar flow
         """
-        component_flow = input_flow
+        self.component_flow = input_flow
         match type(sexpr).__name__:
             case 'str':  # TRUE or FALSE string
                 # we are assigining either true or false to the lhs, component flow will be scalar
-                svalue_output = Flow.populate_scalar_flow(scalar_type="Boolean", anum=cls.anum, domain=cls.domain,
+                svalue_output = Flow.populate_scalar_flow(scalar_type="Boolean", anum=self.anum, domain=self.domain,
                                                           value=sexpr, label=None)
                 return [svalue_output]
             case 'INST_PROJ_a':
-                action_input = component_flow
+                action_input = self.component_flow
                 iset = InstanceSet(input_instance_flow=action_input, iset_components=sexpr.iset.components,
-                                   activity_data=cls.activity_data)
-                initial_aid, final_aid, component_flow = iset.process()
+                                   activity_data=self.activity_data)
+                initial_aid, final_aid, self.component_flow = iset.process()
                 # Add the output flow generated by the instance set expression to the set of ouput flows
                 if initial_aid:
                     # For an InstanceSet with a single labled flow component, no action is created
                     # So don't process action inputs and outputs unless there is an initial_aid
-                    cls.action_inputs[initial_aid] = {action_input.fid}
+                    self.action_inputs[initial_aid] = {action_input.fid}
                     if final_aid:
-                        cls.action_outputs[final_aid] = {component_flow.fid}
-                action_input = component_flow
+                        self.action_outputs[final_aid] = {self.component_flow.fid}
+                action_input = self.component_flow
                 project_attrs = tuple([a.name for a in sexpr.projection.attrs])
                 aid, sflows = ReadAction.populate(input_single_instance_flow=action_input,
-                                                  attrs=project_attrs, anum=cls.anum, domain=cls.domain)
-                cls.action_inputs[aid] = {action_input.fid}
-                cls.action_outputs[aid] = {s.fid for s in sflows}
+                                                  attrs=project_attrs, anum=self.anum, domain=self.domain)
+                self.action_inputs[aid] = {action_input.fid}
+                self.action_outputs[aid] = {s.fid for s in sflows}
                 return sflows
             case 'N_a':
                 pass
             case 'BOOL_a':
                 pass
             case 'MATH_a':
-                action_input = component_flow
+                action_input = self.component_flow
                 operand_flows = []
                 op_name = sexpr.op
                 for o in sexpr.operands:
                     match type(o).__name__:
                         case 'INST_PROJ_a':
-                            component_flow = InstanceSet.process(input_instance_flow=action_input,
-                                                                 iset_components=o.iset.components,
-                                                                 activity_data=cls.activity_data)
+                            iset = InstanceSet(input_instance_flow=action_input, iset_components=o.iset.components,
+                                               activity_data=self.activity_data)
+                            self.component_flow = iset.process()
+
                             if o.iset.select:
                                 pass
                             if o.projection:
                                 tflow = ProjectAction.populate(projection=o.projection,
                                                                input_nsflow=action_input,
-                                                               activity_data=cls.activity_data)
+                                                               activity_data=self.activity_data)
                                 pass
                             pass
                         case _:
                             pass
 
-                    operand_flows.append(cls.walk(sexpr=o, input_flow=component_flow))
+                    operand_flows.append(self.walk(sexpr=o, input_flow=self.component_flow))
                 pass
             case 'Op_chain_a':
                 pass
@@ -146,4 +145,4 @@ class ScalarExpr:
                     f"Expected .... but received {type(sexpr).__name__} during sexpr walk")
                 raise ScalarOperationOrExpressionExpected
         # Process optional header, selection, and projection actions for the TEXPR
-        return component_flow
+        return self.component_flow

@@ -31,15 +31,23 @@ class ScalarAssignment:
     Break down a scalar assignment statement into action semantics and populate them
     """
 
-    input_instance_flow = None  # The instance flow feeding the next component on the RHS
-    input_instance_ctype = None  # The class type of the input instance flow
-    domain = None
-    anum = None
-    activity_path = None
-    scrall_text = None
+    def __init__(self, activity_data: Activity_ap, scalar_assign_parse: Scalar_Assignment_a):
+        """
 
-    @classmethod
-    def process(cls, activity_data: Activity_ap, scalar_assign_parse: Scalar_Assignment_a) -> Boundary_Actions:
+        Args:
+            activity_data:
+            scalar_assign_parse: A parsed scalar assignment
+        """
+        self.scalar_assign_parse = scalar_assign_parse
+        self.activity_data = activity_data
+        self.input_instance_flow = None  # The instance flow feeding the next component on the RHS
+        self.input_instance_ctype = None  # The class type of the input instance flow
+        self.domain = self.activity_data.domain
+        self.anum = self.activity_data.anum
+        self.activity_path = activity_data.activity_path
+        self.scrall_text = activity_data.scrall_text
+
+    def process(self) -> Boundary_Actions:
         """
         Given a parsed scalar assignment consisting of an LHS and an RHS, populate each component action
         and return the boundary actions.
@@ -48,30 +56,29 @@ class ScalarAssignment:
         The final output flow must be a scalar flow. The associated Scalar determines the type of the
         assignment.
 
-        :param activity_data:
-        :param scalar_assign_parse: A parsed scalar assignment
+        Returns:
+            boundary actions
         """
-        lhs = scalar_assign_parse.lhs
-        rhs = scalar_assign_parse.rhs
+        lhs = self.scalar_assign_parse.lhs
+        rhs = self.scalar_assign_parse.rhs
 
-        input_instance_flow = None
-        if activity_data.state_model:
-            match activity_data.smtype:
+        if self.activity_data.state_model:
+            match self.activity_data.smtype:
                 case SMType.LIFECYCLE:
-                    input_instance_flow = Flow_ap(fid=activity_data.xiflow, content=Content.INSTANCE,
-                                                  tname=activity_data.state_model, max_mult=MaxMult.ONE)
+                    self.input_instance_flow = Flow_ap(fid=self.activity_data.xiflow, content=Content.INSTANCE,
+                                                       tname=self.activity_data.state_model, max_mult=MaxMult.ONE)
                 case SMType.MA:
-                    input_instance_flow = Flow_ap(fid=activity_data.piflow, content=Content.INSTANCE,
-                                                  tname=activity_data.cname, max_mult=MaxMult.ONE)
+                    self.input_instance_flow = Flow_ap(fid=self.activity_data.piflow, content=Content.INSTANCE,
+                                                       tname=self.activity_data.cname, max_mult=MaxMult.ONE)
                 case SMType.SA:
                     # A single assigner state machine has no executing instance and hence no xi_flow
                     pass
-        elif activity_data.cname:
-            input_instance_flow = Flow_ap(fid=activity_data.xiflow, content=Content.INSTANCE,
-                                          tname=activity_data.cname, max_mult=MaxMult.ONE)
+        elif self.activity_data.cname:
+            self.input_instance_flow = Flow_ap(fid=self.activity_data.xiflow, content=Content.INSTANCE,
+                                               tname=self.activity_data.cname, max_mult=MaxMult.ONE)
 
-        bactions, scalar_flows = ScalarExpr.process(rhs=rhs, input_instance_flow=input_instance_flow,
-                                                    activity_data=activity_data)
+        se = ScalarExpr(rhs=rhs, input_instance_flow=self.input_instance_flow, activity_data=self.activity_data)
+        bactions, scalar_flows = se.process()
 
         # Where any actions populated for the RHS?
         if not bactions.ain and not bactions.aout:
@@ -108,27 +115,35 @@ class ScalarAssignment:
             # If the label is the name of an attribute of the executing instance, we need to write to that attribute
             # and in this case, there is no need for a Labeled Flow
             # TODO: What if the LHS is an attribute of some other instance/class?  ex: left traffic light.Signal = _go
-            class_name = activity_data.state_model
+            class_name = self.activity_data.state_model
             if not class_name:
-                class_name = activity_data.cname
+                class_name = self.activity_data.cname
             if class_name:
-                R = f"Name:<{label}>, Class:<{class_name}>, Domain:<{activity_data.domain}>"
+                R = f"Name:<{label}>, Class:<{class_name}>, Domain:<{self.activity_data.domain}>"
                 attribute_r = Relation.restrict(db=mmdb, relation="Attribute", restriction=R)
                 if attribute_r.body:
-                    WriteAction.populate(input_single_instance_flow=input_instance_flow,
-                                         input_sflow=scalar_flows[count], attr_name=label, anum=activity_data.anum,
-                                         domain=activity_data.domain)
+                    wa = WriteAction(write_to_instance_flow=self.input_instance_flow, value_to_write_flow=scalar_flows[count],
+                                     attr_name=label, anum=self.activity_data.anum, domain=self.activity_data.domain)
+                    write_aid = wa.populate()  # returns the write action id (not used)
+                    # Since the write action is on the lhs it is the one and only final boundary action
+                    # So we replace whatever action ids might have been assigned to the set
+                    write_out = {write_aid}
+                    old_ain = bactions.ain
+                    # If the scalar expression had no actions, the initial action is also the final action
+                    write_in = {write_aid} if not old_ain else old_ain
+                    bactions = Boundary_Actions(ain=write_in, aout=write_out)
+                    pass
                     continue
             sflow = scalar_flows[count]
             # Migrate the scalar_flow to a labeled flow
             _logger.info(f"Labeling output of scalar expression to [{lhs}]")
             Transaction.open(db=mmdb, name=tr_Migrate)
             # Delete the Unlabeled flow
-            Relvar.deleteone(db=mmdb, tr=tr_Migrate, relvar_name="Unlabeled_Flow",
-                             tid={"ID": sflow.fid, "Activity": activity_data.anum, "Domain": activity_data.domain})
+            Relvar.deleteone(db=mmdb, tr=tr_Migrate, relvar_name="Unlabeled Flow",
+                             tid={"ID": sflow.fid, "Activity": self.activity_data.anum, "Domain": self.activity_data.domain})
             # Insert the labeled flow
             Relvar.insert(db=mmdb, tr=tr_Migrate, relvar='Labeled Flow', tuples=[
-                Labeled_Flow_i(ID=sflow.fid, Activity=activity_data.anum, Domain=activity_data.domain, Name=label)
+                Labeled_Flow_i(ID=sflow.fid, Activity=self.activity_data.anum, Domain=self.activity_data.domain, Name=label)
             ])
             Transaction.execute(db=mmdb, name=tr_Migrate)
         return bactions

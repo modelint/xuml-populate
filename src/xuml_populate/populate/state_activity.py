@@ -61,6 +61,11 @@ class StateActivity:
         self.anum = activity_data['anum']
         self.activity_parse = activity_data['parse']
         self.domain = domain
+        # Maintain a dictionary of seq token control flow dependencies
+        # seq_token_out_action: {seq_token_in_actions}
+        self.seq_flows: dict[str, set(str)] = {}
+        # seq_token: output_action_ids
+        self.seq_tokens: dict[str, set(str)] = {}
         self.wave_ctr = 1  # Initialize wave counter
         self.waves = dict()
         self.xactions = None
@@ -420,6 +425,24 @@ class StateActivity:
             c = count + 1
             boundary_actions = ExecutionUnit.process_method_statement_set(
                 activity_data=activity_detail, statement_set=xunit.statement_set)
+            in_tokens, out_token = xunit.statement_set.input_tokens, xunit.output_token
+            if out_token:
+                # The statement has set an output_token (it cannot set more than one)
+                # Register the new out_token
+                if out_token in self.seq_tokens:
+                    pass  # TODO: raise exception -- token can ony be set by one statement
+                self.seq_tokens[out_token] = set()
+                for a in boundary_actions.aout:
+                    # Each output_action is the source of a control dependency named by that output token
+                    # Register the output token and the emitting action
+                    self.seq_tokens[out_token].add(a)
+                    self.seq_flows[a] = set()  # Set is filled when in_tokens are processed
+            for tk in in_tokens:
+                for a_upstream in self.seq_tokens[tk]:  # All upstream actions that set the token
+                    for a_in in boundary_actions.ain:  # All initial actions in this statement
+                        self.seq_flows[a_upstream].add(a_in)  # Add that initial action to the downstream value
+
+            pass
 
             # Process any input or output tokens
             # if output_tk not in seq_flows:

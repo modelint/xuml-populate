@@ -60,11 +60,8 @@ class Statement:
                                                            case_outputs=case_outputs)
                 pass
             case 'Scalar_Assignment_a':
-                boundary_actions = ScalarAssignment.process(activity_data=activity_data,
-                                                            scalar_assign_parse=statement_parse,
-                                                            # case_outputs=case_outputs,
-                                                            # case_prefix=case_prefix
-                                                            )
+                sa = ScalarAssignment(activity_data=activity_data, scalar_assign_parse=statement_parse)
+                boundary_actions = sa.process()
                 pass
             case 'Switch_a':
                 boundary_actions = SwitchStatement.populate(activity_data=activity_data,

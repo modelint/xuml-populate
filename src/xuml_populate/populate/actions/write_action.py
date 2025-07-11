@@ -20,50 +20,56 @@ from xuml_populate.populate.mmclass_nt import Write_Action_i, Attribute_Write_Ac
 _logger = logging.getLogger(__name__)
 
 # Transactions
-tr_write = "Write Action"
+tr_Write = "Write Action"
 
 class WriteAction:
     """
     Create all relations for a Write Action
     """
 
-    input_instance_flow = None  # We are selecting instances from this instance flow
-    output_instance_flow = None
-    action_id = None
+    def __init__(self, write_to_instance_flow: Flow_ap, value_to_write_flow: Flow_ap, attr_name: str,
+                 anum: str, domain: str):
+        """
 
-    @classmethod
-    def populate(cls, input_single_instance_flow: Flow_ap, input_sflow: Flow_ap, attr_name: str,
-                 anum: str, domain: str) -> str:
+        Args:
+            write_to_instance_flow: Update an attribute value of this instance
+            value_to_write_flow: Input scalar flow (the value to be written)
+            attr_name: The attribute name
+            anum: The activity number
+            domain: The domain name
+        """
+        assert write_to_instance_flow.content == Content.INSTANCE
+        assert write_to_instance_flow.max_mult == MaxMult.ONE
+        self.write_to_instance_flow = write_to_instance_flow  # We are selecting instances from this instance flow
+        self.cname = write_to_instance_flow.tname
+        self.anum = anum
+        self.domain = domain
+        self.attr_name = attr_name
+        self.value_to_write_flow = value_to_write_flow
+
+        self.output_instance_flow = None
+        self.action_id = None
+
+    def populate(self) -> str:
         """
         Populate the Write Action
 
-        :param input_single_instance_flow: Update an attribute value of this instance
-        :param attr_name: The attribute name
-        :param input_sflow: Input scalar flow (the value to be written)
-        :param anum:  The activity number
-        :param domain:  The domain name
-        :return: action_id
+        Returns:
+            action_id
         """
-
-        assert input_single_instance_flow.content == Content.INSTANCE
-        assert input_single_instance_flow.max_mult == MaxMult.ONE
-        cname = input_single_instance_flow.tname
-
-        # Get the class header
-        class_attrs = MMclass.header(cname=cname, domain=domain)
-
         # Populate the Action superclass instance and obtain its action_id
-        Transaction.open(db=mmdb, name=tr_write)
-        action_id = Action.populate(tr=tr_write, anum=anum, domain=domain, action_type="write")  # Transaction open
-        Relvar.insert(db=mmdb, tr=tr_write, relvar='Write Action', tuples=[
-            Write_Action_i(ID=action_id, Activity=anum, Domain=domain, Instance_flow=input_single_instance_flow.fid)
+        Transaction.open(db=mmdb, name=tr_Write)
+        self.action_id = Action.populate(tr=tr_Write, anum=self.anum, domain=self.domain, action_type="write")
+        Relvar.insert(db=mmdb, tr=tr_Write, relvar='Write Action', tuples=[
+            Write_Action_i(ID=self.action_id, Activity=self.anum, Domain=self.domain,
+                           Instance_flow=self.write_to_instance_flow.fid)
         ])
 
-        Relvar.insert(db=mmdb, tr=tr_write, relvar='Attribute Write Access', tuples=[
-            Attribute_Write_Access_i(Attribute=attr_name, Class=cname, Write_action=action_id, Activity=anum,
-                                     Domain=domain, Input_flow=input_sflow.fid)
+        Relvar.insert(db=mmdb, tr=tr_Write, relvar='Attribute Write Access', tuples=[
+            Attribute_Write_Access_i(Attribute=self.attr_name, Class=self.cname, Write_action=self.action_id,
+                                     Activity=self.anum, Domain=self.domain, Input_flow=self.value_to_write_flow.fid)
         ])
 
         # We now have a transaction with all select-action instances, enter into the metamodel db
-        Transaction.execute(db=mmdb, name=tr_write)  # write action
-        return action_id
+        Transaction.execute(db=mmdb, name=tr_Write)  # write action
+        return self.action_id
