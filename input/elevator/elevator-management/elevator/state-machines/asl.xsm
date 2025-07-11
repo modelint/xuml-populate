@@ -30,8 +30,8 @@ transitions
 --
 state Registering stop
 activity
-    Stop requested = TRUE
-    Stop registered -> me
+    Stop requested = TRUE <1> // Can't dispatch event until we know the attribute has been set
+    <1> Stop registered -> me
 transitions
     Stop registered > Requesting service
 --
