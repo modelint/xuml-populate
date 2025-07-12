@@ -18,8 +18,8 @@ from xuml_populate.config import mmdb
 from xuml_populate.populate.mmclass_nt import Labeled_Flow_i
 from xuml_populate.populate.actions.expressions.instance_set import InstanceSet
 from xuml_populate.exceptions.action_exceptions import *
-from xuml_populate.populate.actions.aparse_types import (Flow_ap, MaxMult, Content, Activity_ap, Boundary_Actions,
-                                                         Labeled_Flow)
+from xuml_populate.populate.actions.aparse_types import (Flow_ap, MaxMult, Content, MethodActivityAP, StateActivityAP,
+                                                         Activity_ap, Boundary_Actions, Labeled_Flow)
 
 _logger = logging.getLogger(__name__)
 
@@ -79,8 +79,13 @@ class InstanceAssignment:
 
         # If the Activity is a Method or a Lifecycle State Model State, define the executing instance flow
         xi_instance_flow = None
-        if activity_data.cname or activity_data.smtype == SMType.LIFECYCLE:  # cname defined only on Methods
-            xi_instance_flow = Flow_ap(fid=activity_data.xiflow, content=Content.INSTANCE, tname=activity_data.cname,
+        tname = None
+        if isinstance(activity_data, MethodActivityAP):
+            tname = activity_data.cname
+        elif isinstance(activity_data, StateActivityAP) and activity_data.smtype == SMType.LIFECYCLE:
+            tname = activity_data.state_model
+        if tname is not None:
+            xi_instance_flow = Flow_ap(fid=activity_data.xiflow, content=Content.INSTANCE, tname=tname,
                                        max_mult=MaxMult.ONE)
 
         # Process the instance set expression in the RHS and obtain the generated instance flow

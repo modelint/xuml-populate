@@ -20,7 +20,6 @@ from xuml_populate.populate.mmclass_nt import System_i
 _mmdb_fname = f"{mmdb}.ral"
 _logger = logging.getLogger(__name__)
 
-
 class System:
     """
     The command line specifies a package representing a System. The organization of this package is defined
@@ -47,7 +46,8 @@ class System:
         self.content = {}  # Parsed content for all files in the system package
         self.mmdb_path = Path(__file__).parent / "populate" / _mmdb_fname  # Path to the serialized repository db
         self.system_name = system_path.stem.title()
-        self.verbose=verbose
+        self.verbose = verbose
+        self.domains: dict[str, Domain] = {}  # Domain objects keyed by name
 
         # Process each domain folder in the system package
         for domain_path in system_path.iterdir():
@@ -159,7 +159,8 @@ class System:
 
         # Populate each domain into the metamodel db
         for domain_name, domain_parse in self.content.items():
-            Domain(domain=domain_name, content=domain_parse, parse_actions=self.parse_actions, verbose=self.verbose)
+            d = Domain(domain=domain_name, content=domain_parse, parse_actions=self.parse_actions, verbose=self.verbose)
+            self.domains[domain_name] = d
 
         # Save the populated metamodel
         saved_mmdb_name = f"mmdb_{self.name}.ral"

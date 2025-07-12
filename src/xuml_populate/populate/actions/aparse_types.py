@@ -1,7 +1,8 @@
 """ aparse_types.py -- Data types useful for processing parsed action language """
 
 from collections import namedtuple
-from typing import NamedTuple
+from typing import NamedTuple, TypedDict
+from dataclasses import dataclass
 from enum import Enum
 
 
@@ -15,6 +16,7 @@ class Content(Enum):
     INSTANCE = 2
     RELATION = 3
 
+
 Attribute_ap = namedtuple('Attribute_ap', 'name scalar')
 """ An Attribute/Scalar pair """
 Labeled_Flow = namedtuple('Labeled_Flow', 'label flow')
@@ -23,9 +25,32 @@ Attribute_Comparison = namedtuple('Attribute_Comparison', 'attr op')
 """ An attribute compared in a selection phrase """
 Boundary_Actions = namedtuple("Boundary_Actions", "ain aout")
 """ Initial actions not dependent on any data flow input and output actions that do not flow to any other action"""
-Activity_ap = namedtuple("Activity_ap", "anum domain cname sname state_model smtype eename opname xiflow piflow "
-                                        "activity_path scrall_text")
+
 """ Activity identification and diagnostic data """
+
+@dataclass(frozen=True, kw_only=True)
+class Activity_ap:
+    anum: str  # activity number
+    domain: str  # domainname
+    xiflow: str  # executing instance flow (none for assigner state activities)
+    activity_path: str  # descriptive name of activity for logging (e.g. domain, class, method name)
+    scrall_text: str  # Full unparsed text of the activity for logging and diagnostic reference
+
+@dataclass(frozen=True, kw_only=True)
+class MethodActivityAP(Activity_ap):
+    cname: str  # Method is defined on this class name
+
+@dataclass(frozen=True, kw_only=True)
+class StateActivityAP(Activity_ap):
+    sname: str  # state name
+    state_model: str  # state model name (class or rnum)
+    smtype: str  # lifecycle, sa assigner, ma assigner
+    piflow: str  # parititioning instance flow, set to None unless sm type is ma assigner
+
+@dataclass(frozen=True, kw_only=True)
+class OpActivityAP(Activity_ap):
+    eename: str
+    opname: str
 
 class Flow_ap(NamedTuple):
     """

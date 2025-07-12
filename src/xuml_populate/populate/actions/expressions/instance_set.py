@@ -11,7 +11,8 @@ from xuml_populate.populate.flow import Flow
 from xuml_populate.populate.actions.select_action import SelectAction
 from xuml_populate.populate.actions.restrict_action import RestrictAction
 from xuml_populate.populate.actions.rank_restrict_action import RankRestrictAction
-from xuml_populate.populate.actions.aparse_types import Flow_ap, MaxMult, Content, Activity_ap
+from xuml_populate.populate.actions.aparse_types import (Flow_ap, MaxMult, Content, Activity_ap,
+                                                         StateActivityAP, MethodActivityAP)
 from xuml_populate.exceptions.action_exceptions import *
 
 _logger = logging.getLogger(__name__)
@@ -59,7 +60,8 @@ class InstanceSet:
                     # If this path is the first component, it assumes it is traversing from an executing
                     # instance (self). But there is no self if the Activity is an assigner State Activity.
                     # So we throw an exception if this is the case.
-                    if count == 0 and self.activity_data.smtype and self.activity_data.smtype != SMType.LIFECYCLE:
+                    if count == 0 and isinstance(self.activity_data, StateActivityAP) and \
+                            self.activity_data.smtype != SMType.LIFECYCLE:
                         msg = (f"Path from self in an Assigner State here: {self.activity_data.activity_path} with path"
                                f"parse: {comp}")
                         _logger.error(msg)

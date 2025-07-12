@@ -1,5 +1,5 @@
 """
-anum.py – Populate an Activity
+activity.py – Populate an Activity
 """
 
 # System
@@ -41,7 +41,7 @@ class Activity:
     """
     # These dictionaries are for debugging purposes, delete once we get action semantics populated
     sm = {}
-    methods = {}
+    # methods = {}
     operations = {}
     domain = None
 
@@ -49,30 +49,6 @@ class Activity:
     def valid_param(cls, pname: str, activity: Activity_ap):
         # TODO: Verify that the parameter is in the signature of the specified activity with exception if not
         pass
-
-    @classmethod
-    def populate_method(cls, tr: str, action_text: str, cname: str, method: str,
-                        subsys: str, domain: str, parse_actions: bool) -> str:
-        """
-        Populate Synchronous Activity for Method
-
-        :param tr: The name of the open transaction
-        :param cname: The class name
-        :param method: The method name
-        :param action_text: Unparsed scrall text
-        :param subsys: The subsystem name
-        :param domain: The domain name
-        :param parse_actions:
-        :return: The Activity number (Anum)
-        """
-        cls.domain = domain
-        Anum = cls.populate(tr=tr, action_text=action_text, subsys=subsys, domain=domain, synchronous=True)
-        cls.methods.setdefault(cname, {})[method] = {
-            'anum': Anum, 'domain': domain, 'text': action_text, 'parse': None
-        }
-        # Parse the scrall and save for later population
-        cls.methods[cname][method]['parse'] = ScrallParser.parse_text(scrall_text=action_text, debug=False)
-        return Anum
 
     @classmethod
     def populate_operation(cls, tr: str, action_text: str, ee: str, subsys: str, domain: str,
@@ -110,11 +86,11 @@ class Activity:
             Activity_i(Anum=Anum, Domain=domain)
         ])
         if synchronous:
-            Relvar.insert(db=mmdb, tr=tr, relvar='Synchronous_Activity', tuples=[
+            Relvar.insert(db=mmdb, tr=tr, relvar='Synchronous Activity', tuples=[
                 Synchronous_Activity_i(Anum=Anum, Domain=domain)
             ])
         else:
-            Relvar.insert(db=mmdb, tr=tr, relvar='Asynchronous_Activity', tuples=[
+            Relvar.insert(db=mmdb, tr=tr, relvar='Asynchronous Activity', tuples=[
                 Asynchronous_Activity_i(Anum=Anum, Domain=domain)
             ])
         return Anum
@@ -171,18 +147,107 @@ class Activity:
                 Single_Assigner_Activity_i(Anum=Anum, Domain=domain)
         return Anum
 
+    @classmethod
+    def pop_xunits(cls, activity_obj):
+
+        signum = None
+        xi_flow_id = None
+        pi_flow_id = None
+        activity_path = None
+        domain = activity_obj.domain
+
+        match type(activity_obj).__name__:
+            case 'Method':
+                _logger.info(f"Populating method execution units: {activity_obj.class_name}.{activity_obj.name}")
+                # Look up signature
+                R = f"Method:<{activity_obj.name}>, Class:<{activity_obj.class_name}>, Domain:<{domain}>"
+                method_sig_r = Relation.restrict(db=mmdb, relation='Method Signature', restriction=R)
+                if not method_sig_r.body:
+                    # TODO: raise exception here
+                    pass
+                signum = method_sig_r.body[0]['SIGnum']
+
+                # Look up xi flow
+                R = f"Name:<{activity_obj.name}>, Class:<{activity_obj.class_name}>, Domain:<{domain}>"
+                method_r = Relation.restrict(db=mmdb, relation='Method', restriction=R)
+                if not method_r.body:
+                    # TODO: raise exception here
+                    pass
+                xi_flow_id = method_r.body[0]['Executing_instance_flow']
+                activity_path = f"{domain}:{activity_obj.class_name}:{activity_obj.name}.mtd"
+                pass
+            case 'State':
+                _logger.info(f"Populating state activity execution units: {activity_obj.state_model}")
+                # Look up signature
+                R = f"State_model:<{activity_obj.state_model}>, Domain:<{activity_obj.domain}>"
+                state_sig_r = Relation.restrict(db=mmdb, relation='State Signature', restriction=R)
+                if not state_sig_r.body:
+                    # TODO: raise exception here
+                    pass
+                signum = state_sig_r.body[0]['SIGnum']
+
+                match activity_obj.sm_type:
+                    case SMType.LIFECYCLE:
+                        # Look up the executign instance (xi) flow
+                        R = f"Anum:<{activity_obj.anum}>, Domain:<{domain}>"
+                        result = Relation.restrict(db=mmdb, relation='Lifecycle Activity', restriction=R)
+                        if not result.body:
+                            # TODO: raise exception here
+                            pass
+                        xi_flow_id = result.body[0]['Executing_instance_flow']
+                    case SMType.MA:
+                        # Look up the partitioning instance (pi) flow
+                        R = f"Anum:<{activity_obj.anum}>, Domain:<{domain}>"
+                        result = Relation.restrict(db=mmdb, relation='Multiple Assigner Activity', restriction=R)
+                        if not result.body:
+                            # TODO: raise exception here
+                            pass
+                        pi_flow_id = result.body[0]['Paritioning_instance_flow']
+                    case SMType.SA:
+                        pass  # No xi or pi flow (rnum only, no associated instance)
+
+                activity_path = f"{domain}:{activity_obj.state_model}.xsm"
+                activity_detail = Activity_ap(anum=activity_obj.anum, domain=domain,
+                                      cname=None, sname=activity_obj.state_name, state_model=activity_obj.state_model,
+                                      smtype=activity_obj.sm_type, eename=None, opname=None,
+                                      xiflow=xi_flow_id, piflow=pi_flow_id,
+                                      activity_path=activity_obj, scrall_text=activity_obj.activity_text)
+
+            case _:
+                pass
+
+        # aparse = self.activity_data['parse']
+        # activity_detail = Activity_ap(anum=self.activity_data['anum'], domain=self.domain,
+        #                               cname=self.class_name, sname=None, state_model=None, smtype=None, eename=None,
+        #                               opname=self.name, xiflow=xi_flow_id, piflow=None,
+        #                               activity_path=method_path, scrall_text=aparse[1])
+        #
+        # # seq_flows = {}  TODO: We don't appear to use these
+        # # seq_labels = set()
+        #
+        # # Here we process each statement set in the Method (Activity)
+        # for count, xunit in enumerate(aparse[0]):  # Use count for debugging
+        #     c = count + 1
+        #     if type(xunit.statement_set.statement).__name__ == 'Output_Flow_a':
+        #         # This is the statement set that returns the Method's value
+        #         ExecutionUnit.process_synch_output(activity_data=activity_detail,
+        #                                            synch_output=xunit.statement_set.statement)
+        #     else:
+        #         # This is a statement set that does not return the Method's value
+        #         boundary_actions = ExecutionUnit.process_method_statement_set(
+        #             activity_data=activity_detail, statement_set=xunit.statement_set)
+        #
+        #     # Process any input or output tokens
+        #     # if output_tk not in seq_flows:
+        #     # Get a set of terminal actions
+        #     # seq_flows[output_tk] = {'from': [terminal_actions], 'to': []}
+        # pass
 
     @classmethod
     def process_execution_units(cls):
         """
         Process each Scrall Execution Unit for all Activities (Method, State, and Synchronous Operation)
         """
-        # Populate each (Method) Activity
-        for class_name, method_data in cls.methods.items():
-            for method_name, activity_data in method_data.items():
-                ma = MethodActivity(name=method_name, class_name=class_name, activity_data=activity_data)
-                pass
-        pass
         # Populate each State Activity
         for state_model, sm in cls.sm.items():
             for state_name, activity_parse in sm.items():

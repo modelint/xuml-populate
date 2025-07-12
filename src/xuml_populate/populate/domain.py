@@ -44,9 +44,12 @@ class Domain:
         """
         _logger.info(f"Populating modeled domain [{domain}]")
 
+        self.name = domain
         self.subsystem_counter = {}
         self.types = None
         self.parse_actions = parse_actions
+        self.methods = []
+        self.state_models = []
 
         _logger.info(f"Transaction open: domain and subsystems [{domain}]")
         Transaction.open(db=mmdb, name=tr_Modeled_Domain)
@@ -93,12 +96,14 @@ class Domain:
             for m_parse in subsys_parse['methods'].values():
                 # All classes must be populated first, so that parameter types in signatures can be resolved
                 # as class or non-class types
-                Method(domain=domain, subsys=subsys.name, m_parse=m_parse, parse_actions=parse_actions)
+                m = Method(domain=self.name, subsys=subsys.name, m_parse=m_parse, parse_actions=parse_actions)
+                self.methods.append(m)
 
-            # Insert state machines
+            # Insert state models
             _logger.info("Populating state models")
             for sm in subsys_parse['state_models'].values():
-                StateModel(subsys=subsys.name, sm=sm, parse_actions=self.parse_actions)
+                pop_sm = StateModel(subsys=subsys.name, sm=sm, parse_actions=self.parse_actions)
+                self.state_models.append(pop_sm)
 
         Attribute.ResolveAttrTypes(domain=domain)
         _logger.info("Populating lineage")
@@ -112,6 +117,8 @@ class Domain:
         #     with redirect_stdout(f):
         #         Relvar.printall(db=mmdb)
         #
+        for m in self.methods:
+            m.process_execution_units()
         # Populate actions for all Activities
         Activity.process_execution_units()
         # if self.parse_actions:

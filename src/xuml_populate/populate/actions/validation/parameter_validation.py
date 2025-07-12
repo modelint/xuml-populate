@@ -5,7 +5,7 @@ parameter_validation.py – Verify that a parameter is defined
 import logging
 from xuml_populate.config import mmdb
 from xuml_populate.exceptions.action_exceptions import UndefinedParameter, UndefinedMethod
-from xuml_populate.populate.actions.aparse_types import Activity_ap
+from xuml_populate.populate.actions.aparse_types import Activity_ap, MethodActivityAP, StateActivityAP
 from pyral.relation import Relation
 
 _logger = logging.getLogger(__name__)
