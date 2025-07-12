@@ -5,7 +5,7 @@ restrict_action.py – Populate a Restrict Action instance in PyRAL
 import logging
 from typing import Set
 from xuml_populate.config import mmdb
-from xuml_populate.populate.actions.aparse_types import Flow_ap, Activity_ap
+from xuml_populate.populate.actions.aparse_types import Flow_ap, ActivityAP
 from xuml_populate.populate.actions.action import Action
 from xuml_populate.populate.actions.expressions.restriction_condition import RestrictCondition
 from xuml_populate.populate.flow import Flow
@@ -28,7 +28,7 @@ class RestrictAction:
     """
 
     def __init__(self, input_relation_flow: Flow_ap, selection_parse: Criteria_Selection_a,
-                 activity_data: Activity_ap):
+                 activity_data: ActivityAP):
         """
         Populate the Restrict Action
 

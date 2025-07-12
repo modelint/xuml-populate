@@ -11,7 +11,7 @@ from xuml_populate.populate.flow import Flow
 from xuml_populate.populate.actions.select_action import SelectAction
 from xuml_populate.populate.actions.restrict_action import RestrictAction
 from xuml_populate.populate.actions.rank_restrict_action import RankRestrictAction
-from xuml_populate.populate.actions.aparse_types import (Flow_ap, MaxMult, Content, Activity_ap,
+from xuml_populate.populate.actions.aparse_types import (Flow_ap, MaxMult, Content, ActivityAP,
                                                          StateActivityAP, MethodActivityAP)
 from xuml_populate.exceptions.action_exceptions import *
 
@@ -33,7 +33,7 @@ class InstanceSet:
         iset_components: The components in the instance set
         activity_data: General information about the enclosing anum, anum, domain, etc
     """
-    def __init__(self, input_instance_flow: Flow_ap, iset_components, activity_data: Activity_ap):
+    def __init__(self, input_instance_flow: Flow_ap, iset_components, activity_data: ActivityAP):
         self.component_flow = input_instance_flow
         self.activity_data = activity_data
         self.iset_components = iset_components

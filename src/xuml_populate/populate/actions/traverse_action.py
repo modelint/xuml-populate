@@ -23,7 +23,7 @@ from xuml_populate.exceptions.action_exceptions import (UndefinedRelationship, I
                                                         SubclassNotInGeneralization, PerspectiveNotDefined,
                                                         UndefinedAssociation, NeedPerspectiveOrClassToHop,
                                                         NeedPerspectiveToHop, UnexpectedClassOrPerspectiveInPath)
-from xuml_populate.populate.actions.aparse_types import Flow_ap, MaxMult, Content, Activity_ap
+from xuml_populate.populate.actions.aparse_types import Flow_ap, MaxMult, Content, ActivityAP
 from xuml_populate.populate.mmclass_nt import (Action_i, Traverse_Action_i, Path_i, Hop_i, Association_Class_Hop_i,
                                                Circular_Hop_i, Symmetric_Hop_i, Asymmetric_Circular_Hop_i,
                                                Ordinal_Hop_i, Straight_Hop_i,
@@ -49,7 +49,7 @@ class TraverseAction:
     Populate an output Instance Flow produced by this Traverse Action.
     """
 
-    def __init__(self, input_instance_flow: Flow_ap, path: PATH_a, activity_data: Activity_ap):
+    def __init__(self, input_instance_flow: Flow_ap, path: PATH_a, activity_data: ActivityAP):
         """
         Initialize the python attributes required to manage validation and population.
 

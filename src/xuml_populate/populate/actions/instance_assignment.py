@@ -19,7 +19,7 @@ from xuml_populate.populate.mmclass_nt import Labeled_Flow_i
 from xuml_populate.populate.actions.expressions.instance_set import InstanceSet
 from xuml_populate.exceptions.action_exceptions import *
 from xuml_populate.populate.actions.aparse_types import (Flow_ap, MaxMult, Content, MethodActivityAP, StateActivityAP,
-                                                         Activity_ap, Boundary_Actions, Labeled_Flow)
+                                                         ActivityAP, Boundary_Actions, Labeled_Flow)
 
 _logger = logging.getLogger(__name__)
 
@@ -54,7 +54,7 @@ class InstanceAssignment:
     assign_zero_one = None  # Does assignment operator limit to a zero or one instance selection?
 
     @classmethod
-    def process(cls, activity_data: Activity_ap, inst_assign: Inst_Assignment_a,
+    def process(cls, activity_data: ActivityAP, inst_assign: Inst_Assignment_a,
                 case_name: str, case_outputs: Set[Labeled_Flow]) -> Boundary_Actions:
         """
         Given a parsed instance set expression, populate each component action

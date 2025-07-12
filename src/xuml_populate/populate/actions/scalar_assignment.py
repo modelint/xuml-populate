@@ -16,7 +16,8 @@ from xuml_populate.pop_types import SMType
 from xuml_populate.populate.mmclass_nt import Labeled_Flow_i
 from xuml_populate.populate.actions.extract_action import ExtractAction
 from xuml_populate.populate.ns_flow import NonScalarFlow
-from xuml_populate.populate.actions.aparse_types import Flow_ap, MaxMult, Content, Activity_ap, Boundary_Actions
+from xuml_populate.populate.actions.aparse_types import (Flow_ap, MaxMult, Content, ActivityAP,
+                                                         MethodActivityAP, StateActivityAP, Boundary_Actions)
 from xuml_populate.populate.actions.expressions.scalar_expr import ScalarExpr
 from xuml_populate.exceptions.action_exceptions import ScalarAssignmentFlowMismatch, ScalarAssignmentfromMultipleTuples
 from xuml_populate.populate.actions.write_action import WriteAction
@@ -31,7 +32,7 @@ class ScalarAssignment:
     Break down a scalar assignment statement into action semantics and populate them
     """
 
-    def __init__(self, activity_data: Activity_ap, scalar_assign_parse: Scalar_Assignment_a):
+    def __init__(self, activity_data: ActivityAP, scalar_assign_parse: Scalar_Assignment_a):
         """
 
         Args:
@@ -62,18 +63,18 @@ class ScalarAssignment:
         lhs = self.scalar_assign_parse.lhs
         rhs = self.scalar_assign_parse.rhs
 
-        if self.activity_data.state_model:
+        if isinstance(self.activity_data, StateActivityAP):
             match self.activity_data.smtype:
                 case SMType.LIFECYCLE:
                     self.input_instance_flow = Flow_ap(fid=self.activity_data.xiflow, content=Content.INSTANCE,
                                                        tname=self.activity_data.state_model, max_mult=MaxMult.ONE)
                 case SMType.MA:
                     self.input_instance_flow = Flow_ap(fid=self.activity_data.piflow, content=Content.INSTANCE,
-                                                       tname=self.activity_data.cname, max_mult=MaxMult.ONE)
+                                                       tname=self.activity_data.pclass, max_mult=MaxMult.ONE)
                 case SMType.SA:
                     # A single assigner state machine has no executing instance and hence no xi_flow
                     pass
-        elif self.activity_data.cname:
+        elif isinstance(self.activity_data, MethodActivityAP):
             self.input_instance_flow = Flow_ap(fid=self.activity_data.xiflow, content=Content.INSTANCE,
                                                tname=self.activity_data.cname, max_mult=MaxMult.ONE)
 
@@ -115,14 +116,17 @@ class ScalarAssignment:
             # If the label is the name of an attribute of the executing instance, we need to write to that attribute
             # and in this case, there is no need for a Labeled Flow
             # TODO: What if the LHS is an attribute of some other instance/class?  ex: left traffic light.Signal = _go
-            class_name = self.activity_data.state_model
-            if not class_name:
+            class_name = None
+            if isinstance(self.activity_data, StateActivityAP) and self.activity_data.smtype == SMType.LIFECYCLE:
+                class_name = self.activity_data.state_model
+            elif isinstance(self.activity_data, MethodActivityAP):
                 class_name = self.activity_data.cname
             if class_name:
                 R = f"Name:<{label}>, Class:<{class_name}>, Domain:<{self.activity_data.domain}>"
                 attribute_r = Relation.restrict(db=mmdb, relation="Attribute", restriction=R)
                 if attribute_r.body:
-                    wa = WriteAction(write_to_instance_flow=self.input_instance_flow, value_to_write_flow=scalar_flows[count],
+                    wa = WriteAction(write_to_instance_flow=self.input_instance_flow,
+                                     value_to_write_flow=scalar_flows[count],
                                      attr_name=label, anum=self.activity_data.anum, domain=self.activity_data.domain)
                     write_aid = wa.populate()  # returns the write action id (not used)
                     # Since the write action is on the lhs it is the one and only final boundary action

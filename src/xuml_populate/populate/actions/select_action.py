@@ -5,7 +5,7 @@ select_action.py – Populate a selection action instance in PyRAL
 import logging
 from typing import List
 from xuml_populate.config import mmdb
-from xuml_populate.populate.actions.aparse_types import Flow_ap, MaxMult, Activity_ap, Attribute_Comparison
+from xuml_populate.populate.actions.aparse_types import Flow_ap, MaxMult, ActivityAP, Attribute_Comparison
 from xuml_populate.populate.actions.action import Action
 from xuml_populate.populate.flow import Flow
 from xuml_populate.populate.actions.expressions.restriction_condition import RestrictCondition
@@ -27,7 +27,7 @@ class SelectAction:
     Create all relations for a Select Statement
     """
 
-    def __init__(self, input_instance_flow: Flow_ap, selection_parse, activity_data: Activity_ap):
+    def __init__(self, input_instance_flow: Flow_ap, selection_parse, activity_data: ActivityAP):
         """
 
         :param input_instance_flow: The source flow into this selection

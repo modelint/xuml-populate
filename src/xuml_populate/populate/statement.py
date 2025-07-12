@@ -14,7 +14,7 @@ from xuml_populate.populate.actions.instance_assignment import InstanceAssignmen
 from xuml_populate.populate.actions.table_assignment import TableAssignment
 from xuml_populate.populate.actions.scalar_assignment import ScalarAssignment
 from xuml_populate.populate.actions.switch_statement import SwitchStatement
-from xuml_populate.populate.actions.aparse_types import Activity_ap, Boundary_Actions, Labeled_Flow
+from xuml_populate.populate.actions.aparse_types import ActivityAP, Boundary_Actions, Labeled_Flow
 
 _logger = logging.getLogger(__name__)
 
@@ -31,7 +31,7 @@ class Statement:
     xi_flow_id = None
 
     @classmethod
-    def populate(cls, activity_data: Activity_ap, statement_parse: namedtuple,
+    def populate(cls, activity_data: ActivityAP, statement_parse: namedtuple,
                  case_name: str = '', case_outputs: Set[Labeled_Flow] = None) -> Boundary_Actions:
         """
         Populate a Statement

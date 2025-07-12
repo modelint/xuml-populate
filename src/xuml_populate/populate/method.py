@@ -129,7 +129,7 @@ class Method:
         self.xi_flow_id = method_r.body[0]['Executing_instance_flow']
 
         activity_detail = MethodActivityAP(anum=self.anum, domain=self.domain,
-                                           cname=self.class_name, xiflow=self.xi_flow_id,
+                                           cname=self.class_name, opname=self.name, xiflow=self.xi_flow_id,
                                            activity_path=self.path, scrall_text=self.activity_parse[1])
 
         # Here we process each statement set in the Method (Activity)

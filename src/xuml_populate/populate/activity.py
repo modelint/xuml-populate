@@ -19,7 +19,7 @@ from xuml_populate.populate.flow import Flow
 from xuml_populate.populate.method_activity import MethodActivity
 from xuml_populate.populate.state_activity import StateActivity
 from xuml_populate.populate.element import Element
-from xuml_populate.populate.actions.aparse_types import Activity_ap
+from xuml_populate.populate.actions.aparse_types import ActivityAP
 from xuml_populate.populate.mmclass_nt import (Activity_i, Asynchronous_Activity_i, State_Activity_i,
                                                Synchronous_Activity_i, Lifecycle_Activity_i,
                                                Multiple_Assigner_Activity_i, Single_Assigner_Activity_i)
@@ -46,7 +46,7 @@ class Activity:
     domain = None
 
     @classmethod
-    def valid_param(cls, pname: str, activity: Activity_ap):
+    def valid_param(cls, pname: str, activity: ActivityAP):
         # TODO: Verify that the parameter is in the signature of the specified activity with exception if not
         pass
 
@@ -207,17 +207,17 @@ class Activity:
                         pass  # No xi or pi flow (rnum only, no associated instance)
 
                 activity_path = f"{domain}:{activity_obj.state_model}.xsm"
-                activity_detail = Activity_ap(anum=activity_obj.anum, domain=domain,
-                                      cname=None, sname=activity_obj.state_name, state_model=activity_obj.state_model,
-                                      smtype=activity_obj.sm_type, eename=None, opname=None,
-                                      xiflow=xi_flow_id, piflow=pi_flow_id,
-                                      activity_path=activity_obj, scrall_text=activity_obj.activity_text)
+                activity_detail = ActivityAP(anum=activity_obj.anum, domain=domain,
+                                             cname=None, sname=activity_obj.state_name, state_model=activity_obj.state_model,
+                                             smtype=activity_obj.sm_type, eename=None, opname=None,
+                                             xiflow=xi_flow_id, piflow=pi_flow_id,
+                                             activity_path=activity_obj, scrall_text=activity_obj.activity_text)
 
             case _:
                 pass
 
         # aparse = self.activity_data['parse']
-        # activity_detail = Activity_ap(anum=self.activity_data['anum'], domain=self.domain,
+        # activity_detail = ActivityAP(anum=self.activity_data['anum'], domain=self.domain,
         #                               cname=self.class_name, sname=None, state_model=None, smtype=None, eename=None,
         #                               opname=self.name, xiflow=xi_flow_id, piflow=None,
         #                               activity_path=method_path, scrall_text=aparse[1])

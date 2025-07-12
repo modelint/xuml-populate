@@ -7,7 +7,7 @@ from xuml_populate.config import mmdb
 from xuml_populate.exceptions.action_exceptions import ProjectedAttributeNotDefined
 from scrall.parse.visitor import Projection_a
 from xuml_populate.populate.flow import Flow
-from xuml_populate.populate.actions.aparse_types import Flow_ap, Content, Activity_ap
+from xuml_populate.populate.actions.aparse_types import Flow_ap, Content, ActivityAP
 from xuml_populate.populate.actions.action import Action
 from xuml_populate.populate.mmclass_nt import Relational_Action_i, Table_Action_i, Project_Action_i, \
     Projected_Attribute_i
@@ -27,7 +27,7 @@ class ProjectAction:
     """
 
     @classmethod
-    def populate(cls, input_nsflow: Flow_ap, projection: Projection_a, activity_data: Activity_ap) -> (str, Flow_ap):
+    def populate(cls, input_nsflow: Flow_ap, projection: Projection_a, activity_data: ActivityAP) -> (str, Flow_ap):
         """
         Populate the Project Action
 

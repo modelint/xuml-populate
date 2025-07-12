@@ -5,7 +5,7 @@ switch_statement.py – Populate a switch action instance in PyRAL
 import logging
 from xuml_populate.config import mmdb
 from xuml_populate.exceptions.action_exceptions import ActionException, BadScalarSwitchInput
-from xuml_populate.populate.actions.aparse_types import Activity_ap, Boundary_Actions
+from xuml_populate.populate.actions.aparse_types import ActivityAP, Boundary_Actions
 from xuml_populate.populate.actions.action import Action
 from xuml_populate.populate.flow import Flow
 from scrall.parse.visitor import Switch_a
@@ -35,7 +35,7 @@ class SwitchStatement:
     labeled_outputs = None
 
     @classmethod
-    def populate(cls, sw_parse: Switch_a, activity_data: Activity_ap) -> Boundary_Actions:
+    def populate(cls, sw_parse: Switch_a, activity_data: ActivityAP) -> Boundary_Actions:
         """
         Populate the Switch Action and its Cases
 

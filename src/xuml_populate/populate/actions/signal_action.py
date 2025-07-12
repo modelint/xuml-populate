@@ -13,7 +13,7 @@ from pyral.transaction import Transaction
 
 # xUML populate
 from xuml_populate.config import mmdb
-from xuml_populate.populate.actions.aparse_types import Flow_ap, MaxMult, Content, Activity_ap, Boundary_Actions
+from xuml_populate.populate.actions.aparse_types import Flow_ap, MaxMult, Content, ActivityAP, Boundary_Actions
 from xuml_populate.populate.actions.action import Action
 from xuml_populate.pop_types import SMType
 from xuml_populate.populate.mm_class import MMclass
@@ -33,7 +33,7 @@ class SignalAction:
     We'll implement the other subclasses of Signal Action later.
     """
     # TODO: Implement other Signal Action subclasses
-    def __init__(self, statement_parse: Signal_a, activity_data: Activity_ap):
+    def __init__(self, statement_parse: Signal_a, activity_data: ActivityAP):
         """
         Initialize with everything the Signal statement requires
 

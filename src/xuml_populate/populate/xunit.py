@@ -12,7 +12,7 @@ from pyral.relvar import Relvar
 from xuml_populate.config import mmdb
 from xuml_populate.populate.actions.aparse_types import Flow_ap, Content, MaxMult
 from xuml_populate.populate.statement import Statement
-from xuml_populate.populate.actions.aparse_types import Activity_ap
+from xuml_populate.populate.actions.aparse_types import ActivityAP
 from xuml_populate.populate.actions.expressions.instance_set import InstanceSet
 from xuml_populate.populate.actions.expressions.scalar_expr import ScalarExpr
 from xuml_populate.populate.mmclass_nt import Synchronous_Output_i
@@ -36,7 +36,7 @@ class ExecutionUnit:
         pass
 
     @classmethod
-    def process_synch_output(cls, activity_data: Activity_ap, synch_output: Output_Flow_a):
+    def process_synch_output(cls, activity_data: ActivityAP, synch_output: Output_Flow_a):
         """
 
         :param activity_data:
@@ -91,7 +91,7 @@ class ExecutionUnit:
         pass
 
     @classmethod
-    def process_method_statement_set(cls, activity_data: Activity_ap, statement_set) -> (
+    def process_method_statement_set(cls, activity_data: ActivityAP, statement_set) -> (
             List[str], List[str]):
         """
         Initiates the population of all elements derived from a set of statements in a method.

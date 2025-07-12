@@ -4,7 +4,7 @@ import logging
 from xuml_populate.config import mmdb
 from scrall.parse.visitor import Execution_Unit_a, Seq_Statement_Set_a, Comp_Statement_Set_a
 from xuml_populate.populate.statement import Statement
-from xuml_populate.populate.actions.aparse_types import Activity_ap
+from xuml_populate.populate.actions.aparse_types import ActivityAP
 from typing import List
 
 class SynchOutput:
@@ -18,7 +18,7 @@ class SynchOutput:
         pass
 
     @classmethod
-    def process_method_statement_set(cls, activity_data: Activity_ap, statement_set) -> (List[str], List[str]):
+    def process_method_statement_set(cls, activity_data: ActivityAP, statement_set) -> (List[str], List[str]):
         """
         Initiates the population of all elements derived from a set of statements in a method.
 

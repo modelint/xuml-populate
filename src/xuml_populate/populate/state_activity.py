@@ -14,7 +14,7 @@ from pyral.rtypes import JoinCmd, ProjectCmd, SetCompareCmd, SetOp, Attribute, S
 # xUML Populate
 from xuml_populate.config import mmdb
 from xuml_populate.pop_types import SMType
-from xuml_populate.populate.actions.aparse_types import Activity_ap
+from xuml_populate.populate.actions.aparse_types import ActivityAP
 from xuml_populate.populate.xunit import ExecutionUnit
 from xuml_populate.populate.mmclass_nt import Flow_Dependency_i, Wave_i, Wave_Assignment_i
 from xuml_populate.exceptions.action_exceptions import MethodXIFlowNotPopulated, LifecycleXIFlowNotPopulated, \
@@ -412,11 +412,11 @@ class StateActivity:
 
         state_path = f"{self.domain}:{self.state_model}.xsm"
 
-        activity_detail = Activity_ap(anum=self.anum, domain=self.domain,
-                                      cname=None, sname=self.state_name, state_model=self.state_model,
-                                      smtype=self.sm_type, eename=None, opname=None,
-                                      xiflow=xi_flow_id, piflow=pi_flow_id,
-                                      activity_path=state_path, scrall_text=self.activity_text)
+        activity_detail = ActivityAP(anum=self.anum, domain=self.domain,
+                                     cname=None, sname=self.state_name, state_model=self.state_model,
+                                     smtype=self.sm_type, eename=None, opname=None,
+                                     xiflow=xi_flow_id, piflow=pi_flow_id,
+                                     activity_path=state_path, scrall_text=self.activity_text)
         seq_flows = {}
         seq_labels = set()
 

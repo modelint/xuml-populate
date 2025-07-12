@@ -6,7 +6,7 @@ import logging
 from xuml_populate.config import mmdb
 from xuml_populate.populate.actions.table import Table
 from xuml_populate.populate.flow import Flow
-from xuml_populate.populate.actions.aparse_types import Flow_ap, MaxMult, Content, Activity_ap
+from xuml_populate.populate.actions.aparse_types import Flow_ap, MaxMult, Content, ActivityAP
 from xuml_populate.exceptions.action_exceptions import (ProductForbidsCommonAttributes, UnjoinableHeaders,
                                                         SetOpRequiresSameHeaders)
 from xuml_populate.populate.actions.action import Action
@@ -33,7 +33,7 @@ class SetAction:
     ns_type = None
 
     @classmethod
-    def populate(cls, a_input: Flow_ap, b_input: Flow_ap, setop: str, activity_data: Activity_ap) -> (str, Flow_ap):
+    def populate(cls, a_input: Flow_ap, b_input: Flow_ap, setop: str, activity_data: ActivityAP) -> (str, Flow_ap):
         """
         Populate the Set Action
 

@@ -13,7 +13,7 @@ from pyral.transaction import Transaction
 # xUML Populate
 from xuml_populate.config import mmdb
 from xuml_populate.exceptions.action_exceptions import CallFromUndefinedName
-from xuml_populate.populate.actions.aparse_types import Activity_ap, Boundary_Actions
+from xuml_populate.populate.actions.aparse_types import ActivityAP, Boundary_Actions
 
 class CallStatement:
     """
@@ -27,7 +27,7 @@ class CallStatement:
 
     """
 
-    def __init__(self, call_parse: Call_a, activity_data: Activity_ap):
+    def __init__(self, call_parse: Call_a, activity_data: ActivityAP):
 
         self.parse = call_parse
         self.activity_data = activity_data

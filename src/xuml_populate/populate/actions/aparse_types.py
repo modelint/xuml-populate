@@ -29,7 +29,7 @@ Boundary_Actions = namedtuple("Boundary_Actions", "ain aout")
 """ Activity identification and diagnostic data """
 
 @dataclass(frozen=True, kw_only=True)
-class Activity_ap:
+class ActivityAP:
     anum: str  # activity number
     domain: str  # domainname
     xiflow: str  # executing instance flow (none for assigner state activities)
@@ -37,18 +37,20 @@ class Activity_ap:
     scrall_text: str  # Full unparsed text of the activity for logging and diagnostic reference
 
 @dataclass(frozen=True, kw_only=True)
-class MethodActivityAP(Activity_ap):
+class MethodActivityAP(ActivityAP):
     cname: str  # Method is defined on this class name
+    opname: str  # Name of the method
 
 @dataclass(frozen=True, kw_only=True)
-class StateActivityAP(Activity_ap):
+class StateActivityAP(ActivityAP):
     sname: str  # state name
     state_model: str  # state model name (class or rnum)
     smtype: str  # lifecycle, sa assigner, ma assigner
     piflow: str  # parititioning instance flow, set to None unless sm type is ma assigner
+    pclass: str  # name of the partitioning class
 
 @dataclass(frozen=True, kw_only=True)
-class OpActivityAP(Activity_ap):
+class OpActivityAP(ActivityAP):
     eename: str
     opname: str
 

@@ -4,7 +4,7 @@ rename_action.py – Populate a selection action instance in PyRAL
 
 import logging
 from xuml_populate.config import mmdb
-from xuml_populate.populate.actions.aparse_types import Flow_ap, MaxMult, Content, Activity_ap
+from xuml_populate.populate.actions.aparse_types import Flow_ap, MaxMult, Content, ActivityAP
 from xuml_populate.populate.flow import Flow
 from xuml_populate.populate.ns_flow import NonScalarFlow
 from xuml_populate.populate.actions.action import Action
@@ -24,7 +24,7 @@ class RenameAction:
 
     @classmethod
     def populate(cls, input_nsflow: Flow_ap, from_attr: str, to_attr: str,
-                 activity_data: Activity_ap ) -> (str, Flow_ap):
+                 activity_data: ActivityAP) -> (str, Flow_ap):
         """
 
         :param input_nsflow:

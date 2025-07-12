@@ -9,7 +9,7 @@ from typing import Optional, Set, Dict, List
 from xuml_populate.populate.attribute import Attribute
 from xuml_populate.populate.actions.validation.parameter_validation import validate_param
 from xuml_populate.populate.actions.table_attribute import TableAttribute
-from xuml_populate.populate.actions.aparse_types import (Flow_ap, MaxMult, Content, Activity_ap, Attribute_Comparison,
+from xuml_populate.populate.actions.aparse_types import (Flow_ap, MaxMult, Content, ActivityAP, Attribute_Comparison,
                                                          Attribute_ap)
 from xuml_populate.populate.actions.read_action import ReadAction
 from xuml_populate.populate.actions.extract_action import ExtractAction
@@ -45,7 +45,7 @@ class RestrictCondition:
         :return: Selection cardinality, attribute comparisons, and a set of scalar flows input for attribute comparison
     """
     def __init__(self, tr: str, action_id: str, input_nsflow: Flow_ap, selection_parse: Criteria_Selection_a,
-                 activity_data: Activity_ap):
+                 activity_data: ActivityAP):
         """
 
         :param tr:

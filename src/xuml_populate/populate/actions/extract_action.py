@@ -6,7 +6,7 @@ import logging
 from xuml_populate.config import mmdb
 from xuml_populate.populate.actions.table import Table
 from typing import Set, Dict, List, Optional
-from xuml_populate.populate.actions.aparse_types import Flow_ap, MaxMult, Content, Activity_ap
+from xuml_populate.populate.actions.aparse_types import Flow_ap, MaxMult, Content, ActivityAP
 from xuml_populate.exceptions.action_exceptions import (ProductForbidsCommonAttributes, UnjoinableHeaders,
                                                         SetOpRequiresSameHeaders)
 from xuml_populate.populate.actions.action import Action
@@ -28,7 +28,7 @@ class ExtractAction:
     Create all relations for an Extract Action
     """
     def __init__(self, tuple_flow: Flow_ap, attr: str, anum: str,
-                 domain: str, activity_data: Activity_ap, label: str = None):
+                 domain: str, activity_data: ActivityAP, label: str = None):
         """
         Populate the Extract Action
 

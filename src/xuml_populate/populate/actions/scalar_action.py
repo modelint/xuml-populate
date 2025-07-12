@@ -5,7 +5,7 @@ scalar_action.py – Populate a scalar action instance in PyRAL
 import logging
 from typing import Set, List, Tuple
 from xuml_populate.config import mmdb
-from xuml_populate.populate.actions.aparse_types import Flow_ap, MaxMult, Content, Activity_ap
+from xuml_populate.populate.actions.aparse_types import Flow_ap, MaxMult, Content, ActivityAP
 from xuml_populate.populate.actions.action import Action
 from xuml_populate.populate.mm_class import MMclass
 from scrall.parse.visitor import Projection_a

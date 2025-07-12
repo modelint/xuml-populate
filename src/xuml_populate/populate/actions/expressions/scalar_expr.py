@@ -14,7 +14,7 @@ from xuml_populate.populate.actions.expressions.instance_set import InstanceSet
 from xuml_populate.populate.actions.read_action import ReadAction
 from xuml_populate.exceptions.action_exceptions import ScalarOperationOrExpressionExpected
 from xuml_populate.populate.flow import Flow
-from xuml_populate.populate.actions.aparse_types import Flow_ap, MaxMult, Content, Activity_ap, Boundary_Actions
+from xuml_populate.populate.actions.aparse_types import Flow_ap, MaxMult, Content, ActivityAP, Boundary_Actions
 from xuml_populate.populate.actions.project_action import ProjectAction
 
 _logger = logging.getLogger(__name__)
@@ -34,7 +34,7 @@ class ScalarExpr:
     So we need to walk through the parse tree through the nested operations, possibly
     building instance sets.
     """
-    def __init__(self, rhs: Scalar_RHS_a, input_instance_flow: Flow_ap, activity_data: Activity_ap):
+    def __init__(self, rhs: Scalar_RHS_a, input_instance_flow: Flow_ap, activity_data: ActivityAP):
         """
 
         Args:

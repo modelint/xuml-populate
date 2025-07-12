@@ -6,7 +6,7 @@ from xuml_populate.populate.actions.expressions.instance_set import InstanceSet
 from xuml_populate.populate.actions.expressions.class_accessor import ClassAccessor
 from xuml_populate.populate.flow import Flow
 from xuml_populate.populate.actions.rename_action import RenameAction
-from xuml_populate.populate.actions.aparse_types import Flow_ap, MaxMult, Content, Activity_ap, Boundary_Actions
+from xuml_populate.populate.actions.aparse_types import Flow_ap, MaxMult, Content, ActivityAP, Boundary_Actions
 from xuml_populate.populate.actions.select_action import SelectAction
 from xuml_populate.populate.actions.restrict_action import RestrictAction
 from xuml_populate.populate.actions.project_action import ProjectAction
@@ -51,7 +51,7 @@ class TableExpr:
     action_outputs = None
 
     @classmethod
-    def process(cls, tuple_output: bool, activity_data: Activity_ap, rhs: TEXPR_a, input_instance_flow: Flow_ap) -> (
+    def process(cls, tuple_output: bool, activity_data: ActivityAP, rhs: TEXPR_a, input_instance_flow: Flow_ap) -> (
             Boundary_Actions, Flow_ap):
         """
         Initiate the recursive descent through a table expression and yield a final result as either a

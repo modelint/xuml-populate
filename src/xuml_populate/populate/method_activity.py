@@ -14,7 +14,7 @@ from pyral.rtypes import JoinCmd, ProjectCmd, SetCompareCmd, SetOp, Attribute, S
 
 # xUML Populate
 from xuml_populate.config import mmdb
-from xuml_populate.populate.actions.aparse_types import Activity_ap
+from xuml_populate.populate.actions.aparse_types import ActivityAP
 from xuml_populate.populate.xunit import ExecutionUnit
 from xuml_populate.populate.mmclass_nt import Flow_Dependency_i, Wave_i, Wave_Assignment_i
 from xuml_populate.exceptions.action_exceptions import MethodXIFlowNotPopulated
@@ -381,10 +381,10 @@ class MethodActivity:
         method_path = f"{self.domain}:{self.class_name}:{self.name}.mtd"
 
         aparse = self.activity_data['parse']
-        activity_detail = Activity_ap(anum=self.activity_data['anum'], domain=self.domain,
-                                      cname=self.class_name, sname=None, state_model=None, smtype=None, eename=None,
-                                      opname=self.name, xiflow=xi_flow_id, piflow=None,
-                                      activity_path=method_path, scrall_text=aparse[1])
+        activity_detail = ActivityAP(anum=self.activity_data['anum'], domain=self.domain,
+                                     cname=self.class_name, sname=None, state_model=None, smtype=None, eename=None,
+                                     opname=self.name, xiflow=xi_flow_id, piflow=None,
+                                     activity_path=method_path, scrall_text=aparse[1])
 
         # seq_flows = {}  TODO: We don't appear to use these
         # seq_labels = set()
