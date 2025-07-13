@@ -5,6 +5,7 @@ state_model.py – Process parsed lifecycle to p
 # System
 import logging
 from enum import Enum
+from typing import Tuple
 
 # Model Integration
 from xsm_parser.state_model_parser import StateModel_a
@@ -14,6 +15,7 @@ from pyral.transaction import Transaction
 
 
 # xUML Populate
+from xuml_populate.populate.state_activity import StateActivity
 from xuml_populate.pop_types import SMType
 from xuml_populate.config import mmdb
 from xuml_populate.exceptions.mp_exceptions import MismatchedStateSignature, BadStateModelName
@@ -57,6 +59,8 @@ class StateModel:
         self.signums = {}  # Remember signature of each inserted state for processing transitions
         self.signatures = {}
         self.parse_actions = parse_actions
+        self.states: dict[str, dict] = {}
+        self.domain = sm.domain
 
         # Populate
         # It is easiest to create all events and states at once before checking constraints
@@ -95,12 +99,14 @@ class StateModel:
                 State_i(Name=s.state.name, State_model=self.sm_name, Domain=sm.domain)
             ])
             # Create its Activity
-            anum = Activity.populate_state(tr=tr_SM,
-                                           state=s.state.name, subsys=subsys, actions=s.activity,
-                                           state_model=self.sm_name, domain=sm.domain,
-                                           parse_actions=self.parse_actions,
-                                           sm_type=self.sm_type
-                                           )
+            state_info = Activity.populate_state(
+                tr=tr_SM, state=s.state.name, subsys=subsys, actions=s.activity,
+                state_model=self.sm_name, domain=sm.domain,
+                parse_actions=self.parse_actions, sm_type=self.sm_type)
+            self.states[s.state.name] = state_info
+            anum = state_info["anum"]
+
+
             # Signature
             sig_params = frozenset(s.state.signature)
             if sig_params not in self.signatures:
@@ -252,3 +258,13 @@ class StateModel:
                     ])
 
         Transaction.execute(db=mmdb, name=tr_SM)
+
+    def process_states(self):
+        """
+        """
+        for name, s_data in self.states.items():
+            sa = StateActivity(state_name=name, state_model=self.sm_name,
+                               activity_data=s_data, domain=self.domain)
+            pass
+        pass
+

@@ -117,12 +117,13 @@ class Domain:
         #     with redirect_stdout(f):
         #         Relvar.printall(db=mmdb)
         #
+        # Populate actions for all Activities
         for m in self.methods:
             m.process_execution_units()
-        # Populate actions for all Activities
-        Activity.process_execution_units()
-        # if self.parse_actions:
-        #     Activity.process_execution_units()
+        for s in self.state_models:
+            s.process_states()
+
+        pass
 
         # Print out the populated metamodel
         if verbose:

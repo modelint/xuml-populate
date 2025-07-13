@@ -6,7 +6,6 @@ activity.py – Populate an Activity
 import logging
 from typing import NamedTuple
 
-
 # Model Integration
 from pyral.relvar import Relvar
 from pyral.relation import Relation
@@ -40,8 +39,6 @@ class Activity:
     Create an Activity relation
     """
     # These dictionaries are for debugging purposes, delete once we get action semantics populated
-    sm = {}
-    # methods = {}
     operations = {}
     domain = None
 
@@ -97,23 +94,25 @@ class Activity:
 
     @classmethod
     def populate_state(cls, tr: str, state: str, state_model: str, sm_type: SMType, actions: str,
-                       subsys: str, domain: str, parse_actions: bool) -> str:
+                       subsys: str, domain: str, parse_actions: bool) -> dict:
         """
-        :param tr:  Name of the transaction
-        :param state: State name
-        :param state_model:  State model name
-        :param sm_type:  Lifecycle, Single or Multiple assigner
-        :param actions:
-        :param subsys:
-        :param domain:
-        :param parse_actions:
-        :return: Anum
+
+        Args:
+            tr: Name of the transaction
+            state: State name
+            state_model: State model name
+            sm_type: Lifecycle, Single or Multiple assigner
+            actions:
+            subsys:
+            domain:
+            parse_actions:
+
+        Returns:
+            Dictionary of state info including parse result
         """
 
         # Parse scrall in this state and add it to temporary sm dictionary
         action_text = ''.join(actions) + '\n'
-        if state_model not in cls.sm:
-            cls.sm[state_model] = {}
         if parse_actions:
             parsed_activity = ScrallParser.parse_text(scrall_text=action_text, debug=False)
         else:
@@ -122,7 +121,7 @@ class Activity:
 
         # Create the Susbystem Element and obtain a unique Anum
         Anum = cls.populate(tr=tr, action_text=action_text, subsys=subsys, domain=domain, synchronous=False)
-        cls.sm[state_model][state] = {'anum': Anum, 'sm_type': sm_type, 'parse': parsed_activity[0],
+        state_info = {'anum': Anum, 'sm_type': sm_type, 'parse': parsed_activity[0],
                                       'text': action_text, 'domain': domain}
         Relvar.insert(db=mmdb, tr=tr, relvar='State_Activity', tuples=[
             State_Activity_i(Anum=Anum, Domain=domain)
@@ -145,7 +144,7 @@ class Activity:
                 ])
             case SMType.SA:
                 Single_Assigner_Activity_i(Anum=Anum, Domain=domain)
-        return Anum
+        return state_info
 
     @classmethod
     def pop_xunits(cls, activity_obj):
