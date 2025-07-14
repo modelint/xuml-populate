@@ -1,7 +1,7 @@
 """ aparse_types.py -- Data types useful for processing parsed action language """
 
 from collections import namedtuple
-from typing import NamedTuple, TypedDict
+from typing import NamedTuple
 from dataclasses import dataclass
 from enum import Enum
 
@@ -15,6 +15,11 @@ class Content(Enum):
     SCALAR = 1
     INSTANCE = 2
     RELATION = 3
+
+class SMType(Enum):
+    LIFECYCLE = 1
+    SA = 2
+    MA = 3
 
 
 Attribute_ap = namedtuple('Attribute_ap', 'name scalar')
@@ -45,7 +50,7 @@ class MethodActivityAP(ActivityAP):
 class StateActivityAP(ActivityAP):
     sname: str  # state name
     state_model: str  # state model name (class or rnum)
-    smtype: str  # lifecycle, sa assigner, ma assigner
+    smtype: SMType  # lifecycle, sa assigner, ma assigner
     piflow: str  # parititioning instance flow, set to None unless sm type is ma assigner
     pclass: str  # name of the partitioning class
 

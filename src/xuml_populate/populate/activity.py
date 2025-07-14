@@ -18,11 +18,10 @@ from scrall.parse.parser import ScrallParser
 # xUML Populate
 from xuml_populate.populate.mmclass_nt import Flow_Dependency_i, Wave_i, Wave_Assignment_i
 from xuml_populate.exceptions.action_exceptions import MethodXIFlowNotPopulated
-from xuml_populate.pop_types import SMType
 from xuml_populate.config import mmdb
 from xuml_populate.populate.flow import Flow
 from xuml_populate.populate.element import Element
-from xuml_populate.populate.actions.aparse_types import ActivityAP, StateActivityAP, MethodActivityAP
+from xuml_populate.populate.actions.aparse_types import ActivityAP, SMType
 from xuml_populate.populate.mmclass_nt import (Activity_i, Asynchronous_Activity_i, State_Activity_i,
                                                Synchronous_Activity_i, Lifecycle_Activity_i,
                                                Multiple_Assigner_Activity_i, Single_Assigner_Activity_i)

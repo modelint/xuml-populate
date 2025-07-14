@@ -15,8 +15,8 @@ from pyral.transaction import Transaction
 
 
 # xUML Populate
+from xuml_populate.populate.actions.aparse_types import SMType
 from xuml_populate.populate.state_activity import StateActivity
-from xuml_populate.pop_types import SMType
 from xuml_populate.config import mmdb
 from xuml_populate.exceptions.mp_exceptions import MismatchedStateSignature, BadStateModelName
 from xuml_populate.populate.flow import Flow

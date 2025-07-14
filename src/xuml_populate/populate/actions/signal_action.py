@@ -13,9 +13,8 @@ from pyral.transaction import Transaction
 
 # xUML populate
 from xuml_populate.config import mmdb
-from xuml_populate.populate.actions.aparse_types import Flow_ap, MaxMult, Content, ActivityAP, Boundary_Actions
+from xuml_populate.populate.actions.aparse_types import Flow_ap, MaxMult, Content, ActivityAP, Boundary_Actions, SMType
 from xuml_populate.populate.actions.action import Action
-from xuml_populate.pop_types import SMType
 from xuml_populate.populate.mm_class import MMclass
 from xuml_populate.populate.flow import Flow
 from xuml_populate.populate.mmclass_nt import (Signal_Action_i, Supplied_Parameter_Value_i,

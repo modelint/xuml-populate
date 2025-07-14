@@ -12,11 +12,10 @@ from pyral.transaction import Transaction
 
 # xUML populate
 from xuml_populate.config import mmdb
-from xuml_populate.pop_types import SMType
 from xuml_populate.populate.mmclass_nt import Labeled_Flow_i
 from xuml_populate.populate.actions.extract_action import ExtractAction
 from xuml_populate.populate.ns_flow import NonScalarFlow
-from xuml_populate.populate.actions.aparse_types import (Flow_ap, MaxMult, Content, ActivityAP,
+from xuml_populate.populate.actions.aparse_types import (Flow_ap, MaxMult, Content, ActivityAP, SMType,
                                                          MethodActivityAP, StateActivityAP, Boundary_Actions)
 from xuml_populate.populate.actions.expressions.scalar_expr import ScalarExpr
 from xuml_populate.exceptions.action_exceptions import ScalarAssignmentFlowMismatch, ScalarAssignmentfromMultipleTuples

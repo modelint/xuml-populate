@@ -13,13 +13,12 @@ from pyral.relation import Relation  # For debugging
 from pyral.relvar import Relvar
 
 # xUML Populate
-from xuml_populate.pop_types import SMType
 from xuml_populate.config import mmdb
 from xuml_populate.populate.mmclass_nt import Labeled_Flow_i
 from xuml_populate.populate.actions.expressions.instance_set import InstanceSet
 from xuml_populate.exceptions.action_exceptions import *
 from xuml_populate.populate.actions.aparse_types import (Flow_ap, MaxMult, Content, MethodActivityAP, StateActivityAP,
-                                                         ActivityAP, Boundary_Actions, Labeled_Flow)
+                                                         ActivityAP, Boundary_Actions, Labeled_Flow, SMType)
 
 _logger = logging.getLogger(__name__)
 

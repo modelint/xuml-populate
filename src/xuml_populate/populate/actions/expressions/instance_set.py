@@ -4,14 +4,13 @@
 import logging
 
 # xUML Populate
-from xuml_populate.pop_types import SMType
 from xuml_populate.populate.actions.traverse_action import TraverseAction
 from xuml_populate.populate.actions.expressions.class_accessor import ClassAccessor
 from xuml_populate.populate.flow import Flow
 from xuml_populate.populate.actions.select_action import SelectAction
 from xuml_populate.populate.actions.restrict_action import RestrictAction
 from xuml_populate.populate.actions.rank_restrict_action import RankRestrictAction
-from xuml_populate.populate.actions.aparse_types import (Flow_ap, MaxMult, Content, ActivityAP,
+from xuml_populate.populate.actions.aparse_types import (Flow_ap, MaxMult, Content, ActivityAP, SMType,
                                                          StateActivityAP, MethodActivityAP)
 from xuml_populate.exceptions.action_exceptions import *
 
