@@ -133,11 +133,8 @@ class StateActivity:
                     for a_in in boundary_actions.ain:  # All initial actions in this statement
                         self.seq_flows[a_upstream].add(a_in)  # Add that initial action to the downstream value
 
-            pass
-
-            # Process any input or output tokens
-            # if output_tk not in seq_flows:
-            # Get a set of terminal actions
-            # seq_flows[output_tk] = {'from': [terminal_actions], 'to': []}
-        pass
+        a = Activity(name=self.name, class_name=self.class_name, activity_data=self.activity_detail)
+        a.pop_flow_dependencies()
+        a.assign_waves()
+        a.populate_waves()
 
