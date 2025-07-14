@@ -53,6 +53,7 @@ class Method:
         self.name = self.method_parse.method
         self.xi_flow_id = None
         self.path = f"{domain}:{self.class_name}:{self.name}.mtd"
+        self.activity_detail = None
 
         Transaction.open(db=mmdb, name=tr_Method)
         _logger.info("Transaction open: Populating method")
@@ -128,7 +129,7 @@ class Method:
             pass
         self.xi_flow_id = method_r.body[0]['Executing_instance_flow']
 
-        activity_detail = MethodActivityAP(anum=self.anum, domain=self.domain,
+        self.activity_detail = MethodActivityAP(anum=self.anum, domain=self.domain,
                                            cname=self.class_name, opname=self.name, xiflow=self.xi_flow_id,
                                            activity_path=self.path, scrall_text=self.activity_parse[1])
 
@@ -137,10 +138,16 @@ class Method:
             c = count + 1
             if type(xunit.statement_set.statement).__name__ == 'Output_Flow_a':
                 # This is the statement set that returns the Method's value
-                ExecutionUnit.process_synch_output(activity_data=activity_detail,
+                ExecutionUnit.process_synch_output(activity_data=self.activity_detail,
                                                    synch_output=xunit.statement_set.statement)
             else:
                 # This is a statement set that does not return the Method's value
                 boundary_actions = ExecutionUnit.process_method_statement_set(
-                    activity_data=activity_detail, statement_set=xunit.statement_set)
+                    activity_data=self.activity_detail, statement_set=xunit.statement_set)
+
+        a = Activity(name=self.name, class_name=self.class_name, activity_data=self.activity_detail)
+        a.pop_flow_dependencies()
+        a.assign_waves()
+        a.populate_waves()
+        pass
 
