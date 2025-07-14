@@ -50,13 +50,19 @@ class StateActivity:
         self.name = state_name
         self.xi_flow = None
         self.signum = None
-        self.anum = None
+        self.anum = activity_data["anum"]
         self.xi_flow_id = None
         self.pi_flow_id = None
+        self.pclass = None
         self.path = f"{self.domain}:{self.sm_name}:{self.name}.mtd"
         self.activity_detail = None
         self.parse = activity_data['parse']
         self.activity_data = activity_data
+        # Maintain a dictionary of seq token control flow dependencies
+        # seq_token_out_action: {seq_token_in_actions}
+        self.seq_flows: dict[str, set[str]] = {}
+        # seq_token: output_action_ids
+        self.seq_tokens: dict[str, set[str]] = {}
 
         self.process_execution_units()
 
@@ -66,8 +72,8 @@ class StateActivity:
 
         _logger.info(f"Populating state activity execution units: {self.path}")
         # Look up signature
-        R = f"State_model:<{self.state_model}>, Domain:<{self.domain}>"
-        result = Relation.restrict(db=mmdb, relation='State_Signature', restriction=R)
+        R = f"State_model:<{self.sm_name}>, Domain:<{self.domain}>"
+        result = Relation.restrict(db=mmdb, relation='State Signature', restriction=R)
         if not result.body:
             # TODO: raise exception here
             pass
@@ -90,13 +96,14 @@ class StateActivity:
                     # TODO: raise exception here
                     pass
                 self.pi_flow_id = result.body[0]['Paritioning_instance_flow']
+                self.pclass =
             case SMType.SA:
                 pass  # No xi or pi flow (rnum only, no associated instance)
 
         activity_detail = StateActivityAP(anum=self.anum, domain=self.domain,
                                           sname=self.name, state_model=self.state_model,
                                           smtype=self.sm_type, xiflow=self.xi_flow_id, piflow=self.pi_flow_id,
-                                          activity_path=self.path, scrall_text=self.activity_data.text)
+                                          activity_path=self.path, scrall_text=self.activity_data['text'])
 
         # Here we process each statement set in the State Activity
         for count, xunit in enumerate(self.parse):  # Use count for debugging
