@@ -112,7 +112,7 @@ class Method:
         """
         Process each Scrall Execution Unit for all Activities (Method, State, and Synchronous Operation)
         """
-        _logger.info(f"Populating method execution units: {self.class_name}.{self.name}")
+        _logger.info(f"Populating method execution units: {self.path}")
         # Look up signature
         R = f"Method:<{self.name}>, Class:<{self.class_name}>, Domain:<{self.domain}>"
         method_sig_r = Relation.restrict(db=mmdb, relation='Method Signature', restriction=R)

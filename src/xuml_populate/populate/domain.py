@@ -114,6 +114,7 @@ class Domain:
         # Populate actions for all Activities
         for m in self.methods:
             m.process_execution_units()
+
         # Intermediate printout for debugging
         mmdb_printout = f"mmdb_preaction_{domain}.txt"
         with open(mmdb_printout, 'w') as f:

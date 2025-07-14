@@ -263,8 +263,6 @@ class StateModel:
         """
         """
         for name, s_data in self.states.items():
-            sa = StateActivity(state_name=name, state_model=self.sm_name,
-                               activity_data=s_data, domain=self.domain)
-            pass
+            sa = StateActivity(state_name=name, activity_data=s_data)
         pass
 
