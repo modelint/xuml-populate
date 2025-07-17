@@ -12,7 +12,7 @@ from pyral.relvar import Relvar
 from xuml_populate.config import mmdb
 from xuml_populate.populate.actions.aparse_types import Flow_ap, Content, MaxMult
 from xuml_populate.populate.statement import Statement
-from xuml_populate.populate.actions.aparse_types import ActivityAP
+from xuml_populate.populate.actions.aparse_types import ActivityAP, Boundary_Actions
 from xuml_populate.populate.actions.expressions.instance_set import InstanceSet
 from xuml_populate.populate.actions.expressions.scalar_expr import ScalarExpr
 from xuml_populate.populate.mmclass_nt import Synchronous_Output_i
@@ -55,8 +55,8 @@ class ExecutionUnit:
                 pass
             case 'INST_PROJ_a':
                 iset = InstanceSet(input_instance_flow=xi_instance_flow,
-                                    iset_components=synch_output.output.iset.components,
-                                    activity_data=activity_data)
+                                   iset_components=synch_output.output.iset.components,
+                                   activity_data=activity_data)
                 _, _, output_flow = iset.process()
             case _:
                 # Unexpected or unimplemented synch output case
@@ -91,8 +91,7 @@ class ExecutionUnit:
         pass
 
     @classmethod
-    def process_method_statement_set(cls, activity_data: ActivityAP, statement_set) -> (
-            List[str], List[str]):
+    def process_method_statement_set(cls, activity_data: ActivityAP, statement_set) -> Boundary_Actions:
         """
         Initiates the population of all elements derived from a set of statements in a method.
 

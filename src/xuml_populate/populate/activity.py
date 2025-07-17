@@ -16,12 +16,12 @@ from pyral.rtypes import JoinCmd, ProjectCmd, SetCompareCmd, SetOp, Attribute, S
 from scrall.parse.parser import ScrallParser
 
 # xUML Populate
+from xuml_populate.populate.xunit import ExecutionUnit
 from xuml_populate.populate.mmclass_nt import Flow_Dependency_i, Wave_i, Wave_Assignment_i
-from xuml_populate.exceptions.action_exceptions import MethodXIFlowNotPopulated
 from xuml_populate.config import mmdb
 from xuml_populate.populate.flow import Flow
 from xuml_populate.populate.element import Element
-from xuml_populate.populate.actions.aparse_types import ActivityAP, SMType
+from xuml_populate.populate.actions.aparse_types import (ActivityAP, SMType, ActivityType, Boundary_Actions)
 from xuml_populate.populate.mmclass_nt import (Activity_i, Asynchronous_Activity_i, State_Activity_i,
                                                Synchronous_Activity_i, Lifecycle_Activity_i,
                                                Multiple_Assigner_Activity_i, Single_Assigner_Activity_i)
@@ -72,25 +72,93 @@ class Activity:
     operations = {}
     domain = None
 
-    def __init__(self, name: str, class_name: str, activity_data):
+    def __init__(self, activity_data: ActivityAP):
         """
-        Populate the Method Activity and perform any pre-runtime analysis or organization helpful for runtime
+        Populate the Activity and perform any pre-runtime analysis or organization helpful for runtime
         execution.
 
         Args:
-            name: The Method name
-            class_name: Method is defined on this class
             activity_data: All the data, including parse, about this method
         """
-
-        self.name = name
-        self.class_name = class_name
         self.activity_data = activity_data
+        self.parse = activity_data.parse
+        self.name = None
+        self.class_name = None
+        self.state_name = None
+        self.pclass = None
+        self.atype = None
+        self.xi_flow_id = None
+
+        # Maintain a dictionary of seq token control flow dependencies
+        # seq_token_out_action: {seq_token_in_actions}
+        self.seq_flows: dict[str, set[str]] = {}
+        # seq_token: output_action_ids
+        self.seq_tokens: dict[str, set[str]] = {}
+
+        match type(activity_data).__name__:
+            case 'MethodActivityAP':
+                self.atype = ActivityType.METHOD
+                self.name = activity_data.opname
+                self.class_name = activity_data.cname
+                self.xi_flow_id = activity_data.xiflow
+                pass
+            case 'StateActivityAP':
+                self.atype = ActivityType.STATE
+                self.state_name = activity_data.sname
+                self.pclass_name = activity_data.pclass
+                self.xi_flow_id = activity_data.xiflow  # None if not a Lifecycle state
+            case _:
+                pass
+
         self.anum = activity_data.anum
         self.domain = activity_data.domain
         self.wave_ctr = 1  # Initialize wave counter
         self.waves = dict()
         self.xactions = None
+
+        self.pop_xunits()
+        self.pop_flow_dependencies()
+        self.assign_waves()
+        self.populate_waves()
+
+    def pop_xunits(self):
+        for count, xunit in enumerate(self.parse):  # Use count for debugging
+            c = count + 1
+            boundary_actions = Boundary_Actions(ain=set(), aout=set())
+
+            # Process the Scrall execution unit
+            match type(xunit.statement_set.statement).__name__:
+                case 'ExecutionUnit_a':
+                    boundary_actions = ExecutionUnit.process_method_statement_set(
+                        activity_data=self.activity_data, statement_set=xunit.statement_set)
+                case 'Output_Flow_a':
+                    if self.atype == ActivityType.STATE:
+                        pass  # TODO Raise exception
+                    # Synch activity can have a synch output which needs additional processing
+                    ExecutionUnit.process_synch_output(activity_data=self.activity_data,
+                                                       synch_output=xunit.statement_set.statement)
+                case _:
+                    pass  # TODO Raise exception
+
+            # Process any sequence tokens
+            # TODO: Test case where there are no boundary actions
+            in_tokens, out_token = xunit.statement_set.input_tokens, xunit.output_token
+            if out_token:
+                # The statement has set an output_token (it cannot set more than one)
+                # Register the new out_token
+                if out_token in self.seq_tokens:
+                    pass  # TODO: raise exception -- token can ony be set by one statement
+                self.seq_tokens[out_token] = set()
+                for a in boundary_actions.aout:
+                    # Each output_action is the source of a control dependency named by that output token
+                    # Register the output token and the emitting action
+                    self.seq_tokens[out_token].add(a)
+                    self.seq_flows[a] = set()  # Set is filled when in_tokens are processed
+            for tk in in_tokens:
+                for a_upstream in self.seq_tokens[tk]:  # All upstream actions that set the token
+                    for a_in in boundary_actions.ain:  # All initial actions in this statement
+                        self.seq_flows[a_upstream].add(a_in)  # Add that initial action to the downstream value
+
 
     @classmethod
     def valid_param(cls, pname: str, activity: ActivityAP):
@@ -409,7 +477,7 @@ class Activity:
 
     def pop_flow_dependencies(self):
         """
-        For each method activity, determine the flow dependencies among its actions and populate the Flow Dependency class
+        For each activity, determine the flow dependencies among its actions and populate the Flow Dependency class
         """
         # Initialize dict with key for each flow, status to be determined
         R = f"Activity:<{self.anum}>, Domain:<{self.domain}>"
@@ -437,19 +505,13 @@ class Activity:
                         pass  # Source added previously
                     flow_path[output_flow]['source'].add(flow_usage[flow_header.id_attr])
 
-        # Mark all flows in method that are available in the first wave of execution
+        # Mark all flows in Activity that are available in the first wave of execution
 
         # The single executing instance flow is available
-        R = f"Anum:<{self.anum}>, Domain:<{self.domain}>"
-        result = Relation.restrict(db=mmdb, relation='Method', restriction=R)
-        if not result.body:
-            msg = f"No executing instance populated for method: {self.domain}::{self.class_name}.{self.name}"
-            _logger.error(msg)
-            raise MethodXIFlowNotPopulated(msg)
-        method_xi_flow = result.body[0]['Executing_instance_flow']
-        flow_path[method_xi_flow]['available'] = True
+        if self.xi_flow_id:
+            flow_path[self.xi_flow_id]['available'] = True
 
-        # All method parameter flows are available
+        # All activity parameter flows are available
         R = f"Activity:<{self.anum}>, Domain:<{self.domain}>"
         result = Relation.restrict(db=mmdb, relation='Parameter', restriction=R)
         for pflow in result.body:
@@ -470,10 +532,3 @@ class Activity:
                         Flow_Dependency_i(From_action=source_action, To_action=dest_action,
                                           Activity=self.anum, Domain=self.domain, Flow=f)
                     ])
-                pass
-            pass
-        pass
-
-    pass  # Method
-    pass  # Populate
-

@@ -18,7 +18,7 @@ from xuml_populate.populate.flow import Flow
 from xuml_populate.populate.signature import Signature
 from xuml_populate.populate.activity import Activity
 from xuml_populate.populate.mm_type import MMtype
-from xuml_populate.populate.mmclass_nt import (Method_Signature_i, Method_i, Parameter_i, Synchronous_Output_i)
+from xuml_populate.populate.mmclass_nt import (Method_Signature_i, Method_i, Parameter_i)
 from xuml_populate.populate.actions.aparse_types import MethodActivityAP
 
 _logger = logging.getLogger(__name__)
@@ -129,9 +129,10 @@ class Method:
             pass
         self.xi_flow_id = method_r.body[0]['Executing_instance_flow']
 
-        self.activity_detail = MethodActivityAP(anum=self.anum, domain=self.domain,
-                                           cname=self.class_name, opname=self.name, xiflow=self.xi_flow_id,
-                                           activity_path=self.path, scrall_text=self.activity_parse[1])
+        self.activity_detail = MethodActivityAP(
+            anum=self.anum, domain=self.domain, cname=self.class_name, opname=self.name,
+            xiflow=self.xi_flow_id, activity_path=self.path,
+            parse=self.activity_parse[0], scrall_text=self.method_parse.activity)
 
         # Here we process each statement set in the Method (Activity)
         for count, xunit in enumerate(self.activity_parse[0]):  # Use count for debugging
@@ -145,9 +146,6 @@ class Method:
                 boundary_actions = ExecutionUnit.process_method_statement_set(
                     activity_data=self.activity_detail, statement_set=xunit.statement_set)
 
-        a = Activity(name=self.name, class_name=self.class_name, activity_data=self.activity_detail)
-        a.pop_flow_dependencies()
-        a.assign_waves()
-        a.populate_waves()
-        pass
+        # Populate the Method Actions
+        Activity(activity_data=self.activity_detail)
 

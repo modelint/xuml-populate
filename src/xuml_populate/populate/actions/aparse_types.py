@@ -1,9 +1,13 @@
 """ aparse_types.py -- Data types useful for processing parsed action language """
 
+# System
 from collections import namedtuple
 from typing import NamedTuple
 from dataclasses import dataclass
 from enum import Enum
+
+# Model Integration
+from scrall.parse.visitor import Execution_Unit_a
 
 
 class MaxMult(Enum):
@@ -20,6 +24,11 @@ class SMType(Enum):
     LIFECYCLE = 1
     SA = 2
     MA = 3
+
+class ActivityType(Enum):
+    METHOD = 1
+    STATE = 2
+    OP = 3
 
 
 Attribute_ap = namedtuple('Attribute_ap', 'name scalar')
@@ -39,6 +48,7 @@ class ActivityAP:
     domain: str  # domainname
     xiflow: str  # executing instance flow (none for assigner state activities)
     activity_path: str  # descriptive name of activity for logging (e.g. domain, class, method name)
+    parse: Execution_Unit_a  # The Scrall parse of the actions
     scrall_text: str  # Full unparsed text of the activity for logging and diagnostic reference
 
 @dataclass(frozen=True, kw_only=True)
