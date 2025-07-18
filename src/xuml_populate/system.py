@@ -171,3 +171,4 @@ class System:
         with open(mmdb_printout, 'w') as f:
             with redirect_stdout(f):
                 Relvar.printall(db=mmdb)
+

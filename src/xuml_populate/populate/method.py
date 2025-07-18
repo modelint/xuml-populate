@@ -134,18 +134,6 @@ class Method:
             xiflow=self.xi_flow_id, activity_path=self.path,
             parse=self.activity_parse[0], scrall_text=self.method_parse.activity)
 
-        # Here we process each statement set in the Method (Activity)
-        for count, xunit in enumerate(self.activity_parse[0]):  # Use count for debugging
-            c = count + 1
-            if type(xunit.statement_set.statement).__name__ == 'Output_Flow_a':
-                # This is the statement set that returns the Method's value
-                ExecutionUnit.process_synch_output(activity_data=self.activity_detail,
-                                                   synch_output=xunit.statement_set.statement)
-            else:
-                # This is a statement set that does not return the Method's value
-                boundary_actions = ExecutionUnit.process_method_statement_set(
-                    activity_data=self.activity_detail, statement_set=xunit.statement_set)
-
         # Populate the Method Actions
         Activity(activity_data=self.activity_detail)
 

@@ -2,14 +2,19 @@
 class_accessor.py – Populate a Class Accessor action instance in PyRAL
 """
 
+# System
 import logging
-from xuml_populate.config import mmdb
 from typing import Optional
-from xuml_populate.populate.mmclass_nt import Class_Accessor_i
-from xuml_populate.populate.flow import Flow
+
+# Model Integration
 from pyral.relvar import Relvar
 from pyral.relation import Relation
 from pyral.transaction import Transaction
+
+# xUML Populate
+from xuml_populate.config import mmdb
+from xuml_populate.populate.mmclass_nt import Class_Accessor_i
+from xuml_populate.populate.flow import Flow
 
 _logger = logging.getLogger(__name__)
 
@@ -32,21 +37,21 @@ class ClassAccessor:
         """
         # Return None if the name does not match any defined Class
         R = f"Name:<{name}>, Domain:<{domain}>"
-        result = Relation.restrict(mmdb, relation='Class', restriction=R)
-        if not result.body:
+        class_r = Relation.restrict(db=mmdb, relation='Class', restriction=R)
+        if not class_r.body:
             return None
 
         # Return flow id of existing Class Accessor
         R = f"Class:<{name}>, Activity:<{anum}>, Domain:<{domain}>"
-        result = Relation.restrict(mmdb, relation='Class_Accessor', restriction=R)
-        if result.body:
-            return result.body[0].fid
+        ca_r = Relation.restrict(db=mmdb, relation='Class Accessor', restriction=R)
+        if ca_r.body:
+            return ca_r.body[0]["Output_flow"]
 
         # Populate a Class Accessor and Multiple Instance Flow returning the flow id
-        Transaction.open(mmdb, tr_Class_Accessor)
+        Transaction.open(db=mmdb, name=tr_Class_Accessor)
         output_flow = Flow.populate_instance_flow(cname=name, anum=anum, domain=domain, label=None)
-        Relvar.insert(mmdb, relvar='Class_Accessor', tuples=[
+        Relvar.insert(db=mmdb, relvar='Class_Accessor', tuples=[
             Class_Accessor_i(Class=name, Activity=anum, Domain=domain, Output_flow=output_flow.fid)
         ])
-        Transaction.execute(mmdb, tr_Class_Accessor)
+        Transaction.execute(db=mmdb, name=tr_Class_Accessor)
         return output_flow.fid

@@ -16,6 +16,7 @@ from pyral.rtypes import JoinCmd, ProjectCmd, SetCompareCmd, SetOp, Attribute, S
 from scrall.parse.parser import ScrallParser
 
 # xUML Populate
+from xuml_populate.utility import print_mmdb
 from xuml_populate.populate.xunit import ExecutionUnit
 from xuml_populate.populate.mmclass_nt import Flow_Dependency_i, Wave_i, Wave_Assignment_i
 from xuml_populate.config import mmdb
@@ -127,13 +128,14 @@ class Activity:
             boundary_actions = Boundary_Actions(ain=set(), aout=set())
 
             # Process the Scrall execution unit
-            match type(xunit.statement_set.statement).__name__:
-                case 'ExecutionUnit_a':
+            match type(xunit).__name__:
+                case 'Execution_Unit_a':
                     boundary_actions = ExecutionUnit.process_method_statement_set(
                         activity_data=self.activity_data, statement_set=xunit.statement_set)
                 case 'Output_Flow_a':
                     if self.atype == ActivityType.STATE:
                         pass  # TODO Raise exception
+                    print_mmdb()
                     # Synch activity can have a synch output which needs additional processing
                     ExecutionUnit.process_synch_output(activity_data=self.activity_data,
                                                        synch_output=xunit.statement_set.statement)

@@ -9,6 +9,7 @@ from scrall.parse.visitor import Output_Flow_a
 from pyral.relvar import Relvar
 
 # Xuml Populate
+from xuml_populate.utility import print_mmdb
 from xuml_populate.config import mmdb
 from xuml_populate.populate.actions.aparse_types import Flow_ap, Content, MaxMult
 from xuml_populate.populate.statement import Statement
@@ -66,13 +67,14 @@ class ExecutionUnit:
         # b, f = ScalarExpr.process(mmdb, rhs=synch_output.output, input_instance_flow=xi_instance_flow,
         #                           activity_data=activity_data)
 
+
         # Populate the output flow (no transaction required)
-        Relvar.insert(db=mmdb, relvar='Synchronous_Output', tuples=[
+        Relvar.insert(db=mmdb, relvar='Synchronous Output', tuples=[
             Synchronous_Output_i(Anum=activity_data.anum, Domain=activity_data.domain,
                                  Output_flow=output_flow.fid, Type=output_flow.tname)
         ])
         _logger.info(f"INSERT Synchronous operation output flow): ["
-                     f"{activity_data.domain}:{activity_data.cname}:{activity_data.opname}:^{output_flow.fid}]")
+                     f"{activity_data.activity_path}:^{output_flow.fid}]")
 
     @classmethod
     def process_state_statement_set(cls):
