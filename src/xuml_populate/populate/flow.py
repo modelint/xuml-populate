@@ -2,18 +2,24 @@
 flow.py – Populate a Flow in PyRAL
 """
 
+# System
 import logging
-from xuml_populate.config import mmdb
+from typing import Optional, Set, List, Dict
+
+# Model Integration
 from pyral.relvar import Relvar
 from pyral.relation import Relation
 from pyral.transaction import Transaction
-from typing import Optional, Set, List, Dict
+
+# xUML Populate
+from xuml_populate.config import mmdb
 from xuml_populate.populate.actions.table import Table
 from xuml_populate.exceptions.action_exceptions import FlowException, ControlFlowHasNoTargetActions
-from xuml_populate.populate.mmclass_nt import Data_Flow_i, Flow_i, \
-    Multiple_Instance_Flow_i, Single_Instance_Flow_i, Instance_Flow_i, \
-    Control_Flow_i, Non_Scalar_Flow_i, Scalar_Flow_i, Relation_Flow_i, Labeled_Flow_i, Unlabeled_Flow_i, \
+from xuml_populate.populate.mmclass_nt import (
+    Data_Flow_i, Flow_i, Multiple_Instance_Flow_i, Single_Instance_Flow_i, Instance_Flow_i,
+    Control_Flow_i, Non_Scalar_Flow_i, Scalar_Flow_i, Relation_Flow_i, Labeled_Flow_i, Unlabeled_Flow_i,
     Tuple_Flow_i, Table_Flow_i, Control_Dependency_i, Scalar_Value_i
+)
 from xuml_populate.populate.actions.aparse_types import Flow_ap, MaxMult, Content
 
 # TODO: Add Table and Control Flow population
@@ -93,21 +99,21 @@ class Flow:
             return None
         # Is it an Instance Flow?
         R = f"ID:<{fid}>, Activity:<{anum}>, Domain:<{domain}>"
-        if_result = Relation.restrict(mmdb, relation='Instance_Flow', restriction=R)
+        if_result = Relation.restrict(db=mmdb, relation='Instance_Flow', restriction=R)
         if if_result.body:
             # Okay, it's an instance flow. Now we need the multiplicity on that flow
             ctype = if_result.body[0]['Class']
-            many_if_result = Relation.restrict(mmdb, relation='Multiple_Instance_Flow', restriction=R)
+            many_if_result = Relation.restrict(db=mmdb, relation='Multiple_Instance_Flow', restriction=R)
             m = MaxMult.MANY if many_if_result.body else MaxMult.ONE
             return Flow_ap(fid=fid, content=Content.INSTANCE, tname=ctype, max_mult=m)
 
         # Is it a Relation Flow?
         R = f"ID:<{fid}>, Activity:<{anum}>, Domain:<{domain}>"
-        rf_result = Relation.restrict(mmdb, relation='Relation_Flow', restriction=R)
+        rf_result = Relation.restrict(db=mmdb, relation='Relation_Flow', restriction=R)
         if rf_result.body:
             # It's a Relation Flow. Tuple or Table?
             ttype = rf_result.body[0]['Type']
-            ntuples = Relation.restrict(mmdb, relation='Table_Flow', restriction=R)
+            ntuples = Relation.restrict(db=mmdb, relation='Table_Flow', restriction=R)
             m = MaxMult.MANY if ntuples.body else MaxMult.ONE
             return Flow_ap(fid=fid, content=Content.RELATION, tname=ttype, max_mult=m)
 
@@ -154,25 +160,39 @@ class Flow:
     def populate_control_flow(cls, tr: str, enabled_actions: Set[str], anum: str, domain: str,
                               label: Optional[str] = None) -> str:
         """
-        Populate a new Control Flow.
+        Populate a new Control Flow superclass instance. Any subclasses are populated by the
+        outer transaction.
 
         Since a Control Flow must feed an Action, it populates inside the provided transaction
         and does not open and close its own like Data Flows.
 
-        :return: The flow id
+        Args:
+            tr: The outer transaction
+            enabled_actions: All downstream Actions that take this Control Flow as an input
+            anum: The Activity
+            domain: The Domain
+            label: An optional flow label naming this flow
+
+        Returns:
+            str: The populated Control Flow's flow id
         """
         flow_id = cls.populate_flow(tr=tr, anum=anum, domain=domain, label=label)
-        Relvar.insert(mmdb, tr=tr, relvar='Control_Flow', tuples=[
+        Relvar.insert(db=mmdb, tr=tr, relvar='Control Flow', tuples=[
             Control_Flow_i(ID=flow_id, Activity=anum, Domain=domain)
         ])
         # Populate one or more targets of each Control Flow
         if len(enabled_actions) < 1:
-            _logger.error(f"Control flow requires at least one target action")
-            raise ControlFlowHasNoTargetActions
+            msg = f"Control flow requires at least one target action"
+            _logger.error(msg)
+            raise ControlFlowHasNoTargetActions(msg)
         for a in enabled_actions:
-            Relvar.insert(mmdb, tr=tr, relvar='Control_Dependency', tuples=[
+            Relvar.insert(db=mmdb, tr=tr, relvar='Control Dependency', tuples=[
                 Control_Dependency_i(Control_flow=flow_id, Action=a, Activity=anum, Domain=domain)
             ])
+
+        # The subclass (Sequence Flow, Result, Case, ...) is not populated here since each
+        # requires different attributes.  So the outer transaction must complete the subclass
+        # population for the desired usage of this Control Flow
         return flow_id
 
     @classmethod

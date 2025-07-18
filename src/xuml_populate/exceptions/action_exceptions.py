@@ -11,6 +11,9 @@ post = " --"
 class ActionException(Exception):
     pass
 
+class FlowException(Exception):
+    pass
+
 class AssignmentOperatorMismatch(Exception):
     pass
 

@@ -16,7 +16,9 @@ from pyral.rtypes import JoinCmd, ProjectCmd, SetCompareCmd, SetOp, Attribute, S
 from scrall.parse.parser import ScrallParser
 
 # xUML Populate
+from xuml_populate.exceptions.action_exceptions import *
 from xuml_populate.utility import print_mmdb
+from xuml_populate.populate.actions.sequence_flow import SequenceFlow
 from xuml_populate.populate.xunit import ExecutionUnit
 from xuml_populate.populate.mmclass_nt import Flow_Dependency_i, Wave_i, Wave_Assignment_i
 from xuml_populate.config import mmdb
@@ -89,6 +91,7 @@ class Activity:
         self.pclass = None
         self.atype = None
         self.xi_flow_id = None
+        self.flow_path = None
 
         # Maintain a dictionary of seq token control flow dependencies
         # seq_token_out_action: {seq_token_in_actions}
@@ -118,9 +121,22 @@ class Activity:
         self.xactions = None
 
         self.pop_xunits()
+        self.pop_seq_flows()
         self.pop_flow_dependencies()
         self.assign_waves()
         self.populate_waves()
+        pass
+
+    def pop_seq_flows(self):
+        for source, destinations in self.seq_flows.items():
+            # Find the token associated with the source action
+            # A source action can emit at most one sequence flow, so only one t value should be found
+            t = next(k for k, v in self.seq_tokens.items() if source in v)
+            if not t:
+                msg = f"Sequence token not found in: {self.activity_data.activity_path}"
+                _logger.error(msg)
+                raise FlowException(msg)
+            s = SequenceFlow(token=t, source_aid=source, dest_aids=destinations, anum=self.anum, domain=self.domain)
 
     def pop_xunits(self):
         for count, xunit in enumerate(self.parse):  # Use count for debugging
@@ -135,7 +151,6 @@ class Activity:
                 case 'Output_Flow_a':
                     if self.atype == ActivityType.STATE:
                         pass  # TODO Raise exception
-                    print_mmdb()
                     # Synch activity can have a synch output which needs additional processing
                     ExecutionUnit.process_synch_output(activity_data=self.activity_data,
                                                        synch_output=xunit.statement_set.statement)
@@ -144,20 +159,21 @@ class Activity:
 
             # Process any sequence tokens
             # TODO: Test case where there are no boundary actions
+            print_mmdb()
             in_tokens, out_token = xunit.statement_set.input_tokens, xunit.output_token
             if out_token:
                 # The statement has set an output_token (it cannot set more than one)
                 # Register the new out_token
                 if out_token in self.seq_tokens:
                     pass  # TODO: raise exception -- token can ony be set by one statement
-                self.seq_tokens[out_token] = set()
+                self.seq_tokens[out_token.name] = set()
                 for a in boundary_actions.aout:
                     # Each output_action is the source of a control dependency named by that output token
                     # Register the output token and the emitting action
-                    self.seq_tokens[out_token].add(a)
+                    self.seq_tokens[out_token.name].add(a)
                     self.seq_flows[a] = set()  # Set is filled when in_tokens are processed
             for tk in in_tokens:
-                for a_upstream in self.seq_tokens[tk]:  # All upstream actions that set the token
+                for a_upstream in self.seq_tokens[tk.name]:  # All upstream actions that set the token
                     for a_in in boundary_actions.ain:  # All initial actions in this statement
                         self.seq_flows[a_upstream].add(a_in)  # Add that initial action to the downstream value
 
@@ -481,10 +497,24 @@ class Activity:
         """
         For each activity, determine the flow dependencies among its actions and populate the Flow Dependency class
         """
+        print_mmdb()  # Diagnostic
+
         # Initialize dict with key for each flow, status to be determined
         R = f"Activity:<{self.anum}>, Domain:<{self.domain}>"
         flow_r = Relation.restrict(db=mmdb, relation='Flow', restriction=R)
-        flow_path = {f['ID']: {'source': set(), 'dest': set(), 'available': False} for f in flow_r.body}
+        self.flow_path = {f['ID']: {'source': set(), 'dest': set(), 'available': False} for f in flow_r.body}
+
+        # Set each sequence flow dependency first
+        # Find all sequence flows
+        R = f"Activity:<{self.anum}>, Domain:<{self.domain}>"
+        seq_flow_r = Relation.restrict(db=mmdb, relation='Sequence Flow', restriction=R)
+        for seq_flow_t in seq_flow_r.body:
+            source_action = seq_flow_t["Source_action"]
+            seq_fid = seq_flow_t["Flow"]
+            sdeps = self.seq_flows[source_action]
+            for dest_action in sdeps:
+                self.flow_path[seq_fid]['dest'].add(dest_action)
+                self.flow_path[seq_fid]['source'].add(source_action)
 
         # Now proceed through each flow usage class (actions, cases, etc)
         for flow_header in flow_attrs:
@@ -498,34 +528,34 @@ class Activity:
                 if flow_header.in_attr:
                     # Header specifies an input flow, thus a destination action
                     input_flow = flow_usage[flow_header.in_attr]
-                    if input_flow in flow_path[input_flow]['dest']:
+                    if input_flow in self.flow_path[input_flow]['dest']:
                         pass  # Dest added previously
-                    flow_path[input_flow]['dest'].add(flow_usage[flow_header.id_attr])
+                    self.flow_path[input_flow]['dest'].add(flow_usage[flow_header.id_attr])
                 if flow_header.out_attr:
                     output_flow = flow_usage[flow_header.out_attr]
-                    if output_flow in flow_path[output_flow]['source']:
+                    if output_flow in self.flow_path[output_flow]['source']:
                         pass  # Source added previously
-                    flow_path[output_flow]['source'].add(flow_usage[flow_header.id_attr])
+                    self.flow_path[output_flow]['source'].add(flow_usage[flow_header.id_attr])
 
         # Mark all flows in Activity that are available in the first wave of execution
 
         # The single executing instance flow is available
         if self.xi_flow_id:
-            flow_path[self.xi_flow_id]['available'] = True
+            self.flow_path[self.xi_flow_id]['available'] = True
 
         # All activity parameter flows are available
         R = f"Activity:<{self.anum}>, Domain:<{self.domain}>"
         result = Relation.restrict(db=mmdb, relation='Parameter', restriction=R)
         for pflow in result.body:
-            flow_path[pflow['Input_flow']]['available'] = True
+            self.flow_path[pflow['Input_flow']]['available'] = True
 
         # All class accessor flows are available
         R = f"Activity:<{self.anum}>, Domain:<{self.domain}>"
         result = Relation.restrict(db=mmdb, relation='Class_Accessor', restriction=R)
         for ca_flow in result.body:
-            flow_path[ca_flow['Output_flow']]['available'] = True
+            self.flow_path[ca_flow['Output_flow']]['available'] = True
 
-        for f, p in flow_path.items():
+        for f, p in self.flow_path.items():
             if not (p['source'] and p['dest']):
                 continue
             for source_action in p['source']:
