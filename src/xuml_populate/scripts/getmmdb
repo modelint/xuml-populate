@@ -1,0 +1,17 @@
+#!/bin/zsh
+
+# getmmdb - Copies a new empty metamodel database from make-xuml-repo
+# Adjust paths to suit your platform
+# Here
+
+# Absolute path to the directory where a new metamodel repository is created
+src_dir="/Users/starr/SDEV/Python/PyCharm/make-xuml-repo/working"
+
+# Copy files from the source directory to destinations relative to current working directory
+# Relative to the scripts directory in the xuml-populate project
+
+cp "$src_dir/mmclass_nt.py" ./../populate/
+cp "$src_dir/mmdb.ral"       ./../populate/
+cp "$src_dir/mmdb.txt"       ./../../../working/
+
+echo "Files copied successfully."

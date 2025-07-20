@@ -193,6 +193,21 @@ State_Activity_i = namedtuple('State_Activity_i', 'Anum Domain')
 Synchronous_Activity_i = namedtuple('Synchronous_Activity_i', 'Anum Domain')
 Synchronous_Output_i = namedtuple('Synchronous_Output_i', 'Anum Domain Output_flow Type')
 
+# Creation Deletion subsystem
+Attribute_Initialization_i = namedtuple('Attribute_Initialization_i', 'Create_action Activity Attribute Class Domain')
+Create_Action_i = namedtuple('Create_Action_i', 'Action Activity Domain')
+Default_Initialization_i = namedtuple('Default_Initialization_i', 'Create_action Activity Attribute Class Domain')
+Delegated_Create_Action_i = namedtuple('Delegated_Create_Action_i', 'Action Activity Domain')
+Delete_Action_i = namedtuple('Delete_Action_i', 'Action Activity Domain')
+Deletion_Flow_i = namedtuple('Deletion_Flow_i', 'Flow Activity Domain Action')
+Explicit_Initialization_i = namedtuple('Explicit_Initialization_i', 'Create_action Activity Attribute Class Domain Initial_value_flow')
+Initializing_Attribute_Reference_i = namedtuple('Initializing_Attribute_Reference_i', 'Create_action Activity From_attribute From_class To_attribute To_class Rnum Domain')
+Initializing_Instance_Reference_i = namedtuple('Initializing_Instance_Reference_i', 'Create_action Activity From_attribute From_class To_attribute To_class Rnum Domain Flow')
+Instance_Initialization_i = namedtuple('Instance_Initialization_i', 'Create_action Activity Class Domain')
+Local_Create_Action_i = namedtuple('Local_Create_Action_i', 'Action Activity Domain')
+New_Instance_Flow_i = namedtuple('New_Instance_Flow_i', 'Create_action Flow Activity Domain')
+Reference_Initialization_i = namedtuple('Reference_Initialization_i', 'Create_action Activity Attribute Class Domain')
+
 # Relational Action subsystem
 Class_Restriction_Condition_i = namedtuple('Class_Restriction_Condition_i', 'Select_action Activity Domain')
 Criterion_i = namedtuple('Criterion_i', 'ID Action Activity Domain Attribute Non_scalar_type')
