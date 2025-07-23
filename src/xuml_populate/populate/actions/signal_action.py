@@ -69,11 +69,11 @@ class SignalAction:
         self.action_id = Action.populate(tr=tr_Signal, anum=self.activity_data.anum, domain=self.activity_data.domain,
                                          action_type="signal")  # Transaction open
         Relvar.insert(db=mmdb, tr=tr_Signal, relvar='Signal Action', tuples=[
-            Signal_Action_i(Action=self.action_id, Activity=self.activity_data.anum, Domain=self.activity_data.domain,
+            Signal_Action_i(ID=self.action_id, Activity=self.activity_data.anum, Domain=self.activity_data.domain,
                             Event_spec=self.statement_parse.event, State_model=self.activity_data.state_model)
         ])
         Relvar.insert(db=mmdb, tr=tr_Signal, relvar='Signal Instance Set Action', tuples=[
-            Signal_Instance_Set_Action_i(Action=self.action_id, Activity=self.activity_data.anum,
+            Signal_Instance_Set_Action_i(ID=self.action_id, Activity=self.activity_data.anum,
                                          Domain=self.activity_data.domain, Instance_flow=dest_flow.fid)
         ])
         if self.statement_parse.supplied_params:

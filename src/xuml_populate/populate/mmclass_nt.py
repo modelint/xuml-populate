@@ -38,6 +38,19 @@ Non_Derived_Attribute_i = namedtuple('Non_Derived_Attribute_i', 'Name Class Doma
 Subclass_Classification_Value_i = namedtuple('Subclass_Classification_Value_i', 'Value Superclass Subclass Generalization Domain')
 Super_Identifier_i = namedtuple('Super_Identifier_i', 'Number Class Domain')
 
+# Reference Action subsystem
+New_Associative_Reference_Action_i = namedtuple('New_Associative_Reference_Action_i', 'ID Activity Domain T_instance P_instance')
+Reference_Action_i = namedtuple('Reference_Action_i', 'ID Activity Domain Association')
+New_Reference_Action_i = namedtuple('New_Reference_Action_i', 'ID Activity Domain Create_action')
+Update_Reference_Action_i = namedtuple('Update_Reference_Action_i', 'ID Activity Domain From_instance To_instance')
+New_Simple_Reference_Action_i = namedtuple('New_Simple_Reference_Action_i', 'ID Activity Domain Target_instance')
+From_Ref_Instance_i = namedtuple('From_Ref_Instance_i', 'Flow Activity Domain')
+To_Ref_Instance_i = namedtuple('To_Ref_Instance_i', 'Flow Activity Domain')
+T_Ref_Instance_i = namedtuple('T_Ref_Instance_i', 'Flow Activity Domain')
+P_Ref_Instance_i = namedtuple('P_Ref_Instance_i', 'Flow Activity Domain')
+Referenced_Instance_i = namedtuple('Referenced_Instance_i', 'Flow Activity Domain')
+Target_Ref_Instance_i = namedtuple('Target_Ref_Instance_i', 'Flow Activity Domain')
+
 # Type subsystem
 Model_Attribute_i = namedtuple('Model_Attribute_i', 'Name Non_scalar_type Domain')
 Scalar_i = namedtuple('Scalar_i', 'Name Domain')
@@ -195,16 +208,16 @@ Synchronous_Output_i = namedtuple('Synchronous_Output_i', 'Anum Domain Output_fl
 
 # Creation Deletion subsystem
 Attribute_Initialization_i = namedtuple('Attribute_Initialization_i', 'Create_action Activity Attribute Class Domain')
-Create_Action_i = namedtuple('Create_Action_i', 'Action Activity Domain')
+Create_Action_i = namedtuple('Create_Action_i', 'ID Activity Domain')
 Default_Initialization_i = namedtuple('Default_Initialization_i', 'Create_action Activity Attribute Class Domain')
-Delegated_Create_Action_i = namedtuple('Delegated_Create_Action_i', 'Action Activity Domain')
-Delete_Action_i = namedtuple('Delete_Action_i', 'Action Activity Domain')
+Delegated_Create_Action_i = namedtuple('Delegated_Create_Action_i', 'ID Activity Domain')
+Delete_Action_i = namedtuple('Delete_Action_i', 'ID Activity Domain')
 Deletion_Flow_i = namedtuple('Deletion_Flow_i', 'Flow Activity Domain Action')
 Explicit_Initialization_i = namedtuple('Explicit_Initialization_i', 'Create_action Activity Attribute Class Domain Initial_value_flow')
 Initializing_Attribute_Reference_i = namedtuple('Initializing_Attribute_Reference_i', 'Create_action Activity From_attribute From_class To_attribute To_class Rnum Domain')
 Initializing_Instance_Reference_i = namedtuple('Initializing_Instance_Reference_i', 'Create_action Activity From_attribute From_class To_attribute To_class Rnum Domain Flow')
 Instance_Initialization_i = namedtuple('Instance_Initialization_i', 'Create_action Activity Class Domain')
-Local_Create_Action_i = namedtuple('Local_Create_Action_i', 'Action Activity Domain')
+Local_Create_Action_i = namedtuple('Local_Create_Action_i', 'ID Activity Domain')
 New_Instance_Flow_i = namedtuple('New_Instance_Flow_i', 'Create_action Flow Activity Domain')
 Reference_Initialization_i = namedtuple('Reference_Initialization_i', 'Create_action Activity Attribute Class Domain')
 
@@ -253,11 +266,11 @@ Transition_i = namedtuple('Transition_i', 'From_state Event State_model Domain T
 # Signal Action subsystem
 Absolute_Delivery_Time_i = namedtuple('Absolute_Delivery_Time_i', 'Action Activity Domain When')
 Delivery_Time_i = namedtuple('Delivery_Time_i', 'Action Activity Domain Flow')
-Initial_Signal_Action_i = namedtuple('Initial_Signal_Action_i', 'Action Activity Domain Create_action')
+Initial_Signal_Action_i = namedtuple('Initial_Signal_Action_i', 'ID Activity Domain Create_action')
 Multiple_Assigner_Partition_Instance_i = namedtuple('Multiple_Assigner_Partition_Instance_i', 'Action Activity Domain Partition')
 Relative_Delivery_Time_i = namedtuple('Relative_Delivery_Time_i', 'Action Activity Domain Delay')
-Signal_Action_i = namedtuple('Signal_Action_i', 'Action Activity Domain Event_spec State_model')
-Signal_Assigner_Action_i = namedtuple('Signal_Assigner_Action_i', 'Action Activity Domain Association')
-Signal_EE_Action_i = namedtuple('Signal_EE_Action_i', 'Action Activity Domain EE_name EE_class')
-Signal_Instance_Set_Action_i = namedtuple('Signal_Instance_Set_Action_i', 'Action Activity Domain Instance_flow')
+Signal_Action_i = namedtuple('Signal_Action_i', 'ID Activity Domain Event_spec State_model')
+Signal_Assigner_Action_i = namedtuple('Signal_Assigner_Action_i', 'ID Activity Domain Association')
+Signal_EE_Action_i = namedtuple('Signal_EE_Action_i', 'ID Activity Domain EE_name EE_class')
+Signal_Instance_Set_Action_i = namedtuple('Signal_Instance_Set_Action_i', 'ID Activity Domain Instance_flow')
 Supplied_Parameter_Value_i = namedtuple('Supplied_Parameter_Value_i', 'Parameter Signature Action Activity Domain Data_flow')

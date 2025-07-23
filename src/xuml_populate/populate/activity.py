@@ -144,7 +144,8 @@ class Activity:
             boundary_actions = Boundary_Actions(ain=set(), aout=set())
 
             # Process the Scrall execution unit
-            match type(xunit).__name__:
+            xunit_type = type(xunit).__name__
+            match xunit_type:
                 case 'Execution_Unit_a':
                     boundary_actions = ExecutionUnit.process_method_statement_set(
                         activity_data=self.activity_data, statement_set=xunit.statement_set)
