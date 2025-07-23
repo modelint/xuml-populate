@@ -144,19 +144,16 @@ class Activity:
             boundary_actions = Boundary_Actions(ain=set(), aout=set())
 
             # Process the Scrall execution unit
-            xunit_type = type(xunit).__name__
-            match xunit_type:
-                case 'Execution_Unit_a':
-                    boundary_actions = ExecutionUnit.process_method_statement_set(
-                        activity_data=self.activity_data, statement_set=xunit.statement_set)
-                case 'Output_Flow_a':
-                    if self.atype == ActivityType.STATE:
-                        pass  # TODO Raise exception
-                    # Synch activity can have a synch output which needs additional processing
-                    ExecutionUnit.process_synch_output(activity_data=self.activity_data,
-                                                       synch_output=xunit.statement_set.statement)
-                case _:
+            statement_type = type(xunit.statement_set.statement).__name__
+            if statement_type == 'Output_Flow_a':
+                if self.atype == ActivityType.STATE:
                     pass  # TODO Raise exception
+                # Synch activity can have a synch output which needs additional processing
+                ExecutionUnit.process_synch_output(activity_data=self.activity_data,
+                                                   synch_output=xunit.statement_set.statement)
+            else:
+                boundary_actions = ExecutionUnit.process_method_statement_set(
+                    activity_data=self.activity_data, statement_set=xunit.statement_set)
 
             # Process any sequence tokens
             # TODO: Test case where there are no boundary actions
