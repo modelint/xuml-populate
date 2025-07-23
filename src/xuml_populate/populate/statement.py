@@ -14,6 +14,7 @@ from xuml_populate.populate.actions.instance_assignment import InstanceAssignmen
 from xuml_populate.populate.actions.table_assignment import TableAssignment
 from xuml_populate.populate.actions.scalar_assignment import ScalarAssignment
 from xuml_populate.populate.actions.switch_statement import SwitchStatement
+from xuml_populate.populate.actions.create_action import CreateAction
 from xuml_populate.populate.actions.aparse_types import ActivityAP, Boundary_Actions, Labeled_Flow
 
 _logger = logging.getLogger(__name__)
@@ -72,8 +73,10 @@ class Statement:
                 pass
             case 'Signal_a':
                 sig_s = SignalAction(activity_data=activity_data, statement_parse=statement_parse)
-                boundary_actions = sig_s.process()  # TODO: Check this
+                boundary_actions = sig_s.process()
             case 'New_inst_a':
+                create_s = CreateAction(activity_data=activity_data, statement_parse=statement_parse)
+                boundary_actions = create_s.process()
                 pass
             case _:
                 boundary_actions = None
