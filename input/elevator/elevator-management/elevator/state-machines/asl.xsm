@@ -37,7 +37,7 @@ transitions
 --
 state Registering floor call( dir: Direction )
 activity
-    *Floor Service &R49 me, /R3/Bank Level
+    *Floor Service(Direction: ^dir) &R49 me, /R3/Bank Level
     Floor call registered -> me
 transitions
     Floor call registered > Requesting service

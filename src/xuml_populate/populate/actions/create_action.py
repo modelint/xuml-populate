@@ -75,7 +75,8 @@ class CreateAction:
         Relation.restrict(db=mmdb, relation='Attribute', restriction=R, svar_name="attrs")
         attr_ref_r = Relation.semijoin(db=mmdb, rname2="Attribute Reference",
                                        attrs={"Name": "From_attribute", "Class": "From_class", "Domain": "Domain"})
-        attr_names_r = Relation.project(db=mmdb, relation="attrs", attributes=("Name",))
+        attr_names_r = Relation.project(db=mmdb, relation="attrs", attributes=("Name", "Scalar",),
+                                        svar_name="attr_name_types")
         attr_names = {n["Name"] for n in attr_names_r.body}
 
         # These are the droids we're looking for
@@ -128,13 +129,26 @@ class CreateAction:
             R = f"Attribute:<{da}>, Class:<{self.target_class}>, Domain:<{self.domain}>"
             default_ival_r = Relation.restrict(db=mmdb, relation='Default Initial Value', restriction=R)
             if len(default_ival_r.body) == 1:
+                # There is a default initial value specified in the class model
                 default_ival_t = default_ival_r.body[0]
                 default_initial_value = default_ival_t["Value"]
                 self.non_ref_ivalues[da] = {'default initial value': default_initial_value}
-        pass
+            else:
+                # Last chance... Look for a default value defined on the Attribute's type
+                # TODO: We'll need a populated type model so that we can search it
+                R = f"Name:<{da}>"
+                name_type_r = Relation.restrict(db=mmdb, relation="attr_name_types", restriction=R)
+                scalar_type_name = name_type_r.body[0]["Scalar"]
+                # For now, let's assume we did the search and didn't find one
+                # We cannot find any value for the attribute so we cannot peform the create action
+                msg1 = f"No type default defined on scalar type {scalar_type_name}"
+                _logger.error(msg1)
+                msg2 = f"No explicit or default initial value defined for attribute {self.domain}:{self.target_class}.{da}"
+                _logger.error(msg2)
+                raise ActionException(msg2)
 
-
-        pass
+        # Now we need to find a value for each referential attribute
+        # We'll do this by populating the relevant actions in the ref subsystem
 
         # Populate the Action superclass instance and obtain its action_id
         Transaction.open(db=mmdb, name=tr_Create)
