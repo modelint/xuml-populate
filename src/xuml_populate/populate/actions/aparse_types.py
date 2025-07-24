@@ -46,6 +46,7 @@ Boundary_Actions = namedtuple("Boundary_Actions", "ain aout")
 class ActivityAP:
     anum: str  # activity number
     domain: str  # domainname
+    signum: str  # signature number
     xiflow: str  # executing instance flow (none for assigner state activities)
     activity_path: str  # descriptive name of activity for logging (e.g. domain, class, method name)
     parse: Execution_Unit_a  # The Scrall parse of the actions

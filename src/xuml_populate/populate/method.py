@@ -52,7 +52,7 @@ class Method:
         self.anum = None
         self.name = self.method_parse.method
         self.xi_flow_id = None
-        self.path = f"{domain}:{self.class_name}:{self.name}.mtd"
+        self.path = f"{domain}:{self.class_name}.{self.name}"
         self.activity_detail = None
 
         Transaction.open(db=mmdb, name=tr_Method)
@@ -130,7 +130,7 @@ class Method:
         self.xi_flow_id = method_r.body[0]['Executing_instance_flow']
 
         self.activity_detail = MethodActivityAP(
-            anum=self.anum, domain=self.domain, cname=self.class_name, opname=self.name,
+            anum=self.anum, domain=self.domain, cname=self.class_name, opname=self.name, signum=self.signum,
             xiflow=self.xi_flow_id, activity_path=self.path,
             parse=self.activity_parse[0], scrall_text=self.method_parse.activity)
 

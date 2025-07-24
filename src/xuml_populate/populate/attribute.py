@@ -2,16 +2,23 @@
 attribute.py – Process parsed attribute to populate the metamodel db
 """
 
+# System
 import logging
-from xuml_populate.config import mmdb
 from typing import Set
+
+# Model Integration
 from pyral.relvar import Relvar
 from pyral.relation import Relation
+
+# xUML Populate
+from xuml_populate.config import mmdb
 from xuml_populate.exceptions.action_exceptions import UndefinedAttribute
 from xuml_populate.populate.mm_type import MMtype
-from xuml_populate.populate.mmclass_nt import \
-    Attribute_i, Non_Derived_Attribute_i, Model_Attribute_i, \
-    Identifier_i, Irreducible_Identifier_i, Super_Identifier_i, Identifier_Attribute_i
+from xuml_populate.populate.mmclass_nt import (
+    Attribute_i, Non_Derived_Attribute_i, Model_Attribute_i,
+    Identifier_i, Irreducible_Identifier_i, Super_Identifier_i, Identifier_Attribute_i,
+    Default_Initial_Value_i
+)
 
 UNRESOLVED = '__unresolved__'  # Attribute type is referential and type resolution is deferred
 
@@ -34,10 +41,14 @@ class Attribute:
 
         Raises an exception if the Attribute is not defined on the specified Class.
 
-        :param name:  Attribute name
-        :param tname:  Table (possibly Class) name
-        :param domain:  Domain name
-        :return: Name of Attribute's Scalar (Type)
+        Args:
+            name: Attribute name
+            tname: Table (possibly Class) name
+            domain: Domain name
+
+        Returns:
+
+            Name of Attribute's Scalar (Type)
         """
         R = f"Name:<{name}>, Non_scalar_type:<{tname}>, Domain:<{domain}>"
         model_attr_r = Relation.restrict(db=mmdb, relation='Model Attribute', restriction=R, svar_name="model_attr_rv")
@@ -53,7 +64,6 @@ class Attribute:
                                          attrs={"Name":"Name", "Non_scalar_type":"Table", "Domain":"Domain"})
         if table_attr_r.body:
             return table_attr_r.body[0]['Scalar']
-
 
     @classmethod
     def populate(cls, tr: str, domain: str, cname: str, class_identifiers: Set[int], record):
@@ -72,35 +82,45 @@ class Attribute:
         participating_ids = cls.record.get('I', [])  # This attr might not participate in any identifier
         # Populate the Attribute's type if it hasn't already been populated
         MMtype.populate_unknown(name=cls.dtype, domain=domain)
-        Relvar.insert(mmdb, tr=tr, relvar='Attribute', tuples=[
+        Relvar.insert(db=mmdb, tr=tr, relvar='Attribute', tuples=[
             Attribute_i(Name=record['name'], Class=cname, Domain=domain, Scalar=cls.dtype)
         ])
-        Relvar.insert(mmdb, tr=tr, relvar='Model_Attribute', tuples=[
+        Relvar.insert(db=mmdb, tr=tr, relvar='Model_Attribute', tuples=[
             Model_Attribute_i(Name=record['name'], Domain=domain, Non_scalar_type=cname)
         ])
-        # TODO: Check for derived or non-derived, for now assume the latter
-        Relvar.insert(mmdb, tr=tr, relvar='Non_Derived_Attribute', tuples=[
-            Non_Derived_Attribute_i(Name=record['name'], Class=cname, Domain=domain)
-        ])
+        derived = record.get('derived')
+        if not derived:
+            Relvar.insert(db=mmdb, tr=tr, relvar='Non_Derived_Attribute', tuples=[
+                Non_Derived_Attribute_i(Name=record['name'], Class=cname, Domain=domain)
+            ])
+            default_value = record.get('default_value')
+            if default_value:
+                Relvar.insert(db=mmdb, tr=tr, relvar='Default Initial Value', tuples=[
+                    Default_Initial_Value_i(Attribute=record['name'], Class=cname, Domain=domain, Value=default_value)
+                ])
+
+        else:
+            # TODO: Handle derived attribute population later
+            pass
 
         for i in participating_ids:
             # Add Identifier if it is not already in the population
             if i.number not in class_identifiers:
-                Relvar.insert(mmdb, tr=tr, relvar='Identifier', tuples=[
+                Relvar.insert(db=mmdb, tr=tr, relvar='Identifier', tuples=[
                     Identifier_i(Number=i.number, Class=cname, Domain=domain)
                 ])
                 if not i.superid:
-                    Relvar.insert(mmdb, tr=tr, relvar='Irreducible_Identifier', tuples=[
+                    Relvar.insert(db=mmdb, tr=tr, relvar='Irreducible_Identifier', tuples=[
                         Irreducible_Identifier_i(Number=i.number, Class=cname, Domain=domain)
                     ])
                 else:
-                    Relvar.insert(mmdb, tr=tr, relvar='Super_Identifier', tuples=[
+                    Relvar.insert(db=mmdb, tr=tr, relvar='Super_Identifier', tuples=[
                         Super_Identifier_i(Number=i.number, Class=cname, Domain=domain)
                     ])
                 class_identifiers.add(i.number)
 
             # Include this attribute in this identifier
-            Relvar.insert(mmdb, tr=tr, relvar='Identifier_Attribute', tuples=[
+            Relvar.insert(db=mmdb, tr=tr, relvar='Identifier_Attribute', tuples=[
                 Identifier_Attribute_i(Identifier=i.number, Attribute=record['name'], Class=cname, Domain=domain)
             ])
 
@@ -111,14 +131,14 @@ class Attribute:
         """
         # TODO: Make this first part work and deprecate second
         R = f"Scalar:<{UNRESOLVED}>, Domain:<{domain}>"
-        Relation.restrict(mmdb, relation='Attribute', restriction=R)
-        uattrs = Relation.project(mmdb, attributes=('Name', 'Class'))
+        Relation.restrict(db=mmdb, relation='Attribute', restriction=R)
+        uattrs = Relation.project(db=mmdb, attributes=('Name', 'Class'))
 
         # Rather than batch all the updates, we do them one by one
         # This reduces the search space for each subsequent type resolution
         for a in uattrs.body:
             assign_type = cls.ResolveAttr(attr=a['Name'], cname=a['Class'], domain=domain)
-            Relvar.updateone(mmdb, relvar_name='Attribute',
+            Relvar.updateone(db=mmdb, relvar_name='Attribute',
                              id={'Name': a['Name'], 'Class': a['Class'], 'Domain': domain},
                              update={'Scalar': assign_type})
 
@@ -147,12 +167,12 @@ class Attribute:
         _logger.info(f"Resolving attribute type [{cname}.{attr}]")
         # We join the two relvars on the To_attribute so that we can obtain that attribute's Type
 
-        Relation.join(mmdb, rname1='Attribute', rname2='Attribute_Reference',
+        Relation.join(db=mmdb, rname1='Attribute', rname2='Attribute_Reference',
                       attrs={'Name': 'To_attribute', 'Class': 'To_class', 'Domain': 'Domain'})
 
         # Finally, we restrict and project on our from attribute to get its reference type
         R = f"From_attribute:<{attr}>, From_class:<{cname}>, Domain:<{domain}>"
-        from_attrs = Relation.restrict(mmdb, restriction=R)
+        from_attrs = Relation.restrict(db=mmdb, restriction=R)
 
         # The same attribute could participate in multiple References, so we just pick one arbitrarily
         aref = from_attrs.body[0]

@@ -47,7 +47,7 @@ class StateActivity:
         self.xi_flow_id = None
         self.pi_flow_id = None
         self.pclass = None
-        self.path = f"{self.domain}:{self.sm_name}:{self.name}.mtd"
+        self.path = f"{self.domain}:{self.sm_name}[{self.name}]"
         self.state_parse = state_parse
         self.activity_detail = None
         # Maintain a dictionary of seq token control flow dependencies
@@ -64,12 +64,12 @@ class StateActivity:
         """
         _logger.info(f"Populating state activity execution units: {self.path}")
         # Look up signature
-        R = f"State_model:<{self.sm_name}>, Domain:<{self.domain}>"
-        result = Relation.restrict(db=mmdb, relation='State Signature', restriction=R)
-        if not result.body:
+        R = f"Name:<{self.name}>, State_model:<{self.sm_name}>, Domain:<{self.domain}>"
+        real_state_r = Relation.restrict(db=mmdb, relation='Real State', restriction=R)
+        if not real_state_r.body:
             # TODO: raise exception here
             pass
-        self.signum = result.body[0]['SIGnum']
+        self.signum = real_state_r.body[0]['Signature']
 
         match self.sm_type:
             case SMType.LIFECYCLE:
@@ -98,7 +98,8 @@ class StateActivity:
                 pass  # No xi or pi flow (rnum only, no associated instance)
 
         self.activity_detail = StateActivityAP(
-            anum=self.anum, domain=self.domain, sname=self.name, state_model=self.sm_name, smtype=self.sm_type,
+            anum=self.anum, domain=self.domain, signum=self.signum,
+            sname=self.name, state_model=self.sm_name, smtype=self.sm_type,
             xiflow=self.xi_flow_id, piflow=self.pi_flow_id, pclass=self.pclass,
             activity_path=self.path, parse=self.state_parse["parse"], scrall_text=self.state_parse['text'])
 

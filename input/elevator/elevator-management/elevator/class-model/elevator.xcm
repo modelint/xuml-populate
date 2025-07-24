@@ -67,7 +67,7 @@ class Floor Service
 attributes
     Floor : Level Name {I, I2, R49}
     Shaft : Shaft ID {I, R49}
-    Direction : Direction {I, I2}
+    Direction : Direction {I, I2} = up
     Bank : Bank Name {I2, R49}
 --
 class Middle Bank Level

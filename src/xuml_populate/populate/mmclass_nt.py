@@ -30,6 +30,7 @@ Attribute_In_Derivation_i = namedtuple('Attribute_In_Derivation_i', 'Source_attr
 Attribute_Reference_i = namedtuple('Attribute_Reference_i', 'From_attribute From_class To_attribute To_class Domain To_identifier Ref Rnum')
 Class_i = namedtuple('Class_i', 'Name Cnum Domain')
 Classifier_Attribute_i = namedtuple('Classifier_Attribute_i', 'Type Superclass Generalization Identifier Attribute Domain')
+Default_Initial_Value_i = namedtuple('Default_Initial_Value_i', 'Attribute Class Domain Value')
 Derived_Attribute_i = namedtuple('Derived_Attribute_i', 'Name Class Domain')
 Identifier_i = namedtuple('Identifier_i', 'Number Class Domain')
 Identifier_Attribute_i = namedtuple('Identifier_Attribute_i', 'Identifier Attribute Class Domain')
