@@ -4,7 +4,7 @@ create_action.py – Populate a create action in PyRAL
 
 # System
 import logging
-from typing import Sequence, Tuple, Optional
+from typing import Sequence, Tuple, Optional, Any
 
 # Model Integration
 from scrall.parse.visitor import New_inst_a, Scalar_RHS_a
@@ -53,10 +53,14 @@ class CreateAction:
 
         # Unpack statement parse
         self.target_class = statement_parse.cname.name
-        self.non_ref_ivalues = None
+        self.non_ref_ivalues: dict[str, Any] = {}
 
         self.non_ref_inits = statement_parse.attrs
         self.ref_inits = statement_parse.rels
+
+        # We will use this nested dictionary to gather all required initial attribute values
+        # for non referential attributes
+        self.non_ref_ivalues: dict[str, dict[str, Any]] = {}
 
     def process(self) -> Boundary_Actions:
         """
@@ -65,12 +69,12 @@ class CreateAction:
             Boundary_Actions: The signal action id is both the initial and final action id
         """
         # We need to verify that each attribute of the target class is initialized
-        # Here we build get all attribute names for the target class and split into referential and non-referential
+
+        # Get all attribute names for the target class and split into referential and non-referential
         R = f"Class:<{self.target_class}>, Domain:<{self.domain}>"
-        attr_r = Relation.restrict(db=mmdb, relation='Attribute', restriction=R, svar_name="attrs")
+        Relation.restrict(db=mmdb, relation='Attribute', restriction=R, svar_name="attrs")
         attr_ref_r = Relation.semijoin(db=mmdb, rname2="Attribute Reference",
-                                       attrs={"Name": "From_attribute", "Class": "From_class", "Domain": "Domain"},
-                                       svar_name="arefs")
+                                       attrs={"Name": "From_attribute", "Class": "From_class", "Domain": "Domain"})
         attr_names_r = Relation.project(db=mmdb, relation="attrs", attributes=("Name",))
         attr_names = {n["Name"] for n in attr_names_r.body}
 
@@ -78,10 +82,10 @@ class CreateAction:
         ref_attr_names = {n["From_attribute"] for n in attr_ref_r.body}  # All of the referential attribute names
         non_ref_attr_names = attr_names - ref_attr_names  # All of the non referentila attribute names
 
-        # Initially we set the initial value for each non referential attribute to None until we determine
+        # Set the initial value for each non referential attribute to {} until we determine
         # its source (flow, attribute or type default)
-        # We will raise an exception if we can't replace all of the Nones
-        self.non_ref_ivalues = {a: None for a in non_ref_attr_names}
+        # We will raise an exception if we can't fill all of those empty subdicts
+        self.non_ref_ivalues = {a: {} for a in non_ref_attr_names}
 
         # Obtain initial values for each non-referential attribute as follows:
         # --
@@ -95,6 +99,10 @@ class CreateAction:
             attr_name = av_init.attr.name
             sflow_name = av_init.scalar_expr
             sflow_source = type(sflow_name).__name__
+
+            # The source of any Explicit Initialization, as described in the Create Delete Subsystem class model,
+            # is either an input parameter flowing into the activity or a Scalar Flow generated
+            # by some internal Action
             match sflow_source:
                 case 'N_a':
                     # Labeled scalar flow output by some other action
@@ -109,14 +117,21 @@ class CreateAction:
                         _logger.error(msg)
                         raise ActionException(msg)
                     parameter_t = parameter_r.body[0]  # The Parameter instance tuple
+                    # TODO: IMPORTANT Verify that parameter flow type matches the attribute type, else exception
                     self.non_ref_ivalues[attr_name] = {'flow': parameter_t["Input_flow"]}
                 case _:
                     pass
-            # Now process each implicit initialization
-            default_init_attrs = [a for a, v in self.non_ref_ivalues.items() if not v]
-            for a in default_init_attrs:
-                pass
-            pass
+        # Now process each implicit initialization
+        # Find all non referential attributes with no value explicitly specified, these will require default values
+        default_init_attrs = [a for a, v in self.non_ref_ivalues.items() if not v]
+        for da in default_init_attrs:
+            R = f"Attribute:<{da}>, Class:<{self.target_class}>, Domain:<{self.domain}>"
+            default_ival_r = Relation.restrict(db=mmdb, relation='Default Initial Value', restriction=R)
+            if len(default_ival_r.body) == 1:
+                default_ival_t = default_ival_r.body[0]
+                default_initial_value = default_ival_t["Value"]
+                self.non_ref_ivalues[da] = {'default initial value': default_initial_value}
+        pass
 
 
         pass
