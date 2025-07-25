@@ -90,7 +90,7 @@ class StateActivity:
                 self.pi_flow_id = ma_activity_r.body[0]['Paritioning_instance_flow']
                 R = f"Anum:<{self.anum}>, Domain:<{self.domain}>"
                 ma_r = Relation.restrict(db=mmdb, relation='Multiple Assigner', restriction=R)
-                if not result.body:
+                if not ma_r.body:
                     # TODO: raise exception here
                     pass
                 self.pclass = ma_r.body[0]['Partitioning_class']

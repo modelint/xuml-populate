@@ -15,6 +15,7 @@ from pyral.transaction import Transaction
 # xUML populate
 from xuml_populate.utility import print_mmdb
 from xuml_populate.populate.actions.expressions.scalar_expr import ScalarExpr
+from xuml_populate.populate.actions.new_assoc_ref_action import NewAssociativeReferenceAction
 from xuml_populate.config import mmdb
 from xuml_populate.populate.actions.aparse_types import Flow_ap, MaxMult, Content, ActivityAP, Boundary_Actions, SMType
 from xuml_populate.populate.actions.action import Action
@@ -50,6 +51,7 @@ class CreateAction:
         self.anum = self.activity_data.anum
         self.domain = self.activity_data.domain
         self.signum = self.activity_data.signum
+        self.to_ref_parse = statement_parse.rels
 
         # Unpack statement parse
         self.target_class = statement_parse.cname.name
@@ -147,8 +149,6 @@ class CreateAction:
                 _logger.error(msg2)
                 raise ActionException(msg2)
 
-        # Now we need to find a value for each referential attribute
-        # We'll do this by populating the relevant actions in the ref subsystem
 
         # Populate the Action superclass instance and obtain its action_id
         Transaction.open(db=mmdb, name=tr_Create)
@@ -157,12 +157,24 @@ class CreateAction:
         Relvar.insert(db=mmdb, tr=tr_Create, relvar='Create Action', tuples=[
             Create_Action_i(ID=self.action_id, Activity=self.activity_data.anum, Domain=self.activity_data.domain)
         ])
-        Relvar.insert(db=mmdb, tr=tr_Create, relvar='Signal Instance Set Action', tuples=[
+        Relvar.insert(db=mmdb, tr=tr_Create, relvar='Local Create Action', tuples=[
             Local_Create_Action_i(ID=self.action_id, Activity=self.activity_data.anum, Domain=self.activity_data.domain)
         ])
-        # Initialize all non-referential attributes
-        for i in self.non_ref_inits:
+        # Now we need to find a value for each referential attribute
+        # We'll do this by populating the relevant actions in the ref subsystem
+        for to_ref in self.to_ref_parse:
+            if to_ref.iset2:
+                pass
+                # An associative reference requires two instance sets, so we must be creating an association class
+                aref_action = NewAssociativeReferenceAction(create_action_id=self.action_id, action_parse=to_ref, activity_data=self.activity_data)
+                aref_flow = aref_action.populate()
+                pass
+            else:
+                pass
+                # New simple ref action
             pass
 
+
         Transaction.execute(db=mmdb, name=tr_Create)
+
         return Boundary_Actions(ain={self.action_id}, aout={self.action_id})
