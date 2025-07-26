@@ -241,8 +241,7 @@ class RestrictCondition:
 
         :param attr: Name of some compared Attribute that matches an Attribute of the executing instance
         """
-        read_iflow = Flow_ap(fid=self.activity_data.xiflow, tname=self.activity_data.cname, content=Content.INSTANCE,
-                             max_mult=MaxMult.ONE)
+        read_iflow = self.activity_data.xiflow
         _, read_flows = ReadAction.populate(input_single_instance_flow=read_iflow,
                                             attrs=(attr,),
                                             anum=self.anum, domain=self.domain)

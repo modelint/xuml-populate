@@ -9,7 +9,6 @@ from enum import Enum
 # Model Integration
 from scrall.parse.visitor import Execution_Unit_a
 
-
 class MaxMult(Enum):
     ONE = 1
     MANY = 2
@@ -42,12 +41,21 @@ Boundary_Actions = namedtuple("Boundary_Actions", "ain aout")
 
 """ Activity identification and diagnostic data """
 
+class Flow_ap(NamedTuple):
+    """
+    Describes a generated flow
+    """
+    fid: str  # Flow ID
+    content: Content
+    tname: str
+    max_mult: MaxMult
+
 @dataclass(frozen=True, kw_only=True)
 class ActivityAP:
     anum: str  # activity number
     domain: str  # domainname
     signum: str  # signature number
-    xiflow: str  # executing instance flow (none for assigner state activities)
+    xiflow: Flow_ap  # executing instance flow (none for assigner state activities)
     activity_path: str  # descriptive name of activity for logging (e.g. domain, class, method name)
     parse: Execution_Unit_a  # The Scrall parse of the actions
     scrall_text: str  # Full unparsed text of the activity for logging and diagnostic reference
@@ -62,19 +70,9 @@ class StateActivityAP(ActivityAP):
     sname: str  # state name
     state_model: str  # state model name (class or rnum)
     smtype: SMType  # lifecycle, sa assigner, ma assigner
-    piflow: str  # parititioning instance flow, set to None unless sm type is ma assigner
-    pclass: str  # name of the partitioning class
+    piflow: Flow_ap  # parititioning instance flow, set to None unless sm type is ma assigner
 
 @dataclass(frozen=True, kw_only=True)
 class OpActivityAP(ActivityAP):
     eename: str
     opname: str
-
-class Flow_ap(NamedTuple):
-    """
-    Describes a generated flow
-    """
-    fid: str  # Flow ID
-    content: Content
-    tname: str
-    max_mult: MaxMult

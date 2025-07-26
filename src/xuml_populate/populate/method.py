@@ -46,12 +46,12 @@ class Method:
         self.domain = domain
         self.subsys = subsys
         self.method_parse = m_parse
-        self.xi_flow = None
         self.class_name = m_parse.class_name
         self.signum = None
         self.anum = None
         self.name = self.method_parse.method
         self.xi_flow_id = None
+        self.xi_flow = None
         self.path = f"{domain}:{self.class_name}.{self.name}"
         self.activity_detail = None
 
@@ -131,7 +131,7 @@ class Method:
 
         self.activity_detail = MethodActivityAP(
             anum=self.anum, domain=self.domain, cname=self.class_name, opname=self.name, signum=self.signum,
-            xiflow=self.xi_flow_id, activity_path=self.path,
+            xiflow=self.xi_flow, activity_path=self.path,
             parse=self.activity_parse[0], scrall_text=self.method_parse.activity)
 
         # Populate the Method Actions

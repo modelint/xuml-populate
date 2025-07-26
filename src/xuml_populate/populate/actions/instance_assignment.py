@@ -84,7 +84,7 @@ class InstanceAssignment:
         elif isinstance(activity_data, StateActivityAP) and activity_data.smtype == SMType.LIFECYCLE:
             tname = activity_data.state_model
         if tname is not None:
-            xi_instance_flow = Flow_ap(fid=activity_data.xiflow, content=Content.INSTANCE, tname=tname,
+            xi_instance_flow = Flow_ap(fid=activity_data.xiflow.fid, content=Content.INSTANCE, tname=tname,
                                        max_mult=MaxMult.ONE)
 
         # Process the instance set expression in the RHS and obtain the generated instance flow

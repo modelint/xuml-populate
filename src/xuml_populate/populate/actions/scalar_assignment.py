@@ -65,17 +65,14 @@ class ScalarAssignment:
         if isinstance(self.activity_data, StateActivityAP):
             match self.activity_data.smtype:
                 case SMType.LIFECYCLE:
-                    self.input_instance_flow = Flow_ap(fid=self.activity_data.xiflow, content=Content.INSTANCE,
-                                                       tname=self.activity_data.state_model, max_mult=MaxMult.ONE)
+                    self.input_instance_flow = self.activity_data.xiflow
                 case SMType.MA:
-                    self.input_instance_flow = Flow_ap(fid=self.activity_data.piflow, content=Content.INSTANCE,
-                                                       tname=self.activity_data.pclass, max_mult=MaxMult.ONE)
+                    self.input_instance_flow = self.activity_data.piflow
                 case SMType.SA:
                     # A single assigner state machine has no executing instance and hence no xi_flow
                     pass
         elif isinstance(self.activity_data, MethodActivityAP):
-            self.input_instance_flow = Flow_ap(fid=self.activity_data.xiflow, content=Content.INSTANCE,
-                                               tname=self.activity_data.cname, max_mult=MaxMult.ONE)
+            self.input_instance_flow = self.activity_data.xiflow
 
         se = ScalarExpr(rhs=rhs, input_instance_flow=self.input_instance_flow, activity_data=self.activity_data)
         bactions, scalar_flows = se.process()

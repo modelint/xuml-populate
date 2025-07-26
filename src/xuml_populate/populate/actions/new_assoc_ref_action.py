@@ -96,8 +96,9 @@ class NewAssociativeReferenceAction:
             case 'IN_a':
                 pass
             case 'INST_a':
-                # xi_flow = Flow_ap(fid=self.activity_data.xiflow, content=Content.INSTANCE,
-                #                   tname=self.activity_data.)
+                pop_iset = InstanceSet(input_instance_flow=self.activity_data.xiflow, iset_components=iset.components,
+                                       activity_data=self.activity_data)
+                _, _, f = pop_iset.process()
                 pass
             case _:
                 pass

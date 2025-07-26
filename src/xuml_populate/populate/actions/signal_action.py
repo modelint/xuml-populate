@@ -13,7 +13,8 @@ from pyral.transaction import Transaction
 
 # xUML populate
 from xuml_populate.config import mmdb
-from xuml_populate.populate.actions.aparse_types import Flow_ap, MaxMult, Content, ActivityAP, Boundary_Actions, SMType
+from xuml_populate.populate.actions.aparse_types import (Flow_ap, MaxMult, Content, StateActivityAP,
+                                                         Boundary_Actions, SMType)
 from xuml_populate.populate.actions.action import Action
 from xuml_populate.populate.mm_class import MMclass
 from xuml_populate.populate.flow import Flow
@@ -31,7 +32,7 @@ class SignalAction:
     Create all relations for a Signal Action.
     """
     # TODO: Implement other Signal Action subclasses
-    def __init__(self, statement_parse: Signal_a, activity_data: ActivityAP):
+    def __init__(self, statement_parse: Signal_a, activity_data: StateActivityAP):
         """
         Initialize with everything the Signal statement requires
 
@@ -53,10 +54,10 @@ class SignalAction:
             Boundary_Actions: The signal action id is both the initial and final action id
         """
         dest_name = self.statement_parse.dest.target_iset.name
+        dest_flow = None
         if dest_name == 'me':
             if self.activity_data.xiflow:
-                dest_flow = Flow_ap(fid=self.activity_data.xiflow, content=Content.INSTANCE,
-                                    tname=self.activity_data.state_model, max_mult=MaxMult.ONE)
+                dest_flow = self.activity_data.xiflow
             else:
                 dest_flow = None  # TODO: Handle SA, MA assigner 'me' destination cases
         else:

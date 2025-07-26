@@ -13,7 +13,7 @@ from pyral.relation import Relation  # For debugging
 
 # xUML Populate
 from xuml_populate.config import mmdb
-from xuml_populate.populate.actions.aparse_types import SMType
+from xuml_populate.populate.actions.aparse_types import SMType, Flow_ap, Content, MaxMult
 from xuml_populate.populate.activity import Activity
 from xuml_populate.populate.actions.aparse_types import StateActivityAP
 
@@ -41,11 +41,12 @@ class StateActivity:
         self.sm_name = state_model.sm_name
         self.sm_type = state_model.sm_type
         self.name = state_name
-        self.xi_flow = None
         self.signum = None
         self.anum = state_parse["anum"]
         self.xi_flow_id = None
+        self.xi_flow = None
         self.pi_flow_id = None
+        self.pi_flow = None
         self.pclass = None
         self.path = f"{self.domain}:{self.sm_name}[{self.name}]"
         self.state_parse = state_parse
@@ -80,6 +81,8 @@ class StateActivity:
                     # TODO: raise exception here
                     pass
                 self.xi_flow_id = lifecycle_activity_r.body[0]['Executing_instance_flow']
+                self.xi_flow = Flow_ap(fid=self.xi_flow_id, content=Content.INSTANCE, tname=self.sm_name,
+                                       max_mult=MaxMult.ONE)
             case SMType.MA:
                 # Look up the partitioning instance (pi) flow
                 R = f"Anum:<{self.anum}>, Domain:<{self.domain}>"
@@ -88,6 +91,8 @@ class StateActivity:
                     # TODO: raise exception here
                     pass
                 self.pi_flow_id = ma_activity_r.body[0]['Paritioning_instance_flow']
+                self.pi_flow = Flow_ap(fid=self.pi_flow_id, content=Content.INSTANCE, tname=self.pclass,
+                                       max_mult=MaxMult.ONE)
                 R = f"Anum:<{self.anum}>, Domain:<{self.domain}>"
                 ma_r = Relation.restrict(db=mmdb, relation='Multiple Assigner', restriction=R)
                 if not ma_r.body:
@@ -100,7 +105,7 @@ class StateActivity:
         self.activity_detail = StateActivityAP(
             anum=self.anum, domain=self.domain, signum=self.signum,
             sname=self.name, state_model=self.sm_name, smtype=self.sm_type,
-            xiflow=self.xi_flow_id, piflow=self.pi_flow_id, pclass=self.pclass,
+            xiflow=self.xi_flow, piflow=self.pi_flow_id,
             activity_path=self.path, parse=self.state_parse["parse"], scrall_text=self.state_parse['text'])
 
         # Populate the State Activity Actions

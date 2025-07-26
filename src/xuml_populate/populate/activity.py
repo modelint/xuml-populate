@@ -90,7 +90,7 @@ class Activity:
         self.state_name = None
         self.pclass = None
         self.atype = None
-        self.xi_flow_id = None
+        self.xi_flow = None
         self.flow_path = None
 
         # Maintain a dictionary of seq token control flow dependencies
@@ -104,13 +104,13 @@ class Activity:
                 self.atype = ActivityType.METHOD
                 self.name = activity_data.opname
                 self.class_name = activity_data.cname
-                self.xi_flow_id = activity_data.xiflow
+                self.xi_flow = activity_data.xiflow
                 pass
             case 'StateActivityAP':
                 self.atype = ActivityType.STATE
                 self.state_name = activity_data.sname
-                self.pclass_name = activity_data.pclass
-                self.xi_flow_id = activity_data.xiflow  # None if not a Lifecycle state
+                self.pi_flow = activity_data.piflow
+                self.xi_flow = activity_data.xiflow  # None if not a Lifecycle state
             case _:
                 pass
 
@@ -538,8 +538,8 @@ class Activity:
         # Mark all flows in Activity that are available in the first wave of execution
 
         # The single executing instance flow is available
-        if self.xi_flow_id:
-            self.flow_path[self.xi_flow_id]['available'] = True
+        if self.xi_flow:
+            self.flow_path[self.xi_flow.fid]['available'] = True
 
         # All activity parameter flows are available
         R = f"Activity:<{self.anum}>, Domain:<{self.domain}>"
