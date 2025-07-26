@@ -13,6 +13,7 @@ from pyral.relation import Relation
 from pyral.transaction import Transaction
 
 # xUML Populate
+from xuml_populate.utility import print_mmdb
 from xuml_populate.config import mmdb
 from xuml_populate.populate.actions.aparse_types import Flow_ap, ActivityAP, Content
 from xuml_populate.populate.actions.expressions.instance_set import InstanceSet
@@ -84,7 +85,10 @@ class NewAssociativeReferenceAction:
         flow_id = None
         iset_type = type(iset).__name__
         match iset_type:
-            case 'N_a':
+            case 'N_a' | 'IN_a':
+                # It's just a single name, so we don't need to create an InstanceSet
+                # since we know there won't be any new Actions or flows populated
+                # We just need to find the named flow
                 R = f"Name:<{iset.name}>, Activity:<{self.anum}>, Domain:<{self.domain}>"
                 labeled_flow_r = Relation.restrict(db=mmdb, relation='Labeled Flow', restriction=R)
                 if len(labeled_flow_r.body) == 1:
@@ -93,13 +97,12 @@ class NewAssociativeReferenceAction:
                     flow_class = iflow_r.body[0]["Class"]
                     self.ref_flows[flow_class] = flow_id
                 return
-            case 'IN_a':
-                pass
             case 'INST_a':
                 pop_iset = InstanceSet(input_instance_flow=self.activity_data.xiflow, iset_components=iset.components,
                                        activity_data=self.activity_data)
-                _, _, f = pop_iset.process()
-                pass
+                ain, aout, f = pop_iset.process()
+                self.ref_flows[f.tname] = f.fid
+                return
             case _:
                 pass
 
