@@ -60,7 +60,7 @@ class NewAssociativeReferenceAction:
         self.action_id = Action.populate(tr=tr_AssocRef, anum=self.anum, domain=self.domain,
                                          action_type="new assoc ref")
         Relvar.insert(db=mmdb, relvar="Reference Action", tuples=[
-            Reference_Action_i(ID=self.action_id, Activity=self.anum, Domain=self.domain, Association=self.parse.rnum)
+            Reference_Action_i(ID=self.action_id, Activity=self.anum, Domain=self.domain, Association=self.parse.rnum.rnum)
         ], tr=tr_AssocRef)
         Relvar.insert(db=mmdb, relvar="New Reference Action", tuples=[
             New_Reference_Action_i(ID=self.action_id, Activity=self.anum, Domain=self.domain,
@@ -76,8 +76,26 @@ class NewAssociativeReferenceAction:
         self.t_class = tref_r.body[0]["To_class"]
         self.p_class = pref_r.body[0]["To_class"]
 
+        # Obtain the T and P instance flows typed by the participating Classes
         self.get_iflow(iset=self.parse.iset1)
         self.get_iflow(iset=self.parse.iset2)
+
+        # Populate links to the source Single Instance Flows
+        Relvar.insert(db=mmdb, relvar="T Ref Instance", tuples=[
+            T_Ref_Instance_i(Flow=self.ref_flows[self.t_class], Activity=self.anum, Domain=self.domain)
+        ], tr=tr_AssocRef)
+        Relvar.insert(db=mmdb, relvar="Referenced Instance", tuples=[
+            Referenced_Instance_i(Flow=self.ref_flows[self.t_class], Activity=self.anum, Domain=self.domain)
+        ], tr=tr_AssocRef)
+        Relvar.insert(db=mmdb, relvar="P Ref Instance", tuples=[
+            P_Ref_Instance_i(Flow=self.ref_flows[self.p_class], Activity=self.anum, Domain=self.domain)
+        ], tr=tr_AssocRef)
+        Relvar.insert(db=mmdb, relvar="Referenced Instance", tuples=[
+            Referenced_Instance_i(Flow=self.ref_flows[self.p_class], Activity=self.anum, Domain=self.domain)
+        ], tr=tr_AssocRef)
+
+        Transaction.execute(db=mmdb, name=tr_AssocRef)
+
         pass
 
     def get_iflow(self, iset):

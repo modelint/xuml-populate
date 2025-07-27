@@ -23,8 +23,7 @@ from xuml_populate.populate.flow import Flow
 from xuml_populate.exceptions.action_exceptions import *
 from xuml_populate.populate.mmclass_nt import (
     Create_Action_i, Instance_Initialization_i, Attribute_Initialization_i, Explicit_Initialization_i,
-    Reference_Initialization_i, Default_Initialization_i, Initializing_Attribute_Reference_i,
-    Initializing_Instance_Reference_i, Local_Create_Action_i, New_Instance_Flow_i
+    Reference_Initialization_i, Default_Initialization_i, Local_Create_Action_i, New_Instance_Flow_i
 )
 
 _logger = logging.getLogger(__name__)
@@ -70,6 +69,24 @@ class CreateAction:
         Returns:
             Boundary_Actions: The signal action id is both the initial and final action id
         """
+        # Begin by populating the Action itself
+        # Populate the Action superclass instance and obtain an action_id
+        Transaction.open(db=mmdb, name=tr_Create)
+        self.action_id = Action.populate(tr=tr_Create, anum=self.activity_data.anum, domain=self.activity_data.domain,
+                                         action_type="create")  # Transaction open
+        Relvar.insert(db=mmdb, tr=tr_Create, relvar='Create Action', tuples=[
+            Create_Action_i(ID=self.action_id, Activity=self.activity_data.anum, Domain=self.activity_data.domain)
+        ])
+        Relvar.insert(db=mmdb, tr=tr_Create, relvar='Local Create Action', tuples=[
+            Local_Create_Action_i(ID=self.action_id, Activity=self.activity_data.anum, Domain=self.activity_data.domain)
+        ])
+        # When this class does not participate in any generalization, there is only one of these
+        # TODO: Check for generalization
+        Relvar.insert(db=mmdb, tr=tr_Create, relvar='Instance Initialization', tuples=[
+            Instance_Initialization_i(Create_action=self.action_id, Class=self.target_class,
+                                      Activity=self.activity_data.anum, Domain=self.activity_data.domain)
+        ])
+
         # We need to verify that each attribute of the target class is initialized
 
         # Get all attribute names for the target class and split into referential and non-referential
@@ -83,12 +100,21 @@ class CreateAction:
 
         # These are the droids we're looking for
         ref_attr_names = {n["From_attribute"] for n in attr_ref_r.body}  # All of the referential attribute names
-        non_ref_attr_names = attr_names - ref_attr_names  # All of the non referentila attribute names
+        non_ref_attr_names = attr_names - ref_attr_names  # All of the non referential attribute names
 
-        # Set the initial value for each non referential attribute to {} until we determine
-        # its source (flow, attribute or type default)
-        # We will raise an exception if we can't fill all of those empty subdicts
-        self.non_ref_ivalues = {a: {} for a in non_ref_attr_names}
+        # Populate all Attribute Initialization instances
+        for a in attr_names:
+            Relvar.insert(db=mmdb, tr=tr_Create, relvar='Attribute Initialization', tuples=[
+                Attribute_Initialization_i(Create_action=self.action_id, Attribute=a, Class=self.target_class,
+                                           Activity=self.activity_data.anum, Domain=self.activity_data.domain)
+            ])
+
+        # Populate Referential Initializations
+        for r in ref_attr_names:
+            Relvar.insert(db=mmdb, tr=tr_Create, relvar='Reference Initialization', tuples=[
+                Reference_Initialization_i(Create_action=self.action_id, Attribute=r, Class=self.target_class,
+                                           Activity=self.activity_data.anum, Domain=self.activity_data.domain)
+            ])
 
         # Obtain initial values for each non-referential attribute as follows:
         # --
@@ -121,9 +147,14 @@ class CreateAction:
                         raise ActionException(msg)
                     parameter_t = parameter_r.body[0]  # The Parameter instance tuple
                     # TODO: IMPORTANT Verify that parameter flow type matches the attribute type, else exception
-                    self.non_ref_ivalues[attr_name] = {'flow': parameter_t["Input_flow"]}
+                    Relvar.insert(db=mmdb, tr=tr_Create, relvar='Explicit Initialization', tuples=[
+                        Explicit_Initialization_i(Create_action=self.action_id, Attribute=r, Class=self.target_class,
+                                                  Activity=self.activity_data.anum, Domain=self.activity_data.domain,
+                                                  Initial_value_flow=parameter_t["Input_flow"])
+                    ])
                 case _:
                     pass
+
         # Now process each implicit initialization
         # Find all non referential attributes with no value explicitly specified, these will require default values
         default_init_attrs = [a for a, v in self.non_ref_ivalues.items() if not v]
@@ -131,11 +162,18 @@ class CreateAction:
             R = f"Attribute:<{da}>, Class:<{self.target_class}>, Domain:<{self.domain}>"
             default_ival_r = Relation.restrict(db=mmdb, relation='Default Initial Value', restriction=R)
             if len(default_ival_r.body) == 1:
-                # There is a default initial value specified in the class model
-                default_ival_t = default_ival_r.body[0]
-                default_initial_value = default_ival_t["Value"]
-                self.non_ref_ivalues[da] = {'default initial value': default_initial_value}
+                # Indicate that there is a value available in the metamodel
+                Relvar.insert(db=mmdb, tr=tr_Create, relvar='Default Initialization', tuples=[
+                    Default_Initialization_i(Create_action=self.action_id, Attribute=r, Class=self.target_class,
+                                             Activity=self.activity_data.anum, Domain=self.activity_data.domain,
+                                             Initial_value_specified=True)
+                ])
             else:
+                Relvar.insert(db=mmdb, tr=tr_Create, relvar='Default Initialization', tuples=[
+                    Default_Initialization_i(Create_action=self.action_id, Attribute=r, Class=self.target_class,
+                                             Activity=self.activity_data.anum, Domain=self.activity_data.domain,
+                                             Initial_value_specified=False)
+                ])
                 # Last chance... Look for a default value defined on the Attribute's type
                 # TODO: We'll need a populated type model so that we can search it
                 R = f"Name:<{da}>"
@@ -149,17 +187,8 @@ class CreateAction:
                 _logger.error(msg2)
                 raise ActionException(msg2)
 
+        Transaction.execute(db=mmdb, name=tr_Create)
 
-        # Populate the Action superclass instance and obtain its action_id
-        Transaction.open(db=mmdb, name=tr_Create)
-        self.action_id = Action.populate(tr=tr_Create, anum=self.activity_data.anum, domain=self.activity_data.domain,
-                                         action_type="create")  # Transaction open
-        Relvar.insert(db=mmdb, tr=tr_Create, relvar='Create Action', tuples=[
-            Create_Action_i(ID=self.action_id, Activity=self.activity_data.anum, Domain=self.activity_data.domain)
-        ])
-        Relvar.insert(db=mmdb, tr=tr_Create, relvar='Local Create Action', tuples=[
-            Local_Create_Action_i(ID=self.action_id, Activity=self.activity_data.anum, Domain=self.activity_data.domain)
-        ])
         # Now we need to find a value for each referential attribute
         # We'll do this by populating the relevant actions in the ref subsystem
         for to_ref in self.to_ref_parse:
@@ -175,6 +204,5 @@ class CreateAction:
             pass
 
 
-        Transaction.execute(db=mmdb, name=tr_Create)
 
         return Boundary_Actions(ain={self.action_id}, aout={self.action_id})
