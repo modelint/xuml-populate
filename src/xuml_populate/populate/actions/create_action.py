@@ -23,7 +23,7 @@ from xuml_populate.populate.flow import Flow
 from xuml_populate.exceptions.action_exceptions import *
 from xuml_populate.populate.mmclass_nt import (
     Create_Action_i, Instance_Initialization_i, Attribute_Initialization_i, Explicit_Initialization_i,
-    Reference_Initialization_i, Default_Initialization_i, Local_Create_Action_i, New_Instance_Flow_i
+    Reference_Initialization_i, Default_Initialization_i, Local_Create_Action_i, Reference_Value_Input_i
 )
 
 _logger = logging.getLogger(__name__)
@@ -71,15 +71,21 @@ class CreateAction:
         """
         # Begin by populating the Action itself
         # Populate the Action superclass instance and obtain an action_id
+        _logger.info("CREATE ACTION TRANSACTION STARTED")
         Transaction.open(db=mmdb, name=tr_Create)
         self.action_id = Action.populate(tr=tr_Create, anum=self.activity_data.anum, domain=self.activity_data.domain,
                                          action_type="create")  # Transaction open
         Relvar.insert(db=mmdb, tr=tr_Create, relvar='Create Action', tuples=[
             Create_Action_i(ID=self.action_id, Activity=self.activity_data.anum, Domain=self.activity_data.domain)
         ])
+        output_flow = Flow.populate_instance_flow(cname=self.target_class, anum=self.anum, domain=self.domain,
+                                                  single=True)
         Relvar.insert(db=mmdb, tr=tr_Create, relvar='Local Create Action', tuples=[
-            Local_Create_Action_i(ID=self.action_id, Activity=self.activity_data.anum, Domain=self.activity_data.domain)
+            Local_Create_Action_i(ID=self.action_id, Activity=self.activity_data.anum, Domain=self.activity_data.domain,
+                                  New_instance_flow=output_flow.fid)
         ])
+
+
         # When this class does not participate in any generalization, there is only one of these
         # TODO: Check for generalization
         Relvar.insert(db=mmdb, tr=tr_Create, relvar='Instance Initialization', tuples=[
@@ -187,22 +193,28 @@ class CreateAction:
                 _logger.error(msg2)
                 raise ActionException(msg2)
 
-        Transaction.execute(db=mmdb, name=tr_Create)
 
-        # Now we need to find a value for each referential attribute
-        # We'll do this by populating the relevant actions in the ref subsystem
+        # Now we need to obtain an input tuple flow for each linked relationship
+        # So that all of the referential attributes can be initialized during model execution
         for to_ref in self.to_ref_parse:
             if to_ref.iset2:
-                pass
-                # An associative reference requires two instance sets, so we must be creating an association class
-                aref_action = NewAssociativeReferenceAction(create_action_id=self.action_id, action_parse=to_ref, activity_data=self.activity_data)
-                aref_flow = aref_action.populate()
-                pass
+                # There are two references on this linked relationship which means that
+                # this relationship is associative -- one reference to each participating class
+                ref_action = NewAssociativeReferenceAction(create_action_id=self.action_id, action_parse=to_ref,
+                                                           activity_data=self.activity_data, tr=tr_Create)
+                tuple_fid, ref_attr_names = ref_action.populate()
+                for n in ref_attr_names:
+                    Relvar.insert(db=mmdb, tr=tr_Create, relvar='Reference Value Input', tuples=[
+                        Reference_Value_Input_i(Flow=tuple_fid, Create_action=self.action_id, Attribute=n,
+                                                Class=self.target_class,
+                                                Activity=self.activity_data.anum, Domain=self.activity_data.domain,
+                                                )
+                    ])
             else:
                 pass
                 # New simple ref action
             pass
 
-
+        Transaction.execute(db=mmdb, name=tr_Create)
 
         return Boundary_Actions(ain={self.action_id}, aout={self.action_id})

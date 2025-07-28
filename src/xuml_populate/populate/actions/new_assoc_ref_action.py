@@ -15,7 +15,8 @@ from pyral.transaction import Transaction
 # xUML Populate
 from xuml_populate.utility import print_mmdb
 from xuml_populate.config import mmdb
-from xuml_populate.populate.actions.aparse_types import Flow_ap, ActivityAP, Content
+from xuml_populate.populate.actions.table import Table
+from xuml_populate.populate.actions.aparse_types import Flow_ap, ActivityAP, Content, MaxMult
 from xuml_populate.populate.actions.expressions.instance_set import InstanceSet
 from xuml_populate.populate.actions.action import Action
 from xuml_populate.populate.flow import Flow
@@ -25,19 +26,16 @@ from xuml_populate.populate.mmclass_nt import (New_Associative_Reference_Action_
                                                Referenced_Instance_i)
 _logger = logging.getLogger(__name__)
 
-# Transactions
-tr_AssocRef = "New Assoc Ref Action"
-
-
 class NewAssociativeReferenceAction:
     """
 
     """
 
-    def __init__(self, create_action_id: str, action_parse: To_ref_a, activity_data: ActivityAP):
+    def __init__(self, tr: str, create_action_id: str, action_parse: To_ref_a, activity_data: ActivityAP):
         """
 
         """
+        self.tr = tr
         self.create_action_id = create_action_id
         self.p_class = None
         self.t_class = None
@@ -48,26 +46,24 @@ class NewAssociativeReferenceAction:
         self.anum = activity_data.anum
         self.rnum = action_parse.rnum.rnum
         self.action_id = None
-        pass
 
-    def populate(self) -> str:
+    def populate(self) -> (str, list[str]):
         """
 
         Returns:
             Flow ID of a tuple of referential attribute values
         """
-        Transaction.open(db=mmdb, name=tr_AssocRef)
-        self.action_id = Action.populate(tr=tr_AssocRef, anum=self.anum, domain=self.domain,
+        self.action_id = Action.populate(tr=self.tr, anum=self.anum, domain=self.domain,
                                          action_type="new assoc ref")
         Relvar.insert(db=mmdb, relvar="Reference Action", tuples=[
             Reference_Action_i(ID=self.action_id, Activity=self.anum, Domain=self.domain, Association=self.parse.rnum.rnum)
-        ], tr=tr_AssocRef)
+        ], tr=self.tr)
         Relvar.insert(db=mmdb, relvar="New Reference Action", tuples=[
             New_Reference_Action_i(ID=self.action_id, Activity=self.anum, Domain=self.domain,
                                    Create_action=self.create_action_id)
-        ], tr=tr_AssocRef)
+        ], tr=self.tr)
 
-        # Nowe we need to create the t and p class names
+        # Now we need to create the t and p class names
         R = f"Ref_type:<T>, Rnum:<{self.rnum}>, Domain:<{self.domain}>"
         tref_r = Relation.restrict(db=mmdb, relation='Association Reference', restriction=R)
         R = f"Ref_type:<P>, Rnum:<{self.rnum}>, Domain:<{self.domain}>"
@@ -83,23 +79,52 @@ class NewAssociativeReferenceAction:
         # Populate links to the source Single Instance Flows
         Relvar.insert(db=mmdb, relvar="T Ref Instance", tuples=[
             T_Ref_Instance_i(Flow=self.ref_flows[self.t_class], Activity=self.anum, Domain=self.domain)
-        ], tr=tr_AssocRef)
+        ], tr=self.tr)
         Relvar.insert(db=mmdb, relvar="Referenced Instance", tuples=[
             Referenced_Instance_i(Flow=self.ref_flows[self.t_class], Activity=self.anum, Domain=self.domain)
-        ], tr=tr_AssocRef)
+        ], tr=self.tr)
         Relvar.insert(db=mmdb, relvar="P Ref Instance", tuples=[
             P_Ref_Instance_i(Flow=self.ref_flows[self.p_class], Activity=self.anum, Domain=self.domain)
-        ], tr=tr_AssocRef)
+        ], tr=self.tr)
         Relvar.insert(db=mmdb, relvar="Referenced Instance", tuples=[
             Referenced_Instance_i(Flow=self.ref_flows[self.p_class], Activity=self.anum, Domain=self.domain)
-        ], tr=tr_AssocRef)
+        ], tr=self.tr)
 
-        Transaction.execute(db=mmdb, name=tr_AssocRef)
+        Relvar.insert(db=mmdb, relvar="New Associative Reference Action", tuples=[
+            New_Associative_Reference_Action_i(ID=self.action_id, Activity=self.anum, Domain=self.domain,
+                                               T_instance=self.ref_flows[self.t_class],
+                                               P_instance=self.ref_flows[self.p_class])
+        ], tr=self.tr)
+        print_mmdb()
 
-        pass
+        # Create the output tuple table type
+        # Get all referential attributes associated with the associatie relationship
+        R = f"Rnum:<{self.rnum}>, Domain:<{self.domain}>"
+        aref_r = Relation.restrict(db=mmdb, relation='Attribute Reference', restriction=R, svar_name="arefs")
+        p_r = Relation.project(db=mmdb, attributes=("From_attribute", "From_class", "Domain"))
+        a_r = Relation.semijoin(db=mmdb, rname2="Attribute", attrs={"From_attribute": "Name", "From_class": "Class",
+                                                                    "Domain": "Domain"})
+        name_type_pairs = {t["Name"]: t["Scalar"] for t in a_r.body}
+        # tname = Table.populate(tr=self.tr, table_header=name_type_pairs, domain=self.domain)
+
+        # Now create the tuple flow
+        tflow_label = f"_{self.rnum}_ref_{self.create_action_id[4:]}"
+        f = Flow.populate_relation_flow_by_header(
+            table_header=name_type_pairs, anum=self.anum, domain=self.domain, max_mult=MaxMult.ONE,
+            label=tflow_label)
+
+        ref_attr_names = [k for k in name_type_pairs.keys()]
+
+        return f.fid, ref_attr_names
+
 
     def get_iflow(self, iset):
+        """
 
+        Args:
+            iset:
+
+        """
         flow_id = None
         iset_type = type(iset).__name__
         match iset_type:
@@ -123,5 +148,3 @@ class NewAssociativeReferenceAction:
                 return
             case _:
                 pass
-
-        pass

@@ -123,7 +123,7 @@ class StateModel:
                     # Populate the Parameter's type if it hasn't already been populated
                     MMtype.populate_unknown(name=p.type, domain=sm.domain)
                     input_fid = Flow.populate_data_flow_by_type(mm_type=p.type, anum=anum,
-                                                                domain=sm.domain, label=None,
+                                                                domain=sm.domain, label=p.name,
                                                                 activity_tr=tr_SM).fid
                     Relvar.insert(db=mmdb, tr=tr_SM, relvar='Parameter', tuples=[
                         Parameter_i(Name=p.name, Signature=signum, Domain=sm.domain,

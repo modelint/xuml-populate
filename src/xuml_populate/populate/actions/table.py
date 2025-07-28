@@ -35,7 +35,7 @@ class Table:
         """
         Population happens in the context of a Relation Flow transaction.
 
-        :param tr: The Relaton Flow transaction name
+        :param tr: The Relation Flow transaction name
         :param table_header: A dictionary of attribute name;type pairs
         :param domain: The domain name
         :return: The name of the Table

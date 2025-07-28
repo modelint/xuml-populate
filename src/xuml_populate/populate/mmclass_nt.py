@@ -216,9 +216,9 @@ Delete_Action_i = namedtuple('Delete_Action_i', 'ID Activity Domain')
 Deletion_Flow_i = namedtuple('Deletion_Flow_i', 'Flow Activity Domain Action')
 Explicit_Initialization_i = namedtuple('Explicit_Initialization_i', 'Create_action Activity Attribute Class Domain Initial_value_flow')
 Instance_Initialization_i = namedtuple('Instance_Initialization_i', 'Create_action Activity Class Domain')
-Local_Create_Action_i = namedtuple('Local_Create_Action_i', 'ID Activity Domain')
-New_Instance_Flow_i = namedtuple('New_Instance_Flow_i', 'Create_action Flow Activity Domain')
+Local_Create_Action_i = namedtuple('Local_Create_Action_i', 'ID Activity Domain New_instance_flow')
 Reference_Initialization_i = namedtuple('Reference_Initialization_i', 'Create_action Activity Attribute Class Domain')
+Reference_Value_Input_i = namedtuple('Reference_Value_Input_i', 'Flow Activity Domain Create_action Attribute Class')
 
 # Relational Action subsystem
 Class_Restriction_Condition_i = namedtuple('Class_Restriction_Condition_i', 'Select_action Activity Domain')
