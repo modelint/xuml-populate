@@ -46,9 +46,16 @@ class UsageAttrs(NamedTuple):
     id_attr: str | None
     in_attr: str | None
     out_attr: str | None
+    in_attr2: str | None = None  # New Associative Reference Action for example
 
 
 flow_attrs = [
+    UsageAttrs(cname='Reference Action', id_attr='ID', in_attr=None, out_attr='Ref_attr_values'),
+    UsageAttrs(cname='New Associative Reference Action', id_attr='ID', in_attr='T_instance', in_attr2='P_instance', out_attr='Ref_attr_values'),
+    # TODO: Update ref metamodel to include the out_attr above
+    UsageAttrs(cname='Multiple Assigner Partition Instance', id_attr='Action', in_attr='Partition', out_attr=None),
+    UsageAttrs(cname='Signal Instance Set Action', id_attr='ID', in_attr='Instance_flow', out_attr=None),
+    UsageAttrs(cname='Write Action', id_attr='ID', in_attr='Instance_flow', out_attr=None),
     UsageAttrs(cname='Select_Action', id_attr='ID', in_attr='Input_flow', out_attr=None),
     UsageAttrs(cname='Traverse_Action', id_attr='ID', in_attr='Source_flow', out_attr='Destination_flow'),
     UsageAttrs(cname='Many_Select', id_attr='ID', in_attr=None, out_attr='Output_flow'),
@@ -157,7 +164,6 @@ class Activity:
 
             # Process any sequence tokens
             # TODO: Test case where there are no boundary actions
-            print_mmdb()
             in_tokens, out_token = xunit.statement_set.input_tokens, xunit.output_token
             if out_token:
                 # The statement has set an output_token (it cannot set more than one)

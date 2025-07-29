@@ -77,7 +77,6 @@ class Statement:
             case 'New_inst_a':
                 create_s = CreateAction(activity_data=activity_data, statement_parse=statement_parse)
                 boundary_actions = create_s.process()
-                pass
             case _:
                 boundary_actions = None
                 # print()

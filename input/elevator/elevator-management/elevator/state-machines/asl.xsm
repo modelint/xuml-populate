@@ -44,7 +44,7 @@ transitions
 --
 state Requesting service
 activity
-    Service requested -> R53( /R3/R28/Shaft )
+    Service requested -> R53( /R3/Shaft Level/R28/Shaft )
     Wait for service -> me
 transitions
     Wait for service > REQUESTED
