@@ -55,13 +55,10 @@ class NewAssociativeReferenceAction:
         """
         self.action_id = Action.populate(tr=self.tr, anum=self.anum, domain=self.domain,
                                          action_type="new assoc ref")
-        Relvar.insert(db=mmdb, relvar="Reference Action", tuples=[
-            Reference_Action_i(ID=self.action_id, Activity=self.anum, Domain=self.domain, Association=self.parse.rnum.rnum)
-        ], tr=self.tr)
-        Relvar.insert(db=mmdb, relvar="New Reference Action", tuples=[
+        Relvar.insert(db=mmdb, tr=self.tr, relvar="New Reference Action", tuples=[
             New_Reference_Action_i(ID=self.action_id, Activity=self.anum, Domain=self.domain,
                                    Create_action=self.create_action_id)
-        ], tr=self.tr)
+        ])
 
         # Now we need to create the t and p class names
         R = f"Ref_type:<T>, Rnum:<{self.rnum}>, Domain:<{self.domain}>"
@@ -109,13 +106,18 @@ class NewAssociativeReferenceAction:
 
         # Now create the tuple flow
         tflow_label = f"_{self.rnum}_ref_{self.create_action_id[4:]}"
-        f = Flow.populate_relation_flow_by_header(
+        tf = Flow.populate_relation_flow_by_header(
             table_header=name_type_pairs, anum=self.anum, domain=self.domain, max_mult=MaxMult.ONE,
             label=tflow_label)
 
+        Relvar.insert(db=mmdb, tr=self.tr, relvar="Reference Action", tuples=[
+            Reference_Action_i(ID=self.action_id, Activity=self.anum, Domain=self.domain,
+                               Association=self.parse.rnum.rnum, Ref_attr_values=tf.fid)
+        ])
+
         ref_attr_names = [k for k in name_type_pairs.keys()]
 
-        return f.fid, ref_attr_names
+        return tf.fid, ref_attr_names
 
 
     def get_iflow(self, iset):

@@ -4,20 +4,19 @@ create_action.py – Populate a create action in PyRAL
 
 # System
 import logging
-from typing import Sequence, Tuple, Optional, Any
+from typing import Any
 
 # Model Integration
-from scrall.parse.visitor import New_inst_a, Scalar_RHS_a
+from scrall.parse.visitor import New_inst_a
 from pyral.relation import Relation
 from pyral.relvar import Relvar
 from pyral.transaction import Transaction
 
 # xUML populate
 from xuml_populate.utility import print_mmdb
-from xuml_populate.populate.actions.expressions.scalar_expr import ScalarExpr
 from xuml_populate.populate.actions.new_assoc_ref_action import NewAssociativeReferenceAction
 from xuml_populate.config import mmdb
-from xuml_populate.populate.actions.aparse_types import Flow_ap, MaxMult, Content, ActivityAP, Boundary_Actions, SMType
+from xuml_populate.populate.actions.aparse_types import ActivityAP, Boundary_Actions
 from xuml_populate.populate.actions.action import Action
 from xuml_populate.populate.flow import Flow
 from xuml_populate.exceptions.action_exceptions import *

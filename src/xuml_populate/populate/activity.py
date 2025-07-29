@@ -16,6 +16,7 @@ from pyral.rtypes import JoinCmd, ProjectCmd, SetCompareCmd, SetOp, Attribute, S
 from scrall.parse.parser import ScrallParser
 
 # xUML Populate
+from xuml_populate.utility import print_mmdb
 from xuml_populate.exceptions.action_exceptions import *
 from xuml_populate.utility import print_mmdb
 from xuml_populate.populate.actions.sequence_flow import SequenceFlow
@@ -50,9 +51,11 @@ class UsageAttrs(NamedTuple):
 
 
 flow_attrs = [
+    UsageAttrs(cname='Reference Value Input', id_attr='Create_action', in_attr='Flow', out_attr=None),
+    UsageAttrs(cname='Local Create Action', id_attr='ID', in_attr=None, out_attr='New_instance_flow'),
     UsageAttrs(cname='Reference Action', id_attr='ID', in_attr=None, out_attr='Ref_attr_values'),
-    UsageAttrs(cname='New Associative Reference Action', id_attr='ID', in_attr='T_instance', in_attr2='P_instance', out_attr='Ref_attr_values'),
-    # TODO: Update ref metamodel to include the out_attr above
+    UsageAttrs(cname='New Associative Reference Action', id_attr='ID', in_attr='T_instance', in_attr2='P_instance',
+               out_attr=None),
     UsageAttrs(cname='Multiple Assigner Partition Instance', id_attr='Action', in_attr='Partition', out_attr=None),
     UsageAttrs(cname='Signal Instance Set Action', id_attr='ID', in_attr='Instance_flow', out_attr=None),
     UsageAttrs(cname='Write Action', id_attr='ID', in_attr='Instance_flow', out_attr=None),
@@ -132,6 +135,7 @@ class Activity:
         self.pop_flow_dependencies()
         self.assign_waves()
         self.populate_waves()
+        print_mmdb()
         pass
 
     def pop_seq_flows(self):
@@ -532,6 +536,12 @@ class Activity:
                 if flow_header.in_attr:
                     # Header specifies an input flow, thus a destination action
                     input_flow = flow_usage[flow_header.in_attr]
+                    if input_flow in self.flow_path[input_flow]['dest']:
+                        pass  # Dest added previously
+                    self.flow_path[input_flow]['dest'].add(flow_usage[flow_header.id_attr])
+                if flow_header.in_attr2:
+                    # Header specifies an additional input flow, thus a destination action
+                    input_flow = flow_usage[flow_header.in_attr2]
                     if input_flow in self.flow_path[input_flow]['dest']:
                         pass  # Dest added previously
                     self.flow_path[input_flow]['dest'].add(flow_usage[flow_header.id_attr])

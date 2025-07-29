@@ -40,17 +40,17 @@ Subclass_Classification_Value_i = namedtuple('Subclass_Classification_Value_i', 
 Super_Identifier_i = namedtuple('Super_Identifier_i', 'Number Class Domain')
 
 # Reference Action subsystem
-New_Associative_Reference_Action_i = namedtuple('New_Associative_Reference_Action_i', 'ID Activity Domain T_instance P_instance')
-Reference_Action_i = namedtuple('Reference_Action_i', 'ID Activity Domain Association')
-New_Reference_Action_i = namedtuple('New_Reference_Action_i', 'ID Activity Domain Create_action')
-Update_Reference_Action_i = namedtuple('Update_Reference_Action_i', 'ID Activity Domain From_instance To_instance')
-New_Simple_Reference_Action_i = namedtuple('New_Simple_Reference_Action_i', 'ID Activity Domain Target_instance')
 From_Ref_Instance_i = namedtuple('From_Ref_Instance_i', 'Flow Activity Domain')
-To_Ref_Instance_i = namedtuple('To_Ref_Instance_i', 'Flow Activity Domain')
-T_Ref_Instance_i = namedtuple('T_Ref_Instance_i', 'Flow Activity Domain')
+New_Associative_Reference_Action_i = namedtuple('New_Associative_Reference_Action_i', 'ID Activity Domain T_instance P_instance')
+New_Reference_Action_i = namedtuple('New_Reference_Action_i', 'ID Activity Domain Create_action')
+New_Simple_Reference_Action_i = namedtuple('New_Simple_Reference_Action_i', 'ID Activity Domain Target_instance')
 P_Ref_Instance_i = namedtuple('P_Ref_Instance_i', 'Flow Activity Domain')
+Reference_Action_i = namedtuple('Reference_Action_i', 'ID Activity Domain Association Ref_attr_values')
 Referenced_Instance_i = namedtuple('Referenced_Instance_i', 'Flow Activity Domain')
+T_Ref_Instance_i = namedtuple('T_Ref_Instance_i', 'Flow Activity Domain')
 Target_Ref_Instance_i = namedtuple('Target_Ref_Instance_i', 'Flow Activity Domain')
+To_Ref_Instance_i = namedtuple('To_Ref_Instance_i', 'Flow Activity Domain')
+Update_Reference_Action_i = namedtuple('Update_Reference_Action_i', 'ID Activity Domain From_instance To_instance')
 
 # Type subsystem
 Model_Attribute_i = namedtuple('Model_Attribute_i', 'Name Non_scalar_type Domain')
