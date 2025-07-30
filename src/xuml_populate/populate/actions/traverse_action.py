@@ -178,19 +178,24 @@ class TraverseAction:
             Traverse_Action_i(ID=self.action_id, Activity=self.anum, Domain=self.domain, Path=self.name,
                               Source_flow=self.input_instance_flow.fid, Destination_flow=self.dest_fid)
         ])
-        Relvar.insert(db=mmdb, tr=tr_Traverse, relvar='Path', tuples=[
-            Path_i(Name=self.name, Domain=self.domain, Dest_class=self.dest_class)
-        ])
+        # If the path already exists, we can just reuse it
+        R = f"Name:<{self.name}>, Domain:<{self.domain}>"
+        path_r = Relation.restrict(db=mmdb, relation='Path', restriction=R)
+        reusing_path = True if path_r.body else False
+        if not reusing_path:
+            Relvar.insert(db=mmdb, tr=tr_Traverse, relvar='Path', tuples=[
+                Path_i(Name=self.name, Domain=self.domain, Dest_class=self.dest_class)
+            ])
 
-        # Get the next action ID
-        # Then process each hop
-        for number, h in enumerate(self.hops, start=1):
-            # Call method to populate this particular kind of type of hop (straight, gen, to assoc, etc)
-            params = vars(h).copy()
-            params.pop("hoptype")
-            params["number"] = number
-            h.hoptype(**params)
-            # h.hoptype(number=number, to_class=h.to_class, rnum=h.rnum)
+            # Get the next action ID
+            # Then process each hop
+            for number, h in enumerate(self.hops, start=1):
+                # Call method to populate this particular kind of type of hop (straight, gen, to assoc, etc)
+                params = vars(h).copy()
+                params.pop("hoptype")
+                params["number"] = number
+                h.hoptype(**params)
+                # h.hoptype(number=number, to_class=h.to_class, rnum=h.rnum)
         Transaction.execute(db=mmdb, name=tr_Traverse)
         _logger.info(f"EXECUTED > {mmdb}:{tr_Traverse}")
 

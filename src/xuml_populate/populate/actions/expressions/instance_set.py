@@ -32,13 +32,20 @@ class InstanceSet:
         iset_components: The components in the instance set
         activity_data: General information about the enclosing anum, anum, domain, etc
     """
-    def __init__(self, input_instance_flow: Flow_ap, iset_components, activity_data: ActivityAP):
+    def __init__(self, input_instance_flow: Flow_ap | None, iset_components, activity_data: ActivityAP):
         self.component_flow = input_instance_flow
         self.activity_data = activity_data
         self.iset_components = iset_components
 
         self.initial_action = None  # The first action in the chain
         self.final_action = None  # The last action in the chain
+
+        if not input_instance_flow:
+            # This will be None when the caller is an assigner
+            # This means that a path such as /R1/R2/Flot won't work because we have no starting point
+            # An assigner would need to specify something like: p/R1/R2/Flot instead, me/self is not available
+            # TODO: Handle case where an assigner procesess an instance set
+            pass
 
     def process(self) -> ( str, str, Flow_ap):
         """

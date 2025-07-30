@@ -14,6 +14,7 @@ from xuml_populate.populate.actions.instance_assignment import InstanceAssignmen
 from xuml_populate.populate.actions.table_assignment import TableAssignment
 from xuml_populate.populate.actions.scalar_assignment import ScalarAssignment
 from xuml_populate.populate.actions.switch_statement import SwitchStatement
+from xuml_populate.populate.actions.decision_action import DecisionAction
 from xuml_populate.populate.actions.create_action import CreateAction
 from xuml_populate.populate.actions.aparse_types import ActivityAP, Boundary_Actions, Labeled_Flow
 
@@ -64,6 +65,9 @@ class Statement:
                 sa = ScalarAssignment(activity_data=activity_data, scalar_assign_parse=statement_parse)
                 boundary_actions = sa.process()
                 pass
+            case 'Decision_a':
+                da = DecisionAction(activity_data=activity_data, statement_parse=statement_parse)
+                boundary_actions = da.process()
             case 'Switch_a':
                 boundary_actions = SwitchStatement.populate(activity_data=activity_data,
                                                             sw_parse=statement_parse)

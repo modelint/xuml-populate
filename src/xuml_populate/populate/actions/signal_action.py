@@ -35,6 +35,7 @@ class SignalAction:
     Create all relations for a Signal Action.
     """
     # TODO: Implement other Signal Action subclasses
+    # TODO: activity_data type should be ActivityAP
     def __init__(self, statement_parse: Signal_a, activity_data: StateActivityAP):
         """
         Initialize with everything the Signal statement requires
