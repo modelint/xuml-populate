@@ -10,9 +10,7 @@ from xuml_populate.populate.actions.action import Action
 from xuml_populate.populate.flow import Flow
 from scrall.parse.visitor import Switch_a
 from xuml_populate.populate.mmclass_nt import (Switch_Action_i, Scalar_Switch_Action_i, Case_i, Match_Value_i,
-                                               Control_Dependency_i, Result_i, Sequence_Flow_i,
-                                               Decision_Input_i, Decision_Action_i,
-                                               Subclass_Switch_Action_i, Gate_Action_i, Gate_Input_i)
+                                               Sequence_Flow_i, Subclass_Switch_Action_i, Gate_Action_i, Gate_Input_i)
 from pyral.relvar import Relvar
 from pyral.relation import Relation  # Keep here for debugging
 from pyral.transaction import Transaction

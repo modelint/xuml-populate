@@ -181,8 +181,7 @@ T_Reference_i = namedtuple('T_Reference_i', 'Association_class Participating_cla
 # Conditional Logic subsystem
 Case_i = namedtuple('Case_i', 'Flow Activity Domain Switch_action')
 Control_Dependency_i = namedtuple('Control_Dependency_i', 'Control_flow Action Activity Domain')
-Decision_Action_i = namedtuple('Decision_Action_i', 'ID Activity Domain Predicate')
-Decision_Input_i = namedtuple('Decision_Input_i', 'Decision_action Flow Activity Domain')
+Decision_Action_i = namedtuple('Decision_Action_i', 'ID Activity Domain Boolean_input')
 Emitter_i = namedtuple('Emitter_i', 'Output_flow Activity Domain')
 Emitter_Input_i = namedtuple('Emitter_Input_i', 'Input_flow Output_flow Activity Domain')
 Match_Value_i = namedtuple('Match_Value_i', 'Case_flow Activity Domain Value')
