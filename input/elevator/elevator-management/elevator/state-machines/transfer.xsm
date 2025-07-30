@@ -38,9 +38,9 @@ transitions
 --
 state Creating or updating transfer
 activity
-    UI.Set destination( Shaft, floor: Destination floor )
-    New transfer -> /R53/Cabin
-    Wait for cabin -> me
+    //    UI.Set destination( Shaft, floor: Destination floor )
+    //    New transfer -> /R53/Cabin
+    //    Wait for cabin -> me
 transitions
     Wait for cabin > WAITING FOR CABIN
 --
@@ -55,15 +55,15 @@ state Changing destination before cabin moves( new dest: Level Name )
 activity
     // The cabin isn’t moving, so we can safely
     // relink to the new destination
-    Destination floor = ^new dest
-    Stationary update -> me
+    //    Destination floor = ^new dest
+    //    Stationary update -> me
 transitions
     Stationary update > WAITING FOR CABIN
 --
 state Dispatching cabin
 activity
-    Go -> /R53/Cabin
-    Cabin dispatched -> me
+    //    Go -> /R53/Cabin
+    //    Cabin dispatched -> me
 transitions
     Cabin dispatched > CABIN IN MOTION
 --
@@ -77,15 +77,15 @@ transitions
 --
 state Request redirect( new dest: Level Name )
 activity
-    Try redirect( ^new dest ) -> /R53/Cabin
-    Redirect requested -> me
+    //    Try redirect( ^new dest ) -> /R53/Cabin
+    //    Redirect requested -> me
 transitions
     Redirect requested > CABIN IN MOTION
 --
 state Match new destination of cabin( updated dest: Level Name )
 activity
-    Destination floor = ^updated dest
-    Update in motion -> me
+    //    Destination floor = ^updated dest
+    //    Update in motion -> me
 transitions
     Update in motion > CABIN IN MOTION
 --
@@ -94,28 +94,28 @@ activity
     // If the Cabin arrives and there is a floor request in the opposite direction
     // and no stop request or call in the Cabin’s current travel direction,
     // we must reverse the cabin’s travel direction
+    //
+    //    call behind .= /R53/R49/Floor Service( Direction: /R53/Cabin.Travel direction.opposite )
+    //    call fwd .= /R53/R49/Floor Service( Direction: /R53/Cabin.Travel direction )
+    //    switch dir = (call behind and !call fwd and !/R53/Accessible Shaft Level.Stop requested)
+    //    switch dir? /R53/Cabin.Travel direction.toggle
 
-    call behind .= /R53/R49/Floor Service( Direction: /R53/Cabin.Travel direction.opposite )
-    call fwd .= /R53/R49/Floor Service( Direction: /R53/Cabin.Travel direction )
-    switch dir = (call behind and !call fwd and !/R53/Accessible Shaft Level.Stop requested)
-    switch dir? /R53/Cabin.Travel direction.toggle
-
-    Reversal checked -> me
+    //    Reversal checked -> me
 transitions
     Reversal checked > Check for active floor service
 --
 state Check for active floor service
 activity
-    UI.Cabin arrived( Shaft, direction: /R53/Cabin.Travel direction )
-    pending floor service .= /R53/R49/Floor Service( Direction: /R53/Cabin.Travel direction )
-
-    pending floor service? {
-        Call in progress -> meCabin
-        Cabin arrived -> pending floor service
-    } : {
-        Serviced stop -> /R53/Accessible Shaft Level
-        Wait to clear -> me
-    }
+    //    UI.Cabin arrived( Shaft, direction: /R53/Cabin.Travel direction )
+    //    pending floor service .= /R53/R49/Floor Service( Direction: /R53/Cabin.Travel direction )
+    //
+    //    pending floor service? {
+    //        Call in progress -> meCabin
+    //        Cabin arrived -> pending floor service
+    //    } : {
+    //        Serviced stop -> /R53/Accessible Shaft Level
+    //        Wait to clear -> me
+    //    }
 transitions
     Call in progress > CALL IN PROGRESS
     Wait to clear > WAITING FOR REQUESTS TO CLEAR
@@ -128,8 +128,8 @@ transitions
 --
 state Canceling floor service
 activity
-    Cancel -> /R53/R49/Floor Service( Direction: /R53/Cabin.Travel direction )
-    Wait to clear -> me
+    //    Cancel -> /R53/R49/Floor Service( Direction: /R53/Cabin.Travel direction )
+    //    Wait to clear -> me
 transitions
     Wait to clear > WAITING FOR REQUESTS TO CLEAR
 --
@@ -141,5 +141,5 @@ transitions
 --
 state Delete !*
 activity
-    Transfer completed -> R53( Shaft )
+    //    Transfer completed -> R53( Shaft )
 --

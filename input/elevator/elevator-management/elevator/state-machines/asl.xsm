@@ -2,8 +2,8 @@ metadata
     Title : Accessible Shaft Level State Machine Diagram
     Author : Leon Starr
     Document ID : mint.elevator3.td.2
-    Modification date : May 12, 2019
-    Version : 3.1.3
+    Modification date : July 29, 2025
+    Version : 3.2.0
     Organization : Model Integration, LLC
     Copyright notice > MIT
     Organization logo > mint
@@ -23,7 +23,7 @@ events
 --
 state NOT REQUESTED
 activity
-    // Not a desired dest for the Cabin
+    Requests cleared -> /R53/Transfer
 transitions
     Stop request > Registering stop
     Floor calling > Registering floor call
@@ -60,17 +60,11 @@ transitions
 --
 state Clear stop request
 activity
-    // Clear the stop request if registered
+    Stop requested = FALSE
 
-    Stop requested? {
-        UI.Clear stop request( Floor, Shaft )
-        Stop requested = FALSE
-    }
-
-    /R49/Floor Service? Opposite floor call pending -> :
+    /R49/Floor Service?
+        Opposite floor call pending -> :
         All requests cleared -> me
-
-    Requests cleared -> /R53/Transfer
 transitions
     Opposite floor call pending > REQUESTED
     All requests cleared > NOT REQUESTED

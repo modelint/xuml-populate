@@ -82,6 +82,12 @@ class SignalAction:
                         pass  # TODO: Destination is some other state model
                 case 'IN_a':
                     pass  # It is an input parameter
+                case 'INST_a':
+                    iset = InstanceSet(input_instance_flow=self.activity_data.xiflow,
+                                       iset_components=signal_dest.target_iset.components,
+                                       activity_data=self.activity_data)
+                    _, _, dest_flow = iset.process()
+                    dest_sm = dest_flow.tname
                 case _:
                     pass  # Includes case where a more complex instance set expression is supplied
 
