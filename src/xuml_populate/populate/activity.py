@@ -51,6 +51,8 @@ class UsageAttrs(NamedTuple):
 
 
 flow_attrs = [
+    UsageAttrs(cname='Decision Action', id_attr='ID', in_attr='Boolean_input', out_attr=None),
+    UsageAttrs(cname='Result', id_attr='Decision_action', in_attr=None, out_attr='Flow'),
     UsageAttrs(cname='Reference Value Input', id_attr='Create_action', in_attr='Flow', out_attr=None),
     UsageAttrs(cname='Local Create Action', id_attr='ID', in_attr=None, out_attr='New_instance_flow'),
     UsageAttrs(cname='Reference Action', id_attr='ID', in_attr=None, out_attr='Ref_attr_values'),

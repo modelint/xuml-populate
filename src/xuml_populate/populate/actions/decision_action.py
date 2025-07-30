@@ -60,12 +60,13 @@ class DecisionAction:
         decision_input = self.statement_parse.input  # Expression to be evaluated as true or false during execution
 
         decision_input_type = type(decision_input).__name__
+        input_init_aid: set[str] = {}  # Default to empty set of strings
         match decision_input_type:
             case 'INST_PROJ_a':
                 # We need to evaluate an instance set and a possible projection
                 iset = InstanceSet(input_instance_flow=self.activity_data.xiflow,
                                    iset_components=decision_input.iset.components, activity_data=self.activity_data)
-                input_init_aids, input_final_aids, self.decision_input_flow = iset.process()
+                input_init_aid, input_final_aid, self.decision_input_flow = iset.process()
                 if self.statement_parse.input.projection:
                     # We have an attribute value to extract and test as a scalar value most likely
                     # TODO: Handle decision input projection
@@ -144,4 +145,4 @@ class DecisionAction:
         ])
         Transaction.execute(db=mmdb, name=tr_Decision)
 
-        return Boundary_Actions(ain=input_init_aids, aout=d_final_aids)
+        return Boundary_Actions(ain={input_init_aid}, aout=d_final_aids)
