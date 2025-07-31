@@ -459,14 +459,15 @@ class TraverseAction:
                     # Get the To class of the other (T or P) reference
                     other_ref_name = 'P' if ref == 'T' else 'T'
                     R = f"Ref:<{other_ref_name}>, Rnum:<{self.rel_cursor}>, Domain:<{self.domain}>"
-                    other_ref = Relation.restrict(restriction=R, relation="Reference").body
+                    other_ref = Relation.restrict(db=mmdb, restriction=R, relation="Reference").body
                     if not other_ref:
                         # The model must be currupted somehow
                         raise MissingTorPrefInAssociativeRel(rnum=self.rel_cursor, domain=self.domain)
                     other_participating_class = other_ref[0]['To_class']
                     if next_hop.name == other_participating_class:
                         self.class_cursor = next_hop.name
-                        self.straight_hop()
+                        self.hops.append(
+                            Hop(hoptype=self.straight_hop, to_class=other_participating_class, rnum=self.rel_cursor))
                         return
                     else:
                         # Next hop must be a perspective
