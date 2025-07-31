@@ -466,6 +466,7 @@ class TraverseAction:
                     other_participating_class = other_ref[0]['To_class']
                     if next_hop.name == other_participating_class:
                         self.class_cursor = next_hop.name
+                        self.name += self.class_cursor + '/'
                         self.hops.append(
                             Hop(hoptype=self.straight_hop, to_class=other_participating_class, rnum=self.rel_cursor))
                         return
@@ -488,6 +489,7 @@ class TraverseAction:
                 Relation.restrict(db=mmdb, relation='Perspective', restriction=R)
                 P = ('Side',)
                 side = Relation.project(db=mmdb, attributes=P).body[0]['Side']
+                self.name += self.class_cursor + '/'
                 self.hops.append(
                     FromAsymAssocHop(hoptype=self.from_asymmetric_association_class, to_class=self.class_cursor,
                                      rnum=self.rel_cursor, side=side)

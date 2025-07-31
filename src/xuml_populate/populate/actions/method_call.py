@@ -11,6 +11,7 @@ from pyral.relation import Relation
 from pyral.transaction import Transaction
 
 # xUML Populate
+from xuml_populate.utility import print_mmdb
 from xuml_populate.config import mmdb
 from xuml_populate.populate.actions.expressions.instance_set import InstanceSet
 from xuml_populate.exceptions.action_exceptions import *
@@ -31,7 +32,7 @@ class MethodCall:
             activity_data:
         """
         self.method_name = method_name
-        self.method_calss = method_class
+        self.method_class = method_class
         self.parse = parse
         self.activity_data = activity_data
 
@@ -41,5 +42,6 @@ class MethodCall:
         Returns:
 
         """
+        print_mmdb()
         pass
 
