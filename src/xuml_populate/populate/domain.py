@@ -22,7 +22,6 @@ from xuml_populate.populate.ee import EE
 from xuml_populate.populate.lineage import Lineage
 from xuml_populate.populate.subsystem import Subsystem
 from xuml_populate.populate.state_model import StateModel
-from xuml_populate.populate.activity import Activity
 from xuml_populate.populate.mmclass_nt import Domain_i, Modeled_Domain_i, Domain_Partition_i, Subsystem_i
 
 
