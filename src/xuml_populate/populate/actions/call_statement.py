@@ -12,9 +12,10 @@ from pyral.transaction import Transaction
 
 # xUML Populate
 from xuml_populate.config import mmdb
+from xuml_populate.populate.actions.method_call import MethodCall
 from xuml_populate.populate.actions.expressions.instance_set import InstanceSet
 from xuml_populate.exceptions.action_exceptions import *
-from xuml_populate.populate.actions.aparse_types import ActivityAP
+from xuml_populate.populate.actions.aparse_types import ActivityAP, Boundary_Actions
 
 class CallStatement:
     """
@@ -41,7 +42,7 @@ class CallStatement:
         self.caller_parse = call_parse.call.components[:-1]
         self.op_chain = call_parse.op_chain
 
-    def process(self):
+    def process(self) -> Boundary_Actions:
         """
 
         Returns:
@@ -66,7 +67,12 @@ class CallStatement:
                 R = f"Name:<{self.op_parse.op_name}>, Class:<{caller_flow.tname}>, Domain:<{self.activity_data.domain}>"
                 method_r = Relation.restrict(db=mmdb, relation='Method', restriction=R)
                 if len(method_r.body) == 1:
-                    # We found a single matching method so we need to populate a Call Action
+                    method_t = method_r.body[0]
+                    mcall = MethodCall(method_name=method_t["Name"], method_class=method_t["Class"],
+                                       parse=self.parse, activity_data=self.activity_data)
+                    boundary_actions = mcall.process()
+                    return boundary_actions
+                    # We found a single matching method so we need to populate a Method Call
                 else:
                     pass
                     # TODO: Locate ee op or type call and populate that
