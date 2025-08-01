@@ -11,6 +11,7 @@ from pyral.relation import Relation
 from pyral.transaction import Transaction
 
 # xUML Populate
+from xuml_populate.utility import print_mmdb
 from xuml_populate.config import mmdb
 from xuml_populate.populate.actions.method_call import MethodCall
 from xuml_populate.populate.actions.expressions.instance_set import InstanceSet

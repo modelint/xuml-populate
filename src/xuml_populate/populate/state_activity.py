@@ -74,7 +74,7 @@ class StateActivity:
 
         match self.sm_type:
             case SMType.LIFECYCLE:
-                # Look up the executign instance (xi) flow
+                # Look up the executing instance (xi) flow
                 R = f"Anum:<{self.anum}>, Domain:<{self.domain}>"
                 lifecycle_activity_r = Relation.restrict(db=mmdb, relation='Lifecycle Activity', restriction=R)
                 if not lifecycle_activity_r.body:
