@@ -106,10 +106,9 @@ class StateModel:
             self.states[s.state.name] = state_info
             anum = state_info["anum"]
 
-
             # Signature
             sig_params = frozenset(s.state.signature)
-            # TODO: State signatures are shared, but we still need to create distinct flows for each parameter input
+            shared_sig = False
             if sig_params not in self.signatures:
                 # Add new signature if it doesn't exist
                 # First create signature superclass instance in Activity subsystem
@@ -118,21 +117,25 @@ class StateModel:
                 Relvar.insert(db=mmdb, tr=tr_SM, relvar='State_Signature', tuples=[
                     State_Signature_i(SIGnum=signum, State_model=self.sm_name, Domain=sm.domain)
                 ])
-                # Now we need to create Data Flows and Parameters
-                for p in s.state.signature:
-                    # Create a Data flow
-                    # Populate the Parameter's type if it hasn't already been populated
-                    MMtype.populate_unknown(name=p.type, domain=sm.domain)
-                    input_fid = Flow.populate_data_flow_by_type(mm_type=p.type, anum=anum,
-                                                                domain=sm.domain, label=p.name,
-                                                                activity_tr=tr_SM).fid
+            else:
+                shared_sig = True
+                # Otherwise, just get the id of the matching signature
+                signum = self.signatures[sig_params]
+
+            # Now we need to create Data Flows and Parameters
+            for p in s.state.signature:
+                # Create a Data flow
+                # Populate the Parameter's type if it hasn't already been populated
+                MMtype.populate_unknown(name=p.type, domain=sm.domain)
+                input_fid = Flow.populate_data_flow_by_type(mm_type=p.type, anum=anum,
+                                                            domain=sm.domain, label=p.name,
+                                                            activity_tr=tr_SM).fid
+                if not shared_sig:
+                    # Don't create the Parameter if we are sharing the signature
                     Relvar.insert(db=mmdb, tr=tr_SM, relvar='Parameter', tuples=[
                         Parameter_i(Name=p.name, Signature=signum, Domain=sm.domain,
                                     Input_flow=input_fid, Activity=anum, Type=p.type)
                     ])
-            else:
-                # Otherwise, just get the id of the matching signature
-                signum = self.signatures[sig_params]
             Relvar.insert(db=mmdb, tr=tr_SM, relvar='Real_State', tuples=[
                 Real_State_i(Name=s.state.name, State_model=self.sm_name, Domain=sm.domain, Signature=signum,
                              Activity=anum)
