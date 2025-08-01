@@ -69,8 +69,8 @@ class CallStatement:
                 method_r = Relation.restrict(db=mmdb, relation='Method', restriction=R)
                 if len(method_r.body) == 1:
                     method_t = method_r.body[0]
-                    mcall = MethodCall(method_name=method_t["Name"], method_class=method_t["Class"],
-                                       parse=self.parse, activity_data=self.activity_data)
+                    mcall = MethodCall(method_name=method_t["Name"], method_anum=method_t["Anum"],
+                                       caller_flow=caller_flow, parse=self.parse, activity_data=self.activity_data)
                     boundary_actions = mcall.process()
                     return boundary_actions
                     # We found a single matching method so we need to populate a Method Call

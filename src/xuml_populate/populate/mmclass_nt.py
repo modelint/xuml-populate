@@ -193,6 +193,7 @@ Switch_Action_i = namedtuple('Switch_Action_i', 'ID Activity Domain')
 
 # Activity subsystem
 Activity_i = namedtuple('Activity_i', 'Anum Domain')
+Activity_Input_i = namedtuple('Activity_Input_i', 'Parameter Signature Activity Domain Flow')
 Asynchronous_Activity_i = namedtuple('Asynchronous_Activity_i', 'Anum Domain')
 Lifecycle_Activity_i = namedtuple('Lifecycle_Activity_i', 'Anum Domain Executing_instance_flow')
 Method_i = namedtuple('Method_i', 'Anum Name Class Domain Executing_instance_flow')
@@ -201,7 +202,7 @@ Method_Call_Parameter_i = namedtuple('Method_Call_Parameter_i', 'Method_call Flo
 Method_Signature_i = namedtuple('Method_Signature_i', 'SIGnum Method Class Domain')
 Multiple_Assigner_Activity_i = namedtuple('Multiple_Assigner_Activity_i', 'Anum Domain Partitioning_instance_flow')
 Operation_Signature_i = namedtuple('Operation_Signature_i', 'SIGnum EE Operation Domain')
-Parameter_i = namedtuple('Parameter_i', 'Name Signature Domain Input_flow Activity Type')
+Parameter_i = namedtuple('Parameter_i', 'Name Signature Domain Type')
 Signature_i = namedtuple('Signature_i', 'SIGnum Domain')
 Single_Assigner_Activity_i = namedtuple('Single_Assigner_Activity_i', 'Anum Domain')
 State_Activity_i = namedtuple('State_Activity_i', 'Anum Domain')
