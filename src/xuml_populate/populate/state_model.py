@@ -28,7 +28,7 @@ from xuml_populate.populate.mmclass_nt import (State_Model_i, Lifecycle_i, Non_D
                                                Initial_Transition_i, Event_Response_i, Transition_i, Non_Transition_i,
                                                Event_Specification_i, Monomorphic_Event_Specification_i,
                                                Monomorphic_Event_i, Effective_Event_i, Event_i, Parameter_i, Assigner_i,
-                                               Multiple_Assigner_i, Single_Assigner_i)
+                                               Multiple_Assigner_i, Single_Assigner_i, Activity_Input_i)
 
 ISP = 'Initial_Pseudo_State'  # Name of initial pseudo state
 
@@ -127,15 +127,18 @@ class StateModel:
                 # Create a Data flow
                 # Populate the Parameter's type if it hasn't already been populated
                 MMtype.populate_unknown(name=p.type, domain=sm.domain)
+                if not shared_sig:
+                    # We populate Parameters only if this is a new Signature
+                    Relvar.insert(db=mmdb, tr=tr_SM, relvar='Parameter', tuples=[
+                        Parameter_i(Name=p.name, Signature=signum, Domain=sm.domain, Type=p.type)
+                    ])
                 input_fid = Flow.populate_data_flow_by_type(mm_type=p.type, anum=anum,
                                                             domain=sm.domain, label=p.name,
                                                             activity_tr=tr_SM).fid
-                if not shared_sig:
-                    # Don't create the Parameter if we are sharing the signature
-                    Relvar.insert(db=mmdb, tr=tr_SM, relvar='Parameter', tuples=[
-                        Parameter_i(Name=p.name, Signature=signum, Domain=sm.domain,
-                                    Input_flow=input_fid, Activity=anum, Type=p.type)
-                    ])
+                Relvar.insert(db=mmdb, tr=tr_SM, relvar='Activity Input', tuples=[
+                    Activity_Input_i(Parameter=p.name, Signature=signum, Domain=sm.domain,
+                                     Flow=input_fid, Activity=anum)
+                ])
             Relvar.insert(db=mmdb, tr=tr_SM, relvar='Real_State', tuples=[
                 Real_State_i(Name=s.state.name, State_model=self.sm_name, Domain=sm.domain, Signature=signum,
                              Activity=anum)
