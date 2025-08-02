@@ -37,6 +37,7 @@ class MethodCall:
         self.method_name = method_name
         self.method_anum = method_anum
         self.parse = parse
+        self.op_parse = self.parse.call.components[-1]
         self.activity_data = activity_data
         self.caller_flow = caller_flow
         self.action_id = None
@@ -57,9 +58,21 @@ class MethodCall:
             Method_Call_i(ID=self.action_id, Activity=self.anum, Domain=self.domain, Method=self.method_anum)
         ])
 
-        # Populate parameter data flows
-        R = f"Signature:<{self.activity_data.signum}>, Domain:<{self.domain}>"
-        parameter_r = Relation.restrict(db=mmdb, relation='Parameter', restriction=R)
+        for sp in self.op_parse.supplied_params:
+            pname = sp.pname
+            sval = sp.sval.name
+
+            # Populate parameter data flows
+            R = f"Parameter:<{sval}>, Activity:<{self.anum}>, Signature:<{self.activity_data.signum}>, Domain:<{self.domain}>"
+            activity_input_r = Relation.restrict(db=mmdb, relation='Activity Input', restriction=R)
+            sval_flow = activity_input_r.body[0]["Flow"]
+            Relvar.insert(db=mmdb, tr=tr_Call, relvar='Method Call Parameter', tuples=[
+                Method_Call_Parameter_i(Method_call=self.action_id, Activity=self.anum, Parameter=pname,
+                                        Signature=self.activity_data.signum, Domain=self.domain, Flow=sval_flow)
+            ])
+            pass
+
+        Transaction.execute(db=mmdb, name=tr_Call)
 
         pass
 
