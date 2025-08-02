@@ -14,6 +14,7 @@ from pyral.relvar import Relation  # For debugging
 
 # xUML Populate
 from xuml_populate.config import mmdb
+from xuml_populate.utility import print_mmdb
 from xuml_populate.populate.attribute import Attribute
 from xuml_populate.populate.mm_class import MMclass
 from xuml_populate.populate.method import Method
@@ -85,10 +86,11 @@ class Domain:
                 Relationship.populate(domain=domain, subsystem=subsys, record=r)
 
             # Insert external entities and operations
-            _logger.info("Populating operations")
-            for ee_name, op_parse in subsys_parse['external'].items():
-                EE.populate(ee_name=ee_name, subsys=subsys.name,
-                            domain=domain, op_parse=op_parse)
+            # TODO: Add operations after we sort out bridging
+            # _logger.info("Populating operations")
+            # for ee_name, op_parse in subsys_parse['external'].items():
+            #     EE.populate(ee_name=ee_name, subsys=subsys.name,
+            #                 domain=domain, op_parse=op_parse)
 
             # Insert methods
             _logger.info("Populating methods")
