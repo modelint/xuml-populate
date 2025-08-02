@@ -50,12 +50,12 @@ class MethodCall:
         Returns:
 
         """
-        print_mmdb()
 
         Transaction.open(db=mmdb, name=tr_Call)
         self.action_id = Action.populate(tr=tr_Call, anum=self.anum, domain=self.domain, action_type="method call")
         Relvar.insert(db=mmdb, tr=tr_Call, relvar='Method Call', tuples=[
-            Method_Call_i(ID=self.action_id, Activity=self.anum, Domain=self.domain, Method=self.method_anum)
+            Method_Call_i(ID=self.action_id, Activity=self.anum, Domain=self.domain, Method=self.method_anum,
+                          Instance_flow=self.caller_flow.fid)
         ])
 
         for sp in self.op_parse.supplied_params:
@@ -70,9 +70,9 @@ class MethodCall:
                 Method_Call_Parameter_i(Method_call=self.action_id, Activity=self.anum, Parameter=pname,
                                         Signature=self.activity_data.signum, Domain=self.domain, Flow=sval_flow)
             ])
-            pass
 
         Transaction.execute(db=mmdb, name=tr_Call)
 
+        print_mmdb()
         pass
 
