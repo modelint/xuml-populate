@@ -2,11 +2,16 @@
 parameter_validation.py – Verify that a parameter is defined
 """
 
+# System
 import logging
-from xuml_populate.config import mmdb
-from xuml_populate.exceptions.action_exceptions import UndefinedParameter, UndefinedMethod
-from xuml_populate.populate.actions.aparse_types import ActivityAP, MethodActivityAP, StateActivityAP
+
+# Model Integration
 from pyral.relation import Relation
+
+# xUML Populate
+from xuml_populate.config import mmdb
+from xuml_populate.exceptions.action_exceptions import UndefinedParameter
+from xuml_populate.populate.actions.aparse_types import ActivityAP
 
 _logger = logging.getLogger(__name__)
 
@@ -17,31 +22,8 @@ def validate_param(name: str, activity: ActivityAP):
     :param name:  Parameter name
     :param activity:  Activity context
     """
-    # TODO: Only works for Method Signature now. Add State and Operation Signatures later
-    domain = activity.domain
-    anum = activity.anum
-
-    # Method signature
-    if activity.cname and activity.opname:
-        R = f"Method:<{activity.opname}>, Class:<{activity.cname}>, Domain:<{domain}>"
-        result = Relation.restrict(mmdb, relation='Method_Signature', restriction=R)
-        if not result.body:
-            raise UndefinedMethod
-        signum = result.body[0]['SIGnum']
-
-        R = f"Name:<{name}>, Signature:<{signum}>, Activity:<{anum}>, Domain:<{domain}>"
-        result = Relation.restrict(mmdb, relation='Parameter', restriction=R)
-        if not result.body:
-            raise UndefinedParameter
-        return
-
-    # State signature
-    if activity.sname:
-        # Fail until validation is added
+    # Verify that there is a populated instance of Parameter
+    R = f"Name:<{name}>, Signature:<{activity.signum}>, Domain:<{activity.domain}>"
+    param_r = Relation.restrict(db=mmdb, relation='Parameter', restriction=R)
+    if not param_r.body:
         raise UndefinedParameter
-
-    # Operation signature
-    if activity.eename:
-        # Fail until validation is added
-        raise UndefinedParameter
-

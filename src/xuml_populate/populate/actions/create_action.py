@@ -143,19 +143,21 @@ class CreateAction:
                     pass  # TODO: Locate labeled flow
                 case 'IN_a':
                     # Labeled scalar flow fed by an input parameter
-                    R = f"Name:<{sflow_name.name}>, Signature:<{self.signum}>, Domain:<{self.domain}>"
-                    parameter_r = Relation.restrict(db=mmdb, relation='Parameter', restriction=R)
-                    if len(parameter_r.body) != 1:
-                        msg = (f"State signature parameter [{sflow_name.name}] not found in metamodel db "
+                    R = f"Parameter:<{sflow_name.name}>, Signature:<{self.signum}>, Activity:<{self.anum}>, Domain:<{self.domain}>"
+                    activity_input_r = Relation.restrict(db=mmdb, relation='Activity Input', restriction=R)
+                    if len(activity_input_r.body) != 1:
+                        msg = (f"Parameter input [{self.anum}:{sflow_name.name}] not found in metamodel db "
                                f"for {self.activity_data.activity_path}")
                         _logger.error(msg)
                         raise ActionException(msg)
-                    parameter_t = parameter_r.body[0]  # The Parameter instance tuple
+                    # Get the corresponding parameter flow
+
+                    activity_input_t = activity_input_r.body[0]  # The Activity Input instance tuple
                     # TODO: IMPORTANT Verify that parameter flow type matches the attribute type, else exception
                     Relvar.insert(db=mmdb, tr=tr_Create, relvar='Explicit Initialization', tuples=[
                         Explicit_Initialization_i(Create_action=self.action_id, Attribute=r, Class=self.target_class,
                                                   Activity=self.activity_data.anum, Domain=self.activity_data.domain,
-                                                  Initial_value_flow=parameter_t["Input_flow"])
+                                                  Initial_value_flow=activity_input_t["Flow"])
                     ])
                 case _:
                     pass

@@ -332,11 +332,9 @@ class Activity:
 
         # Get the parameter input flows for our Anum and Domain
         R = f"Activity:<{self.anum}>, Domain:<{self.domain}>"
-        Relation.restrict(db=mmdb, relation='Parameter', restriction=R)
+        Relation.restrict(db=mmdb, relation='Activity Input', restriction=R)
         # Project on the referential attribute to the flow
-        Relation.project(db=mmdb, attributes=("Input_flow",))
-        # Rename it to "Flow"
-        Relation.rename(db=mmdb, names={"Input_flow": "Flow"}, svar_name="param_flows")
+        r = Relation.project(db=mmdb, attributes=("Flow",), svar_name="param_flows")
         # Relation.print(db=mmdb, variable_name="param_flows")
 
         # Get any class accessor flows for our Anum and Domain
@@ -561,9 +559,9 @@ class Activity:
 
         # All activity parameter flows are available
         R = f"Activity:<{self.anum}>, Domain:<{self.domain}>"
-        result = Relation.restrict(db=mmdb, relation='Parameter', restriction=R)
-        for pflow in result.body:
-            self.flow_path[pflow['Input_flow']]['available'] = True
+        activity_input_r = Relation.restrict(db=mmdb, relation='Activity Input', restriction=R)
+        for ai_flow in activity_input_r.body:
+            self.flow_path[ai_flow['Flow']]['available'] = True
 
         # All class accessor flows are available
         R = f"Activity:<{self.anum}>, Domain:<{self.domain}>"
