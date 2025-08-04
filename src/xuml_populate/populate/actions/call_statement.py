@@ -16,7 +16,9 @@ from xuml_populate.config import mmdb
 from xuml_populate.populate.actions.method_call import MethodCall
 from xuml_populate.populate.actions.expressions.instance_set import InstanceSet
 from xuml_populate.exceptions.action_exceptions import *
-from xuml_populate.populate.actions.aparse_types import ActivityAP, Boundary_Actions
+from xuml_populate.populate.actions.aparse_types import ActivityAP, Boundary_Actions, Content, MaxMult
+
+_logger = logging.getLogger(__name__)
 
 class CallStatement:
     """
@@ -65,15 +67,23 @@ class CallStatement:
                 #   1. We at least one named method that matches the op name
                 #   2. The associated class is also the type of the caller
 
+                # If the caller flow tname matches the name of a class that also defines the op_name
+                # we know that we have an target instance of the method's defining class
                 R = f"Name:<{self.op_parse.op_name}>, Class:<{caller_flow.tname}>, Domain:<{self.activity_data.domain}>"
                 method_r = Relation.restrict(db=mmdb, relation='Method', restriction=R)
                 if len(method_r.body) == 1:
+                    # We found a single matching method so we need to populate a Method Call
+                    # Just to be sure, let's ensure that the caller_flow is a single instance flow
+                    if caller_flow.content != Content.INSTANCE or caller_flow.max_mult != MaxMult.ONE:
+                        msg = (f"Method caller type [{caller_flow.tname}] is not a single instance flow for "
+                               f"op_name: {self.op_parse.op_name}")
+                        _logger.error(msg)
+                        raise ActionException(msg)
                     method_t = method_r.body[0]
                     mcall = MethodCall(method_name=method_t["Name"], method_anum=method_t["Anum"],
                                        caller_flow=caller_flow, parse=self.parse, activity_data=self.activity_data)
                     boundary_actions = mcall.process()
                     return boundary_actions
-                    # We found a single matching method so we need to populate a Method Call
                 else:
                     pass
                     # TODO: Locate ee op or type call and populate that

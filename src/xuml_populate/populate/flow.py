@@ -204,6 +204,22 @@ class Flow:
         pass
 
     @classmethod
+    def flow_type(cls, fid: str, anum: str, domain: str) -> str:
+        """
+        Get type of the Flow for a given Flow ID, Anum, and Domain
+
+        Args:
+            fid: Flow ID
+            anum: Activity Number of the Flow
+            domain: Domain Name of the Flow/Activity
+
+        Returns:
+            Name data type in the flow
+        """
+        flow_data = Flow.lookup_data(fid=fid, anum=anum, domain=domain)
+        return flow_data.tname
+
+    @classmethod
     def lookup_data(cls, fid: str, anum: str, domain: str) -> Flow_ap:
         """
         Given a Data Flow identifier (fid, anum, domain), determine the flow content, tname, and maxmult

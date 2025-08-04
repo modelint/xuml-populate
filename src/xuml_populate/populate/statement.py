@@ -74,13 +74,14 @@ class Statement:
             case 'Call_a':
                 call_s = CallStatement(activity_data=activity_data, call_parse=statement_parse)
                 boundary_actions = call_s.process()
-                pass
             case 'Signal_a':
                 sig_s = SignalAction(activity_data=activity_data, statement_parse=statement_parse)
                 boundary_actions = sig_s.process()
             case 'New_inst_a':
                 create_s = CreateAction(activity_data=activity_data, statement_parse=statement_parse)
                 boundary_actions = create_s.process()
+            case 'Delete_Action_a':
+                pass
             case _:
                 boundary_actions = None
                 # print()
