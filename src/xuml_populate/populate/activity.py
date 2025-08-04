@@ -49,8 +49,20 @@ class UsageAttrs(NamedTuple):
     out_attr: str | None
     in_attr2: str | None = None  # New Associative Reference Action for example
 
+# We use the following list of tuples to extract the required input and output flows of each Action type
+# Create a tuple for each class that specifies an input, output or both flows as part of some Action's subsystem
+# Some Action's require one class while others may have two or three
+
+# cname - the name of the class holding references to one or more required flows, PyRAL allows spaces in class name
+# id_attr - The attribute holding the Action ID, so the type must be Action ID, PyRAL requires snake_case for attrs
+# in_attr - The name of the required input, for now we assume there is only one, type of this attr must be Flow ID
+# in_attr2 - Okay, make that two possible required inputs in rare cases, same rules as for in_attr
+# out_attr - The name of a required output attr, again a Flow ID type
 
 flow_attrs = [
+    UsageAttrs(cname='Delete Action', id_attr='ID', in_attr='Flow', out_attr=None),
+    UsageAttrs(cname='Method Call', id_attr='ID', in_attr='Instance_flow', out_attr=None),
+    UsageAttrs(cname='Method Call Parameter', id_attr='Method_call', in_attr='Flow', out_attr=None),
     UsageAttrs(cname='Decision Action', id_attr='ID', in_attr='Boolean_input', out_attr=None),
     UsageAttrs(cname='Result', id_attr='Decision_action', in_attr=None, out_attr='Flow'),
     UsageAttrs(cname='Reference Value Input', id_attr='Create_action', in_attr='Flow', out_attr=None),
