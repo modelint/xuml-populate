@@ -187,7 +187,6 @@ class Activity:
                     for a_in in boundary_actions.ain:  # All initial actions in this statement
                         self.seq_flows[a_upstream].add(a_in)  # Add that initial action to the downstream value
 
-
     @classmethod
     def valid_param(cls, pname: str, activity: ActivityAP):
         # TODO: Verify that the parameter is in the signature of the specified activity with exception if not

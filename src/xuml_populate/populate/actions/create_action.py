@@ -36,7 +36,7 @@ class CreateAction:
     """
     def __init__(self, statement_parse: New_inst_a, activity_data: ActivityAP):
         """
-        Initialize with everything the Signal statement requires
+        Initialize with everything the Create Action requires
 
         Args:
             statement_parse: Parsed representation of the New Instance expression
@@ -70,7 +70,6 @@ class CreateAction:
         """
         # Begin by populating the Action itself
         # Populate the Action superclass instance and obtain an action_id
-        _logger.info("CREATE ACTION TRANSACTION STARTED")
         Transaction.open(db=mmdb, name=tr_Create)
         self.action_id = Action.populate(tr=tr_Create, anum=self.activity_data.anum, domain=self.activity_data.domain,
                                          action_type="create")  # Transaction open

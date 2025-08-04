@@ -4,7 +4,6 @@ signal_action.py – Populate a signal action instance in PyRAL
 
 # System
 import logging
-from typing import Sequence, Tuple, Optional
 
 # Model Integration
 from scrall.parse.visitor import Signal_a
@@ -14,12 +13,9 @@ from pyral.transaction import Transaction
 # xUML populate
 from xuml_populate.utility import print_mmdb
 from xuml_populate.config import mmdb
-from xuml_populate.populate.actions.aparse_types import (Flow_ap, MaxMult, Content, StateActivityAP,
-                                                         Boundary_Actions, SMType)
+from xuml_populate.populate.actions.aparse_types import ActivityAP, Boundary_Actions
 from xuml_populate.populate.actions.action import Action
 from xuml_populate.populate.actions.expressions.instance_set import InstanceSet
-from xuml_populate.populate.mm_class import MMclass
-from xuml_populate.populate.flow import Flow
 from xuml_populate.populate.mmclass_nt import (Signal_Action_i, Supplied_Parameter_Value_i,
                                                Signal_Instance_Set_Action_i,
                                                Delivery_Time_i, Absolute_Delivery_Time_i, Relative_Delivery_Time_i,
@@ -36,7 +32,7 @@ class SignalAction:
     """
     # TODO: Implement other Signal Action subclasses
     # TODO: activity_data type should be ActivityAP
-    def __init__(self, statement_parse: Signal_a, activity_data: StateActivityAP):
+    def __init__(self, statement_parse: Signal_a, activity_data: ActivityAP):
         """
         Initialize with everything the Signal statement requires
 
