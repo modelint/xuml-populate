@@ -2,8 +2,8 @@ metadata
     Title : Cabin State Machine Diagram
     Author : Leon Starr
     Document ID : mint.elevator3.td.6
-    Modification date : May 12, 2019
-    Version : 3.1.2
+    Modification date : Aug 5, 2025
+    Version : 3.2.0
     Organization : Model Integration, LLC
     Copyright notice > MIT
     Organization logo > mint
@@ -23,7 +23,7 @@ events
 --
 state Changing destination( new dest: Level Name )
 activity
-    TRAN.Go to floor( Dest floor: ^new dest, Shaft ) ?
+    ~.Go to floor( Dest floor: ^new dest ) ?
          Cabin redirected( Updated dest: ^new dest ) -> /R53/Transfer
     Change requested -> me
 transitions
@@ -39,7 +39,7 @@ transitions
 --
 state SECURING DOORS
 activity
-    /R4/Door.Lock requested.set()
+    /R4/Door.Lock requested = TRUE
     Lock -> /R4/Door
 transitions
     Doors secure > READY TO GO
@@ -48,7 +48,7 @@ transitions
 state Are we already there
 activity
     (/R53/Transfer.Destination floor == /R43/is at/Shaft Level/Floor) ?
-        Already there -> | Prepare to move -> me
+        Already there -> : Prepare to move -> me
 transitions
     Prepare to move > SECURING DOORS
     Already there > PICKUP DROPOFF
@@ -63,12 +63,12 @@ transitions
 --
 state OUT OF SERVICE
 activity
-    /R4/Door.Emergency hold.set
+    /R4/Door.Emergency hold = TRUE
     Passenger open -> /R4/Door
 --
 state EMERGENCY BRAKING
 activity
-    Stop at nearest floor( Shaft ) => TRAN
+    Stop at nearest floor -> ~
 transitions
     Arrived at floor > OUT OF SERVICE
 --
@@ -82,8 +82,8 @@ transitions
 --
 state Requesting transport
 activity
-    TRAN.Goto floor( Dest floor: /R53/Transfer.Destination floor, Shaft ) ?
-        Transport in progress -> | Transport unavailable -> me
+    ~.Goto floor( Dest floor: /R53/Transfer.Destination floor ) ?
+        Transport in progress -> : Transport unavailable -> me
 transitions
     Transport unavailable > OUT OF SERVICE
 --
