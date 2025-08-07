@@ -19,7 +19,6 @@ from xuml_populate.populate.attribute import Attribute
 from xuml_populate.populate.mm_class import MMclass
 from xuml_populate.populate.method import Method
 from xuml_populate.populate.relationship import Relationship
-from xuml_populate.populate.ee import EE
 from xuml_populate.populate.lineage import Lineage
 from xuml_populate.populate.subsystem import Subsystem
 from xuml_populate.populate.state_model import StateModel
@@ -84,13 +83,6 @@ class Domain:
             _logger.info("Populating relationships")
             for r in subsys_parse['class_model'].rels:
                 Relationship.populate(domain=domain, subsystem=subsys, record=r)
-
-            # Insert external entities and operations
-            # TODO: Add operations after we sort out bridging
-            # _logger.info("Populating operations")
-            # for ee_name, op_parse in subsys_parse['external'].items():
-            #     EE.populate(ee_name=ee_name, subsys=subsys.name,
-            #                 domain=domain, op_parse=op_parse)
 
             # Insert methods
             _logger.info("Populating methods")

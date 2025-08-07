@@ -69,8 +69,7 @@ class Method:
         self.activity_parse = ScrallParser.parse_text(scrall_text=self.method_parse.activity, debug=False)
 
         # Populate the method
-        self.anum = Activity.populate(tr=tr_Method, action_text=self.activity_parse,
-                                      subsys=subsys, domain=self.domain, synchronous=True)
+        self.anum = Activity.populate(tr=tr_Method, action_text=self.activity_parse, subsys=subsys, domain=self.domain)
 
         # Populate the executing instance (self) flow
         self.xi_flow = Flow.populate_instance_flow(cname=self.class_name, anum=self.anum, domain=self.domain,

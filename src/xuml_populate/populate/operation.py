@@ -10,8 +10,7 @@ from xuml_populate.populate.flow import Flow
 from xuml_populate.populate.signature import Signature
 from xuml_populate.populate.activity import Activity
 from xuml_populate.populate.mm_type import MMtype
-from xuml_populate.populate.mmclass_nt import Operation_Signature_i, Operation_i, Parameter_i,\
-    Asynchronous_Operation_i, Synchronous_Operation_i, Synchronous_Output_i
+from xuml_populate.populate.mmclass_nt import Parameter_i, Synchronous_Output_i
 
 _logger = logging.getLogger(__name__)
 

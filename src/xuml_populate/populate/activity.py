@@ -26,8 +26,7 @@ from xuml_populate.config import mmdb
 from xuml_populate.populate.flow import Flow
 from xuml_populate.populate.element import Element
 from xuml_populate.populate.actions.aparse_types import (ActivityAP, SMType, ActivityType, Boundary_Actions)
-from xuml_populate.populate.mmclass_nt import (Activity_i, Asynchronous_Activity_i, State_Activity_i,
-                                               Synchronous_Activity_i, Lifecycle_Activity_i,
+from xuml_populate.populate.mmclass_nt import (Activity_i, State_Activity_i, Lifecycle_Activity_i,
                                                Multiple_Assigner_Activity_i, Single_Assigner_Activity_i)
 
 _logger = logging.getLogger(__name__)
@@ -205,26 +204,7 @@ class Activity:
         pass
 
     @classmethod
-    def populate_operation(cls, tr: str, action_text: str, ee: str, subsys: str, domain: str,
-                           synchronous: bool) -> str:
-        """
-        Populate Operation Activity
-
-        :param tr:
-        :param action_text:
-        :param ee:
-        :param subsys:
-        :param domain:
-        :param synchronous:
-        :return:
-        """
-        Anum = cls.populate(tr=tr, action_text=action_text, subsys=subsys, domain=domain, synchronous=synchronous)
-        cls.operations[ee] = ScrallParser.parse_text(scrall_text=action_text, debug=False)
-        return Anum
-
-    @classmethod
-    def populate(cls, tr: str, action_text: str, subsys: str, domain: str,
-                 synchronous: bool) -> str:
+    def populate(cls, tr: str, action_text: str, subsys: str, domain: str) -> str:
         """
         Populate an Activity
 
@@ -232,21 +212,12 @@ class Activity:
         :param action_text: Unparsed scrall text
         :param subsys: The subsystem name
         :param domain: The domain name
-        :param synchronous: True if Activity is synchronous
         :return: The Activity number (Anum)
         """
         Anum = Element.populate_unlabeled_subsys_element(tr=tr, prefix='A', subsystem=subsys, domain=domain)
         Relvar.insert(db=mmdb, tr=tr, relvar='Activity', tuples=[
             Activity_i(Anum=Anum, Domain=domain)
         ])
-        if synchronous:
-            Relvar.insert(db=mmdb, tr=tr, relvar='Synchronous Activity', tuples=[
-                Synchronous_Activity_i(Anum=Anum, Domain=domain)
-            ])
-        else:
-            Relvar.insert(db=mmdb, tr=tr, relvar='Asynchronous Activity', tuples=[
-                Asynchronous_Activity_i(Anum=Anum, Domain=domain)
-            ])
         return Anum
 
     @classmethod
@@ -277,9 +248,9 @@ class Activity:
         # cls.populate_activity(text=action_text, pa=parsed_activity)
 
         # Create the Susbystem Element and obtain a unique Anum
-        Anum = cls.populate(tr=tr, action_text=action_text, subsys=subsys, domain=domain, synchronous=False)
+        Anum = cls.populate(tr=tr, action_text=action_text, subsys=subsys, domain=domain)
         state_info = {'anum': Anum, 'sm_type': sm_type, 'parse': parsed_activity[0],
-                                      'text': action_text, 'domain': domain}
+                      'text': action_text, 'domain': domain}
         Relvar.insert(db=mmdb, tr=tr, relvar='State_Activity', tuples=[
             State_Activity_i(Anum=Anum, Domain=domain)
         ])

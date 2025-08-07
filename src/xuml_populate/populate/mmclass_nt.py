@@ -194,19 +194,16 @@ Switch_Action_i = namedtuple('Switch_Action_i', 'ID Activity Domain')
 # Activity subsystem
 Activity_i = namedtuple('Activity_i', 'Anum Domain')
 Activity_Input_i = namedtuple('Activity_Input_i', 'Parameter Signature Activity Domain Flow')
-Asynchronous_Activity_i = namedtuple('Asynchronous_Activity_i', 'Anum Domain')
 Lifecycle_Activity_i = namedtuple('Lifecycle_Activity_i', 'Anum Domain Executing_instance_flow')
 Method_i = namedtuple('Method_i', 'Anum Name Class Domain Executing_instance_flow')
 Method_Call_i = namedtuple('Method_Call_i', 'ID Activity Domain Method Instance_flow')
 Method_Call_Parameter_i = namedtuple('Method_Call_Parameter_i', 'Method_call Activity Parameter Signature Domain Flow')
 Method_Signature_i = namedtuple('Method_Signature_i', 'SIGnum Method Class Domain')
 Multiple_Assigner_Activity_i = namedtuple('Multiple_Assigner_Activity_i', 'Anum Domain Partitioning_instance_flow')
-Operation_Signature_i = namedtuple('Operation_Signature_i', 'SIGnum EE Operation Domain')
 Parameter_i = namedtuple('Parameter_i', 'Name Signature Domain Type')
 Signature_i = namedtuple('Signature_i', 'SIGnum Domain')
 Single_Assigner_Activity_i = namedtuple('Single_Assigner_Activity_i', 'Anum Domain')
 State_Activity_i = namedtuple('State_Activity_i', 'Anum Domain')
-Synchronous_Activity_i = namedtuple('Synchronous_Activity_i', 'Anum Domain')
 Synchronous_Output_i = namedtuple('Synchronous_Output_i', 'Anum Domain Output_flow Type')
 
 # Creation Deletion subsystem
@@ -240,12 +237,6 @@ Source_Tuple_Attribute_Access_i = namedtuple('Source_Tuple_Attribute_Access_i', 
 Table_Action_i = namedtuple('Table_Action_i', 'ID Activity Domain Input_a_flow Output_flow')
 Table_Restriction_Condition_i = namedtuple('Table_Restriction_Condition_i', 'Restrict_action Activity Domain')
 
-# External Entity subsystem
-Asynchronous_Operation_i = namedtuple('Asynchronous_Operation_i', 'Name EE Domain Anum')
-External_Entity_i = namedtuple('External_Entity_i', 'EEnum Name Class Domain')
-Operation_i = namedtuple('Operation_i', 'Name EE Domain Direction')
-Synchronous_Operation_i = namedtuple('Synchronous_Operation_i', 'Name EE Domain Anum')
-
 # State subsystem
 Assigner_i = namedtuple('Assigner_i', 'Rnum Domain')
 Deletion_State_i = namedtuple('Deletion_State_i', 'Name Class Domain')
@@ -266,11 +257,11 @@ Transition_i = namedtuple('Transition_i', 'From_state Event State_model Domain T
 # Signal Action subsystem
 Absolute_Delivery_Time_i = namedtuple('Absolute_Delivery_Time_i', 'Action Activity Domain When')
 Delivery_Time_i = namedtuple('Delivery_Time_i', 'Action Activity Domain Flow')
+External_Signal_Action_i = namedtuple('External_Signal_Action_i', 'ID Activity Domain')
 Initial_Signal_Action_i = namedtuple('Initial_Signal_Action_i', 'ID Activity Domain Create_action')
 Multiple_Assigner_Partition_Instance_i = namedtuple('Multiple_Assigner_Partition_Instance_i', 'Action Activity Domain Partition')
 Relative_Delivery_Time_i = namedtuple('Relative_Delivery_Time_i', 'Action Activity Domain Delay')
 Signal_Action_i = namedtuple('Signal_Action_i', 'ID Activity Domain Event_spec State_model')
 Signal_Assigner_Action_i = namedtuple('Signal_Assigner_Action_i', 'ID Activity Domain Association')
-Signal_EE_Action_i = namedtuple('Signal_EE_Action_i', 'ID Activity Domain EE_name EE_class')
 Signal_Instance_Set_Action_i = namedtuple('Signal_Instance_Set_Action_i', 'ID Activity Domain Instance_flow')
 Supplied_Parameter_Value_i = namedtuple('Supplied_Parameter_Value_i', 'Parameter Signature Action Activity Domain Data_flow')
