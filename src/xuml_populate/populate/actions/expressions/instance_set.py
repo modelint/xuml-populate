@@ -3,12 +3,20 @@
 # System
 import logging
 
+# Model Integration
+from pyral.relvar import Relvar
+from pyral.relation import Relation
+from pyral.transaction import Transaction
+
 # xUML Populate
+from xuml_populate.utility import print_mmdb
+from xuml_populate.config import mmdb
 from xuml_populate.populate.actions.traverse_action import TraverseAction
 from xuml_populate.populate.actions.expressions.class_accessor import ClassAccessor
 from xuml_populate.populate.flow import Flow
 from xuml_populate.populate.actions.select_action import SelectAction
 from xuml_populate.populate.actions.restrict_action import RestrictAction
+from xuml_populate.populate.actions.method_call import MethodCall
 from xuml_populate.populate.actions.rank_restrict_action import RankRestrictAction
 from xuml_populate.populate.actions.aparse_types import (Flow_ap, MaxMult, Content, ActivityAP, SMType,
                                                          StateActivityAP, MethodActivityAP)
@@ -74,7 +82,7 @@ class InstanceSet:
                                f"path (self not defined): {self.activity_data.activity_path} with path"
                                f"parse: {comp}")
                         _logger.error(msg)
-                        raise PathFromSelfOnAssigner
+                        raise ActionException(msg)
 
                     # Path component
                     # Process the path to create the traverse action and obtain the resultant output instance flow
@@ -152,6 +160,53 @@ class InstanceSet:
                     if count == len(self.iset_components) - 1:
                         # For the last component, there can be no dflow output to another action
                         self.final_action = aid
+                case 'Op_a':
+                    # The only kind of operation that can return an instance set is a Method
+                    # Type operations and external services cannot do this
+                    # So we need to validate that we have a proper method invocation statement and then
+                    # populate the Method Call
+
+                    single_inst_flow_label = comp.owner  # Name on a flow delivering a single instance method target
+                    method_name = comp.op_name  # op_name must be a Method name
+
+                    # Validate the single instance flow
+                    R = f"Name:<{single_inst_flow_label}>, Activity:<{self.activity_data.anum}>, Domain:<{self.activity_data.domain}>"
+                    labeled_flow_r = Relation.restrict(db=mmdb, relation='Labeled Flow', restriction=R)
+                    if not labeled_flow_r:
+                        msg = f"No labeled flow named {single_inst_flow_label} in {self.activity_data.activity_path}"
+                        _logger.error(msg)
+                        raise ActionException(msg)
+
+                    # It must be a single instance flow
+                    single_inst_flow_r = Relation.semijoin(db=mmdb, rname2='Single Instance Flow')
+                    if not single_inst_flow_r:
+                        msg = (f"Method call target [{single_inst_flow_label}] in {self.activity_data.activity_path} "
+                               f"must be a single instance flow")
+                        _logger.error(msg)
+                        raise ActionException(msg)
+
+                    # Get the class name
+                    inst_flow_r = Relation.semijoin(db=mmdb, rname2='Instance Flow')
+                    inst_class_name = inst_flow_r.body[0]['Class']
+
+                    # Verify that the method is defined on this class
+                    R = f"Name:<{method_name}>, Class:<{inst_class_name}>, Domain:<{self.activity_data.domain}>"
+                    method_r = Relation.restrict(db=mmdb, relation='Method', restriction=R)
+                    if not method_r:
+                        msg = (f"Called method [{method_name}] not defined on [{inst_class_name}] in "
+                               f"{self.activity_data.activity_path}")
+                        _logger.error(msg)
+                        raise ActionException(msg)
+
+                    # Method and instance target valid
+                    inst_flow_t = inst_flow_r.body[0]
+                    method_t = method_r.body[0]
+                    mcall = MethodCall(method_name=method_name, method_anum=method_t["Anum"], caller_flow=
+                                       Flow_ap( fid=inst_flow_t["ID"], content=Content.INSTANCE,
+                                                tname=inst_class_name, max_mult=MaxMult.ONE),
+                                       parse=comp,
+                                       activity_data=self.activity_data)
+                    boundary_actions = mcall.process()
                 case _:
                     raise Exception
         return self.initial_action, self.final_action, self.component_flow

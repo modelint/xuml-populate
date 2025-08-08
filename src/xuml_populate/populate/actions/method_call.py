@@ -5,7 +5,7 @@ method_call.py – Process a call action
 import logging
 
 # Model Integration
-from scrall.parse.visitor import Call_a
+from scrall.parse.visitor import Call_a, Op_a
 from pyral.relvar import Relvar
 from pyral.relation import Relation
 from pyral.transaction import Transaction
@@ -29,7 +29,7 @@ class MethodCall:
     actions required by the parse
     """
 
-    def __init__(self, method_name: str, method_anum: str, caller_flow: Flow_ap, parse: Call_a,
+    def __init__(self, method_name: str, method_anum: str, caller_flow: Flow_ap, parse: Call_a | Op_a,
                  activity_data: ActivityAP):
         """
         Initialize the data we need to populate a method call
@@ -38,14 +38,15 @@ class MethodCall:
             method_name:  The name of the method to be called
             method_anum:  The method's activity number
             caller_flow:  A single instance flow providing the target instance of the method call
-            parse: A parsed call statement
+            parse: A parsed call or op statement (that resolves to a method invocation)
             activity_data:  Information about the activity where this action executes
         """
         self.method_name = method_name
         self.method_anum = method_anum
         self.parse = parse
         # The Scrall grammar indicates that the last element in the components list must be an operation
-        self.op_parse = self.parse.call.components[-1]
+        self.op_parse = self.parse.call.components[-1] if type(parse).__name__ == "Call_a" else None
+        self.params = self.parse.supplied_params if type(parse).__name__ == "Op_a" else None
         self.activity_data = activity_data
         self.caller_flow = caller_flow
         self.action_id = None
