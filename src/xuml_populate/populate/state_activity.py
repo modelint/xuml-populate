@@ -91,7 +91,7 @@ class StateActivity:
                     # TODO: raise exception here
                     pass
                 self.pi_flow_id = ma_activity_r.body[0]['Partitioning_instance_flow']
-                self.pi_flow = Flow_ap(fid=self.pi_flow_id, content=Content.INSTANCE, tname=self.pclass,
+                self.pi_flow = Flow_ap(fid=self.pi_flow_id, content=Content.INSTANCE, tname=self.state_model.pclass,
                                        max_mult=MaxMult.ONE)
                 R = f"Rnum:<{self.sm_name}>, Domain:<{self.domain}>"
                 ma_r = Relation.restrict(db=mmdb, relation='Multiple Assigner', restriction=R)
@@ -105,7 +105,7 @@ class StateActivity:
         self.activity_detail = StateActivityAP(
             anum=self.anum, domain=self.domain, signum=self.signum,
             sname=self.name, state_model=self.sm_name, smtype=self.sm_type,
-            xiflow=self.xi_flow, piflow=self.pi_flow_id,
+            xiflow=self.xi_flow, piflow=self.pi_flow,
             activity_path=self.path, parse=self.state_parse["parse"], scrall_text=self.state_parse['text'])
 
         # Populate the State Activity Actions

@@ -77,18 +77,26 @@ class InstanceAssignment:
         rhs = inst_assign.rhs  # Right hand sid of assignment
 
         # If the Activity is a Method or a Lifecycle State Model State, define the executing instance flow
-        xi_instance_flow = None
-        tname = None
-        if isinstance(activity_data, MethodActivityAP):
-            tname = activity_data.cname
-        elif isinstance(activity_data, StateActivityAP) and activity_data.smtype == SMType.LIFECYCLE:
-            tname = activity_data.state_model
-        if tname is not None:
-            xi_instance_flow = Flow_ap(fid=activity_data.xiflow.fid, content=Content.INSTANCE, tname=tname,
-                                       max_mult=MaxMult.ONE)
+        # xi_instance_flow = None
+        # tname = None
+        # if isinstance(activity_data, MethodActivityAP):
+        #     tname = activity_data.cname
+        # elif isinstance(activity_data, StateActivityAP) and activity_data.smtype == SMType.LIFECYCLE:
+        #     tname = activity_data.state_model
+        # if tname is not None:
+        #     xi_instance_flow = Flow_ap(fid=activity_data.xiflow.fid, content=Content.INSTANCE, tname=tname,
+        #                                max_mult=MaxMult.ONE)
 
         # Process the instance set expression in the RHS and obtain the generated instance flow
-        iset = InstanceSet(input_instance_flow=xi_instance_flow, iset_components=rhs.components,
+        starting_instance_flow = None
+        if isinstance(activity_data, MethodActivityAP):
+            starting_instance_flow = activity_data.xiflow
+        elif activity_data.smtype == SMType.LIFECYCLE:
+            starting_instance_flow = activity_data.xiflow
+        elif activity_data.smtype == SMType.MA:
+            starting_instance_flow = activity_data.piflow
+
+        iset = InstanceSet(input_instance_flow=starting_instance_flow, iset_components=rhs.components,
                            activity_data=activity_data)
         initial_aid, final_aid, iset_instance_flow = iset.process()
 

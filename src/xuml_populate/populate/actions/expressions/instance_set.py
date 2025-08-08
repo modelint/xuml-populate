@@ -41,10 +41,11 @@ class InstanceSet:
         self.final_action = None  # The last action in the chain
 
         if not input_instance_flow:
-            # This will be None when the caller is an assigner
+            # This will be None when the caller is a single assigner.
+            # (A multiple assigner uses the paritioning instance flow as a the implicit starting point in a path)
             # This means that a path such as /R1/R2/Flot won't work because we have no starting point
-            # An assigner would need to specify something like: p/R1/R2/Flot instead, me/self is not available
-            # TODO: Handle case where an assigner procesess an instance set
+            # A single assigner would need to specify something like: p/R1/R2/Flot instead, me/self is not available
+            # TODO: Handle case where a single assigner processes an instance set
             pass
 
     def process(self) -> ( str, str, Flow_ap):
@@ -64,11 +65,13 @@ class InstanceSet:
             match type(comp).__name__:
                 case 'PATH_a':
                     # If this path is the first component, it assumes it is traversing from an executing
-                    # instance (self). But there is no self if the Activity is an assigner State Activity.
-                    # So we throw an exception if this is the case.
+                    # or instance (self) or partitioning instance of a multiple assigner.
+                    # A single assigner must specify an explicit initial flow which means that it cannot start off
+                    # with an implicit /R<n>, rather <inst set>/R<n> instead.
                     if count == 0 and isinstance(self.activity_data, StateActivityAP) and \
-                            self.activity_data.smtype != SMType.LIFECYCLE:
-                        msg = (f"Path from self in an Assigner State here: {self.activity_data.activity_path} with path"
+                            self.activity_data.smtype == SMType.SA:
+                        msg = (f"Single Assigner traverse action must specify instancse set to begin "
+                               f"path (self not defined): {self.activity_data.activity_path} with path"
                                f"parse: {comp}")
                         _logger.error(msg)
                         raise PathFromSelfOnAssigner
