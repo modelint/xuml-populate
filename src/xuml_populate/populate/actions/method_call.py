@@ -45,8 +45,7 @@ class MethodCall:
         self.method_anum = method_anum
         self.parse = parse
         # The Scrall grammar indicates that the last element in the components list must be an operation
-        self.op_parse = self.parse.call.components[-1] if type(parse).__name__ == "Call_a" else None
-        self.params = self.parse.supplied_params if type(parse).__name__ == "Op_a" else None
+        self.op_parse = self.parse.call.components[-1] if type(parse).__name__ == "Call_a" else parse
         self.activity_data = activity_data
         self.caller_flow = caller_flow
         self.action_id = None

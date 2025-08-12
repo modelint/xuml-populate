@@ -23,9 +23,10 @@ events
 --
 state Changing destination( new dest: Level Name )
 activity
-    ~.Go to floor( Dest floor: ^new dest ) ?
-         Cabin redirected( Updated dest: ^new dest ) -> /R53/Transfer
-    Change requested -> me
+    ~.Go to floor( Dest floor: ^new dest ) ? {
+        Cabin redirected( Updated dest: ^new dest ) -> /R53/Transfer
+        Change requested -> me
+    }
 transitions
     Change requested > MOVING
 --

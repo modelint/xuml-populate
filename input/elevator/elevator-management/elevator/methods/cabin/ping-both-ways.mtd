@@ -12,10 +12,10 @@ Cabin.Ping both ways() : Acessible Shaft Level
 
 
 // Search in the Cabin's current travel direction
-// UNCOMMENT WHEN READY TO PARSE
-//fwd dest .= Ping( dir: Travel direction )
-//fwd dest? =>> fwd dest : {
-//    rev dest .= Ping( dir: Travel direction.opposite )
-//    !rev dest? Travel direction.toggle
-//    =>> rev dest // Empty if there is no destination in either direction
-//}
+fwd dest .= Ping( dir: Travel direction )
+fwd dest? =>> fwd dest : {
+    rev dest .= Ping( dir: Travel direction.opposite )
+    !rev dest? Travel direction.toggle
+    =>> rev dest
+// Empty if there is no destination in either direction
+}

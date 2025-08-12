@@ -176,7 +176,7 @@ class Activity:
                 ExecutionUnit.process_synch_output(activity_data=self.activity_data,
                                                    synch_output=xunit.statement_set.statement)
             else:
-                boundary_actions = ExecutionUnit.process_method_statement_set(
+                boundary_actions = ExecutionUnit.process_statement_set(
                     activity_data=self.activity_data, statement_set=xunit.statement_set)
 
             # Process any sequence tokens

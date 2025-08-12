@@ -29,14 +29,6 @@ class ExecutionUnit:
     """
 
     @classmethod
-    def process(cls):
-        pass
-
-    @classmethod
-    def process_statement_set(cls) -> (List[str], List[str]):
-        pass
-
-    @classmethod
     def process_synch_output(cls, activity_data: ActivityAP, synch_output: Output_Flow_a):
         """
 
@@ -77,25 +69,9 @@ class ExecutionUnit:
                      f"{activity_data.activity_path}:^{output_flow.fid}]")
 
     @classmethod
-    def process_state_statement_set(cls):
-        pass
-
-    @classmethod
-    def process_operation_output_flow(cls):
-        pass
-
-    @classmethod
-    def process_operation_statement_set(cls):
-        pass
-
-    @classmethod
-    def process_method_output_flow(cls):
-        pass
-
-    @classmethod
-    def process_method_statement_set(cls, activity_data: ActivityAP, statement_set) -> Boundary_Actions:
+    def process_statement_set(cls, activity_data: ActivityAP, statement_set) -> Boundary_Actions:
         """
-        Initiates the population of all elements derived from a set of statements in a method.
+        Initiates the population of all elements derived from a set of statements in an Activity.
 
         Populates each action and returns two lists of action ids.
         The first list is each action that does not require any data input from any other action
