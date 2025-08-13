@@ -56,7 +56,7 @@ class InstanceSet:
             # TODO: Handle case where a single assigner processes an instance set
             pass
 
-    def process(self) -> ( str, str, Flow_ap):
+    def process(self) -> tuple[str, str, Flow_ap]:
         """
         Populate any Actions or Flows corresponding to a sequence of instance set components.
         Return the boundary actions and the resultant output Instance Flow

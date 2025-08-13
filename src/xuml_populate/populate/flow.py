@@ -269,18 +269,23 @@ class Flow:
             return Flow_ap(fid=fid, content=Content.SCALAR, tname=tname, max_mult=None)
 
     @classmethod
-    def populate_data_flow_by_type(cls, label: Optional[str], mm_type: str, anum: str,
-                                   domain: str, activity_tr: str = None) -> Flow_ap:
+    def populate_data_flow_by_type(cls, mm_type: str, anum: str,
+                                   domain: str, mult: MaxMult = MaxMult.MANY,
+                                   label: Optional[str] = None, activity_tr: str = None) -> Flow_ap:
         """
         Populate an instance of Data Flow and determine its subclasses based on the supplied
         Class, Scalar, or Table Type.
 
-        :param label:
-        :param mm_type: A Class, Scalar, or Table Type
-        :param anum:
-        :param domain:
-        :param activity_tr: Incorporate this in the activity population transaction if provided
-        :return: The generated flow id
+        Args:
+            mm_type: A Class, Scalar, or Table Type
+            anum:
+            domain:
+            mult: Defaults to Many, even if the mm_type is scalar (in which case it is ignored)
+            label:
+            activity_tr: Incorporate this in the activity population transaction if provided
+
+        Returns:
+            The generated flow id
         """
         tr = tr_Inst_Flow if not activity_tr else activity_tr
         # For now we distinguish only between class and scalar types
@@ -289,7 +294,8 @@ class Flow:
         r_result = Relation.restrict(db=mmdb, relation='Class', restriction=R)
         if r_result.body:
             # It's a class type, create a multiple instance flow
-            flow = cls.populate_instance_flow(cname=mm_type, anum=anum, domain=domain, label=label,
+            single = True if mult == MaxMult.ONE else False
+            flow = cls.populate_instance_flow(cname=mm_type, anum=anum, domain=domain, label=label, single=single,
                                               activity_tr=tr)
         else:
             # It's a scalar type
@@ -425,6 +431,28 @@ class Flow:
             ])
         return Flow_ap(fid=flow_id, content=Content.RELATION, tname=table_name,
                        max_mult=MaxMult.ONE if is_tuple else MaxMult.MANY)
+
+    @classmethod
+    def copy_data_flow(cls, tr: str, ref_fid: str, ref_anum: str, new_anum: str, domain: str) -> Flow_ap:
+        """
+        Given a flow associated with some Activity, populate a new flow of the same type, but with the
+        supplied activity number and a new flow id.
+
+        Args:
+            tr: Name of the enclosing transaction_
+            ref_fid:  Copy the flow with this id
+            ref_anum: The ref flow's activity number
+            new_anum:  Associate copy with this Activity
+            domain: Domain of both reference and copy
+
+        Returns:
+            The copied flow
+
+        """
+        ref_flow = Flow.lookup_data(fid=ref_fid, anum=ref_anum, domain=domain)
+        new_flow = Flow.populate_data_flow_by_type(mm_type=ref_flow.tname, mult=ref_flow.max_mult, anum=new_anum,
+                                                   domain=domain, activity_tr=tr)
+        return new_flow
 
     @classmethod
     def populate_relation_flow_by_reference(cls, ref_flow: Flow_ap, anum: str, domain: str, tuple_flow: bool = False,

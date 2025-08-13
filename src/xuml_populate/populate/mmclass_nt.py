@@ -106,6 +106,11 @@ Symmetric_Perspective_i = namedtuple('Symmetric_Perspective_i', 'Side Rnum Domai
 T_Perspective_i = namedtuple('T_Perspective_i', 'Side Rnum Domain')
 Unary_Association_i = namedtuple('Unary_Association_i', 'Rnum Domain')
 
+# Method Call subsystem
+Method_Call_i = namedtuple('Method_Call_i', 'ID Activity Domain Method Instance_flow')
+Method_Call_Output_i = namedtuple('Method_Call_Output_i', 'Method_call Activity Domain Target_method Flow')
+Method_Call_Parameter_i = namedtuple('Method_Call_Parameter_i', 'Method_call Activity Parameter Signature Domain Flow')
+
 # Domain subsystem
 Domain_i = namedtuple('Domain_i', 'Name Alias')
 Domain_Partition_i = namedtuple('Domain_Partition_i', 'Number Domain')
@@ -196,8 +201,6 @@ Activity_i = namedtuple('Activity_i', 'Anum Domain')
 Activity_Input_i = namedtuple('Activity_Input_i', 'Parameter Signature Activity Domain Flow')
 Lifecycle_Activity_i = namedtuple('Lifecycle_Activity_i', 'Anum Domain Executing_instance_flow')
 Method_i = namedtuple('Method_i', 'Anum Name Class Domain Executing_instance_flow')
-Method_Call_i = namedtuple('Method_Call_i', 'ID Activity Domain Method Instance_flow')
-Method_Call_Parameter_i = namedtuple('Method_Call_Parameter_i', 'Method_call Activity Parameter Signature Domain Flow')
 Method_Signature_i = namedtuple('Method_Signature_i', 'SIGnum Method Class Domain')
 Multiple_Assigner_Activity_i = namedtuple('Multiple_Assigner_Activity_i', 'Anum Domain Partitioning_instance_flow')
 Parameter_i = namedtuple('Parameter_i', 'Name Signature Domain Type')

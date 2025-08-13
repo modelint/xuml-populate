@@ -18,7 +18,7 @@ from xuml_populate.populate.actions.action import Action
 from xuml_populate.populate.actions.read_action import ReadAction
 from xuml_populate.exceptions.action_exceptions import *
 from xuml_populate.populate.actions.aparse_types import ActivityAP, Boundary_Actions, Flow_ap
-from xuml_populate.populate.mmclass_nt import Method_Call_i, Method_Call_Parameter_i
+from xuml_populate.populate.mmclass_nt import Method_Call_i, Method_Call_Parameter_i, Method_Call_Output_i
 
 _logger = logging.getLogger(__name__)
 
@@ -53,7 +53,7 @@ class MethodCall:
         self.anum = self.activity_data.anum
         self.domain = self.activity_data.domain
 
-    def process(self) -> (str, str, Flow_ap):
+    def process(self) -> tuple[str, str, Flow_ap]:
         """
         Populate a Method Call action
 
@@ -125,7 +125,6 @@ class MethodCall:
             _logger.error(msg)
             ActionException(msg)
 
-        Transaction.execute(db=mmdb, name=tr_Call)
 
         # Create an output flow in this activity compatible with the output of the target method, if any
         method_call_output_flow = None
@@ -133,8 +132,17 @@ class MethodCall:
         if synch_output_r:
             synch_output_fid = synch_output_r.body[0]["Output_flow"]
             synch_output_anum = synch_output_r.body[0]["Anum"]
-            synch_output_flow = Flow.lookup_data(fid=synch_output_fid, anum=synch_output_anum, domain=self.domain)
-            pass
+            method_call_output_flow = Flow.copy_data_flow(tr=tr_Call, ref_fid=synch_output_fid,
+                                                          ref_anum=synch_output_anum, new_anum=self.anum,
+                                                          domain=self.domain)
+            # Populate the output of the Method Call action (corresponds to the target Method's Synch Output)
+            Relvar.insert(db=mmdb, relvar="Method Call Output", tr=tr_Call, tuples=[
+                Method_Call_Output_i(Method_call=self.action_id, Activity=self.anum, Domain=self.domain,
+                                     Target_method=synch_output_anum, Flow=method_call_output_flow.fid)
+            ])
 
+        # TODO: Populate metamodel with synch output method flow (need to update make_xuml_db)
+
+        Transaction.execute(db=mmdb, name=tr_Call)
         return self.action_id, self.action_id, method_call_output_flow
 
