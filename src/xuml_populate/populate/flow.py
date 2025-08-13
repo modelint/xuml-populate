@@ -233,39 +233,39 @@ class Flow:
         """
         # First verify that the fid corresponds to some Data Flow instance
         R = f"ID:<{fid}>, Activity:<{anum}>, Domain:<{domain}>"
-        result = Relation.restrict(mmdb, relation='Data_Flow', restriction=R)
-        if not result.body:
+        data_flow_r = Relation.restrict(db=mmdb, relation='Data_Flow', restriction=R)
+        if not data_flow_r.body:
             # Either fid not defined or it is a Control Flow
             raise FlowException
 
         # Is Non Scalar or Scalar Flow?
         R = f"ID:<{fid}>, Activity:<{anum}>, Domain:<{domain}>"
-        result = Relation.restrict(mmdb, relation='Non_Scalar_Flow', restriction=R)
-        if result.body:
+        non_scalar_flow_r = Relation.restrict(db=mmdb, relation='Non_Scalar_Flow', restriction=R)
+        if non_scalar_flow_r.body:
             # It is a Non Scalar Flow
             R = f"ID:<{fid}>, Activity:<{anum}>, Domain:<{domain}>"
-            result = Relation.restrict(mmdb, relation='Instance_Flow', restriction=R)
-            if result.body:
+            instance_flow_r = Relation.restrict(db=mmdb, relation='Instance_Flow', restriction=R)
+            if instance_flow_r.body:
                 # It's an Instance Flow
-                tname = result.body[0]['Type']
+                tname = instance_flow_r.body[0]['Class']
                 R = f"ID:<{fid}>, Activity:<{anum}>, Domain:<{domain}>"
-                result = Relation.restrict(mmdb, relation='Multiple_Instance_Flow', restriction=R)
+                result = Relation.restrict(db=mmdb, relation='Multiple_Instance_Flow', restriction=R)
                 max_mult = MaxMult.MANY if result.body else MaxMult.ONE
                 return Flow_ap(fid=fid, content=Content.INSTANCE, tname=tname, max_mult=max_mult)
             else:
                 # Must be a Table Flow
                 R = f"ID:<{fid}>, Activity:<{anum}>, Domain:<{domain}>"
-                result = Relation.restrict(mmdb, relation='Relation_Flow', restriction=R)
-                tname = result.body[0]['Type']
+                relation_flow_r = Relation.restrict(db=mmdb, relation='Relation_Flow', restriction=R)
+                tname = relation_flow_r.body[0]['Type']
                 R = f"ID:<{fid}>, Activity:<{anum}>, Domain:<{domain}>"
-                result = Relation.restrict(mmdb, relation='Table_Flow', restriction=R)
-                max_mult = MaxMult.MANY if result.body else MaxMult.ONE
+                table_flow_r = Relation.restrict(db=mmdb, relation='Table_Flow', restriction=R)
+                max_mult = MaxMult.MANY if table_flow_r.body else MaxMult.ONE
                 return Flow_ap(fid=fid, content=Content.RELATION, tname=tname, max_mult=max_mult)
         else:
             # It's a Scalar Flow
             R = f"ID:<{fid}>, Activity:<{anum}>, Domain:<{domain}>"
-            result = Relation.restrict(mmdb, relation='Scalar_Flow', restriction=R)
-            tname = result.body[0]['Type']
+            scalar_flow_r = Relation.restrict(db=mmdb, relation='Scalar_Flow', restriction=R)
+            tname = scalar_flow_r.body[0]['Type']
             return Flow_ap(fid=fid, content=Content.SCALAR, tname=tname, max_mult=None)
 
     @classmethod

@@ -15,6 +15,7 @@ from xuml_populate.utility import print_mmdb
 from xuml_populate.config import mmdb
 from xuml_populate.populate.flow import Flow
 from xuml_populate.populate.actions.action import Action
+from xuml_populate.populate.actions.read_action import ReadAction
 from xuml_populate.exceptions.action_exceptions import *
 from xuml_populate.populate.actions.aparse_types import ActivityAP, Boundary_Actions, Flow_ap
 from xuml_populate.populate.mmclass_nt import Method_Call_i, Method_Call_Parameter_i
@@ -52,7 +53,7 @@ class MethodCall:
         self.anum = self.activity_data.anum
         self.domain = self.activity_data.domain
 
-    def process(self) -> Boundary_Actions:
+    def process(self) -> (str, str, Flow_ap):
         """
         Populate a Method Call action
 
@@ -71,8 +72,12 @@ class MethodCall:
 
         # Validate Method Call params (ensure that the call matches the Method's populated signature
         R = f"Anum:<{self.method_anum}>, Domain:<{self.domain}>"
-        Relation.restrict(db=mmdb, relation='Method', restriction=R)
-        Relation.semijoin(db=mmdb, rname2='Method Signature', attrs={'Name': 'Method', 'Domain': 'Domain'})
+        Relation.restrict(db=mmdb, relation='Method', restriction=R, svar_name="target_method_sv")
+        target_method_sig_r = Relation.semijoin(db=mmdb, rname2='Method Signature',
+                                                attrs={'Name': 'Method', 'Domain': 'Domain'})
+        # IMPORTANT:
+        # We need the signature of the method we are calling (not the signature of the activity calling the method)
+        target_method_signum = target_method_sig_r.body[0]['SIGnum']
         param_r = Relation.semijoin(db=mmdb, rname2='Parameter', attrs={'SIGnum': 'Signature', 'Domain': 'Domain'})
         sig_params = {t["Name"]: t["Type"] for t in param_r.body}
 
@@ -81,12 +86,25 @@ class MethodCall:
         for sp in self.op_parse.supplied_params:
             pname = sp.pname
             sp_pnames.add(pname)
-            sval = sp.sval.name
+            sval = None
+            if type(sp.sval).__name__ == 'N_a':
+                sval = sp.sval.name
+            else:
+                pass  # TODO: resolve scalar expression
 
+            sval_flow = None
             # Populate parameter data flows
-            R = f"Parameter:<{sval}>, Activity:<{self.anum}>, Signature:<{self.activity_data.signum}>, Domain:<{self.domain}>"
-            activity_input_r = Relation.restrict(db=mmdb, relation='Activity Input', restriction=R)
-            sval_flow = activity_input_r.body[0]["Flow"]
+            R = f"Name:<{sval}>, Class:<{self.caller_flow.tname}>, Domain:<{self.domain}>"
+            attr_r = Relation.restrict(db=mmdb, relation="Attribute", restriction=R)
+            if attr_r:
+                aid, sflows = ReadAction.populate(input_single_instance_flow=self.caller_flow,
+                                                  attrs=(sval,), anum=self.anum, domain=self.domain)
+                sval_flow = sflows[0].fid
+            else:
+                R = f"Parameter:<{sval}>, Activity:<{self.anum}>, Signature:<{self.activity_data.signum}>, Domain:<{self.domain}>"
+                activity_input_r = Relation.restrict(db=mmdb, relation='Activity Input', restriction=R)
+                sval_flow = activity_input_r.body[0]["Flow"]
+            pass
 
             # Validate type match
             sval_flow_type = Flow.flow_type(fid=sval_flow, anum=self.anum, domain=self.domain)
@@ -97,7 +115,7 @@ class MethodCall:
 
             Relvar.insert(db=mmdb, tr=tr_Call, relvar='Method Call Parameter', tuples=[
                 Method_Call_Parameter_i(Method_call=self.action_id, Activity=self.anum, Parameter=pname,
-                                        Signature=self.activity_data.signum, Domain=self.domain, Flow=sval_flow)
+                                        Signature=target_method_signum, Domain=self.domain, Flow=sval_flow)
             ])
 
         # Validate match between set of supplied params and the Method Signature Parameters
@@ -108,5 +126,15 @@ class MethodCall:
             ActionException(msg)
 
         Transaction.execute(db=mmdb, name=tr_Call)
-        return Boundary_Actions(ain={self.action_id}, aout={self.action_id})
+
+        # Create an output flow in this activity compatible with the output of the target method, if any
+        method_call_output_flow = None
+        synch_output_r = Relation.semijoin(db=mmdb, rname1="target_method_sv", rname2="Synchronous Output")
+        if synch_output_r:
+            synch_output_fid = synch_output_r.body[0]["Output_flow"]
+            synch_output_anum = synch_output_r.body[0]["Anum"]
+            synch_output_flow = Flow.lookup_data(fid=synch_output_fid, anum=synch_output_anum, domain=self.domain)
+            pass
+
+        return self.action_id, self.action_id, method_call_output_flow
 

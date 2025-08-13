@@ -166,7 +166,8 @@ class InstanceSet:
                     # So we need to validate that we have a proper method invocation statement and then
                     # populate the Method Call
 
-                    single_inst_flow_label = comp.owner  # Name on a flow delivering a single instance method target
+                    single_inst_flow_label = comp.owner if comp.owner != 'implicit' else 'me'
+                    # Name on a flow delivering a single instance method target
                     method_name = comp.op_name  # op_name must be a Method name
 
                     # Validate the single instance flow
@@ -206,7 +207,10 @@ class InstanceSet:
                                                 tname=inst_class_name, max_mult=MaxMult.ONE),
                                        parse=comp,
                                        activity_data=self.activity_data)
-                    boundary_actions = mcall.process()
+                    ain, aout, self.component_flow = mcall.process()
+                    if first_action:
+                        self.initial_action = ain
+                    self.final_action = aout
                 case _:
                     raise Exception
         return self.initial_action, self.final_action, self.component_flow
