@@ -80,6 +80,7 @@ Traverse_Action_i = namedtuple('Traverse_Action_i', 'ID Activity Domain Path Sou
 
 # Action subsystem
 Action_i = namedtuple('Action_i', 'ID Activity Domain Type')
+Instance_Action_i = namedtuple('Instance_Action_i', 'ID Activity Domain')
 Flow_Dependency_i = namedtuple('Flow_Dependency_i', 'From_action To_action Activity Domain Flow')
 Wave_i = namedtuple('Wave_i', 'Number Activity Domain')
 Wave_Assignment_i = namedtuple('Wave_Assignment_i', 'Action Activity Domain Wave')
@@ -110,6 +111,7 @@ Unary_Association_i = namedtuple('Unary_Association_i', 'Rnum Domain')
 Method_Call_i = namedtuple('Method_Call_i', 'ID Activity Domain Method Instance_flow')
 Method_Call_Output_i = namedtuple('Method_Call_Output_i', 'Method_call Activity Domain Target_method Flow')
 Method_Call_Parameter_i = namedtuple('Method_Call_Parameter_i', 'Method_call Activity Parameter Signature Domain Flow')
+Pass_Action_i = namedtuple('Pass_Action_i', 'ID Activity Domain Input_flow Output_flow')
 
 # Domain subsystem
 Domain_i = namedtuple('Domain_i', 'Name Alias')

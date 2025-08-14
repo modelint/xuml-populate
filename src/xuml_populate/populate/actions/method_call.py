@@ -18,7 +18,8 @@ from xuml_populate.populate.actions.action import Action
 from xuml_populate.populate.actions.read_action import ReadAction
 from xuml_populate.exceptions.action_exceptions import *
 from xuml_populate.populate.actions.aparse_types import ActivityAP, Boundary_Actions, Flow_ap
-from xuml_populate.populate.mmclass_nt import Method_Call_i, Method_Call_Parameter_i, Method_Call_Output_i
+from xuml_populate.populate.mmclass_nt import (Method_Call_i, Method_Call_Parameter_i, Method_Call_Output_i,
+                                               Instance_Action_i)
 
 _logger = logging.getLogger(__name__)
 
@@ -65,6 +66,9 @@ class MethodCall:
         # Populate the action superclass and obtain our action id
         self.action_id = Action.populate(tr=tr_Call, anum=self.anum, domain=self.domain, action_type="method call")
         # Insert the Method Call instance
+        Relvar.insert(db=mmdb, tr=tr_Call, relvar='Instance Action', tuples=[
+            Instance_Action_i(ID=self.action_id, Activity=self.anum, Domain=self.domain)
+        ])
         Relvar.insert(db=mmdb, tr=tr_Call, relvar='Method Call', tuples=[
             Method_Call_i(ID=self.action_id, Activity=self.anum, Domain=self.domain, Method=self.method_anum,
                           Instance_flow=self.caller_flow.fid)

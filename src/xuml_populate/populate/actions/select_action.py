@@ -11,7 +11,7 @@ from xuml_populate.populate.flow import Flow
 from xuml_populate.populate.actions.expressions.restriction_condition import RestrictCondition
 from xuml_populate.populate.mmclass_nt import (Select_Action_i, Single_Select_i, Identifier_Select_i,
                                                Zero_One_Cardinality_Select_i, Many_Select_i,
-                                               Class_Restriction_Condition_i)
+                                               Class_Restriction_Condition_i, Instance_Action_i)
 from pyral.relvar import Relvar
 from pyral.relation import Relation
 from pyral.transaction import Transaction
@@ -56,7 +56,10 @@ class SelectAction:
         Transaction.open(db=mmdb, name=tr_Select)
         self.action_id = Action.populate(tr=tr_Select, anum=self.anum, domain=self.domain,
                                          action_type="select")  # Transaction open
-        Relvar.insert(db=mmdb, tr=tr_Select, relvar='Select_Action', tuples=[
+        Relvar.insert(db=mmdb, tr=tr_Select, relvar='Instance Action', tuples=[
+            Instance_Action_i(ID=self.action_id, Activity=self.anum, Domain=self.domain)
+        ])
+        Relvar.insert(db=mmdb, tr=tr_Select, relvar='Select Action', tuples=[
             Select_Action_i(ID=self.action_id, Activity=self.anum, Domain=self.domain,
                             Input_flow=self.input_instance_flow.fid)
         ])
@@ -71,7 +74,7 @@ class SelectAction:
         self.selection_cardinality = rcond.cardinality
         self.sflows = rcond.input_scalar_flows
 
-        Relvar.insert(db=mmdb, tr=tr_Select, relvar='Class_Restriction_Condition', tuples=[
+        Relvar.insert(db=mmdb, tr=tr_Select, relvar='Class Restriction Condition', tuples=[
             Class_Restriction_Condition_i(Select_action=self.action_id, Activity=self.anum, Domain=self.domain)
         ])
         # Create output flows

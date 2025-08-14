@@ -18,7 +18,7 @@ from xuml_populate.config import mmdb
 from xuml_populate.populate.actions.aparse_types import ActivityAP, Boundary_Actions
 from xuml_populate.populate.actions.action import Action
 from xuml_populate.exceptions.action_exceptions import *
-from xuml_populate.populate.mmclass_nt import Delete_Action_i
+from xuml_populate.populate.mmclass_nt import Delete_Action_i, Instance_Action_i
 from xuml_populate.populate.actions.expressions.instance_set import InstanceSet
 
 _logger = logging.getLogger(__name__)
@@ -62,6 +62,9 @@ class DeleteAction:
                            iset_components=self.iset_parse.components, activity_data=self.activity_data)
         ain, aout, i_flow = iset.process()
 
+        Relvar.insert(db=mmdb, tr=tr_Delete, relvar='Instance Action', tuples=[
+            Instance_Action_i(ID=self.action_id, Activity=self.activity_data.anum, Domain=self.activity_data.domain)
+        ])
         Relvar.insert(db=mmdb, tr=tr_Delete, relvar='Delete Action', tuples=[
             Delete_Action_i(ID=self.action_id, Activity=self.activity_data.anum, Domain=self.activity_data.domain,
                             Flow=i_flow.fid)

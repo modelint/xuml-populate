@@ -19,7 +19,8 @@ from xuml_populate.populate.actions.expressions.instance_set import InstanceSet
 from xuml_populate.populate.mmclass_nt import (Signal_Action_i, Supplied_Parameter_Value_i,
                                                Signal_Instance_Set_Action_i,
                                                Delivery_Time_i, Absolute_Delivery_Time_i, Relative_Delivery_Time_i,
-                                               Multiple_Assigner_Partition_Instance_i, Signal_Assigner_Action_i)
+                                               Multiple_Assigner_Partition_Instance_i, Signal_Assigner_Action_i,
+                                               Instance_Action_i)
 
 _logger = logging.getLogger(__name__)
 
@@ -122,7 +123,9 @@ class SignalAction:
             Signal_Action_i(ID=self.action_id, Activity=self.activity_data.anum, Domain=self.activity_data.domain,
                             Event_spec=self.statement_parse.event, State_model=dest_sm)
         ])
-
+        Relvar.insert(db=mmdb, tr=tr_Signal, relvar='Instance Action', tuples=[
+            Instance_Action_i(ID=self.action_id, Activity=self.activity_data.anum, Domain=self.activity_data.domain)
+        ])
 
         if self.statement_parse.supplied_params:
             # TODO: Populate Supplied Parameter Value instances for each

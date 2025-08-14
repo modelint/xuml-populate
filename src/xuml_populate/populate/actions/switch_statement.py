@@ -10,7 +10,8 @@ from xuml_populate.populate.actions.action import Action
 from xuml_populate.populate.flow import Flow
 from scrall.parse.visitor import Switch_a
 from xuml_populate.populate.mmclass_nt import (Switch_Action_i, Scalar_Switch_Action_i, Case_i, Match_Value_i,
-                                               Sequence_Flow_i, Subclass_Switch_Action_i, Gate_Action_i, Gate_Input_i)
+                                               Sequence_Flow_i, Subclass_Switch_Action_i, Gate_Action_i, Gate_Input_i,
+                                               Instance_Action_i)
 from pyral.relvar import Relvar
 from pyral.relation import Relation  # Keep here for debugging
 from pyral.transaction import Transaction
@@ -86,6 +87,9 @@ class SwitchStatement:
         Transaction.open(db=mmdb, name=tr_Switch)
         action_id = Action.populate(tr=tr_Switch, anum=anum, domain=domain, action_type="scalar switch")  # Transaction open
         # TODO: It appears that the Subclass Switch Action has is not yet populated/implemented
+        Relvar.insert(db=mmdb, tr=tr_Switch, relvar='Instance Action', tuples=[
+            Instance_Action_i(ID=action_id, Activity=anum, Domain=domain)
+        ])
         Relvar.insert(db=mmdb, tr=tr_Switch, relvar='Switch_Action', tuples=[
             Switch_Action_i(ID=action_id, Activity=anum, Domain=domain)
         ])
@@ -133,9 +137,13 @@ class SwitchStatement:
         for mcl in multi_case_labels:
             output_flows[mcl] = Flow.populate_switch_output(label=mcl, ref_flow=mcl_flows[mcl][0],
                                                             anum=anum, domain=domain)
+            Relvar.insert(db=mmdb, tr=tr_Switch, relvar='Instance Action', tuples=[
+                Instance_Action_i(ID=gate_aid, Activity=anum, Domain=domain)
+            ])
             Relvar.insert(db=mmdb, tr=tr_Switch, relvar='Gate Action', tuples=[
                 Gate_Action_i(ID=gate_aid, Output_flow=output_flows[mcl].fid, Activity=anum, Domain=domain)
-        ])
+            ])
+
         for label, flows in mcl_flows.items():
             for f in flows:
                 Relvar.insert(db=mmdb, tr=tr_Switch, relvar='Gate Input', tuples=[

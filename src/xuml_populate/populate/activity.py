@@ -59,6 +59,7 @@ class UsageAttrs(NamedTuple):
 # out_attr - The name of a required output attr, again a Flow ID type
 
 flow_attrs = [
+    UsageAttrs(cname='Pass Action', id_attr='ID', in_attr='Input_flow', out_attr='Output_flow'),
     UsageAttrs(cname='Delete Action', id_attr='ID', in_attr='Flow', out_attr=None),
     UsageAttrs(cname='Method Call', id_attr='ID', in_attr='Instance_flow', out_attr=None),
     UsageAttrs(cname='Method Call Parameter', id_attr='Method_call', in_attr='Flow', out_attr=None),

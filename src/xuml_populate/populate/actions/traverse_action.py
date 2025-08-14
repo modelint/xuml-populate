@@ -30,7 +30,7 @@ from xuml_populate.populate.mmclass_nt import (Action_i, Traverse_Action_i, Path
                                                From_Asymmetric_Association_Class_Hop_i,
                                                From_Symmetric_Association_Class_Hop_i, To_Association_Class_Hop_i,
                                                Perspective_Hop_i, Generalization_Hop_i, To_Subclass_Hop_i,
-                                               To_Superclass_Hop_i, Association_Hop_i)
+                                               To_Superclass_Hop_i, Association_Hop_i, Instance_Action_i)
 from xuml_populate.populate.actions.hop_types import (AggregationType, Hop, SymmetricHop, AsymmetricCircularHop,
                                                       OrdinalHop, FromAsymAssocHop)
 
@@ -174,7 +174,10 @@ class TraverseAction:
         _logger.info(f"INSERT Traverse action output Flow: ["
                      f"{self.domain}:{self.dest_class}:{self.activity_path.split(':')[-1]}"
                      f":{self.dest_fid}]")
-        Relvar.insert(db=mmdb, tr=tr_Traverse, relvar='Traverse_Action', tuples=[
+        Relvar.insert(db=mmdb, tr=tr_Traverse, relvar='Instance Action', tuples=[
+            Instance_Action_i(ID=self.action_id, Activity=self.anum, Domain=self.domain)
+        ])
+        Relvar.insert(db=mmdb, tr=tr_Traverse, relvar='Traverse Action', tuples=[
             Traverse_Action_i(ID=self.action_id, Activity=self.anum, Domain=self.domain, Path=self.name,
                               Source_flow=self.input_instance_flow.fid, Destination_flow=self.dest_fid)
         ])

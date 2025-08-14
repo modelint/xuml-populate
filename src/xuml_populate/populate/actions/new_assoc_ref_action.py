@@ -23,7 +23,7 @@ from xuml_populate.populate.flow import Flow
 from xuml_populate.exceptions.action_exceptions import *
 from xuml_populate.populate.mmclass_nt import (New_Associative_Reference_Action_i, Reference_Action_i,
                                                New_Reference_Action_i, T_Ref_Instance_i, P_Ref_Instance_i,
-                                               Referenced_Instance_i)
+                                               Referenced_Instance_i, Instance_Action_i)
 _logger = logging.getLogger(__name__)
 
 class NewAssociativeReferenceAction:
@@ -110,6 +110,9 @@ class NewAssociativeReferenceAction:
             table_header=name_type_pairs, anum=self.anum, domain=self.domain, max_mult=MaxMult.ONE,
             label=tflow_label)
 
+        Relvar.insert(db=mmdb, tr=self.tr, relvar="Instance Action", tuples=[
+            Instance_Action_i(ID=self.action_id, Activity=self.anum, Domain=self.domain)
+        ])
         Relvar.insert(db=mmdb, tr=self.tr, relvar="Reference Action", tuples=[
             Reference_Action_i(ID=self.action_id, Activity=self.anum, Domain=self.domain,
                                Association=self.parse.rnum.rnum, Ref_attr_values=tf.fid)

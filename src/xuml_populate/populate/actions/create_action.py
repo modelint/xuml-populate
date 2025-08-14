@@ -20,10 +20,10 @@ from xuml_populate.populate.actions.aparse_types import ActivityAP, Boundary_Act
 from xuml_populate.populate.actions.action import Action
 from xuml_populate.populate.flow import Flow
 from xuml_populate.exceptions.action_exceptions import *
-from xuml_populate.populate.mmclass_nt import (
-    Create_Action_i, Instance_Initialization_i, Attribute_Initialization_i, Explicit_Initialization_i,
-    Reference_Initialization_i, Default_Initialization_i, Local_Create_Action_i, Reference_Value_Input_i
-)
+from xuml_populate.populate.mmclass_nt import (Create_Action_i, Instance_Initialization_i, Attribute_Initialization_i,
+                                               Explicit_Initialization_i, Reference_Initialization_i,
+                                               Default_Initialization_i, Local_Create_Action_i,
+                                               Reference_Value_Input_i, Instance_Action_i)
 
 _logger = logging.getLogger(__name__)
 
@@ -74,6 +74,9 @@ class CreateAction:
         self.action_id = Action.populate(tr=tr_Create, anum=self.activity_data.anum, domain=self.activity_data.domain,
                                          action_type="create")  # Transaction open
         Relvar.insert(db=mmdb, tr=tr_Create, relvar='Create Action', tuples=[
+            Create_Action_i(ID=self.action_id, Activity=self.activity_data.anum, Domain=self.activity_data.domain)
+        ])
+        Relvar.insert(db=mmdb, tr=tr_Create, relvar='Instance Action', tuples=[
             Create_Action_i(ID=self.action_id, Activity=self.activity_data.anum, Domain=self.activity_data.domain)
         ])
         output_flow = Flow.populate_instance_flow(cname=self.target_class, anum=self.anum, domain=self.domain,
