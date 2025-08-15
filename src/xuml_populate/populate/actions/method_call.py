@@ -3,6 +3,7 @@ method_call.py – Process a call action
 """
 # System
 import logging
+from typing import Optional
 
 # Model Integration
 from scrall.parse.visitor import Call_a, Op_a

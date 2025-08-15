@@ -5,7 +5,7 @@ import logging
 from typing import List
 
 # Model Integration
-from scrall.parse.visitor import Output_Flow_a
+from scrall.parse.visitor import Output_Flow_a, Seq_Statement_Set_a, Comp_Statement_Set_a
 from pyral.relvar import Relvar
 
 # Xuml Populate
@@ -27,6 +27,19 @@ class ExecutionUnit:
     """
     Process an Execution Unit
     """
+
+    @classmethod
+    def process(cls, activity_data: ActivityAP, statement_set: Seq_Statement_Set_a | Comp_Statement_Set_a
+                ) -> Boundary_Actions:
+        """
+
+        Args:
+            activity_data:
+            statement_set:
+
+        Returns:
+
+        """
 
     @classmethod
     def process_synch_output(cls, activity_data: ActivityAP, synch_output: Output_Flow_a):
@@ -69,7 +82,8 @@ class ExecutionUnit:
                      f"{activity_data.activity_path}:^{output_flow.fid}]")
 
     @classmethod
-    def process_statement_set(cls, activity_data: ActivityAP, statement_set) -> Boundary_Actions:
+    def process_statement_set(cls, activity_data: ActivityAP,
+                              statement_set: Seq_Statement_Set_a | Comp_Statement_Set_a) -> Boundary_Actions:
         """
         Initiates the population of all elements derived from a set of statements in an Activity.
 
@@ -98,7 +112,11 @@ class ExecutionUnit:
 
             pass
         elif block:
-            pass  # TODO: Implement this when we have an example
+            ba_list = list()
+            for s in block:
+                b = ExecutionUnit.process_statement_set(statement_set=s.statement_set, activity_data=activity_data)
+                ba_list.append(b)
+            pass
         else:
             # Parsing error, neither were specified
             raise Exception

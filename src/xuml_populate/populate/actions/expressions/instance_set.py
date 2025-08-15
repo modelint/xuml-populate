@@ -2,6 +2,7 @@
 
 # System
 import logging
+from typing import Optional
 
 # Model Integration
 from pyral.relvar import Relvar
@@ -40,7 +41,7 @@ class InstanceSet:
         iset_components: The components in the instance set
         activity_data: General information about the enclosing anum, anum, domain, etc
     """
-    def __init__(self, input_instance_flow: Flow_ap | None, iset_components, activity_data: ActivityAP):
+    def __init__(self, iset_components, activity_data: ActivityAP, input_instance_flow: Optional[Flow_ap] = None):
         self.component_flow = input_instance_flow
         self.activity_data = activity_data
         self.iset_components = iset_components
@@ -54,6 +55,9 @@ class InstanceSet:
             # This means that a path such as /R1/R2/Flot won't work because we have no starting point
             # A single assigner would need to specify something like: p/R1/R2/Flot instead, me/self is not available
             # TODO: Handle case where a single assigner processes an instance set
+
+            # This could also be none if there is an upstream action and the flow is in the mmdb, but
+            # hasn't yet been looked up for this staement.  Labeled flow input to a decision action, for example
             pass
 
     def process(self) -> tuple[str, str, Flow_ap]:

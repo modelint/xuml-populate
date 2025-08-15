@@ -86,6 +86,9 @@ class Statement:
                 delete_s = DeleteStatement(activity_data=activity_data, statement_parse=statement_parse)
                 boundary_actions = delete_s.process()
                 pass
+            case 'Output_Flow_a':
+                # There's no action required for this case with this case
+                boundary_actions = Boundary_Actions(ain=set(), aout=set())
             case _:
                 boundary_actions = None
                 # print()

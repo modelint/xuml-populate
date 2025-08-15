@@ -8,9 +8,9 @@ import logging
 # Model Integration
 from scrall.parse.visitor import Decision_a, Signal_a
 from pyral.relvar import Relvar
+from pyral.relvar import Relation
 from pyral.transaction import Transaction
 
-from xuml_populate.exceptions.action_exceptions import ActionException
 # xUML populate
 from xuml_populate.utility import print_mmdb
 from xuml_populate.populate.actions.expressions.instance_set import InstanceSet
@@ -19,6 +19,7 @@ from xuml_populate.populate.actions.aparse_types import ActivityAP, Boundary_Act
 from xuml_populate.populate.actions.action import Action
 from xuml_populate.populate.flow import Flow
 from xuml_populate.populate.mmclass_nt import Result_i, Decision_Action_i
+from xuml_populate.exceptions.action_exceptions import *
 
 _logger = logging.getLogger(__name__)
 
@@ -71,6 +72,11 @@ class DecisionAction:
                     # We have an attribute value to extract and test as a scalar value most likely
                     # TODO: Handle decision input projection
                     pass
+            case 'N_a':
+                # We have the name of a flow, verify it exists
+                iset = InstanceSet(iset_components=[decision_input], activity_data=self.activity_data)
+                # It's just a flow, so the returned initial, final actions should be empty
+                _, _, self.decision_input_flow = iset.process()
             case _:
                 pass
 
@@ -85,39 +91,39 @@ class DecisionAction:
         # So we need to re-specify ev1 with a complete Signal statement if we are using this shorthand
         # This is only relevant if the true_result is a Signal statement with no explicit destination
         # --
-        shared_dest = None
-        true_statement = true_result.statement  # We'll need to change this if the shorthand was used
+        # TODO: Rethink shared dest so that xunits are handled properly
+        # shared_dest = None
+        # true_statement = true_result.statement  # We'll need to change this if the shorthand was used
         if type(true_result.statement).__name__ == 'Signal_a' and not true_result.statement.dest:
-            # The false_result must be a Signal supplying the shared destination
-            # Verify that a shared destination si provided by the false result
-            if type(false_result.statement).__name__ != 'Signal_a':
-                msg = f"No destination specified for signal in true result"
-                _logger.error(msg)
-                raise ActionException(msg)
-            shared_dest = false_result.statement.dest  # Grab the false result signal's destination
-            # But make sure that the false result signal statement actually supplied a destination
-            if not shared_dest:
-                msg = f"No destination specified for signal in false result"
-                _logger.error(msg)
-                raise ActionException(msg)
-
-        if shared_dest:
-            # We have two signal statements with a shared destination,
-            # so need to create a new Signal_a tuple with the shared_dest value inserted
-            true_statement = Signal_a(event=true_result.statement.event,
-                                      supplied_params=true_result.statement.supplied_params, dest=shared_dest)
+            pass
+        #     # The false_result must be a Signal supplying the shared destination
+        #     # Verify that a shared destination is provided by the false result
+        #     if type(false_result.statement).__name__ != 'Signal_a':
+        #         msg = f"No destination specified for signal in true result"
+        #         _logger.error(msg)
+        #         raise ActionException(msg)
+        #     shared_dest = false_result.statement.dest  # Grab the false result signal's destination
+        #     # But make sure that the false result signal statement actually supplied a destination
+        #     if not shared_dest:
+        #         msg = f"No destination specified for signal in false result"
+        #         _logger.error(msg)
+        #         raise ActionException(msg)
+        #
+        # if shared_dest:
+        #     # We have two signal statements with a shared destination,
+        #     # so need to create a new Signal_a tuple with the shared_dest value inserted
+        #     true_statement = Signal_a(event=true_result.statement.event,
+        #                               supplied_params=true_result.statement.supplied_params, dest=shared_dest)
 
         # We'll use true_statement instead of true_result.statement in case we had to ammend
 
         # Populate the true and false result statements and grab the initial actions of each so we can enable them
-        from xuml_populate.populate.statement import Statement
-        t_boundary_actions = Statement.populate(activity_data=self.activity_data,
-                                                statement_parse=true_statement,  # Possibly ammended statement
-                                                case_name='true')
+        from xuml_populate.populate.xunit import ExecutionUnit
+        t_boundary_actions = ExecutionUnit.process_statement_set(activity_data=self.activity_data,
+                                                                 statement_set=true_result)
         true_init_actions = t_boundary_actions.ain
-        f_boundary_actions = Statement.populate(activity_data=self.activity_data,
-                                                statement_parse=false_result.statement,
-                                                case_name='false')
+        f_boundary_actions = ExecutionUnit.process_statement_set(activity_data=self.activity_data,
+                                                                 statement_set=false_result)
         false_init_actions = f_boundary_actions.ain
         d_final_aids = t_boundary_actions.aout | f_boundary_actions.aout
 
