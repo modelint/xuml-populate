@@ -166,19 +166,20 @@ class Activity:
     def pop_xunits(self):
         for count, xunit in enumerate(self.parse):  # Use count for debugging
             c = count + 1
-            boundary_actions = Boundary_Actions(ain=set(), aout=set())
+            boundary_actions = ExecutionUnit.process_statement_set(
+                activity_data=self.activity_data, content=xunit.statement_set)
 
-            # Process the Scrall execution unit
-            statement_type = type(xunit.statement_set.statement).__name__
-            if statement_type == 'Output_Flow_a':
-                if self.atype == ActivityType.STATE:
-                    pass  # TODO Raise exception
-                # Synch activity can have a synch output which needs additional processing
-                ExecutionUnit.process_synch_output(activity_data=self.activity_data,
-                                                   synch_output=xunit.statement_set.statement)
-            else:
-                boundary_actions = ExecutionUnit.process_statement_set(
-                    activity_data=self.activity_data, statement_set=xunit.statement_set)
+            # # Process the Scrall execution unit
+            # statement_type = type(xunit.statement_set.statement).__name__
+            # if statement_type == 'Output_Flow_a':
+            #     if self.atype == ActivityType.STATE:
+            #         pass  # TODO Raise exception
+            #     # Synch activity can have a synch output which needs additional processing
+            #     ExecutionUnit.process_synch_output(activity_data=self.activity_data,
+            #                                        synch_output=xunit.statement_set.statement)
+            # else:
+            #     boundary_actions = ExecutionUnit.process_statement_set(
+            #         activity_data=self.activity_data, statement_set=xunit.statement_set)
 
             # Process any sequence tokens
             # TODO: Test case where there are no boundary actions

@@ -23,23 +23,30 @@ tr_OutputFlow = "OutputFlow"
 
 _logger = logging.getLogger(__name__)
 
+
 class ExecutionUnit:
     """
-    Process an Execution Unit
+    Process a Scrall execution_unit
+
+    Note: Unlike metamodel classes, Scrall grammar element names are lowercase with underscore delimiters.
+    So we write execution_unit instead of "Execution Unit" since it is merely a Scrall specific construct.
+
+    The Scrall grammar defines an execution_unit as a statement_set followed by any number of sequence tokens.
+
+    A statement_set can be either a sequenced_statement_set or a component_statement_set.
+
+    A sequenced_statement_set is a possibly mixed sequence of statements and blocks, and a block is a sequence
+    of one or more execution_units. So we'll need recursion to process these. This, by the way, is called
+    'sequenced' because they can be enabled by any number of sequence_tokens (handled outside this class).
+
+    A component_statement_set is exactly the same as a sequenced_statement_set except that it is internal to some
+    statement, like a switch or a decision, and thus cannot be preceded by any sequence_tokens.
+
+    And since we don't deal with the sequence_tokens here, we'll handle both sequenced_statement_sets and
+    component_statement_sets identically.
+
+    To sum up, we take either a sequenced or component statement set
     """
-
-    @classmethod
-    def process(cls, activity_data: ActivityAP, statement_set: Seq_Statement_Set_a | Comp_Statement_Set_a
-                ) -> Boundary_Actions:
-        """
-
-        Args:
-            activity_data:
-            statement_set:
-
-        Returns:
-
-        """
 
     @classmethod
     def process_synch_output(cls, activity_data: ActivityAP, synch_output: Output_Flow_a):
@@ -50,18 +57,18 @@ class ExecutionUnit:
         :return:
         """
         cls.activity_data = activity_data
-        xi_instance_flow = Flow_ap(fid=activity_data.xiflow, content=Content.INSTANCE, tname=activity_data.cname,
-                                   max_mult=MaxMult.ONE)
         match type(synch_output.output).__name__:
             case 'INST_a':
-                iset = InstanceSet(input_instance_flow=xi_instance_flow,
-                                   iset_components=synch_output.output.components,
+                iset = InstanceSet(iset_components=synch_output.output.components,
                                    activity_data=activity_data)
                 _, _, output_flow = iset.process()
                 pass
             case 'INST_PROJ_a':
-                iset = InstanceSet(input_instance_flow=xi_instance_flow,
-                                   iset_components=synch_output.output.iset.components,
+                iset = InstanceSet(iset_components=synch_output.output.iset.components,
+                                   activity_data=activity_data)
+                _, _, output_flow = iset.process()
+            case 'N_a':
+                iset = InstanceSet(iset_components=[synch_output.output],
                                    activity_data=activity_data)
                 _, _, output_flow = iset.process()
             case _:
@@ -81,9 +88,10 @@ class ExecutionUnit:
         _logger.info(f"INSERT Synchronous operation output flow): ["
                      f"{activity_data.activity_path}:^{output_flow.fid}]")
 
+
     @classmethod
-    def process_statement_set(cls, activity_data: ActivityAP,
-                              statement_set: Seq_Statement_Set_a | Comp_Statement_Set_a) -> Boundary_Actions:
+    def process_statement_set(cls, content: Seq_Statement_Set_a | Comp_Statement_Set_a | Output_Flow_a,
+                              activity_data: ActivityAP) -> Boundary_Actions:
         """
         Initiates the population of all elements derived from a set of statements in an Activity.
 
@@ -94,12 +102,22 @@ class ExecutionUnit:
         The second list is each action that does not provide any data input
         to any other action in the execution unit. These are terminal actions.
 
-        :param activity_data:  Info about the activity and its unparsed text. Useful for providing helpful error msgs
-        :param statement_set:  The statement set we are populating
-        :return: Tuple with a list of initial and terminal actions
+        Args:
+            content: execution_unit content is a set of one or more statements or blocks or an output_flow
+            activity_data: Info about the activity and its unparsed text. Useful for providing helpful error msgs
+
+        Returns:
+            Tuple with a list of initial and terminal actions
         """
-        single_statement = statement_set.statement
-        block = statement_set.block
+        # Let's first check to see if we have an output_flow
+        if type(content.statement).__name__ == 'Output_Flow_a':
+            ExecutionUnit.process_synch_output(synch_output=content.statement, activity_data=activity_data)
+            return Boundary_Actions(ain=set(), aout=set())
+
+        # Its a statement_set
+
+        single_statement = content.statement
+        block = content.block
         boundary_actions = None
 
         # Mutually exclusive options
@@ -110,13 +128,12 @@ class ExecutionUnit:
         if single_statement:
             boundary_actions = Statement.populate(activity_data=activity_data, statement_parse=single_statement)
 
-            pass
         elif block:
             ba_list = list()
             for s in block:
-                b = ExecutionUnit.process_statement_set(statement_set=s.statement_set, activity_data=activity_data)
+                b = ExecutionUnit.process_statement_set(content=s.statement_set, activity_data=activity_data)
                 ba_list.append(b)
-            pass
+            pass  # TODO: Look at the b list and figure out what to return based on example
         else:
             # Parsing error, neither were specified
             raise Exception
@@ -124,3 +141,4 @@ class ExecutionUnit:
         # aid = Statement.populate()
         pass
         return boundary_actions
+

@@ -89,13 +89,21 @@ class MethodCall:
         # Populate each Parameter specified in the Method's signature with an incoming Data Flow
         sp_pnames: set[str] = set()
         for sp in self.op_parse.supplied_params:
+
+            # Set the supplied parameter name
             pname = sp.pname
             sp_pnames.add(pname)
+
+            # Resolve the supplied value to a flow or constant value
             sval = None
-            if type(sp.sval).__name__ == 'N_a':
-                sval = sp.sval.name
-            else:
-                pass  # TODO: resolve scalar expression
+            sval_type = type(sp.val).__name__
+            match sval_type:
+                case 'N_a':
+                    sval = sp.sval.name
+                case 'INST_PROJ_a':
+                    pass  # TODO: resolve scalar expression
+                case '_':
+                    pass
 
             sval_flow = None
             # Populate parameter data flows

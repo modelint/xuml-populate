@@ -120,10 +120,10 @@ class DecisionAction:
         # Populate the true and false result statements and grab the initial actions of each so we can enable them
         from xuml_populate.populate.xunit import ExecutionUnit
         t_boundary_actions = ExecutionUnit.process_statement_set(activity_data=self.activity_data,
-                                                                 statement_set=true_result)
+                                                                 content=true_result)
         true_init_actions = t_boundary_actions.ain
         f_boundary_actions = ExecutionUnit.process_statement_set(activity_data=self.activity_data,
-                                                                 statement_set=false_result)
+                                                                 content=false_result)
         false_init_actions = f_boundary_actions.ain
         d_final_aids = t_boundary_actions.aout | f_boundary_actions.aout
 
