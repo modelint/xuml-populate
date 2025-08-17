@@ -489,6 +489,10 @@ class Activity:
         """
         For each activity, determine the flow dependencies among its actions and populate the Flow Dependency class
         """
+        # TODO: Optimize redundant read actions ... (moved here from Read Action)
+        # TODO: Avoid populating duplicate for reading the same attr set by maintaining dict of action/flows
+        # TODO: for the current activity. If duplicate found, return its action id and output flows instead.
+        # TODO: Ensure that the existing read action that has no incoming control flows
         print_mmdb()  # Diagnostic
 
         # Initialize dict with key for each flow, status to be determined

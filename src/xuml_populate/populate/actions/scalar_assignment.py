@@ -74,7 +74,7 @@ class ScalarAssignment:
         elif isinstance(self.activity_data, MethodActivityAP):
             self.input_instance_flow = self.activity_data.xiflow
 
-        se = ScalarExpr(rhs=rhs, input_instance_flow=self.input_instance_flow, activity_data=self.activity_data)
+        se = ScalarExpr(expr=rhs.expr, input_instance_flow=self.input_instance_flow, activity_data=self.activity_data)
         bactions, scalar_flows = se.process()
 
         # Where any actions populated for the RHS?

@@ -102,7 +102,8 @@ class MethodCall:
                 case 'N_a':
                     sval = sp.sval.name
                 case 'INST_PROJ_a':
-                    # se = ScalarExpr(rhs=)
+                    se = ScalarExpr(expr=sp.sval, input_instance_flow=self.caller_flow, activity_data=self.activity_data)
+                    bactions, scalar_flows = se.process()
 
                     pass  # TODO: resolve scalar expression
                 case '_':
@@ -113,8 +114,9 @@ class MethodCall:
             R = f"Name:<{sval}>, Class:<{self.caller_flow.tname}>, Domain:<{self.domain}>"
             attr_r = Relation.restrict(db=mmdb, relation="Attribute", restriction=R)
             if attr_r:
-                aid, sflows = ReadAction.populate(input_single_instance_flow=self.caller_flow,
-                                                  attrs=(sval,), anum=self.anum, domain=self.domain)
+                ra = ReadAction(input_single_instance_flow=self.caller_flow,
+                                attrs=(sval,), anum=self.anum, domain=self.domain)
+                aid, sflows = ra.populate()
                 sval_flow = sflows[0].fid
             else:
                 R = f"Parameter:<{sval}>, Activity:<{self.anum}>, Signature:<{self.activity_data.signum}>, Domain:<{self.domain}>"

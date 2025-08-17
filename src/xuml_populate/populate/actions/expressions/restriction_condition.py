@@ -195,7 +195,8 @@ class RestrictCondition:
                                     raise ActionException
                                 if ns_flow.content == Content.INSTANCE:
                                     # TODO: Fill out the read action case
-                                    ReadAction.populate()
+                                    # ReadAction.populate()
+                                    pass
                                 elif ns_flow.content == Content.RELATION:
                                     if len(o.projection.attrs) != 1:
                                         # For attribute comparison, there can only be one extracted attribute
@@ -242,9 +243,9 @@ class RestrictCondition:
         :param attr: Name of some compared Attribute that matches an Attribute of the executing instance
         """
         read_iflow = self.activity_data.xiflow
-        _, read_flows = ReadAction.populate(input_single_instance_flow=read_iflow,
-                                            attrs=(attr,),
-                                            anum=self.anum, domain=self.domain)
+        ra = ReadAction(input_single_instance_flow=read_iflow, attrs=(attr,),
+                        anum=self.anum, domain=self.domain)
+        _, read_flows = ra.populate()
         assert len(read_flows) == 1
         # Since we are reading a single attribute, assume only one output flow
         return self.pop_comparison_criterion(attr=attr, op='==', scalar_flow=read_flows[0])
