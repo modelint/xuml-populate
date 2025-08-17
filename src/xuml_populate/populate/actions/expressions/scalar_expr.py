@@ -2,7 +2,6 @@
 
 # System
 import logging
-from typing import List
 
 # Model Integration
 from scrall.parse.visitor import Scalar_RHS_a, MATH_a, BOOL_a, INST_a, N_a, Projection_a, Op_chain_a, INST_PROJ_a
@@ -54,7 +53,7 @@ class ScalarExpr:
         self.component_flow = None
         self.output_tflow_id = None
 
-    def process(self) -> (Boundary_Actions, List[Flow_ap]):
+    def process(self) -> tuple[Boundary_Actions, list[Flow_ap]]:
         """
         Walks through a scalar expression on the right hand side of a scalar assignment to
         obtain a tuple flow with one or more attributes. Each attribute value will be assigned.
@@ -74,10 +73,10 @@ class ScalarExpr:
 
         return Boundary_Actions(ain=init_aids, aout=final_aids), rhs_sflows
 
-    def resolve_iset(self, iset: INST_a, op_chain: Op_chain_a = None, projection: Projection_a = None) -> List[Flow_ap]:
+    def resolve_iset(self, iset: INST_a, op_chain: Op_chain_a = None, projection: Projection_a = None) -> list[Flow_ap]:
         pass
 
-    def walk(self, sexpr: str | INST_PROJ_a | MATH_a | BOOL_a | N_a, input_flow: Flow_ap) -> [Flow_ap]:
+    def walk(self, sexpr: str | INST_PROJ_a | MATH_a | BOOL_a | N_a, input_flow: Flow_ap) -> list[Flow_ap]:
         """
 
         :param sexpr:  Parsed scalar expression

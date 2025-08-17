@@ -17,7 +17,7 @@ from xuml_populate.populate.actions.expressions.class_accessor import ClassAcces
 from xuml_populate.populate.flow import Flow
 from xuml_populate.populate.actions.select_action import SelectAction
 from xuml_populate.populate.actions.restrict_action import RestrictAction
-from xuml_populate.populate.actions.method_call import MethodCall
+# from xuml_populate.populate.actions.method_call import MethodCall
 from xuml_populate.populate.actions.rank_restrict_action import RankRestrictAction
 from xuml_populate.populate.actions.aparse_types import (Flow_ap, MaxMult, Content, ActivityAP, SMType,
                                                          StateActivityAP, MethodActivityAP)
@@ -206,6 +206,7 @@ class InstanceSet:
                     # Method and instance target valid
                     inst_flow_t = inst_flow_r.body[0]
                     method_t = method_r.body[0]
+                    from xuml_populate.populate.actions.method_call import MethodCall
                     mcall = MethodCall(method_name=method_name, method_anum=method_t["Anum"], caller_flow=
                                        Flow_ap( fid=inst_flow_t["ID"], content=Content.INSTANCE,
                                                 tname=inst_class_name, max_mult=MaxMult.ONE),

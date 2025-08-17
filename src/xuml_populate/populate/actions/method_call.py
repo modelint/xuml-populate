@@ -13,6 +13,7 @@ from pyral.transaction import Transaction
 
 # xUML Populate
 from xuml_populate.utility import print_mmdb
+from xuml_populate.populate.actions.expressions.scalar_expr import ScalarExpr
 from xuml_populate.config import mmdb
 from xuml_populate.populate.flow import Flow
 from xuml_populate.populate.actions.action import Action
@@ -96,11 +97,13 @@ class MethodCall:
 
             # Resolve the supplied value to a flow or constant value
             sval = None
-            sval_type = type(sp.val).__name__
+            sval_type = type(sp.sval).__name__
             match sval_type:
                 case 'N_a':
                     sval = sp.sval.name
                 case 'INST_PROJ_a':
+                    # se = ScalarExpr(rhs=)
+
                     pass  # TODO: resolve scalar expression
                 case '_':
                     pass

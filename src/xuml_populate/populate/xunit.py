@@ -15,7 +15,6 @@ from xuml_populate.populate.actions.aparse_types import Flow_ap, Content, MaxMul
 from xuml_populate.populate.statement import Statement
 from xuml_populate.populate.actions.aparse_types import ActivityAP, Boundary_Actions
 from xuml_populate.populate.actions.expressions.instance_set import InstanceSet
-from xuml_populate.populate.actions.expressions.scalar_expr import ScalarExpr
 from xuml_populate.populate.mmclass_nt import Synchronous_Output_i
 from xuml_populate.exceptions.action_exceptions import *
 
@@ -78,7 +77,6 @@ class ExecutionUnit:
                 raise UndefinedSynchOutputExecutionUnit(msg)
         # b, f = ScalarExpr.process(mmdb, rhs=synch_output.output, input_instance_flow=xi_instance_flow,
         #                           activity_data=activity_data)
-
 
         # Populate the output flow (no transaction required)
         Relvar.insert(db=mmdb, relvar='Synchronous Output', tuples=[
