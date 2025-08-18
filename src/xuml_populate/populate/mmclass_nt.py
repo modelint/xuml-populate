@@ -55,9 +55,12 @@ Update_Reference_Action_i = namedtuple('Update_Reference_Action_i', 'ID Activity
 # Type subsystem
 Model_Attribute_i = namedtuple('Model_Attribute_i', 'Name Non_scalar_type Domain')
 Scalar_i = namedtuple('Scalar_i', 'Name Domain')
+Selector_i = namedtuple('Selector_i', 'ID Activity Domain Value')
 Table_i = namedtuple('Table_i', 'Name Domain')
 Table_Attribute_i = namedtuple('Table_Attribute_i', 'Name Table Domain Scalar')
 Type_i = namedtuple('Type_i', 'Name Domain')
+Type_Action_i = namedtuple('Type_Action_i', 'ID Activity Domain Scalar Output_flow')
+Type_Operation_i = namedtuple('Type_Operation_i', 'ID Activity Domain Name Input_flow')
 
 # Navigation subsystem
 Association_Hop_i = namedtuple('Association_Hop_i', 'Number Path Domain')

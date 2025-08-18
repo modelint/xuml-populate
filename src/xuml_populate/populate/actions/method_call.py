@@ -113,27 +113,29 @@ class MethodCall:
             # Populate parameter data flows
             R = f"Name:<{sval}>, Class:<{self.caller_flow.tname}>, Domain:<{self.domain}>"
             attr_r = Relation.restrict(db=mmdb, relation="Attribute", restriction=R)
-            if attr_r:
+            if attr_r.body:
                 ra = ReadAction(input_single_instance_flow=self.caller_flow,
                                 attrs=(sval,), anum=self.anum, domain=self.domain)
                 aid, sflows = ra.populate()
-                sval_flow = sflows[0].fid
+                sval_flow = sflows[0]
             else:
-                R = f"Parameter:<{sval}>, Activity:<{self.anum}>, Signature:<{self.activity_data.signum}>, Domain:<{self.domain}>"
-                activity_input_r = Relation.restrict(db=mmdb, relation='Activity Input', restriction=R)
-                sval_flow = activity_input_r.body[0]["Flow"]
-            pass
+                # Look up a matching scalar flow
+                sval_flow = Flow.find_labeled_scalar_flow(name=sval, anum=self.anum, domain=self.domain)
+                # R = f"Parameter:<{sval}>, Activity:<{self.anum}>, Signature:<{self.activity_data.signum}>, Domain:<{self.domain}>"
+                # activity_input_r = Relation.restrict(db=mmdb, relation='Activity Input', restriction=R)
+                # sval_flow = activity_input_r.body[0]["Flow"]
 
             # Validate type match
-            sval_flow_type = Flow.flow_type(fid=sval_flow, anum=self.anum, domain=self.domain)
-            if sval_flow_type != sig_params[pname]:
-                msg = f"Supplied parameter flow type for {pname} does not match signature Parameter type {sig_params[pname]}"
+            # sval_flow_type = Flow.flow_type(fid=sval_flow.fid, anum=self.anum, domain=self.domain)
+            if sval_flow.tname != sig_params[pname]:
+                msg = (f"Supplied parameter flow type for {pname} does not match signature Parameter type "
+                       f"{sig_params[pname]}")
                 _logger.error(msg)
                 raise ActionException  # TODO : Type define mismatch exception
 
             Relvar.insert(db=mmdb, tr=tr_Call, relvar='Method Call Parameter', tuples=[
                 Method_Call_Parameter_i(Method_call=self.action_id, Activity=self.anum, Parameter=pname,
-                                        Signature=target_method_signum, Domain=self.domain, Flow=sval_flow)
+                                        Signature=target_method_signum, Domain=self.domain, Flow=sval_flow.fid)
             ])
 
         # Validate match between set of supplied params and the Method Signature Parameters

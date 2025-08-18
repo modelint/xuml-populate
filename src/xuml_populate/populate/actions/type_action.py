@@ -1,0 +1,99 @@
+"""
+type_action.py – Process a Type Action
+"""
+# System
+import logging
+from typing import Optional
+
+# Model Integration
+from pyral.relvar import Relvar
+from pyral.relation import Relation
+from pyral.transaction import Transaction
+
+# xUML Populate
+from xuml_populate.utility import print_mmdb
+from xuml_populate.populate.actions.expressions.scalar_expr import ScalarExpr
+from xuml_populate.config import mmdb
+from xuml_populate.populate.flow import Flow
+from xuml_populate.populate.actions.action import Action
+from xuml_populate.populate.actions.read_action import ReadAction
+from xuml_populate.exceptions.action_exceptions import *
+from xuml_populate.populate.actions.aparse_types import ActivityAP, Boundary_Actions, Flow_ap
+from xuml_populate.populate.mmclass_nt import Type_Action_i, Type_Operation_i, Selector_i
+
+_logger = logging.getLogger(__name__)
+
+tr_Type = "Type Action"
+
+class TypeAction:
+    """
+    Populate a Type Action
+    """
+
+    def __init__(self, op_name: str, anum: str, domain: str, input_flow: Optional[Flow_ap] = None):
+        """
+        Initialize and populate
+
+        Args:
+            op_name:  The name of a type operation or a selected value
+            anum:  The method's activity number
+            domain: The name of the domain
+            input_flow:  A Scalar Flow providing input to the Type Operation Action, none if this is selector op
+        """
+        self.name = op_name
+        self.anum = anum
+        self.domain = domain
+        self.input_flow = input_flow  # If none, this is a selector operation
+
+        self.action_id = None
+        self.sflow_out = None
+
+    def populate(self) -> tuple[str, str, Flow_ap]:
+        """
+
+        Returns:
+            Initial action, final action, output scalar flow
+        """
+        # Open transaction to populate the Type Operation Action
+        Transaction.open(db=mmdb, name=tr_Type)
+
+        # Populate the action superclass and obtain our action id
+        action_id = Action.populate(tr=tr_Type, anum=self.anum, domain=self.domain, action_type="type action")
+
+        # Construct a label for the output scalar flow we need to populate for either a type or selector operation
+        if self.input_flow:
+            # If it is labeled, we can copy that label into the suffix
+            R = f"ID:<{self.input_flow.fid}>, Activity:<{self.anum}>, Domain:<{self.domain}>"
+            labeled_flow_r = Relation.restrict(db=mmdb, relation="Labeled Flow", restriction=R)
+            suffix = self.action_id[:4]  # Just take the number at the end
+            if labeled_flow_r.body:
+                # Op name and input label if it is labeled, otherwise, use action number
+                suffix = labeled_flow_r.body[0]["Name"]
+            output_label_name = f"_{self.name}_{suffix}"
+        else:
+            # The scalar name and the selected value
+            output_label_name = f"_{self.input_flow.tname}_{self.name}"
+
+        # Populate the output scalar flow using the output label we just constructed
+        self.sflow_out = Flow.populate_scalar_flow(scalar_type=self.name, anum=self.anum, domain=self.domain,
+                                                   activity_tr=tr_Type, label=output_label_name)
+
+        # Insert the Type Operation Instance providing the input flow scalar, since that's what we're operating on
+        Relvar.insert(db=mmdb, tr=tr_Type, relvar='Type Action', tuples=[
+            Type_Action_i(ID=action_id, Activity=self.anum, Domain=self.domain, Scalar=self.input_flow.tname,
+                          Output_flow=self.sflow_out.fid)
+        ])
+
+        if self.input_flow:
+            Relvar.insert(db=mmdb, tr=tr_Type, relvar='Type Operation', tuples=[
+                Type_Operation_i(ID=self.action_id, Activity=self.anum, Domain=self.domain,
+                                 Name=self.name, Input_flow=self.input_flow.fid)
+            ])
+        else:
+            Relvar.insert(db=mmdb, tr=tr_Type, relvar='Selector', tuples=[
+                Selector_i(ID=self.action_id, Activity=self.anum, Domain=self.domain, Value=self.name)
+            ])
+
+        Transaction.execute(db=mmdb, name=tr_Type)
+        return action_id, action_id, self.sflow_out
+

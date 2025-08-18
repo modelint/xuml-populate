@@ -55,13 +55,12 @@ class ScalarExpr:
 
     def process(self) -> tuple[Boundary_Actions, list[Flow_ap]]:
         """
-        Walks through a scalar expression on the right hand side of a scalar assignment to
-        obtain a tuple flow with one or more attributes. Each attribute value will be assigned.
-        The order in which attributes are specified in the action language is returned along with
+        Walks through a scalar expression to obtain a tuple flow with one or more attributes. Each attribute value
+        will be assigned. The order in which attributes are specified in the action language is returned along with
         the tuple flow.
 
         Returns:
-            The output tuple flow and the attribute names as ordered in the RHS text expression
+            The output tuple flow and the attribute names as ordered in the scalar expression
         """
         # Obtain one or more scalar flows from the right hand side that will flow values into the left hand side
         expr_sflows = self.walk(sexpr=self.expr, input_flow=self.input_instance_flow)
@@ -99,18 +98,26 @@ class ScalarExpr:
                         # in the order of conflict resolution precedence.
                         # 1. Check for an attribute name on the component flow class
                         # 2. Check for a scalar flow with this name
-                        # Just in case there's a nother possibility, leave a placeholder for anything else
+                        # Just in case there's another possibility, leave a placeholder for anything else
 
                         # Attribute check
                         R = f"Name:<{sexpr.iset.name}>, Class:<{self.component_flow.tname}>, Domain:<{self.domain}>"
                         attribute_r = Relation.restrict(db=mmdb, relation="Attribute", restriction=R)
-                        if attribute_r:
+                        if attribute_r.body:
                             # Create a read action to obtain the value
                             ra = ReadAction(input_single_instance_flow=self.component_flow, attrs=(sexpr.iset.name,),
                                             anum=self.anum, domain=self.domain)
                             aid, sflows = ra.populate()
-                            pass
-                        pass
+                        else:
+                            # We have a scalar flow
+                            pflow = Flow.find_labeled_flow(name=sexpr.iset.name, anum=self.anum, domain=self.domain)
+                            if sexpr.projection:
+                                for a in sexpr.projection.attrs:
+                                    # TODO: Populate Type Operation Actions
+                                    # This has to be a type operation
+                                    pass
+                                # If the parameter flow
+                                pass
 
                     case 'INST_a':
                         iset = InstanceSet(input_instance_flow=action_input, iset_components=sexpr.iset.components,
