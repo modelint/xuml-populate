@@ -96,47 +96,50 @@ class MethodCall:
             sp_pnames.add(pname)
 
             # Resolve the supplied value to a flow or constant value
-            sval = None
+            sval_name = None
             sval_type = type(sp.sval).__name__
+            sval_flow = None
             match sval_type:
                 case 'N_a':
-                    sval = sp.sval.name
+                    sval_name = sp.sval.name
                 case 'INST_PROJ_a':
                     se = ScalarExpr(expr=sp.sval, input_instance_flow=self.caller_flow, activity_data=self.activity_data)
                     bactions, scalar_flows = se.process()
-
-                    pass  # TODO: resolve scalar expression
+                    if len(scalar_flows) != 1:
+                        msg = f"Type operation output is not a single scalar flow, instead got {scalar_flows}"
+                        _logger.error(msg)
+                        raise ActionException(msg)
+                    sval_flow = scalar_flows[0]
                 case '_':
                     pass
 
-            sval_flow = None
             # Populate parameter data flows
-            R = f"Name:<{sval}>, Class:<{self.caller_flow.tname}>, Domain:<{self.domain}>"
-            attr_r = Relation.restrict(db=mmdb, relation="Attribute", restriction=R)
-            if attr_r.body:
-                ra = ReadAction(input_single_instance_flow=self.caller_flow,
-                                attrs=(sval,), anum=self.anum, domain=self.domain)
-                aid, sflows = ra.populate()
-                sval_flow = sflows[0]
-            else:
-                # Look up a matching scalar flow
-                sval_flow = Flow.find_labeled_scalar_flow(name=sval, anum=self.anum, domain=self.domain)
-                # R = f"Parameter:<{sval}>, Activity:<{self.anum}>, Signature:<{self.activity_data.signum}>, Domain:<{self.domain}>"
-                # activity_input_r = Relation.restrict(db=mmdb, relation='Activity Input', restriction=R)
-                # sval_flow = activity_input_r.body[0]["Flow"]
+            if sval_name is not None:
+                # We have either a flow label or an attribute name
+                R = f"Name:<{sval_name}>, Class:<{self.caller_flow.tname}>, Domain:<{self.domain}>"
+                attr_r = Relation.restrict(db=mmdb, relation="Attribute", restriction=R)
+                if attr_r.body:
+                    ra = ReadAction(input_single_instance_flow=self.caller_flow,
+                                    attrs=(sval_name,), anum=self.anum, domain=self.domain)
+                    aid, sflows = ra.populate()
+                    sval_flow = sflows[0]
+                else:
+                    sval_flow = Flow.find_labeled_scalar_flow(name=sval_name, anum=self.anum, domain=self.domain)
 
-            # Validate type match
-            # sval_flow_type = Flow.flow_type(fid=sval_flow.fid, anum=self.anum, domain=self.domain)
-            if sval_flow.tname != sig_params[pname]:
-                msg = (f"Supplied parameter flow type for {pname} does not match signature Parameter type "
-                       f"{sig_params[pname]}")
-                _logger.error(msg)
-                raise ActionException  # TODO : Type define mismatch exception
+            elif sval_flow is not None:
+                # We have already created a scalar flow
 
-            Relvar.insert(db=mmdb, tr=tr_Call, relvar='Method Call Parameter', tuples=[
-                Method_Call_Parameter_i(Method_call=self.action_id, Activity=self.anum, Parameter=pname,
-                                        Signature=target_method_signum, Domain=self.domain, Flow=sval_flow.fid)
-            ])
+                # Validate type match
+                if sval_flow.tname != sig_params[pname]:
+                    msg = (f"Supplied parameter flow type for {pname} does not match signature Parameter type "
+                           f"{sig_params[pname]}")
+                    _logger.error(msg)
+                    raise ActionException  # TODO : Type define mismatch exception
+
+                Relvar.insert(db=mmdb, tr=tr_Call, relvar='Method Call Parameter', tuples=[
+                    Method_Call_Parameter_i(Method_call=self.action_id, Activity=self.anum, Parameter=pname,
+                                            Signature=target_method_signum, Domain=self.domain, Flow=sval_flow.fid)
+                ])
 
         # Validate match between set of supplied params and the Method Signature Parameters
         if sp_pnames != set(sig_params.keys()):
@@ -144,7 +147,6 @@ class MethodCall:
                    f"Method {self.caller_flow.tname}.{self.method_name}")
             _logger.error(msg)
             ActionException(msg)
-
 
         # Create an output flow in this activity compatible with the output of the target method, if any
         method_call_output_flow = None

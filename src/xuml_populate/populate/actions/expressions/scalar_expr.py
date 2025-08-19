@@ -15,6 +15,7 @@ from xuml_populate.exceptions.action_exceptions import ScalarOperationOrExpressi
 from xuml_populate.populate.flow import Flow
 from xuml_populate.populate.actions.aparse_types import Flow_ap, MaxMult, Content, ActivityAP, Boundary_Actions
 from xuml_populate.populate.actions.project_action import ProjectAction
+from xuml_populate.populate.actions.type_action import TypeAction
 
 _logger = logging.getLogger(__name__)
 
@@ -62,13 +63,17 @@ class ScalarExpr:
         Returns:
             The output tuple flow and the attribute names as ordered in the scalar expression
         """
-        # Obtain one or more scalar flows from the right hand side that will flow values into the left hand side
+        # Obtain one or more scalar flows from the scalar expression that can flow values into an assigment on the lhs
         expr_sflows = self.walk(sexpr=self.expr, input_flow=self.input_instance_flow)
 
         all_ins = {v for s in self.action_inputs.values() for v in s}
         all_outs = {v for s in self.action_outputs.values() for v in s}
-        init_aids = {a for a in self.action_inputs.keys() if not self.action_inputs[a].intersection(all_outs)}
-        final_aids = {a for a in self.action_outputs.keys() if not self.action_outputs[a].intersection(all_ins)}
+        if all_ins != all_outs:
+            init_aids = {a for a in self.action_inputs.keys() if not self.action_inputs[a].intersection(all_outs)}
+            final_aids = {a for a in self.action_outputs.keys() if not self.action_outputs[a].intersection(all_ins)}
+        else:
+            init_aids = all_ins
+            final_aids = all_outs
 
         return Boundary_Actions(ain=init_aids, aout=final_aids), expr_sflows
 
@@ -110,14 +115,24 @@ class ScalarExpr:
                             aid, sflows = ra.populate()
                         else:
                             # We have a scalar flow
-                            pflow = Flow.find_labeled_flow(name=sexpr.iset.name, anum=self.anum, domain=self.domain)
+                            input_sflow = Flow.find_labeled_scalar_flow(name=sexpr.iset.name, anum=self.anum,
+                                                                        domain=self.domain)
+                            # fid = Flow.find_labeled_flow(name=sexpr.iset.name, anum=self.anum, domain=self.domain)
+
                             if sexpr.projection:
+                                # This has to be a type operation and potentially a chain of multiple
+                                first_action = True
+                                component_flow = input_sflow
                                 for a in sexpr.projection.attrs:
-                                    # TODO: Populate Type Operation Actions
-                                    # This has to be a type operation
-                                    pass
+                                    ta = TypeAction(op_name=a.name, anum=self.anum, domain=self.domain,
+                                                    input_flow=component_flow)
+                                    ain, aout, component_flow = ta.populate()
+                                    if first_action:
+                                        self.action_inputs[ain] = {component_flow.fid}
+                                        first_action = False
+                                self.action_outputs[aout] = {component_flow.fid}
                                 # If the parameter flow
-                                pass
+                                return [component_flow]
 
                     case 'INST_a':
                         iset = InstanceSet(input_instance_flow=action_input, iset_components=sexpr.iset.components,

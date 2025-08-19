@@ -12,11 +12,9 @@ from pyral.transaction import Transaction
 
 # xUML Populate
 from xuml_populate.utility import print_mmdb
-from xuml_populate.populate.actions.expressions.scalar_expr import ScalarExpr
 from xuml_populate.config import mmdb
 from xuml_populate.populate.flow import Flow
 from xuml_populate.populate.actions.action import Action
-from xuml_populate.populate.actions.read_action import ReadAction
 from xuml_populate.exceptions.action_exceptions import *
 from xuml_populate.populate.actions.aparse_types import ActivityAP, Boundary_Actions, Flow_ap
 from xuml_populate.populate.mmclass_nt import Type_Action_i, Type_Operation_i, Selector_i
@@ -58,7 +56,7 @@ class TypeAction:
         Transaction.open(db=mmdb, name=tr_Type)
 
         # Populate the action superclass and obtain our action id
-        action_id = Action.populate(tr=tr_Type, anum=self.anum, domain=self.domain, action_type="type action")
+        self.action_id = Action.populate(tr=tr_Type, anum=self.anum, domain=self.domain, action_type="type action")
 
         # Construct a label for the output scalar flow we need to populate for either a type or selector operation
         if self.input_flow:
@@ -75,12 +73,12 @@ class TypeAction:
             output_label_name = f"_{self.input_flow.tname}_{self.name}"
 
         # Populate the output scalar flow using the output label we just constructed
-        self.sflow_out = Flow.populate_scalar_flow(scalar_type=self.name, anum=self.anum, domain=self.domain,
+        self.sflow_out = Flow.populate_scalar_flow(scalar_type=self.input_flow.tname, anum=self.anum, domain=self.domain,
                                                    activity_tr=tr_Type, label=output_label_name)
 
         # Insert the Type Operation Instance providing the input flow scalar, since that's what we're operating on
         Relvar.insert(db=mmdb, tr=tr_Type, relvar='Type Action', tuples=[
-            Type_Action_i(ID=action_id, Activity=self.anum, Domain=self.domain, Scalar=self.input_flow.tname,
+            Type_Action_i(ID=self.action_id, Activity=self.anum, Domain=self.domain, Scalar=self.input_flow.tname,
                           Output_flow=self.sflow_out.fid)
         ])
 
@@ -95,5 +93,5 @@ class TypeAction:
             ])
 
         Transaction.execute(db=mmdb, name=tr_Type)
-        return action_id, action_id, self.sflow_out
+        return self.action_id, self.action_id, self.sflow_out
 
