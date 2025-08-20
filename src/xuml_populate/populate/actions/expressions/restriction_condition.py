@@ -2,10 +2,18 @@
 restrict_condition.py – Process a select phrase and populate a Restriction Condition
 """
 
+# System
 import logging
+from typing import Optional, Set, Dict, List
+
+# Model Integration
+from pyral.relvar import Relvar
+from pyral.relation import Relation
+from scrall.parse.visitor import N_a, BOOL_a, Op_a, Criteria_Selection_a
+
+# xUML Populate
 from xuml_populate.config import mmdb
 from xuml_populate.exceptions.action_exceptions import ActionException
-from typing import Optional, Set, Dict, List
 from xuml_populate.populate.attribute import Attribute
 from xuml_populate.populate.actions.validation.parameter_validation import validate_param
 from xuml_populate.populate.actions.table_attribute import TableAttribute
@@ -17,15 +25,11 @@ from xuml_populate.exceptions.action_exceptions import ComparingNonAttributeInSe
 from xuml_populate.populate.mmclass_nt import Restriction_Condition_i, Equivalence_Criterion_i, \
     Comparison_Criterion_i, Criterion_i, Table_Restriction_Condition_i
 from xuml_populate.populate.flow import Flow
-from pyral.relvar import Relvar
-from pyral.relation import Relation
-from scrall.parse.visitor import N_a, BOOL_a, Op_a, Criteria_Selection_a
 
 _logger = logging.getLogger(__name__)
 
 # Transactions
 tr_Restrict_Cond = "Restrict Condition"
-
 
 class RestrictCondition:
     """
@@ -82,7 +86,7 @@ class RestrictCondition:
             pass
         # Walk the parse tree and save all attributes, ops, values, and input scalar flows
         # Populate the Restriction Condition class
-        Relvar.insert(db=mmdb, tr=tr, relvar='Restriction_Condition', tuples=[
+        Relvar.insert(db=mmdb, tr=tr, relvar='Restriction Condition', tuples=[
             Restriction_Condition_i(Action=self.action_id, Activity=self.anum, Domain=self.domain,
                                     Expression=self.expression.strip(), Selection_cardinality=self.cardinality
                                     )

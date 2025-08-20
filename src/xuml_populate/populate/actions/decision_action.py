@@ -13,11 +13,13 @@ from pyral.transaction import Transaction
 
 # xUML populate
 from xuml_populate.utility import print_mmdb
+from xuml_populate.populate.actions.computation_action import ComputationAction
 from xuml_populate.populate.actions.expressions.instance_set import InstanceSet
 from xuml_populate.config import mmdb
 from xuml_populate.populate.actions.aparse_types import ActivityAP, Boundary_Actions
 from xuml_populate.populate.actions.action import Action
 from xuml_populate.populate.flow import Flow
+from xuml_populate.populate.actions.expressions.scalar_expr import ScalarExpr
 from xuml_populate.populate.mmclass_nt import Result_i, Decision_Action_i
 from xuml_populate.exceptions.action_exceptions import *
 
@@ -77,6 +79,10 @@ class DecisionAction:
                 iset = InstanceSet(iset_components=[decision_input], activity_data=self.activity_data)
                 # It's just a flow, so the returned initial, final actions should be empty
                 _, _, self.decision_input_flow = iset.process()
+            case 'BOOL_a':
+                ca = ComputationAction(expr=decision_input, activity_data=self.activity_data)
+                result_flow = ca.populate()
+                pass
             case _:
                 pass
 

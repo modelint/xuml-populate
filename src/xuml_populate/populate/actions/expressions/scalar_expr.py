@@ -34,7 +34,7 @@ class ScalarExpr:
     So we need to walk through the parse tree through the nested operations, possibly
     building instance sets.
     """
-    def __init__(self, expr: INST_PROJ_a, input_instance_flow: Flow_ap, activity_data: ActivityAP):
+    def __init__(self, expr: INST_PROJ_a | BOOL_a, input_instance_flow: Flow_ap, activity_data: ActivityAP):
         """
 
         Args:

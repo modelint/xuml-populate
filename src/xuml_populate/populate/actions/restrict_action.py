@@ -2,8 +2,17 @@
 restrict_action.py – Populate a Restrict Action instance in PyRAL
 """
 
+# System
 import logging
 from typing import Set
+
+# Model Integration
+from pyral.relvar import Relvar
+from pyral.relation import Relation  # Here for debugging
+from pyral.transaction import Transaction
+from scrall.parse.visitor import Criteria_Selection_a, Rank_Selection_a
+
+# xUML Populate
 from xuml_populate.config import mmdb
 from xuml_populate.populate.actions.aparse_types import Flow_ap, ActivityAP
 from xuml_populate.populate.actions.action import Action
@@ -11,10 +20,6 @@ from xuml_populate.populate.actions.expressions.restriction_condition import Res
 from xuml_populate.populate.flow import Flow
 from xuml_populate.populate.mmclass_nt import (Relational_Action_i, Table_Action_i, Restrict_Action_i,
                                                Table_Restriction_Condition_i)
-from pyral.relvar import Relvar
-from pyral.relation import Relation  # Here for debugging
-from pyral.transaction import Transaction
-from scrall.parse.visitor import Criteria_Selection_a, Rank_Selection_a
 
 _logger = logging.getLogger(__name__)
 
@@ -57,17 +62,17 @@ class RestrictAction:
         # Restrict action does not use the returned cardinality since output is always a Table Flow
         # Nor does it use the comparision critieria to test for identifier selection
 
-        Relvar.insert(db=mmdb, tr=tr_Restrict_Action, relvar='Table_Restriction_Condition', tuples=[
+        Relvar.insert(db=mmdb, tr=tr_Restrict_Action, relvar='Table Restriction Condition', tuples=[
             Table_Restriction_Condition_i(Restrict_action=self.action_id, Activity=anum, Domain=domain)
         ])
-        Relvar.insert(db=mmdb, tr=tr_Restrict_Action, relvar='Relational_Action', tuples=[
+        Relvar.insert(db=mmdb, tr=tr_Restrict_Action, relvar='Relational Action', tuples=[
             Relational_Action_i(ID=self.action_id, Activity=anum, Domain=domain)
         ])
-        Relvar.insert(db=mmdb, tr=tr_Restrict_Action, relvar='Table_Action', tuples=[
+        Relvar.insert(db=mmdb, tr=tr_Restrict_Action, relvar='Table Action', tuples=[
             Table_Action_i(ID=self.action_id, Activity=anum, Domain=domain,
                            Input_a_flow=input_relation_flow.fid, Output_flow=self.output_relation_flow.fid)
         ])
-        Relvar.insert(db=mmdb, tr=tr_Restrict_Action, relvar='Restrict_Action', tuples=[
+        Relvar.insert(db=mmdb, tr=tr_Restrict_Action, relvar='Restrict Action', tuples=[
             Restrict_Action_i(ID=self.action_id, Activity=anum, Domain=domain)
         ])
         # We now have a transaction with all select-action instances, enter into the metamodel db
