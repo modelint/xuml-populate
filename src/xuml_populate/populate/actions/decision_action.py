@@ -81,8 +81,7 @@ class DecisionAction:
                 _, _, self.decision_input_flow = iset.process()
             case 'BOOL_a':
                 ca = ComputationAction(expr=decision_input, activity_data=self.activity_data)
-                result_flow = ca.populate()
-                pass
+                _, self.decision_input_flow = ca.populate()
             case _:
                 pass
 
@@ -128,10 +127,12 @@ class DecisionAction:
         t_boundary_actions = ExecutionUnit.process_statement_set(activity_data=self.activity_data,
                                                                  content=true_result)
         true_init_actions = t_boundary_actions.ain
-        f_boundary_actions = ExecutionUnit.process_statement_set(activity_data=self.activity_data,
-                                                                 content=false_result)
-        false_init_actions = f_boundary_actions.ain
-        d_final_aids = t_boundary_actions.aout | f_boundary_actions.aout
+
+        if false_result:
+            f_boundary_actions = ExecutionUnit.process_statement_set(activity_data=self.activity_data,
+                                                                     content=false_result)
+            false_init_actions = f_boundary_actions.ain
+            d_final_aids = t_boundary_actions.aout | f_boundary_actions.aout
 
         Transaction.open(db=mmdb, name=tr_Decision)
         # Populate Action / Decision Action

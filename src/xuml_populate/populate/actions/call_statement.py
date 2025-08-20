@@ -41,8 +41,13 @@ class CallStatement:
         """
         self.parse = call_parse
         self.activity_data = activity_data
-        self.op_parse = call_parse.call.components[-1]
-        self.caller_parse = call_parse.call.components[:-1]
+        match type(call_parse.call).__name__:
+            case 'N_a' | 'IN_a':
+                self.op_parse = call_parse.call.name
+                self.caller_parse = None
+            case _:
+                self.op_parse = call_parse.call.components[-1]
+                self.caller_parse = call_parse.call.components[:-1]
         self.op_chain = call_parse.op_chain
 
     def process(self) -> Boundary_Actions:
