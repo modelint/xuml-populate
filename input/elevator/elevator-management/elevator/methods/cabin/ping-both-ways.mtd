@@ -10,13 +10,11 @@ Cabin.Ping both ways() : Acessible Shaft Level
 // an empty set.
 //
 
-
-// Search in the Cabin's current travel direction
 my direction = Travel direction
 fwd dest .= .Ping( dir: my direction )
 fwd dest? =>> fwd dest : {
-    rev dest .= .Ping( dir: my direction.opposite )
-    !rev dest? my direction.toggle
+    my opposite direction = my direction.opposite
+    rev dest .= .Ping( dir: my opposite direction )
+    !rev dest? Travel direction = my opposite direction
     =>> rev dest
-// Empty if there is no destination in either direction
 }

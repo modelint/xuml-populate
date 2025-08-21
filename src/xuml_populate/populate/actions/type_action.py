@@ -45,6 +45,7 @@ class TypeAction:
 
         self.action_id = None
         self.sflow_out = None
+        self.default_label = None  # Use this label generated below if the user has not specified their own
 
     def populate(self) -> tuple[str, str, Flow_ap]:
         """
@@ -59,6 +60,8 @@ class TypeAction:
         self.action_id = Action.populate(tr=tr_Type, anum=self.anum, domain=self.domain, action_type="type action")
 
         # Construct a label for the output scalar flow we need to populate for either a type or selector operation
+        # This is just a default label that will be superceded by any user specified label by the caller of this
+        # action, an assigment statement, for example.
         if self.input_flow:
             # If it is labeled, we can copy that label into the suffix
             R = f"ID:<{self.input_flow.fid}>, Activity:<{self.anum}>, Domain:<{self.domain}>"
@@ -67,14 +70,14 @@ class TypeAction:
             if labeled_flow_r.body:
                 # Op name and input label if it is labeled, otherwise, use action number
                 suffix = labeled_flow_r.body[0]["Name"]
-            output_label_name = f"_{self.name}_{suffix}"
+            self.default_label = f"_{self.name}_{suffix}"
         else:
             # The scalar name and the selected value
-            output_label_name = f"_{self.input_flow.tname}_{self.name}"
+            self.default_label = f"_{self.input_flow.tname}_{self.name}"
 
-        # Populate the output scalar flow using the output label we just constructed
-        self.sflow_out = Flow.populate_scalar_flow(scalar_type=self.input_flow.tname, anum=self.anum, domain=self.domain,
-                                                   activity_tr=tr_Type, label=output_label_name)
+        # Populate the output scalar flow (but don't use the generated label)
+        self.sflow_out = Flow.populate_scalar_flow(scalar_type=self.input_flow.tname, anum=self.anum,
+                                                   domain=self.domain, activity_tr=tr_Type)
 
         # Insert the Type Operation Instance providing the input flow scalar, since that's what we're operating on
         Relvar.insert(db=mmdb, tr=tr_Type, relvar='Type Action', tuples=[

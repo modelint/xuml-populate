@@ -13,7 +13,9 @@ from pyral.transaction import Transaction
 # xUML Populate
 from xuml_populate.utility import print_mmdb
 from xuml_populate.config import mmdb
+from xuml_populate.populate.flow import Flow
 from xuml_populate.populate.actions.method_call import MethodCall
+from xuml_populate.populate.actions.read_action import ReadAction
 from xuml_populate.populate.actions.expressions.instance_set import InstanceSet
 from xuml_populate.exceptions.action_exceptions import *
 from xuml_populate.populate.actions.aparse_types import ActivityAP, Boundary_Actions, Content, MaxMult
@@ -41,14 +43,13 @@ class CallStatement:
         """
         self.parse = call_parse
         self.activity_data = activity_data
-        match type(call_parse.call).__name__:
-            case 'N_a' | 'IN_a':
-                self.op_parse = call_parse.call.name
-                self.caller_parse = None
-            case _:
-                self.op_parse = call_parse.call.components[-1]
-                self.caller_parse = call_parse.call.components[:-1]
-        self.op_chain = call_parse.op_chain
+        # match type(call_parse.call).__name__:
+        #     case 'N_a' | 'IN_a':
+        #         self.op_parse = call_parse.call.name
+        #         self.caller_parse = None
+        #     case _:
+        #         self.op_parse = call_parse.call.components[-1]
+        #         self.caller_parse = call_parse.call.components[:-1]
 
     def process(self) -> Boundary_Actions:
         """
@@ -56,15 +57,20 @@ class CallStatement:
         Returns:
 
         """
+        # We are calling an operation on an instance set, in which case we are calling a method
+        # OR we are calling an operation on a scalar flow
 
         call_source = type(self.parse.call).__name__
 
         match call_source:
             case 'INST_a':
+                # We are likely invoking a method on some instance, so let's try that first
+                op_parse = self.parse.call.components[-1]
+                caller_parse = self.parse.call.components[:-1]
                 # At this point we don't know whether we are calling a method, type op, or EE op
                 # We'll need to know the type of the caller and that means we need to process the instance set
                 iset = InstanceSet(input_instance_flow=self.activity_data.xiflow,
-                                   iset_components=self.caller_parse, activity_data=self.activity_data)
+                                   iset_components=caller_parse, activity_data=self.activity_data)
                 ain, aout, caller_flow = iset.process()
 
                 # Are we calling Class's Method?
@@ -74,14 +80,14 @@ class CallStatement:
 
                 # If the caller flow tname matches the name of a class that also defines the op_name
                 # we know that we have an target instance of the method's defining class
-                R = f"Name:<{self.op_parse.op_name}>, Class:<{caller_flow.tname}>, Domain:<{self.activity_data.domain}>"
+                R = f"Name:<{op_parse.op_name}>, Class:<{caller_flow.tname}>, Domain:<{self.activity_data.domain}>"
                 method_r = Relation.restrict(db=mmdb, relation='Method', restriction=R)
                 if len(method_r.body) == 1:
                     # We found a single matching method so we need to populate a Method Call
                     # Just to be sure, let's ensure that the caller_flow is a single instance flow
                     if caller_flow.content != Content.INSTANCE or caller_flow.max_mult != MaxMult.ONE:
                         msg = (f"Method caller type [{caller_flow.tname}] is not a single instance flow for "
-                               f"op_name: {self.op_parse.op_name}")
+                               f"op_name: {op_parse.op_name}")
                         _logger.error(msg)
                         raise ActionException(msg)
                     method_t = method_r.body[0]
@@ -90,11 +96,42 @@ class CallStatement:
                     boundary_actions = mcall.process()
                     return boundary_actions
                 else:
-                    pass
-                    # TODO: Locate ee op or type call and populate that
+                    pass # TODO: is there any other possibility?
 
-            case 'N_a':
-                # TODO: Not sure what Scrall will result in this case
+            case 'N_a' | 'IN_a':
+                # Not an instance set, so we are invoking a type operation on some scalar input flow
+                # OR we are invoking an operation directly on a type
+
+                scalar_input_flow = None  # We need to figure this out based on the call name
+
+                # The call field of Call_a is a name that calls the operation
+                # It must be:
+                #   1. The name of a local attribute
+                #   2. A Scalar Flow that is also a Labled Flow
+                #   3. A Scalar (scalar data type name)
+                # And we need to test these assumptions in precedence order
+
+                # First assumption is an Attribute, which only works if we have an executing instance
+                xiflow = getattr(self.activity_data, 'xiflow')
+                if xiflow:
+                    R = f"Name:<{self.parse.call.name}>, Class:<{xiflow.tname}>, Domain:<{self.domain}>"
+                    attr_r = Relation.restrict(db=mmdb, relation="Attribute", restriction=R)
+                    if attr_r.body:
+                        # We'll need to populate a Read Action
+                        pass  # TODO: It's an attribute, the input flow will be emitted by the Read Action
+
+                # Not an attribute, try Scalar Flow
+                scalar_input_flow = Flow.find_labeled_scalar_flow(name=self.parse.call.name, anum=self.anum, domain=self.domain)
+
+                if not scalar_input_flow:
+                    # Must be a type name, verify that
+                    R = f"Name:<{self.parse.call.name}>, Domain:<{self.domain}>"
+                    type_r = Relation.restrict(db=mmdb, relation="Type", restriction=R)
+                    if type_r.body:
+                        pass
+                        # TODO: If not already populated, populate the Type Operation
+
+
                 pass
 
         #         name = call_parse.call.name
