@@ -63,13 +63,16 @@ class DecisionAction:
         decision_input = self.statement_parse.input  # Expression to be evaluated as true or false during execution
 
         decision_input_type = type(decision_input).__name__
-        input_init_aid: set[str] = {}  # Default to empty set of strings
+        input_init_aids: set[str] = set()  # Default to empty set of strings
         match decision_input_type:
             case 'INST_PROJ_a':
                 # We need to evaluate an instance set and a possible projection
                 iset = InstanceSet(input_instance_flow=self.activity_data.xiflow,
                                    iset_components=decision_input.iset.components, activity_data=self.activity_data)
-                input_init_aid, input_final_aid, self.decision_input_flow = iset.process()
+                aid, _, self.decision_input_flow = iset.process()
+                # We have just one initial action, so the set will be just a single aid
+                input_init_aids.add(aid)
+                # The final aids will result from the true or true/false results
                 if self.statement_parse.input.projection:
                     # We have an attribute value to extract and test as a scalar value most likely
                     # TODO: Handle decision input projection
@@ -81,7 +84,8 @@ class DecisionAction:
                 _, _, self.decision_input_flow = iset.process()
             case 'BOOL_a':
                 ca = ComputationAction(expr=decision_input, activity_data=self.activity_data)
-                _, self.decision_input_flow = ca.populate()
+                aid, self.decision_input_flow = ca.populate()
+                input_init_aids.add(aid)  # The input is whatever action initializes the computation
             case _:
                 pass
 
@@ -133,6 +137,8 @@ class DecisionAction:
                                                                      content=false_result)
             false_init_actions = f_boundary_actions.ain
             d_final_aids = t_boundary_actions.aout | f_boundary_actions.aout
+        else:
+            d_final_aids = t_boundary_actions.aout
 
         Transaction.open(db=mmdb, name=tr_Decision)
         # Populate Action / Decision Action
@@ -149,13 +155,14 @@ class DecisionAction:
             Result_i(Decision=True, Decision_action=self.action_id, Activity=self.anum, Domain=self.domain,
                      Flow=true_result_flow)
         ])
-        false_result_flow = Flow.populate_control_flow(tr=tr_Decision, enabled_actions=false_init_actions,
-                                                       anum=self.anum, domain=self.domain,
-                                                       label=f"_{self.action_id[4:]}_false")
-        Relvar.insert(db=mmdb, tr=tr_Decision, relvar='Result', tuples=[
-            Result_i(Decision=False, Decision_action=self.action_id, Activity=self.anum, Domain=self.domain,
-                     Flow=false_result_flow)
-        ])
+        if false_result:
+            false_result_flow = Flow.populate_control_flow(tr=tr_Decision, enabled_actions=false_init_actions,
+                                                           anum=self.anum, domain=self.domain,
+                                                           label=f"_{self.action_id[4:]}_false")
+            Relvar.insert(db=mmdb, tr=tr_Decision, relvar='Result', tuples=[
+                Result_i(Decision=False, Decision_action=self.action_id, Activity=self.anum, Domain=self.domain,
+                         Flow=false_result_flow)
+            ])
         Transaction.execute(db=mmdb, name=tr_Decision)
 
-        return Boundary_Actions(ain={input_init_aid}, aout=d_final_aids)
+        return Boundary_Actions(ain=input_init_aids, aout=d_final_aids)

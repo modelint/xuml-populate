@@ -11,7 +11,7 @@ from pyral.relation import Relation  # Keep for debugging
 from xuml_populate.config import mmdb
 from xuml_populate.populate.actions.expressions.instance_set import InstanceSet
 from xuml_populate.populate.actions.read_action import ReadAction
-from xuml_populate.exceptions.action_exceptions import ScalarOperationOrExpressionExpected
+from xuml_populate.exceptions.action_exceptions import *
 from xuml_populate.populate.flow import Flow
 from xuml_populate.populate.actions.aparse_types import Flow_ap, MaxMult, Content, ActivityAP, Boundary_Actions
 from xuml_populate.populate.actions.project_action import ProjectAction
@@ -72,8 +72,8 @@ class ScalarExpr:
             init_aids = {a for a in self.action_inputs.keys() if not self.action_inputs[a].intersection(all_outs)}
             final_aids = {a for a in self.action_outputs.keys() if not self.action_outputs[a].intersection(all_ins)}
         else:
-            init_aids = all_ins
-            final_aids = all_outs
+            init_aids = {a for a in self.action_inputs.keys()}
+            final_aids = {a for a in self.action_outputs.keys()}
 
         return Boundary_Actions(ain=init_aids, aout=final_aids), expr_sflows
 
@@ -161,7 +161,7 @@ class ScalarExpr:
                 # Just in case there's a nother possibility, leave a placeholder for anything else
                 R = f"Name:<{sexpr.name}>, Class:<{self.component_flow.tname}>, Domain:<{self.domain}>"
                 attribute_r = Relation.restrict(db=mmdb, relation="Attribute", restriction=R)
-                if attribute_r:
+                if attribute_r.body:
                     # Create a read action to obtain the value
                     ra = ReadAction(input_single_instance_flow=self.component_flow, attrs=(sexpr.name,),
                                     anum=self.anum, domain=self.domain)
@@ -170,6 +170,12 @@ class ScalarExpr:
                     self.action_outputs[aid] = {s.fid for s in sflows}
                     return sflows
                 else:
+                    sflow = Flow.find_labeled_scalar_flow(name=sexpr.name, anum=self.anum, domain=self.domain)
+                    if not sflow:
+                        msg = f"Name N_a in scalar expr must be an attribute or a labeled scalar flow"
+                        _logger.error(msg)
+                        raise ActionException(msg)
+                    return [sflow]  # It's just a single labeled flow to return
                     # TODO: It must be a scalar flow label, handle this
                     pass
                 pass

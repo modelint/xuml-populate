@@ -128,7 +128,7 @@ class ExecutionUnit:
 
         elif block:
             ba_list = list()
-            for s in block:
+            for count, s in enumerate(block):
                 b = ExecutionUnit.process_statement_set(content=s.statement_set, activity_data=activity_data)
                 ba_list.append(b)
             pass  # TODO: Look at the b list and figure out what to return based on example

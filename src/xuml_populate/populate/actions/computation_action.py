@@ -99,7 +99,7 @@ class ComputationAction:
         Transaction.open(db=mmdb, name=tr_Compute)
         self.output_flow = Flow.populate_scalar_flow(scalar_type=self.output_type, anum=self.anum, domain=self.domain,
                                                      label=f"_{self.expr_text}", activity_tr=tr_Compute)
-        self.action_id = Action.populate(tr=tr_Compute, anum=self.anum, domain=self.domain, action_type="read")
+        self.action_id = Action.populate(tr=tr_Compute, anum=self.anum, domain=self.domain, action_type="computation")
         Relvar.insert(db=mmdb, tr=tr_Compute, relvar='Instance Action', tuples=[
             Instance_Action_i(ID=self.action_id, Activity=self.anum, Domain=self.domain)
         ])
