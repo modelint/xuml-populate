@@ -2,13 +2,16 @@
 
 # System
 import logging
-from typing import List
+from typing import TYPE_CHECKING, List
 
 # Model Integration
 from scrall.parse.visitor import Output_Flow_a, Seq_Statement_Set_a, Comp_Statement_Set_a
 from pyral.relvar import Relvar
 
 # Xuml Populate
+if TYPE_CHECKING:
+    from xuml_populate.populate.activity import Activity
+
 from xuml_populate.utility import print_mmdb
 from xuml_populate.config import mmdb
 from xuml_populate.populate.actions.aparse_types import Flow_ap, Content, MaxMult
@@ -48,27 +51,27 @@ class ExecutionUnit:
     """
 
     @classmethod
-    def process_synch_output(cls, activity_data: ActivityAP, synch_output: Output_Flow_a):
+    def process_synch_output(cls, activity: 'Activity', synch_output: Output_Flow_a):
         """
 
-        :param activity_data:
+        :param activity:
         :param synch_output:  Output flow execution unit parse
         :return:
         """
-        cls.activity_data = activity_data
+        cls.activity = activity
         match type(synch_output.output).__name__:
             case 'INST_a':
                 iset = InstanceSet(iset_components=synch_output.output.components,
-                                   activity_data=activity_data)
+                                   activity_data=activity.activity_data)
                 _, _, output_flow = iset.process()
                 pass
             case 'INST_PROJ_a':
                 iset = InstanceSet(iset_components=synch_output.output.iset.components,
-                                   activity_data=activity_data)
+                                   activity_data=activity.activity_data)
                 _, _, output_flow = iset.process()
             case 'N_a':
                 iset = InstanceSet(iset_components=[synch_output.output],
-                                   activity_data=activity_data)
+                                   activity_data=activity.activity_data)
                 _, _, output_flow = iset.process()
             case _:
                 # Unexpected or unimplemented synch output case
@@ -78,18 +81,14 @@ class ExecutionUnit:
         # b, f = ScalarExpr.process(mmdb, rhs=synch_output.output, input_instance_flow=xi_instance_flow,
         #                           activity_data=activity_data)
 
-        # Populate the output flow (no transaction required)
-        Relvar.insert(db=mmdb, relvar='Synchronous Output', tuples=[
-            Synchronous_Output_i(Anum=activity_data.anum, Domain=activity_data.domain,
-                                 Output_flow=output_flow.fid, Type=output_flow.tname)
-        ])
-        _logger.info(f"INSERT Synchronous operation output flow): ["
-                     f"{activity_data.activity_path}:^{output_flow.fid}]")
+        # Add the output flow to this Activity's set so they can be resolved to a single output later
+        activity.synch_output_flows.add(output_flow)
+
 
 
     @classmethod
     def process_statement_set(cls, content: Seq_Statement_Set_a | Comp_Statement_Set_a | Output_Flow_a,
-                              activity_data: ActivityAP) -> Boundary_Actions:
+                              activity: "Activity") -> Boundary_Actions:
         """
         Initiates the population of all elements derived from a set of statements in an Activity.
 
@@ -102,14 +101,14 @@ class ExecutionUnit:
 
         Args:
             content: execution_unit content is a set of one or more statements or blocks or an output_flow
-            activity_data: Info about the activity and its unparsed text. Useful for providing helpful error msgs
+            activity: The enclosing Activity
 
         Returns:
             Tuple with a list of initial and terminal actions
         """
         # Let's first check to see if we have an output_flow
         if type(content.statement).__name__ == 'Output_Flow_a':
-            ExecutionUnit.process_synch_output(synch_output=content.statement, activity_data=activity_data)
+            ExecutionUnit.process_synch_output(synch_output=content.statement, activity=activity)
             return Boundary_Actions(ain=set(), aout=set())
 
         # Its a statement_set
@@ -124,12 +123,12 @@ class ExecutionUnit:
             raise Exception
 
         if single_statement:
-            boundary_actions = Statement.populate(activity_data=activity_data, statement_parse=single_statement)
+            boundary_actions = Statement.populate(activity_data=activity.activity_data, statement_parse=single_statement)
 
         elif block:
             ba_list = list()
             for count, s in enumerate(block):
-                b = ExecutionUnit.process_statement_set(content=s.statement_set, activity_data=activity_data)
+                b = ExecutionUnit.process_statement_set(content=s.statement_set, activity=activity)
                 ba_list.append(b)
             pass  # TODO: Look at the b list and figure out what to return based on example
         else:

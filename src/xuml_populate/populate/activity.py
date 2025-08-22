@@ -23,11 +23,14 @@ from xuml_populate.populate.actions.sequence_flow import SequenceFlow
 from xuml_populate.populate.xunit import ExecutionUnit
 from xuml_populate.populate.mmclass_nt import Flow_Dependency_i, Wave_i, Wave_Assignment_i
 from xuml_populate.config import mmdb
-from xuml_populate.populate.flow import Flow
+from xuml_populate.populate.flow import Flow, Flow_ap
+from xuml_populate.populate.actions.action import Action
 from xuml_populate.populate.element import Element
 from xuml_populate.populate.actions.aparse_types import (ActivityAP, SMType, ActivityType, Boundary_Actions)
 from xuml_populate.populate.mmclass_nt import (Activity_i, State_Activity_i, Lifecycle_Activity_i,
-                                               Multiple_Assigner_Activity_i, Single_Assigner_Activity_i)
+                                               Multiple_Assigner_Activity_i, Single_Assigner_Activity_i,
+                                               Synchronous_Output_i, Flow_Connector_i, Pass_Action_i,
+                                               Instance_Action_i, Gate_Action_i, Gate_Input_i)
 
 _logger = logging.getLogger(__name__)
 
@@ -118,6 +121,8 @@ class Activity:
         self.atype = None
         self.xi_flow = None
         self.flow_path = None
+        self.synch_output_flows: set[Flow_ap] = set()  # Tracks synch outputs of a Method Activity
+        self.is_method = False  # default assumption
 
         # Maintain a dictionary of seq token control flow dependencies
         # seq_token_out_action: {seq_token_in_actions}
@@ -131,7 +136,7 @@ class Activity:
                 self.name = activity_data.opname
                 self.class_name = activity_data.cname
                 self.xi_flow = activity_data.xiflow
-                pass
+                self.method = True
             case 'StateActivityAP':
                 self.atype = ActivityType.STATE
                 self.state_name = activity_data.sname
@@ -147,6 +152,8 @@ class Activity:
         self.xactions = None
 
         self.pop_xunits()
+        if self.is_method:
+            self.resolve_method_outputs()  # Ensure that each method with an output has only one
         self.pop_seq_flows()
         self.pop_flow_dependencies()
         self.assign_waves()
@@ -165,11 +172,103 @@ class Activity:
                 raise FlowException(msg)
             s = SequenceFlow(token=t, source_aid=source, dest_aids=destinations, anum=self.anum, domain=self.domain)
 
+    def resolve_method_outputs(self):
+        # Check the synch outputs for this method
+
+        # Just return if this activity is not a method or if it is and has no output flows
+        if not self.is_method or self.synch_output_flows:
+            return
+
+        # If there is only one output flow, just populate it as the method's synchronous output
+        if len(self.synch_output_flows) == 1:
+            single_output_flow = self.synch_output_flows.pop()
+            Relvar.insert(db=mmdb, relvar='Synchronous Output', tuples=[
+                Synchronous_Output_i(Anum=self.anum, Domain=self.domain,
+                                     Output_flow=single_output_flow.fid, Type=single_output_flow.tname)
+            ])
+            _logger.info(f"INSERT Synchronous operation output flow): ["
+                         f"{self.activity_data.activity_path}:^{single_output_flow.fid}]")
+            return
+
+        # There are multiple output flows and we need to funnel them into a single flow
+        #
+        # and then populate a gate action to combine them with a single output
+        # Then make that output the synch output as above
+        pass
+        # Populate the output flow (no transaction required)
+        tr_Pass = "Pass Action"
+        pass_output_flows: set[Flow_ap] = set()
+        for pass_input_flow in self.synch_output_flows:
+            # Each Pass Action is populated in its own transaction
+            Transaction.open(db=mmdb, name=tr_Pass)
+            # Each synch output will will be populated as an input to its own Pass Action
+            # Create a copy of the input to be the passed output
+            pass_output_flow = Flow.copy_data_flow(tr=tr_Pass, ref_fid=pass_input_flow.fid, ref_anum=self.anum,
+                                                   new_anum=self.anum, domain=self.domain)
+            # Add it to the set of outputs to be converged into a gate
+            pass_output_flows.add(pass_output_flow)
+
+            # Populate the Pass Action
+            aid = Action.populate(tr=tr_Pass, anum=self.anum, domain=self.domain, action_type="pass")
+            Relvar.insert(db=mmdb, relvar='Instance Action', tuples=[
+                Instance_Action_i(ID=aid, Activity=self.anum, Domain=self.domain)
+            ])
+            Relvar.insert(db=mmdb, relvar='Flow Connector', tuples=[
+                Flow_Connector_i(ID=aid, Activity=self.anum, Domain=self.domain)
+            ])
+            Relvar.insert(db=mmdb, relvar='Pass Action', tuples=[
+                Pass_Action_i(ID=aid, Activity=self.anum, Domain=self.domain, Input_flow=pass_output_flow.fid,
+                              Output_flow=pass_output_flow.fid)
+            ])
+            Transaction.execute(db=mmdb, name=tr_Pass)
+
+        # Populate a gate with the outputs
+        tr_Gate = "Gate Action"
+        Transaction.open(db=mmdb, name=tr_Gate)
+
+        # Get a new action id
+        gate_aid = Action.populate(tr=tr_Gate, anum=self.anum, domain=self.domain, action_type="gate")
+
+        # Populate the gate's output flow by copying one of the input flows
+        # Just grab this methods first synch output flow as a copy reference
+        # (as with the pass action, the input and output flow characteristics must match exactly)
+        ref_pass_input_flow = next(iter(self.synch_output_flows))
+        gate_output_flow = Flow.copy_data_flow(tr=tr_Pass, ref_fid=ref_pass_input_flow.fid, ref_anum=self.anum,
+                                               new_anum=self.anum, domain=self.domain)
+
+        # Now we can populate the Gate Action
+        Relvar.insert(db=mmdb, tr=tr_Gate, relvar='Instance Action', tuples=[
+            Instance_Action_i(ID=gate_aid, Activity=self.anum, Domain=self.domain)
+        ])
+        Relvar.insert(db=mmdb, tr=tr_Gate, relvar='Flow Connector', tuples=[
+            Flow_Connector_i(ID=gate_aid, Activity=self.anum, Domain=self.domain)
+        ])
+        Relvar.insert(db=mmdb, tr=tr_Gate, relvar='Gate Action', tuples=[
+            Gate_Action_i(ID=gate_aid, Output_flow=gate_output_flow.fid, Activity=self.anum, Domain=self.domain)
+        ])
+
+        # A Gate Input is populated per input flow
+        for gate_input_flow in pass_output_flows:
+            Relvar.insert(db=mmdb, tr=tr_Gate, relvar='Gate Input', tuples=[
+                Gate_Input_i(Gate_action=gate_aid, Input_flow=gate_input_flow.fid, Activity=self.anum,
+                             Domain=self.domain)
+            ])
+
+        Transaction.execute(db=mmdb, name=tr_Gate)
+
+        # Now we can populate the Synchronous Output with the gate output flow
+        # (no transaction required since it's just one relvar)
+        Relvar.insert(db=mmdb, relvar='Synchronous Output', tuples=[
+            Synchronous_Output_i(Anum=self.anum, Domain=self.domain,
+                                 Output_flow=gate_output_flow.fid, Type=gate_output_flow.tname)
+        ])
+
+
     def pop_xunits(self):
         for count, xunit in enumerate(self.parse):  # Use count for debugging
             c = count + 1
             boundary_actions = ExecutionUnit.process_statement_set(
-                activity_data=self.activity_data, content=xunit.statement_set)
+                activity=self, content=xunit.statement_set)
 
             # # Process the Scrall execution unit
             # statement_type = type(xunit.statement_set.statement).__name__
