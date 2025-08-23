@@ -244,8 +244,8 @@ class Activity:
         # Populate the gate's output flow by copying one of the input flows
         # Just grab this methods first synch output flow as a copy reference
         # (as with the pass action, the input and output flow characteristics must match exactly)
-        ref_pass_input_flow = next(iter(self.synch_output_flows))
-        gate_output_flow = Flow.copy_data_flow(tr=tr_Pass, ref_fid=ref_pass_input_flow.fid, ref_anum=self.anum,
+        ref_pass_input_flow = next(iter(gate_input_fids))
+        gate_output_flow = Flow.copy_data_flow(tr=tr_Gate, ref_fid=ref_pass_input_flow, ref_anum=self.anum,
                                                new_anum=self.anum, domain=self.domain)
 
         # Now we can populate the Gate Action
@@ -260,13 +260,14 @@ class Activity:
         ])
 
         # A Gate Input is populated per input flow
-        for gate_input_flow in pass_output_flows:
+        for input_fid in gate_input_fids:
             Relvar.insert(db=mmdb, tr=tr_Gate, relvar='Gate Input', tuples=[
-                Gate_Input_i(Gate_action=gate_aid, Input_flow=gate_input_flow.fid, Activity=self.anum,
+                Gate_Input_i(Gate_action=gate_aid, Input_flow=input_fid, Activity=self.anum,
                              Domain=self.domain)
             ])
 
         Transaction.execute(db=mmdb, name=tr_Gate)
+        pass
 
         # Now we can populate the Synchronous Output with the gate output flow
         # (no transaction required since it's just one relvar)
@@ -274,6 +275,7 @@ class Activity:
             Synchronous_Output_i(Anum=self.anum, Domain=self.domain,
                                  Output_flow=gate_output_flow.fid, Type=gate_output_flow.tname)
         ])
+        pass
 
 
     def pop_xunits(self):
