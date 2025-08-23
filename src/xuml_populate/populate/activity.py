@@ -195,19 +195,28 @@ class Activity:
         #
         # and then populate a gate action to combine them with a single output
         # Then make that output the synch output as above
-        pass
+        # Check for any existing Pass Actions in this Activity
+        # These would have been created to provide a required destination action for any Decision Action results
+        # that just pass one of the output flows
+        # pass_output_flows: set[Flow_ap] = set()
+        R = f"Activity:<{self.anum}>, Domain:<{self.domain}>"
+        pass_action_r = Relation.restrict(db=mmdb, relation="Pass Action", restriction=R)
+        # Remove any synch output flows from consideration that are input to a Pass Action
+        passed_input_fids = {t["Input_flow"] for t in pass_action_r.body}
+        pass_action_input_fids = {f.fid for f in self.synch_output_flows if f.fid not in passed_input_fids}
+        gate_input_fids = {t["Output_flow"] for t in pass_action_r.body}
+
         # Populate the output flow (no transaction required)
         tr_Pass = "Pass Action"
-        pass_output_flows: set[Flow_ap] = set()
-        for pass_input_flow in self.synch_output_flows:
+        for input_fid in pass_action_input_fids:
             # Each Pass Action is populated in its own transaction
             Transaction.open(db=mmdb, name=tr_Pass)
             # Each synch output will will be populated as an input to its own Pass Action
             # Create a copy of the input to be the passed output
-            pass_output_flow = Flow.copy_data_flow(tr=tr_Pass, ref_fid=pass_input_flow.fid, ref_anum=self.anum,
+            pass_output_flow = Flow.copy_data_flow(tr=tr_Pass, ref_fid=input_fid, ref_anum=self.anum,
                                                    new_anum=self.anum, domain=self.domain)
             # Add it to the set of outputs to be converged into a gate
-            pass_output_flows.add(pass_output_flow)
+            gate_input_fids.add(pass_output_flow.fid)
 
             # Populate the Pass Action
             aid = Action.populate(tr=tr_Pass, anum=self.anum, domain=self.domain, action_type="pass")
@@ -218,10 +227,12 @@ class Activity:
                 Flow_Connector_i(ID=aid, Activity=self.anum, Domain=self.domain)
             ])
             Relvar.insert(db=mmdb, tr=tr_Pass, relvar='Pass Action', tuples=[
-                Pass_Action_i(ID=aid, Activity=self.anum, Domain=self.domain, Input_flow=pass_output_flow.fid,
+                Pass_Action_i(ID=aid, Activity=self.anum, Domain=self.domain, Input_flow=input_fid,
                               Output_flow=pass_output_flow.fid)
             ])
             Transaction.execute(db=mmdb, name=tr_Pass)
+
+        pass
 
         # Populate a gate with the outputs
         tr_Gate = "Gate Action"
