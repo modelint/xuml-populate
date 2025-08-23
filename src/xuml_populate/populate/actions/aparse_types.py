@@ -38,6 +38,8 @@ Attribute_Comparison = namedtuple('Attribute_Comparison', 'attr op')
 """ An attribute compared in a selection phrase """
 Boundary_Actions = namedtuple("Boundary_Actions", "ain aout")
 """ Initial actions not dependent on any data flow input and output actions that do not flow to any other action"""
+Method_Output_Type = namedtuple("Method_Output_Type", 'name mult')
+""" Type name and optional multiplicity of a Method output flow so we can populate a Synchronous Output"""
 
 """ Activity identification and diagnostic data """
 
@@ -64,6 +66,7 @@ class ActivityAP:
 class MethodActivityAP(ActivityAP):
     cname: str  # Method is defined on this class name
     opname: str  # Name of the method
+    domain_method_output_types: dict[str, Method_Output_Type]  # Dictionary of output types for all methods in domain
 
 @dataclass(frozen=True, kw_only=True)
 class StateActivityAP(ActivityAP):

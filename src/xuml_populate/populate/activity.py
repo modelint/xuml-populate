@@ -136,7 +136,7 @@ class Activity:
                 self.name = activity_data.opname
                 self.class_name = activity_data.cname
                 self.xi_flow = activity_data.xiflow
-                self.method = True
+                self.is_method = True
             case 'StateActivityAP':
                 self.atype = ActivityType.STATE
                 self.state_name = activity_data.sname
@@ -154,10 +154,11 @@ class Activity:
         self.pop_xunits()
         if self.is_method:
             self.resolve_method_outputs()  # Ensure that each method with an output has only one
-        self.pop_seq_flows()
-        self.pop_flow_dependencies()
-        self.assign_waves()
-        self.populate_waves()
+        else:  # TODO: For now let's exclude these from the method activity population
+            self.pop_seq_flows()
+            self.pop_flow_dependencies()
+            self.assign_waves()
+            self.populate_waves()
         print_mmdb()
         pass
 
@@ -176,7 +177,7 @@ class Activity:
         # Check the synch outputs for this method
 
         # Just return if this activity is not a method or if it is and has no output flows
-        if not self.is_method or self.synch_output_flows:
+        if not self.is_method or not self.synch_output_flows:
             return
 
         # If there is only one output flow, just populate it as the method's synchronous output
@@ -210,13 +211,13 @@ class Activity:
 
             # Populate the Pass Action
             aid = Action.populate(tr=tr_Pass, anum=self.anum, domain=self.domain, action_type="pass")
-            Relvar.insert(db=mmdb, relvar='Instance Action', tuples=[
+            Relvar.insert(db=mmdb, tr=tr_Pass, relvar='Instance Action', tuples=[
                 Instance_Action_i(ID=aid, Activity=self.anum, Domain=self.domain)
             ])
-            Relvar.insert(db=mmdb, relvar='Flow Connector', tuples=[
+            Relvar.insert(db=mmdb, tr=tr_Pass, relvar='Flow Connector', tuples=[
                 Flow_Connector_i(ID=aid, Activity=self.anum, Domain=self.domain)
             ])
-            Relvar.insert(db=mmdb, relvar='Pass Action', tuples=[
+            Relvar.insert(db=mmdb, tr=tr_Pass, relvar='Pass Action', tuples=[
                 Pass_Action_i(ID=aid, Activity=self.anum, Domain=self.domain, Input_flow=pass_output_flow.fid,
                               Output_flow=pass_output_flow.fid)
             ])

@@ -1,24 +1,31 @@
 """
 switch_statement.py – Populate a switch action instance in PyRAL
 """
-
+# System
 import logging
+from typing import TYPE_CHECKING
+from collections import namedtuple, Counter
+
+# Model Integration
+from scrall.parse.visitor import Switch_a
+from pyral.relvar import Relvar
+from pyral.relation import Relation  # Keep here for debugging
+from pyral.transaction import Transaction
+
+# xUML Populate
+if TYPE_CHECKING:
+    from xuml_populate.populate.activity import Activity
 from xuml_populate.config import mmdb
 from xuml_populate.exceptions.action_exceptions import ActionException, BadScalarSwitchInput
 from xuml_populate.populate.actions.aparse_types import ActivityAP, Boundary_Actions
 from xuml_populate.populate.actions.action import Action
 from xuml_populate.populate.flow import Flow
-from scrall.parse.visitor import Switch_a
 from xuml_populate.populate.mmclass_nt import (Switch_Action_i, Scalar_Switch_Action_i, Case_i, Match_Value_i,
                                                Sequence_Flow_i, Subclass_Switch_Action_i, Gate_Action_i, Gate_Input_i,
-                                               Instance_Action_i)
-from pyral.relvar import Relvar
-from pyral.relation import Relation  # Keep here for debugging
-from pyral.transaction import Transaction
+                                               Instance_Action_i, Flow_Connector_i)
 
 _logger = logging.getLogger(__name__)
 
-from collections import namedtuple, Counter
 
 Case_Control = namedtuple("Case_Control", "match_values target_actions")
 
@@ -34,15 +41,16 @@ class SwitchStatement:
     labeled_outputs = None
 
     @classmethod
-    def populate(cls, sw_parse: Switch_a, activity_data: ActivityAP) -> Boundary_Actions:
+    def populate(cls, sw_parse: Switch_a, activity: 'Activity') -> Boundary_Actions:
         """
         Populate the Switch Action and its Cases
 
         :param sw_parse:  The parsed switch action group
-        :param activity_data: For descriptive error messages
+        :param activity: For descriptive error messages
         """
-        anum = activity_data.anum
-        domain = activity_data.domain
+        anum = activity.anum
+        domain = activity.domain
+        activity_data = activity.activity_data
         cls.output_actions = set()
         cls.labeled_outputs = {}  # { <case>: [output_flow, ...], }  labeled output flows keyed by case
 
@@ -71,7 +79,7 @@ class SwitchStatement:
                 case_name = f"{'_'.join(c.enums)}"
                 cls.labeled_outputs[case_name] = set()
                 from xuml_populate.populate.statement import Statement
-                boundary_actions = Statement.populate(activity_data=activity_data,
+                boundary_actions = Statement.populate(activity=activity,
                                                       statement_parse=c.comp_statement_set.statement,
                                                       case_name=case_name,
                                                       case_outputs=cls.labeled_outputs[case_name])
@@ -138,6 +146,9 @@ class SwitchStatement:
             output_flows[mcl] = Flow.populate_switch_output(label=mcl, ref_flow=mcl_flows[mcl][0],
                                                             anum=anum, domain=domain)
             Relvar.insert(db=mmdb, tr=tr_Switch, relvar='Instance Action', tuples=[
+                Instance_Action_i(ID=gate_aid, Activity=anum, Domain=domain)
+            ])
+            Relvar.insert(db=mmdb, tr=tr_Switch, relvar='Flow Connector', tuples=[
                 Instance_Action_i(ID=gate_aid, Activity=anum, Domain=domain)
             ])
             Relvar.insert(db=mmdb, tr=tr_Switch, relvar='Gate Action', tuples=[

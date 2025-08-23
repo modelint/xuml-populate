@@ -19,7 +19,7 @@ from xuml_populate.populate.flow import Flow
 from xuml_populate.populate.actions.action import Action
 from xuml_populate.populate.actions.read_action import ReadAction
 from xuml_populate.exceptions.action_exceptions import *
-from xuml_populate.populate.actions.aparse_types import ActivityAP, Boundary_Actions, Flow_ap
+from xuml_populate.populate.actions.aparse_types import ActivityAP, Boundary_Actions, Flow_ap, MaxMult
 from xuml_populate.populate.mmclass_nt import (Method_Call_i, Method_Call_Parameter_i, Method_Call_Output_i,
                                                Instance_Action_i)
 
@@ -32,6 +32,9 @@ class MethodCall:
     Populate all components of a Method Call action and any other
     actions required by the parse
     """
+    tr_MethodCallOutput = "Method Call Output"
+    method_call_transaction_open: bool = False
+
 
     def __init__(self, method_name: str, method_anum: str, caller_flow: Flow_ap, parse: Call_a | Op_a,
                  activity_data: ActivityAP):
@@ -56,6 +59,11 @@ class MethodCall:
         self.anum = self.activity_data.anum
         self.domain = self.activity_data.domain
 
+    @classmethod
+    def complete_output_transaction(cls):
+        if cls.method_call_transaction_open:
+            Transaction.execute(db=mmdb, name=cls.tr_MethodCallOutput)
+
     def process(self) -> tuple[str, str, Flow_ap]:
         """
         Populate a Method Call action
@@ -78,7 +86,12 @@ class MethodCall:
 
         # Validate Method Call params (ensure that the call matches the Method's populated signature
         R = f"Anum:<{self.method_anum}>, Domain:<{self.domain}>"
-        Relation.restrict(db=mmdb, relation='Method', restriction=R, svar_name="target_method_sv")
+        target_method = Relation.restrict(db=mmdb, relation='Method', restriction=R, svar_name="target_method_sv")
+        if len(target_method.body) != 1:
+            msg = f"Method call: {self.activity_data.activity_path} has no target method in mmdb"
+            _logger.error(msg)
+            raise ActionException(msg)
+        target_method_anum = target_method.body[0]["Anum"]
         target_method_sig_r = Relation.semijoin(db=mmdb, rname2='Method Signature',
                                                 attrs={'Name': 'Method', 'Domain': 'Domain'})
         # IMPORTANT:
@@ -149,22 +162,54 @@ class MethodCall:
             ActionException(msg)
 
         # Create an output flow in this activity compatible with the output of the target method, if any
+
         method_call_output_flow = None
-        synch_output_r = Relation.semijoin(db=mmdb, rname1="target_method_sv", rname2="Synchronous Output")
-        if synch_output_r:
-            synch_output_fid = synch_output_r.body[0]["Output_flow"]
-            synch_output_anum = synch_output_r.body[0]["Anum"]
-            method_call_output_flow = Flow.copy_data_flow(tr=tr_Call, ref_fid=synch_output_fid,
-                                                          ref_anum=synch_output_anum, new_anum=self.anum,
-                                                          domain=self.domain)
+        target_method_output_type = self.activity_data.domain_method_output_types[target_method_anum]
+        if target_method_output_type is not None:
+            method_call_output_flow = None
+            # Determine the kind of Data Flow output by the target method
+            # Instance flow if the type name is a class
+            type_name = target_method_output_type.name
+            R = f"Name:<{type_name}>, Domain:<{self.domain}>"
+            type_rv = "type_rv" # relational variable to retain type superclass instance for later semijoins
+            type_r = Relation.restrict(db=mmdb, relation="Type", restriction=R, svar_name=type_rv)
+            if not type_r.body:
+                # No matching type found in mmdb
+                msg = f"Method signature output type [{type_name}] not in metamodel"
+                _logger.error(msg)
+                raise ActionException
+            # Is the type a class?
+            class_r = Relation.semijoin(db=mmdb, rname1=type_rv, rname2="Class")
+            if class_r.body:
+                # Populate an instance flow for this class using the specified multiplicity, if any
+                # Single only if a value (1) was specified for mult, it would be None otherwise
+                single = bool(target_method_output_type.mult)
+                method_call_output_flow = Flow.populate_instance_flow(activity_tr=tr_Call, cname=type_name,
+                                                                      anum=self.anum, domain=self.domain, single=single)
+            else:
+                # Popualte a sclaar flow if the type is a scalar, multiplicity is not applicable here
+                scalar_r = Relation.semijoin(db=mmdb, rname1=type_rv, rname2="Scalar")
+                if scalar_r.body:
+                    method_call_output_flow = Flow.populate_scalar_flow(activity_tr=tr_Call, scalar_type=type_name,
+                                                                        anum=self.anum, domain=self.domain)
+                else:  # Must be a table
+                    method_call_output_flow = None  # placeholder
+                    msg = "Unimplemented case: table output from called method"
+                    _logger.exception(msg)
+                    # TODO: Construct table name from method signature (need an example)
+                pass
+
+            Transaction.execute(db=mmdb, name=tr_Call)
+
             # Populate the output of the Method Call action (corresponds to the target Method's Synch Output)
-            Relvar.insert(db=mmdb, relvar="Method Call Output", tr=tr_Call, tuples=[
+            if not MethodCall.method_call_transaction_open:
+                MethodCall.method_call_transaction_open = True
+                Transaction.open(db=mmdb, name=MethodCall.tr_MethodCallOutput)
+
+            Relvar.insert(db=mmdb, relvar="Method Call Output", tr=MethodCall.tr_MethodCallOutput, tuples=[
                 Method_Call_Output_i(Method_call=self.action_id, Activity=self.anum, Domain=self.domain,
-                                     Target_method=synch_output_anum, Flow=method_call_output_flow.fid)
+                                     Target_method=target_method_anum, Flow=method_call_output_flow.fid)
             ])
 
-        # TODO: Populate metamodel with synch output method flow (need to update make_xuml_db)
-
-        Transaction.execute(db=mmdb, name=tr_Call)
         return self.action_id, self.action_id, method_call_output_flow
 

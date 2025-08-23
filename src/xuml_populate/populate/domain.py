@@ -15,6 +15,7 @@ from pyral.relvar import Relation  # For debugging
 # xUML Populate
 from xuml_populate.config import mmdb
 from xuml_populate.utility import print_mmdb
+from xuml_populate.populate.actions.aparse_types import Method_Output_Type
 from xuml_populate.populate.attribute import Attribute
 from xuml_populate.populate.mm_class import MMclass
 from xuml_populate.populate.method import Method
@@ -47,7 +48,8 @@ class Domain:
         self.subsystem_counter = {}
         self.types = None
         self.parse_actions = parse_actions
-        self.methods = []
+        self.methods: dict[str, Method] = {}  # Methods keyed by activity number
+        # self.methods = []
         self.state_models = []
 
         _logger.info(f"Transaction open: domain and subsystems [{domain}]")
@@ -90,7 +92,7 @@ class Domain:
                 # All classes must be populated first, so that parameter types in signatures can be resolved
                 # as class or non-class types
                 m = Method(domain=self.name, subsys=subsys.name, m_parse=m_parse, parse_actions=parse_actions)
-                self.methods.append(m)
+                self.methods[m.anum] = m
 
             # Insert state models
             _logger.info("Populating state models")
@@ -105,8 +107,12 @@ class Domain:
         Lineage.Derive(domain=domain)
         #
         # Populate actions for all Activities
-        for m in self.methods:
-            m.process_execution_units()
+        method_output_types = {
+            anum: Method_Output_Type(name=m.method_parse.flow_out, mult=m.method_parse.mult_out)
+            for anum, m in self.methods.items()
+        }
+        for anum, m in self.methods.items():
+            m.process_execution_units(method_output_types=method_output_types)
 
         # Intermediate printout for debugging
         mmdb_printout = f"mmdb_preaction_{domain}.txt"

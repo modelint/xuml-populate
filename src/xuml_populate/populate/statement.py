@@ -5,9 +5,12 @@ statement.py – Populate all actions in a Scrall statement
 # System
 import logging
 from collections import namedtuple
-from typing import Set
+from typing import Set, TYPE_CHECKING
 
 # xuml Populate
+if TYPE_CHECKING:
+    from xuml_populate.populate.activity import Activity
+
 from xuml_populate.populate.actions.call_statement import CallStatement
 from xuml_populate.populate.actions.signal_action import SignalAction
 from xuml_populate.populate.actions.instance_assignment import InstanceAssignment
@@ -34,12 +37,12 @@ class Statement:
     xi_flow_id = None
 
     @classmethod
-    def populate(cls, activity_data: ActivityAP, statement_parse: namedtuple,
+    def populate(cls, activity: 'Activity', statement_parse: namedtuple,
                  case_name: str = '', case_outputs: Set[Labeled_Flow] = None) -> Boundary_Actions:
         """
         Populate a Statement
 
-        :param activity_data:
+        :param activity:
         :param statement_parse:  A single parsed statement for us to populate
         :param case_name:  Values matched by case concatenated into a string
         :param case_outputs: Each output labeled data flow in the case, if any
@@ -50,40 +53,39 @@ class Statement:
         # into a dictionary of functions of some sort
         match statement_type:
             case 'Inst_Assignment_a':
-                boundary_actions = InstanceAssignment.process(activity_data=activity_data,
+                boundary_actions = InstanceAssignment.process(activity_data=activity.activity_data,
                                                               inst_assign=statement_parse,
                                                               case_name=case_name,
                                                               case_outputs=case_outputs,
                                                               )
                 pass
             case 'Table_Assignment_a':
-                boundary_actions = TableAssignment.process(activity_data=activity_data,
+                boundary_actions = TableAssignment.process(activity_data=activity.activity_data,
                                                            table_assign_parse=statement_parse,
                                                            case_name=case_name,
                                                            case_outputs=case_outputs)
                 pass
             case 'Scalar_Assignment_a':
-                scalar_assignment_s = ScalarAssignment(activity_data=activity_data, scalar_assign_parse=statement_parse)
+                scalar_assignment_s = ScalarAssignment(activity_data=activity.activity_data, scalar_assign_parse=statement_parse)
                 boundary_actions = scalar_assignment_s.process()
                 pass
             case 'Decision_a':
-                decision_a = DecisionAction(activity_data=activity_data, statement_parse=statement_parse)
+                decision_a = DecisionAction(activity=activity, statement_parse=statement_parse)
                 boundary_actions = decision_a.process()
             case 'Switch_a':
-                boundary_actions = SwitchStatement.populate(activity_data=activity_data,
-                                                            sw_parse=statement_parse)
+                boundary_actions = SwitchStatement.populate(activity=activity, sw_parse=statement_parse)
             case 'Call_a':
-                call_s = CallStatement(activity_data=activity_data, call_parse=statement_parse)
+                call_s = CallStatement(activity_data=activity.activity_data, call_parse=statement_parse)
                 boundary_actions = call_s.process()
             case 'Signal_a':
-                sig_a = SignalAction(activity_data=activity_data, statement_parse=statement_parse)
+                sig_a = SignalAction(activity_data=activity.activity_data, statement_parse=statement_parse)
                 boundary_actions = sig_a.process()
             case 'New_inst_a':
-                create_a = CreateAction(activity_data=activity_data, statement_parse=statement_parse)
+                create_a = CreateAction(activity_data=activity.activity_data, statement_parse=statement_parse)
                 boundary_actions = create_a.process()
             case 'Delete_Group_a':
                 # This statement parses into of a set of Delete Actions
-                delete_s = DeleteStatement(activity_data=activity_data, statement_parse=statement_parse)
+                delete_s = DeleteStatement(activity_data=activity.activity_data, statement_parse=statement_parse)
                 boundary_actions = delete_s.process()
                 pass
             case 'Output_Flow_a':

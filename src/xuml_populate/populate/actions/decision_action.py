@@ -3,6 +3,7 @@ decision_action.py – Populate a decision action instance in PyRAL
 """
 
 # System
+from typing import TYPE_CHECKING
 import logging
 
 # Model Integration
@@ -12,6 +13,8 @@ from pyral.relvar import Relation
 from pyral.transaction import Transaction
 
 # xUML populate
+if TYPE_CHECKING:
+    from xuml_populate.populate.activity import Activity
 from xuml_populate.utility import print_mmdb
 from xuml_populate.populate.actions.computation_action import ComputationAction
 from xuml_populate.populate.actions.expressions.instance_set import InstanceSet
@@ -20,32 +23,35 @@ from xuml_populate.populate.actions.aparse_types import ActivityAP, Boundary_Act
 from xuml_populate.populate.actions.action import Action
 from xuml_populate.populate.flow import Flow
 from xuml_populate.populate.actions.expressions.scalar_expr import ScalarExpr
-from xuml_populate.populate.mmclass_nt import Result_i, Decision_Action_i
+from xuml_populate.populate.mmclass_nt import (Result_i, Decision_Action_i,
+                                               Pass_Action_i, Instance_Action_i, Flow_Connector_i)
 from xuml_populate.exceptions.action_exceptions import *
 
 _logger = logging.getLogger(__name__)
 
 # Transactions
 tr_Decision = "Decision Action"
+tr_ResultPass = "Result Pass Action"
 
 class DecisionAction:
     """
     Create all relations for a Decision Action.
     """
     # TODO: Implement other Signal Action subclasses
-    def __init__(self, statement_parse: Decision_a, activity_data: ActivityAP):
+    def __init__(self, statement_parse: Decision_a, activity: 'Activity'):
         """
         Initialize with everything the Signal statement requires
 
         Args:
             statement_parse: Parsed representation of the Signal statement
-            activity_data: Collected info about the activity
+            activity:
         """
         self.action_id = None
         self.statement_parse = statement_parse
-        self.activity_data = activity_data
-        self.anum = activity_data.anum
-        self.domain = activity_data.domain
+        self.activity = activity
+        self.activity_data = activity.activity_data
+        self.anum = activity.anum
+        self.domain = activity.domain
         self.decision_input_flow = None
 
     def process(self) -> Boundary_Actions:
@@ -128,13 +134,32 @@ class DecisionAction:
 
         # Populate the true and false result statements and grab the initial actions of each so we can enable them
         from xuml_populate.populate.xunit import ExecutionUnit
-        t_boundary_actions = ExecutionUnit.process_statement_set(activity_data=self.activity_data,
-                                                                 content=true_result)
+        t_boundary_actions = ExecutionUnit.process_statement_set(activity=self.activity, content=true_result)
         true_init_actions = t_boundary_actions.ain
+        if not true_init_actions:
+            # We need at least one action to trigger with a control flow
+            # But we have an empty set which means that we are passing some flow along
+            # So we need to create a pass action
+            Transaction.open(db=mmdb, name=tr_ResultPass)
+            pass_output_flow = Flow.copy_data_flow(tr=tr_ResultPass, ref_fid=self.decision_input_flow.fid,
+                                                   ref_anum=self.anum, new_anum=self.anum, domain=self.domain)
+            pass_aid = Action.populate(tr=tr_ResultPass, anum=self.anum, domain=self.domain, action_type="pass")
+            true_init_actions = {pass_aid}
+            Relvar.insert(db=mmdb, tr=tr_ResultPass, relvar='Instance Action', tuples=[
+                Instance_Action_i(ID=pass_aid, Activity=self.anum, Domain=self.domain)
+            ])
+            Relvar.insert(db=mmdb, tr=tr_ResultPass, relvar='Flow Connector', tuples=[
+                Flow_Connector_i(ID=pass_aid, Activity=self.anum, Domain=self.domain)
+            ])
+            Relvar.insert(db=mmdb, tr=tr_ResultPass, relvar='Pass Action', tuples=[
+                Pass_Action_i(ID=pass_aid, Activity=self.anum, Domain=self.domain, Input_flow=self.decision_input_flow.fid,
+                              Output_flow=pass_output_flow.fid)
+            ])
+            Transaction.execute(db=mmdb, name=tr_ResultPass)
+            pass
 
         if false_result:
-            f_boundary_actions = ExecutionUnit.process_statement_set(activity_data=self.activity_data,
-                                                                     content=false_result)
+            f_boundary_actions = ExecutionUnit.process_statement_set(activity=self.activity, content=false_result)
             false_init_actions = f_boundary_actions.ain
             d_final_aids = t_boundary_actions.aout | f_boundary_actions.aout
         else:

@@ -123,13 +123,20 @@ class ExecutionUnit:
             raise Exception
 
         if single_statement:
-            boundary_actions = Statement.populate(activity_data=activity.activity_data, statement_parse=single_statement)
+            boundary_actions = Statement.populate(activity=activity, statement_parse=single_statement)
 
         elif block:
-            ba_list = list()
+            ain = None
+            aout = None
             for count, s in enumerate(block):
                 b = ExecutionUnit.process_statement_set(content=s.statement_set, activity=activity)
-                ba_list.append(b)
+                if ain is None:
+                    ain = b.ain  # Set the input boundary action
+                next_out = b.aout if b.aout else None
+                if next_out is not None:
+                    aout = next_out
+            boundary_actions = Boundary_Actions(ain=ain, aout=aout)
+
             pass  # TODO: Look at the b list and figure out what to return based on example
         else:
             # Parsing error, neither were specified

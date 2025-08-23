@@ -18,6 +18,7 @@ from xuml_populate.populate.flow import Flow
 from xuml_populate.populate.signature import Signature
 from xuml_populate.populate.activity import Activity
 from xuml_populate.populate.mm_type import MMtype
+from xuml_populate.populate.actions.aparse_types import Method_Output_Type
 from xuml_populate.populate.mmclass_nt import Method_Signature_i, Method_i, Parameter_i, Activity_Input_i
 from xuml_populate.populate.actions.aparse_types import MethodActivityAP
 
@@ -27,7 +28,6 @@ _logger = logging.getLogger(__name__)
 tr_Method = "Method"
 tr_Parameter = "Parameter"
 tr_OutputFlow = "OutputFlow"
-
 
 class Method:
     """
@@ -110,7 +110,7 @@ class Method:
 
         # Output flow (created by output flow action when it is populated)
 
-    def process_execution_units(self):
+    def process_execution_units(self, method_output_types: dict[str, Method_Output_Type]):
         """
         Process each Scrall Execution Unit for all Activities (Method, State, and Synchronous Operation)
         """
@@ -133,7 +133,7 @@ class Method:
 
         self.activity_detail = MethodActivityAP(
             anum=self.anum, domain=self.domain, cname=self.class_name, opname=self.name, signum=self.signum,
-            xiflow=self.xi_flow, activity_path=self.path,
+            xiflow=self.xi_flow, activity_path=self.path, domain_method_output_types=method_output_types,
             parse=self.activity_parse[0], scrall_text=self.method_parse.activity)
 
         # Populate the Method Actions
