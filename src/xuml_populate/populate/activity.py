@@ -136,7 +136,8 @@ class Activity:
         self.piflow: Optional[Flow_ap] = None  # Partitioning instance flow (for a Multiple Assigner)
         self.flow_path = None  # Not set until flow dependencies are processed
         self.synch_output_flows: set[Flow_ap] = set()  # Tracks synch outputs of a Method Activity
-        self.domain_method_output_types: Optional[dict[str, Method_Output_Type]] = None
+        # self.domain_method_output_types: Optional[dict[str, Method_Output_Type]] = None
+        self.domain_method_output_types = activity_data.domain_method_output_types
 
         match type(activity_data).__name__:
             case 'MethodActivityAP':
@@ -144,13 +145,12 @@ class Activity:
                 self.method_name = activity_data.opname
                 self.class_name = activity_data.cname
                 self.xiflow = activity_data.xiflow
-                self.domain_method_output_types = activity_data.domain_method_output_types
             case 'StateActivityAP':
                 self.atype = ActivityType.STATE
                 self.state_name = activity_data.sname
                 self.state_model = activity_data.state_model
                 self.smtype = activity_data.smtype
-                self.pi_flow = activity_data.piflow
+                self.piflow = activity_data.piflow
                 self.xiflow = activity_data.xiflow  # None if not a Lifecycle state
                 self.smtype = activity_data.smtype
             case _:

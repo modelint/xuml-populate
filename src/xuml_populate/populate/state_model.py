@@ -15,7 +15,7 @@ from pyral.transaction import Transaction
 
 
 # xUML Populate
-from xuml_populate.populate.actions.aparse_types import SMType
+from xuml_populate.populate.actions.aparse_types import SMType, Method_Output_Type
 from xuml_populate.populate.state_activity import StateActivity
 from xuml_populate.config import mmdb
 from xuml_populate.exceptions.mp_exceptions import MismatchedStateSignature, BadStateModelName
@@ -266,9 +266,10 @@ class StateModel:
 
         Transaction.execute(db=mmdb, name=tr_SM)
 
-    def process_states(self):
+    def process_states(self, method_output_types: dict[str, Method_Output_Type]):
         """
         """
         for name, s_data in self.states.items():
-            sa = StateActivity(state_name=name, state_model=self, state_parse=s_data)
+            sa = StateActivity(state_name=name, state_model=self, state_parse=s_data,
+                               method_output_types=method_output_types)
 

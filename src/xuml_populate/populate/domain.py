@@ -137,7 +137,7 @@ class Domain:
             m.post_process()
 
         for s in self.state_models:
-            s.process_states()
+            s.process_states(method_output_types=method_output_types)
 
         pass
 

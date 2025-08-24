@@ -13,7 +13,7 @@ from pyral.relation import Relation  # For debugging
 
 # xUML Populate
 from xuml_populate.config import mmdb
-from xuml_populate.populate.actions.aparse_types import SMType, Flow_ap, Content, MaxMult
+from xuml_populate.populate.actions.aparse_types import SMType, Flow_ap, Content, MaxMult, Method_Output_Type
 from xuml_populate.populate.activity import Activity
 from xuml_populate.populate.actions.aparse_types import StateActivityAP
 
@@ -28,7 +28,8 @@ tr_OutputFlow = "OutputFlow"
 class StateActivity:
     """
     """
-    def __init__(self, state_name: str, state_model: "StateModel", state_parse):
+    def __init__(self, state_name: str, state_model: "StateModel", state_parse,
+                 method_output_types: dict[str, Method_Output_Type]):
         """
         Populate a State's Activity
 
@@ -51,9 +52,9 @@ class StateActivity:
         self.path = f"{self.domain}:{self.sm_name}[{self.name}]"
         self.state_parse = state_parse
 
-        self.process_execution_units()
+        self.process_execution_units(method_output_types=method_output_types)
 
-    def process_execution_units(self):
+    def process_execution_units(self, method_output_types: dict[str, Method_Output_Type]):
         """
 
         """
@@ -99,7 +100,7 @@ class StateActivity:
         state_activity_data = StateActivityAP(
             anum=self.anum, domain=self.domain, signum=self.signum,
             sname=self.name, state_model=self.sm_name, smtype=self.sm_type,
-            xiflow=self.xi_flow, piflow=self.pi_flow,
+            xiflow=self.xi_flow, piflow=self.pi_flow, domain_method_output_types=method_output_types,
             activity_path=self.path, parse=self.state_parse["parse"], scrall_text=self.state_parse['text'])
 
         # Populate the State Activity Actions

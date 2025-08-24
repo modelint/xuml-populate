@@ -64,6 +64,7 @@ class MethodCall:
     def complete_output_transaction(cls):
         if cls.method_call_transaction_open:
             Transaction.execute(db=mmdb, name=cls.tr_MethodCallOutput)
+            MethodCall.method_call_transaction_open = False
 
     def process(self) -> tuple[str, str, Flow_ap]:
         """
@@ -184,7 +185,7 @@ class MethodCall:
                 # No matching type found in mmdb
                 msg = f"Method signature output type [{type_name}] not in metamodel"
                 _logger.error(msg)
-                raise ActionException
+                raise ActionException(msg)
             # Is the type a class?
             class_r = Relation.semijoin(db=mmdb, rname1=type_rv, rname2="Class")
             if class_r.body:

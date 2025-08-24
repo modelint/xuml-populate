@@ -217,6 +217,8 @@ class InstanceSet:
                     if first_action:
                         self.initial_action = ain
                     self.final_action = aout
+                case 'New_inst_a':
+                    pass
                 case _:
                     raise Exception
         return self.initial_action, self.final_action, self.component_flow

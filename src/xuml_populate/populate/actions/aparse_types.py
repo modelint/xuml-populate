@@ -58,6 +58,7 @@ class ActivityAP:
     domain: str  # domainname
     signum: str  # signature number
     xiflow: Flow_ap  # executing instance flow (none for assigner state activities)
+    domain_method_output_types: dict[str, Method_Output_Type]  # Dictionary of output types for all methods in domain
     activity_path: str  # descriptive name of activity for logging (e.g. domain, class, method name)
     parse: Execution_Unit_a  # The Scrall parse of the actions
     scrall_text: str  # Full unparsed text of the activity for logging and diagnostic reference
@@ -66,7 +67,6 @@ class ActivityAP:
 class MethodActivityAP(ActivityAP):
     cname: str  # Method is defined on this class name
     opname: str  # Name of the method
-    domain_method_output_types: dict[str, Method_Output_Type]  # Dictionary of output types for all methods in domain
 
 @dataclass(frozen=True, kw_only=True)
 class StateActivityAP(ActivityAP):
