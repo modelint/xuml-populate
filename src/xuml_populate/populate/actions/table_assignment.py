@@ -61,7 +61,7 @@ class TableAssignment:
         cls.input_instance_flow = activity.xiflow
 
         # The executing instance is by nature a single instance flow
-        xi_flow = Flow_ap(fid=activity.xiflow.fid, content=Content.INSTANCE, tname=activity.cname,
+        xi_flow = Flow_ap(fid=activity.xiflow.fid, content=Content.INSTANCE, tname=activity.class_name,
                           max_mult=MaxMult.ONE)
 
         bactions, output_flow = TableExpr.process(tuple_output=table_assign_parse.assign_tuple, rhs=rhs, activity=activity, input_instance_flow=xi_flow)

@@ -195,7 +195,7 @@ class Activity:
         # Check the synch outputs for this method
 
         # Just return if this activity is not a method or if it is and has no output flows
-        if not self.atype != ActivityType.METHOD or not self.synch_output_flows:
+        if self.atype != ActivityType.METHOD or not self.synch_output_flows:
             return
 
         # If there is only one output flow, just populate it as the method's synchronous output

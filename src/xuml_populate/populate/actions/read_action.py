@@ -4,7 +4,7 @@ read_action.py – Populate a read action instance in PyRAL
 
 # System
 import logging
-from typing import Set, List, Tuple
+from typing import Set, List, Tuple, TYPE_CHECKING
 
 # Model Integration
 from scrall.parse.visitor import Projection_a
