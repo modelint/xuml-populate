@@ -50,12 +50,6 @@ class StateActivity:
         self.pclass = None
         self.path = f"{self.domain}:{self.sm_name}[{self.name}]"
         self.state_parse = state_parse
-        self.activity_detail = None
-        # Maintain a dictionary of seq token control flow dependencies
-        # seq_token_out_action: {seq_token_in_actions}
-        self.seq_flows: dict[str, set[str]] = {}
-        # seq_token: output_action_ids
-        self.seq_tokens: dict[str, set[str]] = {}
 
         self.process_execution_units()
 
@@ -102,13 +96,13 @@ class StateActivity:
             case SMType.SA:
                 pass  # No xi or pi flow (rnum only, no associated instance)
 
-        self.activity_detail = StateActivityAP(
+        state_activity_data = StateActivityAP(
             anum=self.anum, domain=self.domain, signum=self.signum,
             sname=self.name, state_model=self.sm_name, smtype=self.sm_type,
             xiflow=self.xi_flow, piflow=self.pi_flow,
             activity_path=self.path, parse=self.state_parse["parse"], scrall_text=self.state_parse['text'])
 
         # Populate the State Activity Actions
-        activity_obj = Activity(activity_data=self.activity_detail)
+        activity_obj = Activity(activity_data=state_activity_data)
         activity_obj.pop_actions()
         activity_obj.prep_for_execution()

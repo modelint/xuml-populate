@@ -54,7 +54,6 @@ class Method:
         self.xi_flow_id = None
         self.xi_flow = None
         self.path = f"{domain}:{self.class_name}.{self.name}"
-        self.activity_detail = None
         self.activity_obj: Optional[Activity] = None
 
         Transaction.open(db=mmdb, name=tr_Method)
@@ -133,13 +132,13 @@ class Method:
             pass
         self.xi_flow_id = method_r.body[0]['Executing_instance_flow']
 
-        self.activity_detail = MethodActivityAP(
+        method_data = MethodActivityAP(
             anum=self.anum, domain=self.domain, cname=self.class_name, opname=self.name, signum=self.signum,
             xiflow=self.xi_flow, activity_path=self.path, domain_method_output_types=method_output_types,
             parse=self.activity_parse[0], scrall_text=self.method_parse.activity)
 
         # Populate the Method Actions
-        self.activity_obj = Activity(activity_data=self.activity_detail)
+        self.activity_obj = Activity(activity_data=method_data)
         self.activity_obj.pop_actions()
 
     def post_process(self):
