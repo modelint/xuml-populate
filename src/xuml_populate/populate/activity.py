@@ -4,7 +4,7 @@ activity.py – Populate an Activity
 
 # System
 import logging
-from typing import NamedTuple
+from typing import NamedTuple, Optional
 # For debugging
 from collections import namedtuple
 
@@ -17,6 +17,7 @@ from scrall.parse.parser import ScrallParser
 
 # xUML Populate
 from xuml_populate.utility import print_mmdb
+from xuml_populate.populate.actions.aparse_types import SMType, Method_Output_Type
 from xuml_populate.exceptions.action_exceptions import *
 from xuml_populate.utility import print_mmdb
 from xuml_populate.populate.actions.sequence_flow import SequenceFlow
@@ -112,17 +113,46 @@ class Activity:
         Args:
             activity_data: All the data, including parse, about this method
         """
-        self.activity_data = activity_data
+        # These are common to both Method and State Activities
+        self.anum = activity_data.anum
+        self.domain = activity_data.domain
         self.parse = activity_data.parse
-        self.name = None
-        self.class_name = None
-        self.state_name = None
-        self.pclass = None
-        self.atype = None
-        self.xi_flow = None
-        self.flow_path = None
+        self.signum = activity_data.signum
+        self.activity_path = activity_data.activity_path
+        self.scrall_text = activity_data.scrall_text
+
+        # These default to None since they are specific to either Method or State Activities
+        self.method_name: Optional[str] = None
+        self.class_name: Optional[str] = None
+        self.state_name: Optional[str] = None
+        self.state_model: Optional[str] = None
+        self.smtype: Optional[SMType] = None
+        self.pclass: Optional[str] = None
+        self.xiflow = Optional[Flow_ap] = None  # Executable instance flow (for a Method or Lifecycle)
+        self.piflow = Optional[Flow_ap] = None  # Partitioning instance flow (for a Multiple Assigner)
+        self.flow_path = None  # Not set until flow dependencies are processed
         self.synch_output_flows: set[Flow_ap] = set()  # Tracks synch outputs of a Method Activity
-        self.is_method = False  # default assumption
+        self.domain_method_output_types: Optional[dict[str, Method_Output_Type]] = None
+
+        match type(activity_data).__name__:
+            case 'MethodActivityAP':
+                self.atype = ActivityType.METHOD
+                self.method_name = activity_data.opname
+                self.class_name = activity_data.cname
+                self.xiflow = activity_data.xiflow
+                self.domain_method_output_types = activity_data.domain_method_output_types
+            case 'StateActivityAP':
+                self.atype = ActivityType.STATE
+                self.state_name = activity_data.sname
+                self.state_model = activity_data.state_model
+                self.smtype = activity_data.smtype
+                self.pi_flow = activity_data.piflow
+                self.xiflow = activity_data.xiflow  # None if not a Lifecycle state
+                self.smtype = activity_data.smtype
+            case _:
+                msg = f"Activity is neither a Method or State Activity"
+                _logger.error(msg)
+                raise ActionException(msg)
 
         # Maintain a dictionary of seq token control flow dependencies
         # seq_token_out_action: {seq_token_in_actions}
@@ -130,37 +160,25 @@ class Activity:
         # seq_token: output_action_ids
         self.seq_tokens: dict[str, set[str]] = {}
 
-        match type(activity_data).__name__:
-            case 'MethodActivityAP':
-                self.atype = ActivityType.METHOD
-                self.name = activity_data.opname
-                self.class_name = activity_data.cname
-                self.xi_flow = activity_data.xiflow
-                self.is_method = True
-            case 'StateActivityAP':
-                self.atype = ActivityType.STATE
-                self.state_name = activity_data.sname
-                self.pi_flow = activity_data.piflow
-                self.xi_flow = activity_data.xiflow  # None if not a Lifecycle state
-            case _:
-                pass
-
-        self.anum = activity_data.anum
-        self.domain = activity_data.domain
         self.wave_ctr = 1  # Initialize wave counter
-        self.waves = dict()
-        self.xactions = None
+        self.waves: Optional[dict[int, list[str]]] = None
 
+    def pop_actions(self):
+        """
+        Populate all actions for this Activity
+        """
         self.pop_xunits()
-        if self.is_method:
+        if self.atype == ActivityType.METHOD:
             self.resolve_method_outputs()  # Ensure that each method with an output has only one
-        else:  # TODO: For now let's exclude these from the method activity population
-            self.pop_seq_flows()
-            self.pop_flow_dependencies()
-            self.assign_waves()
-            self.populate_waves()
-        print_mmdb()
-        pass
+
+    def prep_for_execution(self):
+        """
+        Post process the populated activities to provide helpful information for execution
+        """
+        self.pop_seq_flows()
+        self.pop_flow_dependencies()
+        self.assign_waves()
+        self.populate_waves()
 
     def pop_seq_flows(self):
         for source, destinations in self.seq_flows.items():
@@ -177,7 +195,7 @@ class Activity:
         # Check the synch outputs for this method
 
         # Just return if this activity is not a method or if it is and has no output flows
-        if not self.is_method or not self.synch_output_flows:
+        if not self.atype != ActivityType.METHOD or not self.synch_output_flows:
             return
 
         # If there is only one output flow, just populate it as the method's synchronous output
@@ -426,8 +444,8 @@ class Activity:
         # Project on the referential attribute to the flow
         Relation.project(db=mmdb, attributes=("Executing_instance_flow",))
         # Rename it to "Flow"
-        Relation.rename(db=mmdb, names={"Executing_instance_flow": "Flow"}, svar_name="xi_flow")
-        # Relation.print(db=mmdb, variable_name="xi_flow")
+        Relation.rename(db=mmdb, names={"Executing_instance_flow": "Flow"}, svar_name="xiflow")
+        # Relation.print(db=mmdb, variable_name="xiflow")
 
         # Get the parameter input flows for our Anum and Domain
         R = f"Activity:<{self.anum}>, Domain:<{self.domain}>"
@@ -446,7 +464,7 @@ class Activity:
         # Relation.print(db=mmdb, variable_name="class_flows")
 
         # Now take the union of all three
-        Relation.union(db=mmdb, relations=("xi_flow", "param_flows", "class_flows"), svar_name="wave_enabled_flows")
+        Relation.union(db=mmdb, relations=("xiflow", "param_flows", "class_flows"), svar_name="wave_enabled_flows")
         # Relation.print(db=mmdb, variable_name="wave_enabled_flows")
 
     def initially_executable_actions(self) -> RelationValue:
@@ -657,8 +675,8 @@ class Activity:
         # Mark all flows in Activity that are available in the first wave of execution
 
         # The single executing instance flow is available
-        if self.xi_flow:
-            self.flow_path[self.xi_flow.fid]['available'] = True
+        if self.xiflow:
+            self.flow_path[self.xiflow.fid]['available'] = True
 
         # All activity parameter flows are available
         R = f"Activity:<{self.anum}>, Domain:<{self.domain}>"
