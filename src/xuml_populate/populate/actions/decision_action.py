@@ -49,7 +49,6 @@ class DecisionAction:
         self.action_id = None
         self.statement_parse = statement_parse
         self.activity = activity
-        self.activity_data = activity.activity_data
         self.anum = activity.anum
         self.domain = activity.domain
         self.decision_input_flow = None
@@ -73,8 +72,8 @@ class DecisionAction:
         match decision_input_type:
             case 'INST_PROJ_a':
                 # We need to evaluate an instance set and a possible projection
-                iset = InstanceSet(input_instance_flow=self.activity_data.xiflow,
-                                   iset_components=decision_input.iset.components, activity_data=self.activity_data)
+                iset = InstanceSet(input_instance_flow=self.activity.xiflow,
+                                   iset_components=decision_input.iset.components, activity=self.activity)
                 aid, _, self.decision_input_flow = iset.process()
                 # We have just one initial action, so the set will be just a single aid
                 input_init_aids.add(aid)
@@ -85,11 +84,11 @@ class DecisionAction:
                     pass
             case 'N_a':
                 # We have the name of a flow, verify it exists
-                iset = InstanceSet(iset_components=[decision_input], activity_data=self.activity_data)
+                iset = InstanceSet(iset_components=[decision_input], activity=self.activity)
                 # It's just a flow, so the returned initial, final actions should be empty
                 _, _, self.decision_input_flow = iset.process()
             case 'BOOL_a':
-                ca = ComputationAction(expr=decision_input, activity_data=self.activity_data)
+                ca = ComputationAction(expr=decision_input, activity=self.activity)
                 aid, self.decision_input_flow = ca.populate()
                 input_init_aids.add(aid)  # The input is whatever action initializes the computation
             case _:

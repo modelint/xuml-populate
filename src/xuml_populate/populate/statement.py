@@ -53,20 +53,20 @@ class Statement:
         # into a dictionary of functions of some sort
         match statement_type:
             case 'Inst_Assignment_a':
-                boundary_actions = InstanceAssignment.process(activity_data=activity.activity_data,
+                boundary_actions = InstanceAssignment.process(activity=activity,
                                                               inst_assign=statement_parse,
                                                               case_name=case_name,
                                                               case_outputs=case_outputs,
                                                               )
                 pass
             case 'Table_Assignment_a':
-                boundary_actions = TableAssignment.process(activity_data=activity.activity_data,
+                boundary_actions = TableAssignment.process(activity=activity,
                                                            table_assign_parse=statement_parse,
                                                            case_name=case_name,
                                                            case_outputs=case_outputs)
                 pass
             case 'Scalar_Assignment_a':
-                scalar_assignment_s = ScalarAssignment(activity_data=activity.activity_data, scalar_assign_parse=statement_parse)
+                scalar_assignment_s = ScalarAssignment(activity=activity, scalar_assign_parse=statement_parse)
                 boundary_actions = scalar_assignment_s.process()
                 pass
             case 'Decision_a':
@@ -75,17 +75,17 @@ class Statement:
             case 'Switch_a':
                 boundary_actions = SwitchStatement.populate(activity=activity, sw_parse=statement_parse)
             case 'Call_a':
-                call_s = CallStatement(activity_data=activity.activity_data, call_parse=statement_parse)
+                call_s = CallStatement(activity=activity, call_parse=statement_parse)
                 boundary_actions = call_s.process()
             case 'Signal_a':
-                sig_a = SignalAction(activity_data=activity.activity_data, statement_parse=statement_parse)
+                sig_a = SignalAction(activity=activity, statement_parse=statement_parse)
                 boundary_actions = sig_a.process()
             case 'New_inst_a':
-                create_a = CreateAction(activity_data=activity.activity_data, statement_parse=statement_parse)
+                create_a = CreateAction(activity=activity, statement_parse=statement_parse)
                 boundary_actions = create_a.process()
             case 'Delete_Group_a':
                 # This statement parses into of a set of Delete Actions
-                delete_s = DeleteStatement(activity_data=activity.activity_data, statement_parse=statement_parse)
+                delete_s = DeleteStatement(activity=activity, statement_parse=statement_parse)
                 boundary_actions = delete_s.process()
                 pass
             case 'Output_Flow_a':

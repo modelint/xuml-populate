@@ -4,7 +4,7 @@ computation_action.py – Populate a read action instance in PyRAL
 
 # System
 import logging
-from typing import Sequence
+from typing import Sequence, TYPE_CHECKING
 
 # Model Integration
 from pyral.relvar import Relvar
@@ -13,8 +13,10 @@ from pyral.transaction import Transaction
 from scrall.parse.visitor import BOOL_a, MATH_a
 
 # xUML populate
+if TYPE_CHECKING:
+    from xuml_populate.populate.activity import Activity
 from xuml_populate.config import mmdb
-from xuml_populate.populate.actions.aparse_types import Flow_ap, MaxMult, Content, ActivityAP
+from xuml_populate.populate.actions.aparse_types import Flow_ap, MaxMult, Content
 from xuml_populate.populate.actions.action import Action
 from xuml_populate.populate.flow import Flow
 from xuml_populate.populate.mmclass_nt import Computation_Action_i, Computation_Input_i, Instance_Action_i
@@ -29,20 +31,19 @@ class ComputationAction:
     Populate a Compute Action
     """
 
-    def __init__(self, expr: BOOL_a | MATH_a, activity_data: ActivityAP):
+    def __init__(self, expr: BOOL_a | MATH_a, activity: 'Activity'):
         """
         Collect all data required to populate a Computation Action
 
         Args:
             expr: A boolean or math scalar expression parse
-            operand_flows: Each data flow inputing an operand into the computation
-            activity_data: General info about the enclosing Activity
+            activity: The enclosing Activity
         """
         self.expr = expr
 
-        self.anum = activity_data.anum
-        self.domain = activity_data.domain
-        self.activity_data = activity_data
+        self.anum = activity.anum
+        self.domain = activity.domain
+        self.activity = activity
 
         self.action_id = None
         self.operand_flows: list[str] = []

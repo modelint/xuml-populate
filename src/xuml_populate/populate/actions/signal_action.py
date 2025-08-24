@@ -4,6 +4,7 @@ signal_action.py – Populate a signal action instance in PyRAL
 
 # System
 import logging
+from typing import TYPE_CHECKING
 
 # Model Integration
 from scrall.parse.visitor import Signal_a
@@ -11,9 +12,11 @@ from pyral.relvar import Relvar
 from pyral.transaction import Transaction
 
 # xUML populate
+if TYPE_CHECKING:
+    from xuml_populate.populate.activity import Activity
 from xuml_populate.utility import print_mmdb
 from xuml_populate.config import mmdb
-from xuml_populate.populate.actions.aparse_types import ActivityAP, Boundary_Actions
+from xuml_populate.populate.actions.aparse_types import Boundary_Actions
 from xuml_populate.populate.actions.action import Action
 from xuml_populate.populate.actions.expressions.instance_set import InstanceSet
 from xuml_populate.populate.mmclass_nt import (Signal_Action_i, Supplied_Parameter_Value_i,
@@ -32,18 +35,18 @@ class SignalAction:
     Create all relations for a Signal Action.
     """
     # TODO: Implement other Signal Action subclasses
-    # TODO: activity_data type should be ActivityAP
-    def __init__(self, statement_parse: Signal_a, activity_data: ActivityAP):
+    # TODO: activity type should be ActivityAP
+    def __init__(self, statement_parse: Signal_a, activity: 'Activity'):
         """
         Initialize with everything the Signal statement requires
 
         Args:
             statement_parse: Parsed representation of the Signal statement
-            activity_data: Collected info about the activity
+            activity: Collected info about the activity
         """
         self.action_id = None
         self.statement_parse = statement_parse
-        self.activity_data = activity_data
+        self.activity = activity
 
         self.dest_iflow = None
         self.parameter_values = None
@@ -56,7 +59,7 @@ class SignalAction:
         """
         # Populate the Action superclass instance and obtain its action_id
         Transaction.open(db=mmdb, name=tr_Signal)
-        self.action_id = Action.populate(tr=tr_Signal, anum=self.activity_data.anum, domain=self.activity_data.domain,
+        self.action_id = Action.populate(tr=tr_Signal, anum=self.activity.anum, domain=self.activity.domain,
                                          action_type="signal")  # Transaction open
 
         # Extract the destination info from the parse
@@ -73,25 +76,25 @@ class SignalAction:
                 case 'N_a':
                     dest_name = signal_dest.target_iset.name
                     if dest_name == 'me':
-                        if self.activity_data.xiflow:
-                            dest_flow = self.activity_data.xiflow
-                        dest_sm = self.activity_data.xiflow.tname  # The Event Spec is defined on my own state model
+                        if self.activity.xiflow:
+                            dest_flow = self.activity.xiflow
+                        dest_sm = self.activity.xiflow.tname  # The Event Spec is defined on my own state model
                     else:
                         pass  # TODO: Destination is some other state model
                 case 'IN_a':
                     pass  # It is an input parameter
                 case 'INST_a':
-                    iset = InstanceSet(input_instance_flow=self.activity_data.xiflow,
+                    iset = InstanceSet(input_instance_flow=self.activity.xiflow,
                                        iset_components=signal_dest.target_iset.components,
-                                       activity_data=self.activity_data)
+                                       activity=self.activity)
                     _, _, dest_flow = iset.process()
                     dest_sm = dest_flow.tname
                 case _:
                     pass  # Includes case where a more complex instance set expression is supplied
 
             Relvar.insert(db=mmdb, tr=tr_Signal, relvar='Signal Instance Set Action', tuples=[
-                Signal_Instance_Set_Action_i(ID=self.action_id, Activity=self.activity_data.anum,
-                                             Domain=self.activity_data.domain, Instance_flow=dest_flow.fid)
+                Signal_Instance_Set_Action_i(ID=self.action_id, Activity=self.activity.anum,
+                                             Domain=self.activity.domain, Instance_flow=dest_flow.fid)
             ])
         elif signal_dest.assigner_dest:
             dest_sm = signal_dest.assigner_dest.rnum.rnum  # The signal destination state model name
@@ -101,30 +104,30 @@ class SignalAction:
 
             # It's a safe assumption that we're signaling an assigner from a lifecycle state machine or a method
             # So we should have an xi flow
-            if not self.activity_data.xiflow:
+            if not self.activity.xiflow:
                 pass  # TODO: Handle case where an assigner is sending a signal to another assigner
 
-            iset = InstanceSet(input_instance_flow=self.activity_data.xiflow,
+            iset = InstanceSet(input_instance_flow=self.activity.xiflow,
                                iset_components=signal_dest.assigner_dest.partition.components,
-                               activity_data=self.activity_data)
+                               activity=self.activity)
             _, _, f = iset.process()
 
             Relvar.insert(db=mmdb, tr=tr_Signal, relvar='Signal Assigner Action', tuples=[
-                Signal_Assigner_Action_i(ID=self.action_id, Activity=self.activity_data.anum,
-                                         Domain=self.activity_data.domain,
+                Signal_Assigner_Action_i(ID=self.action_id, Activity=self.activity.anum,
+                                         Domain=self.activity.domain,
                                          Association=dest_sm)
             ])
             Relvar.insert(db=mmdb, tr=tr_Signal, relvar='Multiple Assigner Partition Instance', tuples=[
-                Multiple_Assigner_Partition_Instance_i(Action=self.action_id, Activity=self.activity_data.anum,
-                                                       Domain=self.activity_data.domain,
+                Multiple_Assigner_Partition_Instance_i(Action=self.action_id, Activity=self.activity.anum,
+                                                       Domain=self.activity.domain,
                                                        Partition=f.fid)
             ])
         Relvar.insert(db=mmdb, tr=tr_Signal, relvar='Signal Action', tuples=[
-            Signal_Action_i(ID=self.action_id, Activity=self.activity_data.anum, Domain=self.activity_data.domain,
+            Signal_Action_i(ID=self.action_id, Activity=self.activity.anum, Domain=self.activity.domain,
                             Event_spec=self.statement_parse.event, State_model=dest_sm)
         ])
         Relvar.insert(db=mmdb, tr=tr_Signal, relvar='Instance Action', tuples=[
-            Instance_Action_i(ID=self.action_id, Activity=self.activity_data.anum, Domain=self.activity_data.domain)
+            Instance_Action_i(ID=self.action_id, Activity=self.activity.anum, Domain=self.activity.domain)
         ])
 
         if self.statement_parse.supplied_params:

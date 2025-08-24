@@ -4,7 +4,7 @@ restrict_action.py – Populate a Restrict Action instance in PyRAL
 
 # System
 import logging
-from typing import Set
+from typing import Set, TYPE_CHECKING
 
 # Model Integration
 from pyral.relvar import Relvar
@@ -13,8 +13,10 @@ from pyral.transaction import Transaction
 from scrall.parse.visitor import Criteria_Selection_a, Rank_Selection_a
 
 # xUML Populate
+if TYPE_CHECKING:
+    from xuml_populate.populate.activity import Activity
 from xuml_populate.config import mmdb
-from xuml_populate.populate.actions.aparse_types import Flow_ap, ActivityAP
+from xuml_populate.populate.actions.aparse_types import Flow_ap
 from xuml_populate.populate.actions.action import Action
 from xuml_populate.populate.actions.expressions.restriction_condition import RestrictCondition
 from xuml_populate.populate.flow import Flow
@@ -33,18 +35,18 @@ class RestrictAction:
     """
 
     def __init__(self, input_relation_flow: Flow_ap, selection_parse: Criteria_Selection_a,
-                 activity_data: ActivityAP):
+                 activity: 'Activity'):
         """
         Populate the Restrict Action
 
         :param input_relation_flow: The source table flow into this restriction
         :param selection_parse:  The parsed Scrall select action group
-        :param activity_data:
+        :param activity:
         """
         # Save attribute values that we will need when creating the various select subsystem
         # classes
-        domain = activity_data.domain
-        anum = activity_data.anum
+        domain = activity.domain
+        anum = activity.anum
 
         # Populate the Action superclass instance and obtain its action_id
         Transaction.open(db=mmdb, name=tr_Restrict_Action)
@@ -56,7 +58,7 @@ class RestrictAction:
 
         # Walk through the criteria parse tree storing any attributes or input flows
         rcond = RestrictCondition(tr=tr_Restrict_Action, action_id=self.action_id, input_nsflow=input_relation_flow,
-                                  selection_parse=selection_parse, activity_data=activity_data)
+                                  selection_parse=selection_parse, activity=activity)
         self.sflows = rcond.input_scalar_flows
         # The first two return values are relevant only to instance selection (Select Action)
         # Restrict action does not use the returned cardinality since output is always a Table Flow

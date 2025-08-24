@@ -1,16 +1,23 @@
 """
 rename_action.py – Populate a selection action instance in PyRAL
 """
-
+# System
 import logging
+from typing import TYPE_CHECKING
+
+# Model Integration
+from pyral.relvar import Relvar
+from pyral.transaction import Transaction
+
+# xUML Populate
+if TYPE_CHECKING:
+    from xuml_populate.populate.activity import Activity
 from xuml_populate.config import mmdb
-from xuml_populate.populate.actions.aparse_types import Flow_ap, MaxMult, Content, ActivityAP
+from xuml_populate.populate.actions.aparse_types import Flow_ap, MaxMult, Content
 from xuml_populate.populate.flow import Flow
 from xuml_populate.populate.ns_flow import NonScalarFlow
 from xuml_populate.populate.actions.action import Action
 from xuml_populate.populate.mmclass_nt import Relational_Action_i, Table_Action_i, Rename_Action_i
-from pyral.relvar import Relvar
-from pyral.transaction import Transaction
 
 _logger = logging.getLogger(__name__)
 
@@ -24,17 +31,17 @@ class RenameAction:
 
     @classmethod
     def populate(cls, input_nsflow: Flow_ap, from_attr: str, to_attr: str,
-                 activity_data: ActivityAP) -> (str, Flow_ap):
+                 activity: 'Activity') -> tuple[str, Flow_ap]:
         """
 
         :param input_nsflow:
         :param from_attr:
         :param to_attr:
-        :param activity_data:
+        :param activity:
         :return:
         """
-        anum = activity_data.anum
-        domain = activity_data.domain
+        anum = activity.anum
+        domain = activity.domain
 
         # Get header for the input flow
         table_header = NonScalarFlow.header(ns_flow=input_nsflow, domain=domain)

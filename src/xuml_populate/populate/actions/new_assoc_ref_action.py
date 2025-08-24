@@ -4,7 +4,7 @@ new_assoc_ref_action.py – Populate a New Associative Reference Action
 
 # System
 import logging
-from typing import List
+from typing import List, TYPE_CHECKING
 
 # Model Integration
 from scrall.parse.visitor import To_ref_a
@@ -13,10 +13,12 @@ from pyral.relation import Relation
 from pyral.transaction import Transaction
 
 # xUML Populate
+if TYPE_CHECKING:
+    from xuml_populate.populate.activity import Activity
 from xuml_populate.utility import print_mmdb
 from xuml_populate.config import mmdb
 from xuml_populate.populate.actions.table import Table
-from xuml_populate.populate.actions.aparse_types import Flow_ap, ActivityAP, Content, MaxMult
+from xuml_populate.populate.actions.aparse_types import Flow_ap, Content, MaxMult
 from xuml_populate.populate.actions.expressions.instance_set import InstanceSet
 from xuml_populate.populate.actions.action import Action
 from xuml_populate.populate.flow import Flow
@@ -31,7 +33,7 @@ class NewAssociativeReferenceAction:
 
     """
 
-    def __init__(self, tr: str, create_action_id: str, action_parse: To_ref_a, activity_data: ActivityAP):
+    def __init__(self, tr: str, create_action_id: str, action_parse: To_ref_a, activity: 'Activity'):
         """
 
         """
@@ -41,13 +43,13 @@ class NewAssociativeReferenceAction:
         self.t_class = None
         self.ref_flows: dict[str, str] = {}
         self.parse = action_parse
-        self.activity_data = activity_data
-        self.domain = activity_data.domain
-        self.anum = activity_data.anum
+        self.activity = activity
+        self.domain = activity.domain
+        self.anum = activity.anum
         self.rnum = action_parse.rnum.rnum
         self.action_id = None
 
-    def populate(self) -> (str, list[str]):
+    def populate(self) -> tuple[str, list[str]]:
         """
 
         Returns:
@@ -146,8 +148,8 @@ class NewAssociativeReferenceAction:
                     self.ref_flows[flow_class] = flow_id
                 return
             case 'INST_a':
-                pop_iset = InstanceSet(input_instance_flow=self.activity_data.xiflow, iset_components=iset.components,
-                                       activity_data=self.activity_data)
+                pop_iset = InstanceSet(input_instance_flow=self.activity.xiflow, iset_components=iset.components,
+                                       activity=self.activity)
                 ain, aout, f = pop_iset.process()
                 self.ref_flows[f.tname] = f.fid
                 return

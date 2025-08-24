@@ -1,19 +1,26 @@
 """
 project_action.py – Populate a Project Action instance in PyRAL
 """
-
+# System
 import logging
-from xuml_populate.config import mmdb
-from xuml_populate.exceptions.action_exceptions import ProjectedAttributeNotDefined
+from typing import TYPE_CHECKING
+
+# Model Integration
 from scrall.parse.visitor import Projection_a
-from xuml_populate.populate.flow import Flow
-from xuml_populate.populate.actions.aparse_types import Flow_ap, Content, ActivityAP
-from xuml_populate.populate.actions.action import Action
-from xuml_populate.populate.mmclass_nt import Relational_Action_i, Table_Action_i, Project_Action_i, \
-    Projected_Attribute_i
 from pyral.relvar import Relvar
 from pyral.relation import Relation
 from pyral.transaction import Transaction
+
+# xUML Populate
+if TYPE_CHECKING:
+    from xuml_populate.populate.activity import Activity
+from xuml_populate.config import mmdb
+from xuml_populate.exceptions.action_exceptions import ProjectedAttributeNotDefined
+from xuml_populate.populate.flow import Flow
+from xuml_populate.populate.actions.aparse_types import Flow_ap, Content
+from xuml_populate.populate.actions.action import Action
+from xuml_populate.populate.mmclass_nt import (Relational_Action_i, Table_Action_i, Project_Action_i,
+                                               Projected_Attribute_i)
 
 _logger = logging.getLogger(__name__)
 
@@ -27,19 +34,19 @@ class ProjectAction:
     """
 
     @classmethod
-    def populate(cls, input_nsflow: Flow_ap, projection: Projection_a, activity_data: ActivityAP) -> (str, Flow_ap):
+    def populate(cls, input_nsflow: Flow_ap, projection: Projection_a, activity: 'Activity') -> tuple[str, Flow_ap]:
         """
         Populate the Project Action
 
         :param input_nsflow: The input Non Scalar Flow that is being projected
         :param projection:  A list of attr names to be projected and optional expansion (ALL, EMPTY)
-        :param activity_data:
+        :param activity:
         :return: Action ID and Projected table flow
         """
         # Save attribute values that we will need when creating the various select subsystem
         # classes
-        domain = activity_data.domain
-        anum = activity_data.anum
+        domain = activity.domain
+        anum = activity.anum
 
         _logger.info("Populating projection action")
         table_header = {}

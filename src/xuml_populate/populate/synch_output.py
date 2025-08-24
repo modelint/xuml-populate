@@ -1,11 +1,17 @@
 """ synch_output.py - Process a Synchronous Output"""
-
+# System
 import logging
-from xuml_populate.config import mmdb
+from typing import List, TYPE_CHECKING
+
+# Model Integration
 from scrall.parse.visitor import Execution_Unit_a, Seq_Statement_Set_a, Comp_Statement_Set_a
+
+# xUML Populate
+if TYPE_CHECKING:
+    from xuml_populate.populate.activity import Activity
+from xuml_populate.config import mmdb
 from xuml_populate.populate.statement import Statement
 from xuml_populate.populate.actions.aparse_types import ActivityAP
-from typing import List
 
 class SynchOutput:
     """
@@ -18,7 +24,7 @@ class SynchOutput:
         pass
 
     @classmethod
-    def process_method_statement_set(cls, activity_data: ActivityAP, statement_set) -> (List[str], List[str]):
+    def process_method_statement_set(cls, activity: 'Activity', statement_set) -> tuple[List[str], List[str]]:
         """
         Initiates the population of all elements derived from a set of statements in a method.
 
@@ -29,7 +35,7 @@ class SynchOutput:
         The second list is each action that does not provide any data input
         to any other action in the execution unit. These are terminal actions.
 
-        :param activity_data:
+        :param activity:
         :param statement_set:
         :return: Tuple with a list of initial and terminal actions
         """
@@ -43,7 +49,7 @@ class SynchOutput:
             raise Exception
 
         if single_statement:
-            boundary_actions = Statement.populate(activity_data, statement_parse=single_statement)
+            boundary_actions = Statement.populate(activity=activity, statement_parse=single_statement)
 
             pass
         elif block:

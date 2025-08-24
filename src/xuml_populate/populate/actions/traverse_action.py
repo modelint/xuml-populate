@@ -4,7 +4,7 @@ traverse_action.py – Populate a traverse action instance in PyRAL
 
 # System
 import logging
-from typing import Set, Dict, List
+from typing import Set, Dict, List, TYPE_CHECKING
 
 # Model Integration
 from scrall.parse.visitor import PATH_a
@@ -13,6 +13,8 @@ from pyral.relation import Relation
 from pyral.transaction import Transaction
 
 # XUML_Populate
+if TYPE_CHECKING:
+    from xuml_populate.populate.activity import Activity
 from xuml_populate.config import mmdb
 from xuml_populate.populate.actions.action import Action
 from xuml_populate.populate.flow import Flow
@@ -23,7 +25,7 @@ from xuml_populate.exceptions.action_exceptions import (UndefinedRelationship, I
                                                         SubclassNotInGeneralization, PerspectiveNotDefined,
                                                         UndefinedAssociation, NeedPerspectiveOrClassToHop,
                                                         NeedPerspectiveToHop, UnexpectedClassOrPerspectiveInPath)
-from xuml_populate.populate.actions.aparse_types import Flow_ap, MaxMult, Content, ActivityAP
+from xuml_populate.populate.actions.aparse_types import Flow_ap, MaxMult, Content
 from xuml_populate.populate.mmclass_nt import (Action_i, Traverse_Action_i, Path_i, Hop_i, Association_Class_Hop_i,
                                                Circular_Hop_i, Symmetric_Hop_i, Asymmetric_Circular_Hop_i,
                                                Ordinal_Hop_i, Straight_Hop_i,
@@ -49,23 +51,23 @@ class TraverseAction:
     Populate an output Instance Flow produced by this Traverse Action.
     """
 
-    def __init__(self, input_instance_flow: Flow_ap, path: PATH_a, activity_data: ActivityAP):
+    def __init__(self, input_instance_flow: Flow_ap, path: PATH_a, activity: 'Activity'):
         """
         Initialize the python attributes required to manage validation and population.
 
         Args:
             input_instance_flow: This is the source instance flow where the path begins
             path: Parsed Scrall representing a Path
-            activity_data:
+            activity:
         """
         # Save parameter values
-        self.actvity_data = activity_data
+        self.actvity_data = activity
         self.input_instance_flow = input_instance_flow
         self.path = path
-        self.anum = activity_data.anum
-        self.domain = activity_data.domain
-        self.activity_path = activity_data.activity_path
-        self.scrall_text = activity_data.scrall_text
+        self.anum = activity.anum
+        self.domain = activity.domain
+        self.activity_path = activity.activity_path
+        self.scrall_text = activity.scrall_text
         self.mult = input_instance_flow.max_mult  # Will be updated as the max mult of the current hop
 
         # Initialize tracking attributes

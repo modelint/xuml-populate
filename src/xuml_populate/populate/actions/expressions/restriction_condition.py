@@ -4,7 +4,7 @@ restrict_condition.py – Process a select phrase and populate a Restriction Con
 
 # System
 import logging
-from typing import Optional, Set, Dict, List
+from typing import Optional, Set, Dict, List, TYPE_CHECKING
 
 # Model Integration
 from pyral.relvar import Relvar
@@ -12,18 +12,19 @@ from pyral.relation import Relation
 from scrall.parse.visitor import N_a, BOOL_a, Op_a, Criteria_Selection_a
 
 # xUML Populate
+if TYPE_CHECKING:
+    from xuml_populate.populate.activity import Activity
 from xuml_populate.config import mmdb
 from xuml_populate.exceptions.action_exceptions import ActionException
 from xuml_populate.populate.attribute import Attribute
 from xuml_populate.populate.actions.validation.parameter_validation import validate_param
 from xuml_populate.populate.actions.table_attribute import TableAttribute
-from xuml_populate.populate.actions.aparse_types import (Flow_ap, MaxMult, Content, ActivityAP, Attribute_Comparison,
-                                                         Attribute_ap)
+from xuml_populate.populate.actions.aparse_types import (Flow_ap, MaxMult, Content, ActivityAP, Attribute_Comparison)
 from xuml_populate.populate.actions.read_action import ReadAction
 from xuml_populate.populate.actions.extract_action import ExtractAction
 from xuml_populate.exceptions.action_exceptions import ComparingNonAttributeInSelection, NoInputInstanceFlow
-from xuml_populate.populate.mmclass_nt import Restriction_Condition_i, Equivalence_Criterion_i, \
-    Comparison_Criterion_i, Criterion_i, Table_Restriction_Condition_i
+from xuml_populate.populate.mmclass_nt import (Restriction_Condition_i, Equivalence_Criterion_i,
+                                               Comparison_Criterion_i, Criterion_i, Table_Restriction_Condition_i)
 from xuml_populate.populate.flow import Flow
 
 _logger = logging.getLogger(__name__)
@@ -49,20 +50,20 @@ class RestrictCondition:
         :return: Selection cardinality, attribute comparisons, and a set of scalar flows input for attribute comparison
     """
     def __init__(self, tr: str, action_id: str, input_nsflow: Flow_ap, selection_parse: Criteria_Selection_a,
-                 activity_data: ActivityAP):
+                 activity: 'Activity'):
         """
 
         :param tr:
         :param action_id:
         :param input_nsflow:
         :param selection_parse:
-        :param activity_data:
+        :param activity:
         """
 
         self.action_id = action_id
-        self.anum = activity_data.anum
-        self.domain = activity_data.domain
-        self.activity_data = activity_data
+        self.anum = activity.anum
+        self.domain = activity.domain
+        self.activity = activity
         self.tr = tr
         self.comparison_criteria = []
         self.input_scalar_flows = set()
@@ -111,7 +112,7 @@ class RestrictCondition:
             match type(o).__name__:
                 case 'IN_a':
                     # Verify that this input is defined on the enclosing Activity
-                    validate_param(name=o.name, activity=self.activity_data)
+                    validate_param(name=o.name, activity=self.activity)
                     if not attr_set:
                         # The Attribute has the same name as the Parameter
                         # We assume that attribute names are capitalized so the name doubling shorthand for
@@ -120,7 +121,8 @@ class RestrictCondition:
                         criterion_id = self.pop_xi_comparison_criterion(attr=o.name)
                     else:
                         # We know this is not an Attribute since it is a scalar flow label coming in as a Parameter
-                        criterion_id = self.pop_comparison_criterion(attr=attr_set.name, op=operator, scalar_flow_label=o.name)
+                        criterion_id = self.pop_comparison_criterion(attr=attr_set.name, op=operator,
+                                                                     scalar_flow_label=o.name)
                     text += f" {criterion_id}"
                 case 'N_a':
                     if not operator or operator in {'AND', 'OR'}:
@@ -145,7 +147,8 @@ class RestrictCondition:
                         # Comparison Criterion
                         if scalar == 'Boolean':
                             # Populate a simple equivalence criterion
-                            criterion_id = self.pop_boolean_equivalence_criterion(not_op=False, attr=o.name, value="true")
+                            criterion_id = self.pop_boolean_equivalence_criterion(not_op=False, attr=o.name,
+                                                                                  value="true")
                         else:
                             # Populate a comparison
                             criterion_id = self.pop_xi_comparison_criterion(attr=o.name)
@@ -168,13 +171,14 @@ class RestrictCondition:
                             # This name is an enum value
                             # TODO: Validate the enum value as a member of the Attribute's Scalar
                             criterion_id = self.pop_equivalence_criterion(attr=attr_set.name, op=operator, value=o.name,
-                                                          scalar=attr_set.scalar)
+                                                                          scalar=attr_set.scalar)
                         elif (n := o.name.lower()) in {'true', 'false'}:
                             # This name is a boolean value
                             criterion_id = self.pop_boolean_equivalence_criterion(not_op=False, attr=attr_set, value=n)
                         else:
                             # It must be the name of a scalar flow that should have been set with some value
-                            criterion_id = self.pop_comparison_criterion(scalar_flow_label=o.name, attr=attr_set.name, op=operator)
+                            criterion_id = self.pop_comparison_criterion(scalar_flow_label=o.name, attr=attr_set.name,
+                                                                         op=operator)
                         text += f" {criterion_id}"
 
                 case 'BOOL_a':
@@ -194,7 +198,8 @@ class RestrictCondition:
                                 # Otherwise, a Tuple Flow will have a value extracted with an Extract Action
 
                                 sflow = None  # This is the scalar flow result of the projection/extraction
-                                ns_flow = Flow.find_labeled_ns_flow(name=o.iset.name, anum=self.anum, domain=self.domain)
+                                ns_flow = Flow.find_labeled_ns_flow(name=o.iset.name, anum=self.anum,
+                                                                    domain=self.domain)
                                 if not ns_flow:
                                     raise ActionException
                                 if ns_flow.content == Content.INSTANCE:
@@ -208,11 +213,12 @@ class RestrictCondition:
                                     attr_to_extract = o.projection.attrs[0].name
                                     extract_action = ExtractAction(
                                         tuple_flow=ns_flow, attr=attr_to_extract, anum=self.anum,
-                                        domain=self.domain, activity_data=self.activity_data
+                                        domain=self.domain, activity=self.activity
                                     )  # Select Action transaction is open
                                     sflow = extract_action.output_sflow
                                 # Now populate a comparison criterion
-                                criterion_id = self.pop_comparison_criterion(attr=o.projection.attrs[0].name, scalar_flow=sflow, op=operator)
+                                criterion_id = self.pop_comparison_criterion(attr=o.projection.attrs[0].name,
+                                                                             scalar_flow=sflow, op=operator)
                                 text += f" {criterion_id}"
                             else:
                                 # This must be a Scalar Flow
@@ -246,7 +252,7 @@ class RestrictCondition:
 
         :param attr: Name of some compared Attribute that matches an Attribute of the executing instance
         """
-        read_iflow = self.activity_data.xiflow
+        read_iflow = self.activity.xiflow
         ra = ReadAction(input_single_instance_flow=read_iflow, attrs=(attr,),
                         anum=self.anum, domain=self.domain)
         _, read_flows = ra.populate()

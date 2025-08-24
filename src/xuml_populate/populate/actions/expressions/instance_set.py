@@ -2,7 +2,7 @@
 
 # System
 import logging
-from typing import Optional
+from typing import Optional, TYPE_CHECKING
 
 # Model Integration
 from pyral.relvar import Relvar
@@ -10,6 +10,8 @@ from pyral.relation import Relation
 from pyral.transaction import Transaction
 
 # xUML Populate
+if TYPE_CHECKING:
+    from xuml_populate.populate.activity import Activity
 from xuml_populate.utility import print_mmdb
 from xuml_populate.config import mmdb
 from xuml_populate.populate.actions.traverse_action import TraverseAction
@@ -17,10 +19,8 @@ from xuml_populate.populate.actions.expressions.class_accessor import ClassAcces
 from xuml_populate.populate.flow import Flow
 from xuml_populate.populate.actions.select_action import SelectAction
 from xuml_populate.populate.actions.restrict_action import RestrictAction
-# from xuml_populate.populate.actions.method_call import MethodCall
 from xuml_populate.populate.actions.rank_restrict_action import RankRestrictAction
-from xuml_populate.populate.actions.aparse_types import (Flow_ap, MaxMult, Content, ActivityAP, SMType,
-                                                         StateActivityAP, MethodActivityAP)
+from xuml_populate.populate.actions.aparse_types import Flow_ap, MaxMult, Content, SMType, ActivityType
 from xuml_populate.exceptions.action_exceptions import *
 
 _logger = logging.getLogger(__name__)
@@ -41,9 +41,9 @@ class InstanceSet:
         iset_components: The components in the instance set
         activity_data: General information about the enclosing anum, anum, domain, etc
     """
-    def __init__(self, iset_components, activity_data: ActivityAP, input_instance_flow: Optional[Flow_ap] = None):
+    def __init__(self, iset_components, activity: 'Activity', input_instance_flow: Optional[Flow_ap] = None):
         self.component_flow = input_instance_flow
-        self.activity_data = activity_data
+        self.activity = activity
         self.iset_components = iset_components
 
         self.initial_action = None  # The first action in the chain
@@ -68,8 +68,8 @@ class InstanceSet:
         Returns:
             output: The initial action id, the final action id, and the output instance flow
         """
-        domain = self.activity_data.domain
-        anum = self.activity_data.anum
+        domain = self.activity.domain
+        anum = self.activity.anum
 
         first_action = True  # We use this to recognize the initial action
         for count, comp in enumerate(self.iset_components):
@@ -80,10 +80,10 @@ class InstanceSet:
                     # or instance (self) or partitioning instance of a multiple assigner.
                     # A single assigner must specify an explicit initial flow which means that it cannot start off
                     # with an implicit /R<n>, rather <inst set>/R<n> instead.
-                    if count == 0 and isinstance(self.activity_data, StateActivityAP) and \
-                            self.activity_data.smtype == SMType.SA:
+                    if count == 0 and self.activity.atype == ActivityType.STATE and \
+                            self.activity.smtype == SMType.SA:
                         msg = (f"Single Assigner traverse action must specify instancse set to begin "
-                               f"path (self not defined): {self.activity_data.activity_path} with path"
+                               f"path (self not defined): {self.activity.activity_path} with path"
                                f"parse: {comp}")
                         _logger.error(msg)
                         raise ActionException(msg)
@@ -91,7 +91,7 @@ class InstanceSet:
                     # Path component
                     # Process the path to create the traverse action and obtain the resultant output instance flow
                     traverse_action = TraverseAction(input_instance_flow=self.component_flow, path=comp,
-                                                     activity_data=self.activity_data)
+                                                     activity=self.activity)
                     aid = traverse_action.action_id
                     self.component_flow = traverse_action.output_flow
 
@@ -119,8 +119,8 @@ class InstanceSet:
                             self.component_flow = ns_flow
                         else:
                             # Either there is no corresponding flow or it is a Scalar Flow
-                            raise NoClassOrInstanceFlowForInstanceSetName(path=self.activity_data.activity_path,
-                                                                          text=self.activity_data.scrall_text,
+                            raise NoClassOrInstanceFlowForInstanceSetName(path=self.activity.activity_path,
+                                                                          text=self.activity.scrall_text,
                                                                           x=self.iset_components.X)
                 case 'Criteria_Selection_a':
                     # Process to populate a select action, the output type does not change
@@ -128,7 +128,7 @@ class InstanceSet:
                     if self.component_flow.content == Content.INSTANCE:
                         sa = SelectAction(
                             input_instance_flow=self.component_flow, selection_parse=comp,
-                            activity_data=self.activity_data
+                            activity=self.activity
                         )
                         aid = sa.action_id
                         self.component_flow = sa.output_instance_flow
@@ -136,7 +136,7 @@ class InstanceSet:
                     elif self.component_flow.content == Content.RELATION:
                         ra = RestrictAction(
                             input_relation_flow=self.component_flow, selection_parse=comp,
-                            activity_data=self.activity_data
+                            activity=self.activity
                         )
                         aid = ra.action_id
                         self.component_flow = ra.output_relation_flow
@@ -153,7 +153,7 @@ class InstanceSet:
                         self.final_action = aid
                 case 'Rank_Selection_a':
                     ranksel = RankRestrictAction(input_relation_flow=self.component_flow, selection_parse=comp,
-                                                 activity_data=self.activity_data)
+                                                 activity=self.activity)
                     aid = ranksel.action_id
                     self.component_flow = ranksel.output_relation_flow
                     # Data flow to/from actions within the instance_set
@@ -175,17 +175,18 @@ class InstanceSet:
                     method_name = comp.op_name  # op_name must be a Method name
 
                     # Validate the single instance flow
-                    R = f"Name:<{single_inst_flow_label}>, Activity:<{self.activity_data.anum}>, Domain:<{self.activity_data.domain}>"
+                    R = (f"Name:<{single_inst_flow_label}>, Activity:<{self.activity.anum}>, "
+                         f"Domain:<{self.activity.domain}>")
                     labeled_flow_r = Relation.restrict(db=mmdb, relation='Labeled Flow', restriction=R)
                     if not labeled_flow_r:
-                        msg = f"No labeled flow named {single_inst_flow_label} in {self.activity_data.activity_path}"
+                        msg = f"No labeled flow named {single_inst_flow_label} in {self.activity.activity_path}"
                         _logger.error(msg)
                         raise ActionException(msg)
 
                     # It must be a single instance flow
                     single_inst_flow_r = Relation.semijoin(db=mmdb, rname2='Single Instance Flow')
                     if not single_inst_flow_r:
-                        msg = (f"Method call target [{single_inst_flow_label}] in {self.activity_data.activity_path} "
+                        msg = (f"Method call target [{single_inst_flow_label}] in {self.activity.activity_path} "
                                f"must be a single instance flow")
                         _logger.error(msg)
                         raise ActionException(msg)
@@ -195,11 +196,11 @@ class InstanceSet:
                     inst_class_name = inst_flow_r.body[0]['Class']
 
                     # Verify that the method is defined on this class
-                    R = f"Name:<{method_name}>, Class:<{inst_class_name}>, Domain:<{self.activity_data.domain}>"
+                    R = f"Name:<{method_name}>, Class:<{inst_class_name}>, Domain:<{self.activity.domain}>"
                     method_r = Relation.restrict(db=mmdb, relation='Method', restriction=R)
                     if not method_r:
                         msg = (f"Called method [{method_name}] not defined on [{inst_class_name}] in "
-                               f"{self.activity_data.activity_path}")
+                               f"{self.activity.activity_path}")
                         _logger.error(msg)
                         raise ActionException(msg)
 
@@ -211,7 +212,7 @@ class InstanceSet:
                                        Flow_ap( fid=inst_flow_t["ID"], content=Content.INSTANCE,
                                                 tname=inst_class_name, max_mult=MaxMult.ONE),
                                        parse=comp,
-                                       activity_data=self.activity_data)
+                                       activity=self.activity)
                     ain, aout, self.component_flow = mcall.process()
                     if first_action:
                         self.initial_action = ain

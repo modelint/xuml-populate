@@ -50,7 +50,6 @@ class SwitchStatement:
         """
         anum = activity.anum
         domain = activity.domain
-        activity_data = activity.activity_data
         cls.output_actions = set()
         cls.labeled_outputs = {}  # { <case>: [output_flow, ...], }  labeled output flows keyed by case
 

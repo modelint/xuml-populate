@@ -12,6 +12,8 @@ from pyral.relvar import Relvar
 from pyral.transaction import Transaction
 
 # xUML populate
+if TYPE_CHECKING:
+    from xuml_populate.populate.activity import Activity
 from xuml_populate.config import mmdb
 from xuml_populate.populate.actions.aparse_types import Flow_ap, MaxMult, Content, ActivityAP
 from xuml_populate.populate.actions.action import Action
@@ -49,7 +51,7 @@ class ReadAction:
         self.domain = domain
         self.action_id = None
 
-    def populate(self) -> tuple[str, Tuple[Flow_ap]]:
+    def populate(self) -> tuple[str, list[Flow_ap]]:
         """
         Populate the Read Action
 
@@ -80,4 +82,4 @@ class ReadAction:
 
             # output_flows[pa] = of
         Transaction.execute(db=mmdb, name=tr_Read)
-        return self.action_id, tuple(scalar_flows)
+        return self.action_id, scalar_flows

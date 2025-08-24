@@ -1,20 +1,27 @@
 """
 set_action.py – Populate a Set Action instance in PyRAL
 """
-
+# System
 import logging
+from typing import TYPE_CHECKING
+
+# Model Integration
+from pyral.relvar import Relvar
+from pyral.transaction import Transaction
+
+# xUML Populate
+if TYPE_CHECKING:
+    from xuml_populate.populate.activity import Activity
 from xuml_populate.config import mmdb
 from xuml_populate.populate.actions.table import Table
 from xuml_populate.populate.flow import Flow
-from xuml_populate.populate.actions.aparse_types import Flow_ap, MaxMult, Content, ActivityAP
+from xuml_populate.populate.actions.aparse_types import Flow_ap, MaxMult, Content
 from xuml_populate.exceptions.action_exceptions import (ProductForbidsCommonAttributes, UnjoinableHeaders,
                                                         SetOpRequiresSameHeaders)
 from xuml_populate.populate.actions.action import Action
 from xuml_populate.populate.mm_class import MMclass
 from xuml_populate.populate.ns_flow import NonScalarFlow
 from xuml_populate.populate.mmclass_nt import Relational_Action_i, Table_Action_i, Set_Action_i
-from pyral.relvar import Relvar
-from pyral.transaction import Transaction
 
 _logger = logging.getLogger(__name__)
 
@@ -33,7 +40,7 @@ class SetAction:
     ns_type = None
 
     @classmethod
-    def populate(cls, a_input: Flow_ap, b_input: Flow_ap, setop: str, activity_data: ActivityAP) -> (str, Flow_ap):
+    def populate(cls, a_input: Flow_ap, b_input: Flow_ap, setop: str, activity: 'Activity') -> (str, Flow_ap):
         """
         Populate the Set Action
 
@@ -41,13 +48,13 @@ class SetAction:
         :param a_input: The a input Non Scalar Flow
         :param b_input: The b input Non Scalar Flow
         :param setop: The set operation name
-        :param activity_data:
+        :param activity:
         :return: Set action output table flow
         """
         # Save attribute values that we will need when creating the various select subsystem
         # classes
-        domain = activity_data.domain
-        anum = activity_data.anum
+        domain = activity.domain
+        anum = activity.anum
 
         table_header = None
         max_mult = MaxMult.ONE if a_input.max_mult == b_input.max_mult == MaxMult.ONE else MaxMult.MANY
@@ -72,7 +79,7 @@ class SetAction:
             case 'TIMES':
                 _logger.info("Populating TIMES action")
                 # Verify that there are no attributes in common among the a/b flow
-                if not NonScalarFlow.headers_disjoint(a_input, b_input, domain=domain):
+                if not NonScalarFlow.headers_disjoint(a_flow=a_input, b_flow=b_input, domain=domain):
                     raise ProductForbidsCommonAttributes
                 # Now take the union of the disjoint headers as the output
                 table_header = NonScalarFlow.header_union(a_flow=a_input, b_flow=b_input, domain=domain)

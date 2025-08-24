@@ -1,21 +1,26 @@
 """
 select_action.py – Populate a selection action instance in PyRAL
 """
-
+# System
 import logging
-from typing import List
+from typing import List, TYPE_CHECKING
+
+# Model Integration
+from pyral.relvar import Relvar
+from pyral.relation import Relation
+from pyral.transaction import Transaction
+
+# xUML Populate
+if TYPE_CHECKING:
+    from xuml_populate.populate.activity import Activity
 from xuml_populate.config import mmdb
-from xuml_populate.populate.actions.aparse_types import Flow_ap, MaxMult, ActivityAP, Attribute_Comparison
+from xuml_populate.populate.actions.aparse_types import Flow_ap, MaxMult, Attribute_Comparison
 from xuml_populate.populate.actions.action import Action
 from xuml_populate.populate.flow import Flow
 from xuml_populate.populate.actions.expressions.restriction_condition import RestrictCondition
 from xuml_populate.populate.mmclass_nt import (Select_Action_i, Single_Select_i, Identifier_Select_i,
                                                Zero_One_Cardinality_Select_i, Many_Select_i,
                                                Class_Restriction_Condition_i, Instance_Action_i)
-from pyral.relvar import Relvar
-from pyral.relation import Relation
-from pyral.transaction import Transaction
-
 _logger = logging.getLogger(__name__)
 
 # Transactions
@@ -27,18 +32,18 @@ class SelectAction:
     Create all relations for a Select Statement
     """
 
-    def __init__(self, input_instance_flow: Flow_ap, selection_parse, activity_data: ActivityAP):
+    def __init__(self, input_instance_flow: Flow_ap, selection_parse, activity: 'Activity'):
         """
 
         :param input_instance_flow: The source flow into this selection
         :param selection_parse:  The parsed Scrall select action group
-        :param activity_data:
+        :param activity:
         """
         self.input_instance_flow = input_instance_flow  # We are selecting instances from this instance flow
         self.selection_parse = selection_parse
-        self.activity_data = activity_data
-        self.domain = activity_data.domain
-        self.anum = activity_data.anum
+        self.activity = activity
+        self.domain = activity.domain
+        self.anum = activity.anum
 
         self.attr_comparisons: List[Attribute_Comparison]
 
@@ -68,7 +73,7 @@ class SelectAction:
         rcond = RestrictCondition(tr=tr_Select, action_id=self.action_id,
                                   input_nsflow=self.input_instance_flow,
                                   selection_parse=self.selection_parse,
-                                  activity_data=self.activity_data
+                                  activity=self.activity
                                   )
         self.attr_comparisons = rcond.comparison_criteria
         self.selection_cardinality = rcond.cardinality
@@ -129,7 +134,7 @@ class SelectAction:
             i += 1  # Increment to the next I num (I1, I2, etc)
         return 0
 
-    def populate_multiplicity_subclasses(self) -> (MaxMult, Flow_ap):
+    def populate_multiplicity_subclasses(self) -> tuple[MaxMult, Flow_ap]:
         """
         Determine multiplicity of output and populate the relevant Select Action subclasses
         """
@@ -143,7 +148,7 @@ class SelectAction:
                 label=None, single=True
             )
             _logger.info(f"INSERT Select action output single instance Flow: [{self.domain}:"
-                         f"{self.input_instance_flow.tname}:{self.activity_data.activity_path.split(':')[-1]}"
+                         f"{self.input_instance_flow.tname}:{self.activity.activity_path.split(':')[-1]}"
                          f":{output_instance_flow}]")
             # Populate the Single Select subclass
             Relvar.insert(db=mmdb, tr=tr_Select, relvar='Single_Select', tuples=[
@@ -170,7 +175,7 @@ class SelectAction:
                 domain=self.domain, label=None, single=False
             )
             _logger.info(f"INSERT Select action output multiple instance Flow: [{self.domain}:"
-                         f"{self.input_instance_flow.tname}:{self.activity_data.activity_path.split(':')[-1]}"
+                         f"{self.input_instance_flow.tname}:{self.activity.activity_path.split(':')[-1]}"
                          f":{output_instance_flow}]")
             # Populate the Many Select subclass
             Relvar.insert(db=mmdb, tr=tr_Select, relvar='Many_Select', tuples=[

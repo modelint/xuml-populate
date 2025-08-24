@@ -1,17 +1,20 @@
 """
 action.py – Populate an action superclass instance in PyRAL
 """
-
+# System
 import logging
+from collections import namedtuple
 from typing import Set, Dict, List, Optional
-from xuml_populate.config import mmdb
+
+# Model Integration
 from scrall.parse.visitor import PATH_a
 from pyral.relvar import Relvar
 from pyral.relation import Relation
 from pyral.transaction import Transaction
-from xuml_populate.populate.mmclass_nt import Action_i, Wave_i
-from collections import namedtuple
 
+# xUML Populate
+from xuml_populate.config import mmdb
+from xuml_populate.populate.mmclass_nt import Action_i, Wave_i
 
 _logger = logging.getLogger(__name__)
 

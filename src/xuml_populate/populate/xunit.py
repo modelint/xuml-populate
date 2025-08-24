@@ -62,16 +62,16 @@ class ExecutionUnit:
         match type(synch_output.output).__name__:
             case 'INST_a':
                 iset = InstanceSet(iset_components=synch_output.output.components,
-                                   activity_data=activity.activity_data)
+                                   activity=activity)
                 _, _, output_flow = iset.process()
                 pass
             case 'INST_PROJ_a':
                 iset = InstanceSet(iset_components=synch_output.output.iset.components,
-                                   activity_data=activity.activity_data)
+                                   activity=activity)
                 _, _, output_flow = iset.process()
             case 'N_a':
                 iset = InstanceSet(iset_components=[synch_output.output],
-                                   activity_data=activity.activity_data)
+                                   activity=activity)
                 _, _, output_flow = iset.process()
             case _:
                 # Unexpected or unimplemented synch output case
@@ -79,7 +79,7 @@ class ExecutionUnit:
                 _logger.error(msg)
                 raise UndefinedSynchOutputExecutionUnit(msg)
         # b, f = ScalarExpr.process(mmdb, rhs=synch_output.output, input_instance_flow=xi_instance_flow,
-        #                           activity_data=activity_data)
+        #                           activity=activity)
 
         # Add the output flow to this Activity's set so they can be resolved to a single output later
         activity.synch_output_flows.add(output_flow)

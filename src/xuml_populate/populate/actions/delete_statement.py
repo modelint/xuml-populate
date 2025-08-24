@@ -3,6 +3,7 @@ delete_statement.py – Unpack a delete statement into one or more delete action
 """
 # System
 import logging
+from typing import TYPE_CHECKING
 
 # Model Integration
 from scrall.parse.visitor import Delete_Group_a
@@ -11,11 +12,13 @@ from pyral.relation import Relation
 from pyral.transaction import Transaction
 
 # xUML Populate
+if TYPE_CHECKING:
+    from xuml_populate.populate.activity import Activity
 from xuml_populate.utility import print_mmdb
 from xuml_populate.config import mmdb
 from xuml_populate.populate.actions.delete_action import DeleteAction
 from xuml_populate.exceptions.action_exceptions import *
-from xuml_populate.populate.actions.aparse_types import ActivityAP, Boundary_Actions
+from xuml_populate.populate.actions.aparse_types import Boundary_Actions
 
 _logger = logging.getLogger(__name__)
 
@@ -31,15 +34,15 @@ class DeleteStatement:
 
     """
 
-    def __init__(self, statement_parse: Delete_Group_a, activity_data: ActivityAP):
+    def __init__(self, statement_parse: Delete_Group_a, activity: 'Activity'):
         """
 
         Args:
             statement_parse: A parsed deletion group
-            activity_data:
+            activity:
         """
         self.parse = statement_parse
-        self.activity_data = activity_data
+        self.activity = activity
 
     def process(self) -> Boundary_Actions:
         """
@@ -50,7 +53,7 @@ class DeleteStatement:
         input_actions: set[str] = set()
         output_actions: set[str] = set()
         for iset_parse in self.parse.instance_sets:
-            delete_a = DeleteAction(iset_parse=iset_parse, activity_data=self.activity_data)
+            delete_a = DeleteAction(iset_parse=iset_parse, activity=self.activity)
             boundary_actions = delete_a.process()
             input_actions.update(boundary_actions.ain)
             output_actions.update(boundary_actions.aout)

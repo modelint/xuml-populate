@@ -128,8 +128,8 @@ class Activity:
         self.state_model: Optional[str] = None
         self.smtype: Optional[SMType] = None
         self.pclass: Optional[str] = None
-        self.xiflow = Optional[Flow_ap] = None  # Executable instance flow (for a Method or Lifecycle)
-        self.piflow = Optional[Flow_ap] = None  # Partitioning instance flow (for a Multiple Assigner)
+        self.xiflow: Optional[Flow_ap] = None  # Executable instance flow (for a Method or Lifecycle)
+        self.piflow: Optional[Flow_ap] = None  # Partitioning instance flow (for a Multiple Assigner)
         self.flow_path = None  # Not set until flow dependencies are processed
         self.synch_output_flows: set[Flow_ap] = set()  # Tracks synch outputs of a Method Activity
         self.domain_method_output_types: Optional[dict[str, Method_Output_Type]] = None
@@ -186,7 +186,7 @@ class Activity:
             # A source action can emit at most one sequence flow, so only one t value should be found
             t = next(k for k, v in self.seq_tokens.items() if source in v)
             if not t:
-                msg = f"Sequence token not found in: {self.activity_data.activity_path}"
+                msg = f"Sequence token not found in: {self.activity_path}"
                 _logger.error(msg)
                 raise FlowException(msg)
             s = SequenceFlow(token=t, source_aid=source, dest_aids=destinations, anum=self.anum, domain=self.domain)
@@ -206,7 +206,7 @@ class Activity:
                                      Output_flow=single_output_flow.fid, Type=single_output_flow.tname)
             ])
             _logger.info(f"INSERT Synchronous operation output flow): ["
-                         f"{self.activity_data.activity_path}:^{single_output_flow.fid}]")
+                         f"{self.activity_path}:^{single_output_flow.fid}]")
             return
 
         # There are multiple output flows and we need to funnel them into a single flow
