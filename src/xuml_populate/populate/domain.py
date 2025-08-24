@@ -122,7 +122,7 @@ class Domain:
         # Call Actions to populate any target Method output flows.
 
         method_output_types = {
-            anum: Method_Output_Type(method_name=m.method_parse.flow_out, mult=m.method_parse.mult_out)
+            anum: Method_Output_Type(name=m.method_parse.flow_out, mult=m.method_parse.mult_out)
             for anum, m in self.methods.items()
         }
 
