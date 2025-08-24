@@ -63,12 +63,15 @@ class UsageAttrs(NamedTuple):
 # out_attr - The name of a required output attr, again a Flow ID type
 
 flow_attrs = [
+    UsageAttrs(cname='Computation Input', id_attr='Computation', in_attr='Input_flow', out_attr=None),
+    UsageAttrs(cname='Computation Action', id_attr='ID', in_attr=None, out_attr='Output_flow'),
     UsageAttrs(cname='Type Action', id_attr='ID', in_attr=None, out_attr='Output_flow'),
     UsageAttrs(cname='Type Operation', id_attr='ID', in_attr='Input_flow', out_attr=None),
     UsageAttrs(cname='Pass Action', id_attr='ID', in_attr='Input_flow', out_attr='Output_flow'),
     UsageAttrs(cname='Delete Action', id_attr='ID', in_attr='Flow', out_attr=None),
     UsageAttrs(cname='Method Call', id_attr='ID', in_attr='Instance_flow', out_attr=None),
     UsageAttrs(cname='Method Call Parameter', id_attr='Method_call', in_attr='Flow', out_attr=None),
+    UsageAttrs(cname='Method Call Output', id_attr='Method_call', in_attr=None, out_attr='Flow'),
     UsageAttrs(cname='Decision Action', id_attr='ID', in_attr='Boolean_input', out_attr=None),
     UsageAttrs(cname='Result', id_attr='Decision_action', in_attr=None, out_attr='Flow'),
     UsageAttrs(cname='Reference Value Input', id_attr='Create_action', in_attr='Flow', out_attr=None),
@@ -79,20 +82,21 @@ flow_attrs = [
     UsageAttrs(cname='Multiple Assigner Partition Instance', id_attr='Action', in_attr='Partition', out_attr=None),
     UsageAttrs(cname='Signal Instance Set Action', id_attr='ID', in_attr='Instance_flow', out_attr=None),
     UsageAttrs(cname='Write Action', id_attr='ID', in_attr='Instance_flow', out_attr=None),
-    UsageAttrs(cname='Select_Action', id_attr='ID', in_attr='Input_flow', out_attr=None),
-    UsageAttrs(cname='Traverse_Action', id_attr='ID', in_attr='Source_flow', out_attr='Destination_flow'),
-    UsageAttrs(cname='Many_Select', id_attr='ID', in_attr=None, out_attr='Output_flow'),
-    UsageAttrs(cname='Single_Select', id_attr='ID', in_attr=None, out_attr='Output_flow'),
-    UsageAttrs(cname='Table_Action', id_attr='ID', in_attr='Input_a_flow', out_attr='Output_flow'),
-    UsageAttrs(cname='Set_Action', id_attr='ID', in_attr='Input_b_flow', out_attr=None),
-    UsageAttrs(cname='Read_Action', id_attr='ID', in_attr='Instance_flow', out_attr=None),
-    UsageAttrs(cname='Attribute_Read_Access', id_attr='Read_action', in_attr=None, out_attr='Output_flow'),
-    UsageAttrs(cname='Comparison_Criterion', id_attr='Action', in_attr='Value', out_attr=None),
-    UsageAttrs(cname='Gate_Action', id_attr='ID', in_attr=None, out_attr='Output_flow'),
-    UsageAttrs(cname='Gate_Input', id_attr='Gate_action', in_attr='Input_flow', out_attr=None),
+    UsageAttrs(cname='Attribute Write Access', id_attr='Write_action', in_attr='Input_flow', out_attr=None),
+    UsageAttrs(cname='Select Action', id_attr='ID', in_attr='Input_flow', out_attr=None),
+    UsageAttrs(cname='Traverse Action', id_attr='ID', in_attr='Source_flow', out_attr='Destination_flow'),
+    UsageAttrs(cname='Many Select', id_attr='ID', in_attr=None, out_attr='Output_flow'),
+    UsageAttrs(cname='Single Select', id_attr='ID', in_attr=None, out_attr='Output_flow'),
+    UsageAttrs(cname='Table Action', id_attr='ID', in_attr='Input_a_flow', out_attr='Output_flow'),
+    UsageAttrs(cname='Set Action', id_attr='ID', in_attr='Input_b_flow', out_attr=None),
+    UsageAttrs(cname='Read Action', id_attr='ID', in_attr='Instance_flow', out_attr=None),
+    UsageAttrs(cname='Attribute Read Access', id_attr='Read_action', in_attr=None, out_attr='Output_flow'),
+    UsageAttrs(cname='Comparison Criterion', id_attr='Action', in_attr='Value', out_attr=None),
+    UsageAttrs(cname='Gate Action', id_attr='ID', in_attr=None, out_attr='Output_flow'),
+    UsageAttrs(cname='Gate Input', id_attr='Gate_action', in_attr='Input_flow', out_attr=None),
     UsageAttrs(cname='Case', id_attr='Switch_action', in_attr=None, out_attr='Flow'),
-    UsageAttrs(cname='Control_Dependency', id_attr='Action', in_attr='Control_flow', out_attr=None),
-    UsageAttrs(cname='Extract_Action', id_attr='ID', in_attr='Input_tuple', out_attr='Output_scalar'),
+    UsageAttrs(cname='Control Dependency', id_attr='Action', in_attr='Control_flow', out_attr=None),
+    UsageAttrs(cname='Extract Action', id_attr='ID', in_attr='Input_tuple', out_attr='Output_scalar'),
 ]
 
 Action_i = namedtuple('Action_i', 'ID')
@@ -161,7 +165,7 @@ class Activity:
         self.seq_tokens: dict[str, set[str]] = {}
 
         self.wave_ctr = 1  # Initialize wave counter
-        self.waves: Optional[dict[int, list[str]]] = None
+        self.waves: dict[int, list[str]] = {}
 
     def pop_actions(self):
         """
@@ -293,7 +297,10 @@ class Activity:
             Synchronous_Output_i(Anum=self.anum, Domain=self.domain,
                                  Output_flow=gate_output_flow.fid, Type=gate_output_flow.tname)
         ])
-        pass
+
+        # Finally, we can populate Method Call Outputs
+        from xuml_populate.populate.actions.method_call import MethodCall
+        MethodCall.complete_output_transaction()
 
 
     def pop_xunits(self):
@@ -626,7 +633,6 @@ class Activity:
         # TODO: Avoid populating duplicate for reading the same attr set by maintaining dict of action/flows
         # TODO: for the current activity. If duplicate found, return its action id and output flows instead.
         # TODO: Ensure that the existing read action that has no incoming control flows
-        print_mmdb()  # Diagnostic
 
         # Initialize dict with key for each flow, status to be determined
         R = f"Activity:<{self.anum}>, Domain:<{self.domain}>"

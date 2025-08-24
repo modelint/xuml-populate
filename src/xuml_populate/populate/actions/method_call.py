@@ -139,21 +139,27 @@ class MethodCall:
                     sval_flow = sflows[0]
                 else:
                     sval_flow = Flow.find_labeled_scalar_flow(name=sval_name, anum=self.anum, domain=self.domain)
+            else:
+                msg = f"Cannot find method call {self.action_id} input source for param {pname}"
+                _logger.error(msg)
+                raise ActionException(msg)
 
-            elif sval_flow is not None:
-                # We have already created a scalar flow
+            if sval_flow is None:
+                msg = f"No input flow found for method call {self.action_id} input source for param {pname}"
+                _logger.error(msg)
+                raise ActionException(msg)
 
-                # Validate type match
-                if sval_flow.tname != sig_params[pname]:
-                    msg = (f"Supplied parameter flow type for {pname} does not match signature Parameter type "
-                           f"{sig_params[pname]}")
-                    _logger.error(msg)
-                    raise ActionException  # TODO : Type define mismatch exception
+            # Validate type match
+            if sval_flow.tname != sig_params[pname]:
+                msg = (f"Supplied parameter flow type for {pname} does not match signature Parameter type "
+                       f"{sig_params[pname]}")
+                _logger.error(msg)
+                raise ActionException  # TODO : Type define mismatch exception
 
-                Relvar.insert(db=mmdb, tr=tr_Call, relvar='Method Call Parameter', tuples=[
-                    Method_Call_Parameter_i(Method_call=self.action_id, Activity=self.anum, Parameter=pname,
-                                            Signature=target_method_signum, Domain=self.domain, Flow=sval_flow.fid)
-                ])
+            Relvar.insert(db=mmdb, tr=tr_Call, relvar='Method Call Parameter', tuples=[
+                Method_Call_Parameter_i(Method_call=self.action_id, Activity=self.anum, Parameter=pname,
+                                        Signature=target_method_signum, Domain=self.domain, Flow=sval_flow.fid)
+            ])
 
         # Validate match between set of supplied params and the Method Signature Parameters
         if sp_pnames != set(sig_params.keys()):
