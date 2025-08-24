@@ -100,25 +100,41 @@ class Domain:
                 pop_sm = StateModel(subsys=subsys.name, sm=sm, parse_actions=self.parse_actions)
                 self.state_models.append(pop_sm)
 
+        _logger.info("Resolving attribute types")
         Attribute.ResolveAttrTypes(domain=domain)
+
         _logger.info("Populating lineage")
-        #
-        # Reprinting these for lineage debugging purposes
         Lineage.Derive(domain=domain)
-        #
+
         # Populate actions for all Activities
+
+        # For Methods, we must populate activities in two passes
+
+        # This is because a Method might call some other Method using a Method Call Action
+        # But we can't complete our population of the Method Call Action beause it populates a relationship
+        # to Synchronous Output for a possibly unpopulated Method.
+
+        # The Method Call Action also need to know the output type of its target Method so that it can populate
+        # output Data Flows.
+
+        # Fortunately, we gathered the signature data when we populated the Method (minus actions) earlier.
+        # Here we assemble the output types into a dictionary that we can use while populating any Method
+        # Call Actions to populate any target Method output flows.
+
         method_output_types = {
-            anum: Method_Output_Type(name=m.method_parse.flow_out, mult=m.method_parse.mult_out)
+            anum: Method_Output_Type(method_name=m.method_parse.flow_out, mult=m.method_parse.mult_out)
             for anum, m in self.methods.items()
         }
+
+        # First pass: Method action population
+        # Here we populate everything except the Method Call Action parameter inputs
+        # Note that we inject the method output types
         for anum, m in self.methods.items():
             m.process_execution_units(method_output_types=method_output_types)
 
-        # Intermediate printout for debugging
-        mmdb_printout = f"mmdb_preaction_{domain}.txt"
-        with open(mmdb_printout, 'w') as f:
-            with redirect_stdout(f):
-                Relvar.printall(db=mmdb)
+        # Second pass: Compute any Method Call population
+        for anum, m in self.methods.items():
+            m.post_process()
 
         for s in self.state_models:
             s.process_states()

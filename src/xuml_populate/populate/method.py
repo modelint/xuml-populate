@@ -3,6 +3,7 @@ method.py – Process parsed method to populate the metamodel db
 """
 # System
 import logging
+from typing import Optional
 
 # Model Integration
 from pyral.transaction import Transaction
@@ -54,6 +55,7 @@ class Method:
         self.xi_flow = None
         self.path = f"{domain}:{self.class_name}.{self.name}"
         self.activity_detail = None
+        self.activity_obj: Optional[Activity] = None
 
         Transaction.open(db=mmdb, name=tr_Method)
         _logger.info("Transaction open: Populating method")
@@ -137,5 +139,13 @@ class Method:
             parse=self.activity_parse[0], scrall_text=self.method_parse.activity)
 
         # Populate the Method Actions
-        Activity(activity_data=self.activity_detail)
+        self.activity_obj = Activity(activity_data=self.activity_detail)
+        self.activity_obj.pop_actions()
+
+    def post_process(self):
+        """
+        """
+        self.activity_obj.prep_for_execution()
+
+
 

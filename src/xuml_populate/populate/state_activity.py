@@ -109,4 +109,6 @@ class StateActivity:
             activity_path=self.path, parse=self.state_parse["parse"], scrall_text=self.state_parse['text'])
 
         # Populate the State Activity Actions
-        Activity(activity_data=self.activity_detail)
+        activity_obj = Activity(activity_data=self.activity_detail)
+        activity_obj.pop_actions()
+        activity_obj.prep_for_execution()

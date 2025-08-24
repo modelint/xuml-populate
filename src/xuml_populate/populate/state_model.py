@@ -271,5 +271,4 @@ class StateModel:
         """
         for name, s_data in self.states.items():
             sa = StateActivity(state_name=name, state_model=self, state_parse=s_data)
-        pass
 
