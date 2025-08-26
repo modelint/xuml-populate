@@ -56,7 +56,7 @@ class ScalarAssignment:
         Given a parsed scalar assignment consisting of an LHS and an RHS, populate each component action
         and return the boundary actions.
 
-        We'll need an initial flow and we'll need to create intermediate instance flows to connect the components.
+        We'll need an initial_pseudo_state flow and we'll need to create intermediate instance flows to connect the components.
         The final output flow must be a scalar flow. The associated Scalar determines the type of the
         assignment.
 
@@ -136,7 +136,7 @@ class ScalarAssignment:
                     # So we replace whatever action ids might have been assigned to the set
                     write_out = {write_aid}
                     old_ain = bactions.ain
-                    # If the scalar expression had no actions, the initial action is also the final action
+                    # If the scalar expression had no actions, the initial_pseudo_state action is also the final action
                     write_in = {write_aid} if not old_ain else old_ain
                     bactions = Boundary_Actions(ain=write_in, aout=write_out)
                     pass

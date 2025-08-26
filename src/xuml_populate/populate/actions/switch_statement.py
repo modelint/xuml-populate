@@ -73,7 +73,7 @@ class SwitchStatement:
         for c in sw_parse.cases:
             # Need to create a Control Flow / Case instnace per case_value and label it with the case_value name
             # Combined with the action_id to ensure label is unique within the Activity
-            # Need to create all component set statements and obtain a set of initial action ids
+            # Need to create all component set statements and obtain a set of initial_pseudo_state action ids
             if c.comp_statement_set.statement:
                 case_name = f"{'_'.join(c.enums)}"
                 cls.labeled_outputs[case_name] = set()
@@ -179,7 +179,7 @@ class SwitchStatement:
         # TODO: Create data flow switches
         Transaction.execute(db=mmdb, name=tr_Switch)
 
-        # For a switch statement, the switch action is both the initial and output action
+        # For a switch statement, the switch action is both the initial_pseudo_state and output action
         # Initial, because the Switch Action is the one Action in the statement that does not
         # depend on any other data input.
         # Also the final output since regardless of what case

@@ -46,7 +46,7 @@ class TableAssignment:
         Given a parsed table assignment consisting of an LHS and an RHS, populate each component action
         and return the resultant table flow
 
-        We'll need an initial flow and we'll need to create intermediate instance flows to connect the components.
+        We'll need an initial_pseudo_state flow and we'll need to create intermediate instance flows to connect the components.
         The final output flow must be a table flow. The associated Table determines the type of the
         assignment. If the LHS spcifies an explicit Table, the resultant Table which must match.
 

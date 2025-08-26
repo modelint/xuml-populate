@@ -22,7 +22,8 @@ from xuml_populate.exceptions.action_exceptions import *
 from xuml_populate.utility import print_mmdb
 from xuml_populate.populate.actions.sequence_flow import SequenceFlow
 from xuml_populate.populate.xunit import ExecutionUnit
-from xuml_populate.populate.mmclass_nt import Flow_Dependency_i, Wave_i, Wave_Assignment_i
+from xuml_populate.populate.mmclass_nt import Flow_Dependency_i, Wave_i, Wave_Assignment_i, \
+    Delegated_Creation_Activity_i, Real_State_Activity_i
 from xuml_populate.config import mmdb
 from xuml_populate.populate.flow import Flow, Flow_ap
 from xuml_populate.populate.actions.action import Action
@@ -31,7 +32,7 @@ from xuml_populate.populate.actions.aparse_types import (ActivityAP, SMType, Act
 from xuml_populate.populate.mmclass_nt import (Activity_i, State_Activity_i, Lifecycle_Activity_i,
                                                Multiple_Assigner_Activity_i, Single_Assigner_Activity_i,
                                                Synchronous_Output_i, Flow_Connector_i, Pass_Action_i,
-                                               Instance_Action_i, Gate_Action_i, Gate_Input_i)
+                                               Instance_Action_i, Gate_Action_i, Gate_Input_i, Real_State_Activity_i)
 
 _logger = logging.getLogger(__name__)
 
@@ -337,8 +338,8 @@ class Activity:
                     self.seq_flows[a] = set()  # Set is filled when in_tokens are processed
             for tk in in_tokens:
                 for a_upstream in self.seq_tokens[tk.name]:  # All upstream actions that set the token
-                    for a_in in boundary_actions.ain:  # All initial actions in this statement
-                        self.seq_flows[a_upstream].add(a_in)  # Add that initial action to the downstream value
+                    for a_in in boundary_actions.ain:  # All initial_pseudo_state actions in this statement
+                        self.seq_flows[a_upstream].add(a_in)  # Add that initial_pseudo_state action to the downstream value
 
     @classmethod
     def valid_param(cls, pname: str, activity: ActivityAP):
@@ -363,13 +364,13 @@ class Activity:
         return Anum
 
     @classmethod
-    def populate_state(cls, tr: str, state: str, state_model: str, sm_type: SMType, actions: str,
-                       subsys: str, domain: str, parse_actions: bool) -> dict:
+    def populate_state(cls, tr: str, state_model: str, sm_type: SMType, actions: str,
+                       subsys: str, domain: str, parse_actions: bool, initial_pseudo_state: bool = False) -> dict:
         """
 
         Args:
             tr: Name of the transaction
-            state: State name
+            initial_pseudo_state: True if this is an initial state
             state_model: State model name
             sm_type: Lifecycle, Single or Multiple assigner
             actions:
@@ -393,27 +394,35 @@ class Activity:
         Anum = cls.populate(tr=tr, action_text=action_text, subsys=subsys, domain=domain)
         state_info = {'anum': Anum, 'sm_type': sm_type, 'parse': parsed_activity[0],
                       'text': action_text, 'domain': domain}
-        Relvar.insert(db=mmdb, tr=tr, relvar='State_Activity', tuples=[
+        Relvar.insert(db=mmdb, tr=tr, relvar='State Activity', tuples=[
             State_Activity_i(Anum=Anum, Domain=domain)
         ])
-        match sm_type:
-            case SMType.LIFECYCLE:
-                # Populate the executing instance (me) flow
-                xi_flow = Flow.populate_instance_flow(cname=state_model, anum=Anum, domain=domain,
-                                                      label='me', single=True, activity_tr=tr)
-                Relvar.insert(db=mmdb, tr=tr, relvar='Lifecycle_Activity', tuples=[
-                    Lifecycle_Activity_i(Anum=Anum, Domain=domain, Executing_instance_flow=xi_flow.fid)
-                ])
-            case SMType.MA:
-                # Populate the executing instance (me) flow
-                partition_flow = Flow.populate_instance_flow(cname=state_model, anum=Anum, domain=domain,
-                                                             label='partition_instance', single=True, activity_tr=tr)
-                Relvar.insert(db=mmdb, tr=tr, relvar='Multiple_Assigner_Activity', tuples=[
-                    Multiple_Assigner_Activity_i(Anum=Anum, Domain=domain,
-                                                 Partitioning_instance_flow=partition_flow.fid)
-                ])
-            case SMType.SA:
-                Single_Assigner_Activity_i(Anum=Anum, Domain=domain)
+        if initial_pseudo_state:
+            Relvar.insert(db=mmdb, tr=tr, relvar='Delegated Creation Activity', tuples=[
+                Delegated_Creation_Activity_i(Anum=Anum, Domain=domain)
+            ])
+        else:
+            Relvar.insert(db=mmdb, tr=tr, relvar='Real State Activity', tuples=[
+                Real_State_Activity_i(Anum=Anum, Domain=domain)
+            ])
+            match sm_type:
+                case SMType.LIFECYCLE:
+                    # Populate the executing instance (me) flow
+                    xi_flow = Flow.populate_instance_flow(cname=state_model, anum=Anum, domain=domain,
+                                                          label='me', single=True, activity_tr=tr)
+                    Relvar.insert(db=mmdb, tr=tr, relvar='Lifecycle_Activity', tuples=[
+                        Lifecycle_Activity_i(Anum=Anum, Domain=domain, Executing_instance_flow=xi_flow.fid)
+                    ])
+                case SMType.MA:
+                    # Populate the executing instance (me) flow
+                    partition_flow = Flow.populate_instance_flow(cname=state_model, anum=Anum, domain=domain,
+                                                                 label='partition_instance', single=True, activity_tr=tr)
+                    Relvar.insert(db=mmdb, tr=tr, relvar='Multiple_Assigner_Activity', tuples=[
+                        Multiple_Assigner_Activity_i(Anum=Anum, Domain=domain,
+                                                     Partitioning_instance_flow=partition_flow.fid)
+                    ])
+                case SMType.SA:
+                    Single_Assigner_Activity_i(Anum=Anum, Domain=domain)
         return state_info
 
     def populate_waves(self):
@@ -479,7 +488,7 @@ class Activity:
         Identify all actions that can be executed in the first wave.
 
         To populate the first wave of execution we need to gather all Actions whose inputs consist entirely
-        of Flows that are initially available. In other words, each Action in the initial Wave will require
+        of Flows that are initially available. In other words, each Action in the initial_pseudo_state Wave will require
         no inputs from any other Action.
         """
         # Get all downstream actions (actions that require input from other actions)
@@ -499,7 +508,7 @@ class Activity:
                                svar_name="executable_actions")
         # Relation.print(db=mmdb, variable_name="executable_actions")
         # Here we are initializing a relation variable named "executable_actions" that will update for each new Wave
-        # And in Wave 1, it is the set of initial actions
+        # And in Wave 1, it is the set of initial_pseudo_state actions
         return ia
 
     def enable_action_outputs(self, source_action_relation: str):
@@ -524,7 +533,7 @@ class Activity:
         on those inputs. These Actions are assigned to the first Wave since they can execute immediately
         upon Activity invocation.
 
-        Iteration begins with step 1: We enable all output Flows of those initial executed Actions
+        Iteration begins with step 1: We enable all output Flows of those initial_pseudo_state executed Actions
 
         Then for step 2: We find all downstream Actions yet to be executed solely dependent
         on currently enabled Flows. We assign those Actions to the next Wave, increment the wave counter
@@ -594,7 +603,7 @@ class Activity:
                     # the temproary s (summarize) relation represents the current unexecuted action
                     # We join it with the Flow Dependencies for this Activity as the To_action
                     # to obtain the set of action generated inputs it requires.
-                    # (we don't care about the non-action generated initial flows since we know these are always
+                    # (we don't care about the non-action generated initial_pseudo_state flows since we know these are always
                     # available)
                     JoinCmd(rname1="s", rname2="fd", attrs={"ID": "To_action"}),
                     ProjectCmd(attributes=("Flow",), relation=None),
@@ -613,7 +622,7 @@ class Activity:
                 # And here we replace the set of completed_actions with our new batch of executable_actions
                 Relation.restrict(db=mmdb, relation="executable_actions", svar_name="completed_actions")
 
-            # Having processed either the initial or subsequent waves, we do the same work
+            # Having processed either the initial_pseudo_state or subsequent waves, we do the same work
             # Add all Action IDs in the executable_actions relation into the current Wave, and increment the counter
             self.waves[self.wave_ctr] = [t['ID'] for t in xactions.body]
             self.wave_ctr += 1

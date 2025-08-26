@@ -9,7 +9,10 @@ from typing import TYPE_CHECKING
 # Model Integration
 from scrall.parse.visitor import Signal_a
 from pyral.relvar import Relvar
+from pyral.relation import Relation
 from pyral.transaction import Transaction
+
+from xuml_populate.exceptions.action_exceptions import ActionException
 
 # xUML populate
 if TYPE_CHECKING:
@@ -52,11 +55,60 @@ class SignalAction:
         self.parameter_values = None
         self.delay_sflow = None
 
+        # Is the target of this signal a creation action - if so, it's an Initial Signal Action?
+        iset_comps = statement_parse.dest.target_iset.components
+        if len(iset_comps) == 1 and type(iset_comps[0]).__name__ == 'New_inst_a':
+            self.initial_signal_action = True
+        else:
+            self.initial_signal_action = False
+
+    def populate_delegated_creation_activity(self):
+        """
+        We populate this signal a bit differently
+        1. We don't have a target instance set, we have a target lifecycle state machine (class)
+        2. In that target lifecycle we need to populate a Delegated Creation Activity associated with an
+           Initial Pseudo State
+        3. We'll need to find any scalar flows or reference flows required for intialization
+        4. And then we'll create a python object DelegatedCreationActivity, and it the flows and let it
+           populate itself
+        5. Finally, we instantiate our signal instance
+        """
+        new_inst_parse = self.statement_parse.dest.target_iset.components[0]
+        target_class = new_inst_parse.cname.name
+        # Get the activity number of the Delegated Creation Activity for that lifecycle
+        R = f"Class:<{target_class}>, Domain:<{self.activity.domain}>"
+        ip_state_r = Relation.restrict(db=mmdb, relation='Initial Pseudo State', restriction=R)
+        if len(ip_state_r.body) != 1:
+            msg = f"Single initial_pseudo_state Pseudo State for Lifecycle: [{target_class}] not defined in metamodel"
+            _logger.error(msg)
+            raise ActionException(msg)
+        dc_anum = ip_state_r.body[0]["Creation_activity"]
+        pass
+        # Obtain a scalar flow for each attribute to be initialized
+        for a in new_inst_parse.attrs:
+            # This will be scalar expressions each producing a scalar flow
+            # Each consists of an attribute name and a scalar expr
+            # TODO: Add this when we have an example
+            pass
+        for r in new_inst_parse.rels:
+            # For each rel, we have either one (simple assoc) or two refs (associative)
+            rnum = r.rnum
+            iset = InstanceSet(input_instance_flow=None, iset_components=[r.iset1],
+                               activity=dc_anum)  # Important: All iset flows belong to Delegated Creation Activity
+            # TODO: problem -- dc_anum needs to be the activity object, not just the name
+            ain, aout, dest_flow = iset.process()
+            pass
+
+        pass
+
     def process(self) -> Boundary_Actions:
         """
         Returns:
-            Boundary_Actions: The signal action id is both the initial and final action id
+            Boundary_Actions: The signal action id is both the initial_pseudo_state and final action id
         """
+        if self.initial_signal_action:
+            self.populate_delegated_creation_activity()
+            pass
         # Populate the Action superclass instance and obtain its action_id
         Transaction.open(db=mmdb, name=tr_Signal)
         self.action_id = Action.populate(tr=tr_Signal, anum=self.activity.anum, domain=self.activity.domain,

@@ -52,7 +52,7 @@ class DeleteAction:
         """
 
         Returns:
-            Boundary_Actions: The signal action id is both the initial and final action id
+            Boundary_Actions: The signal action id is both the initial_pseudo_state and final action id
         """
         # Begin by populating the Action itself
         # Populate the Action superclass instance and obtain an action_id

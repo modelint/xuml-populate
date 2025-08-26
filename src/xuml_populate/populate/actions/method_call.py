@@ -71,7 +71,7 @@ class MethodCall:
         Populate a Method Call action
 
         Returns:
-            There's only one action here, so the initial and output actions will just be the id of the method call.
+            There's only one action here, so the initial_pseudo_state and output actions will just be the id of the method call.
         """
         # Open transaction to populate the Method Call Action and all required Method Call Parameters
         Transaction.open(db=mmdb, name=tr_Call)

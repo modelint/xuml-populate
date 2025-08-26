@@ -35,7 +35,10 @@ class StateActivity:
 
         Args:
             state_name: Name of the state
-            activity_data:
+            state_model: Name of the state model
+            state_parse: The activity Scrall parse
+            activity: The activity object
+            method_output_types: A dictionary of output types for each method in the domain
         """
         self.domain = state_model.domain
         self.state_model = state_model

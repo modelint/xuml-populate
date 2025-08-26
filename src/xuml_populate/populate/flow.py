@@ -349,7 +349,7 @@ class Flow:
         :param activity_tr: Incorporate this in the activity population transaction if provided
         :return: A Flow_ap summary of the key flow characteristics
         """
-        # When an Activity is being populated, it may require certain Flows, the 'me' initial
+        # When an Activity is being populated, it may require certain Flows, the 'me' initial_pseudo_state
         # executing instance Flow, for example. In this case, the Activity has a transaction open
         # and, until this outer transaction closes, the Activity does not yet exist. In this case,
         # we use the activity transaction, otherwise we create a new one locally

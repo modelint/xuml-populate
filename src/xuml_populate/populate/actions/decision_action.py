@@ -56,7 +56,7 @@ class DecisionAction:
     def process(self) -> Boundary_Actions:
         """
         Returns:
-            Boundary_Actions: The signal action id is both the initial and final action id
+            Boundary_Actions: The signal action id is both the initial_pseudo_state and final action id
         """
         # Process the input to the transaction to obtain an input data flow
         # This can be any kind of data, but during Model Execution, the flowing value must resolve to true or false
@@ -75,7 +75,7 @@ class DecisionAction:
                 iset = InstanceSet(input_instance_flow=self.activity.xiflow,
                                    iset_components=decision_input.iset.components, activity=self.activity)
                 aid, _, self.decision_input_flow = iset.process()
-                # We have just one initial action, so the set will be just a single aid
+                # We have just one initial_pseudo_state action, so the set will be just a single aid
                 input_init_aids.add(aid)
                 # The final aids will result from the true or true/false results
                 if self.statement_parse.input.projection:
@@ -85,7 +85,7 @@ class DecisionAction:
             case 'N_a':
                 # We have the name of a flow, verify it exists
                 iset = InstanceSet(iset_components=[decision_input], activity=self.activity)
-                # It's just a flow, so the returned initial, final actions should be empty
+                # It's just a flow, so the returned initial_pseudo_state, final actions should be empty
                 _, _, self.decision_input_flow = iset.process()
             case 'BOOL_a':
                 ca = ComputationAction(expr=decision_input, activity=self.activity)
@@ -131,7 +131,7 @@ class DecisionAction:
 
         # We'll use true_statement instead of true_result.statement in case we had to ammend
 
-        # Populate the true and false result statements and grab the initial actions of each so we can enable them
+        # Populate the true and false result statements and grab the initial_pseudo_state actions of each so we can enable them
         from xuml_populate.populate.xunit import ExecutionUnit
         t_boundary_actions = ExecutionUnit.process_statement_set(activity=self.activity, content=true_result)
         true_init_actions = t_boundary_actions.ain

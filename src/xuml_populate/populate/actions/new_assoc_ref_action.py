@@ -19,7 +19,6 @@ from xuml_populate.utility import print_mmdb
 from xuml_populate.config import mmdb
 from xuml_populate.populate.actions.table import Table
 from xuml_populate.populate.actions.aparse_types import Flow_ap, Content, MaxMult
-from xuml_populate.populate.actions.expressions.instance_set import InstanceSet
 from xuml_populate.populate.actions.action import Action
 from xuml_populate.populate.flow import Flow
 from xuml_populate.exceptions.action_exceptions import *
@@ -148,6 +147,7 @@ class NewAssociativeReferenceAction:
                     self.ref_flows[flow_class] = flow_id
                 return
             case 'INST_a':
+                from xuml_populate.populate.actions.expressions.instance_set import InstanceSet
                 pop_iset = InstanceSet(input_instance_flow=self.activity.xiflow, iset_components=iset.components,
                                        activity=self.activity)
                 ain, aout, f = pop_iset.process()

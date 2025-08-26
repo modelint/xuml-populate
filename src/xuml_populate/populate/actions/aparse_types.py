@@ -27,7 +27,6 @@ class SMType(Enum):
 class ActivityType(Enum):
     METHOD = 1
     STATE = 2
-    OP = 3
 
 
 Attribute_ap = namedtuple('Attribute_ap', 'name scalar')
@@ -76,6 +75,5 @@ class StateActivityAP(ActivityAP):
     piflow: Flow_ap  # parititioning instance flow, set to None unless sm type is ma assigner
 
 @dataclass(frozen=True, kw_only=True)
-class OpActivityAP(ActivityAP):
-    eename: str
-    opname: str
+class DelegatedCreationActivityAP(ActivityAP):
+    cname: str  # Instance of this class is created

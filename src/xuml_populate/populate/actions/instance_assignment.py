@@ -62,7 +62,7 @@ class InstanceAssignment:
         Given a parsed instance set expression, populate each component action
         and return the resultant Class Type name
 
-        We'll need an initial flow and we'll need to create intermediate instance flows to connect the components.
+        We'll need an initial_pseudo_state flow and we'll need to create intermediate instance flows to connect the components.
         The final output flow must be an instance flow. The associated Class Type determines the type of the
         assignment which must match any explicit type.
 

@@ -60,7 +60,7 @@ class CreateAction:
         self.non_ref_inits = statement_parse.attrs
         self.ref_inits = statement_parse.rels
 
-        # We will use this nested dictionary to gather all required initial attribute values
+        # We will use this nested dictionary to gather all required initial_pseudo_state attribute values
         # for non referential attributes
         self.non_ref_ivalues: dict[str, dict[str, Any]] = {}
 
@@ -68,7 +68,7 @@ class CreateAction:
         """
 
         Returns:
-            Boundary_Actions: The signal action id is both the initial and final action id
+            Boundary_Actions: The signal action id is both the initial_pseudo_state and final action id
         """
         # Begin by populating the Action itself
         # Populate the Action superclass instance and obtain an action_id
@@ -125,10 +125,10 @@ class CreateAction:
                                            Activity=self.activity.anum, Domain=self.activity.domain)
             ])
 
-        # Obtain initial values for each non-referential attribute as follows:
+        # Obtain initial_pseudo_state values for each non-referential attribute as follows:
         # --
-        # If an initial value is supplied in the statement, use it
-        # Otherwise look for an initial default value
+        # If an initial_pseudo_state value is supplied in the statement, use it
+        # Otherwise look for an initial_pseudo_state default value
         # Failing that, look for a default value determined by the Scalar (type)
         # And if we still don't find a value (not all types provide a default) raise an exception
 
@@ -194,7 +194,7 @@ class CreateAction:
                 # We cannot find any value for the attribute so we cannot peform the create action
                 msg1 = f"No type default defined on scalar type {scalar_type_name}"
                 _logger.error(msg1)
-                msg2 = (f"No explicit or default initial value defined for "
+                msg2 = (f"No explicit or default initial_pseudo_state value defined for "
                         f"attribute {self.domain}:{self.target_class}.{da}")
                 _logger.error(msg2)
                 raise ActionException(msg2)

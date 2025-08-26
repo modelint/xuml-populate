@@ -94,7 +94,7 @@ class ExecutionUnit:
 
         Populates each action and returns two lists of action ids.
         The first list is each action that does not require any data input from any other action
-        in the execution unit. These are initial actions since they can execute immediately.
+        in the execution unit. These are initial_pseudo_state actions since they can execute immediately.
 
         The second list is each action that does not provide any data input
         to any other action in the execution unit. These are terminal actions.
@@ -104,7 +104,7 @@ class ExecutionUnit:
             activity: The enclosing Activity
 
         Returns:
-            Tuple with a list of initial and terminal actions
+            Tuple with a list of initial_pseudo_state and terminal actions
         """
         # Let's first check to see if we have an output_flow
         if type(content.statement).__name__ == 'Output_Flow_a':

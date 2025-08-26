@@ -30,14 +30,14 @@ class SynchOutput:
 
         Populates each action and returns two lists of action ids.
         The first list is each action that does not require any data input from any other action
-        in the execution unit. These are initial actions since they can execute immediately.
+        in the execution unit. These are initial_pseudo_state actions since they can execute immediately.
 
         The second list is each action that does not provide any data input
         to any other action in the execution unit. These are terminal actions.
 
         :param activity:
         :param statement_set:
-        :return: Tuple with a list of initial and terminal actions
+        :return: Tuple with a list of initial_pseudo_state and terminal actions
         """
         single_statement = statement_set.statement
         block = statement_set.block

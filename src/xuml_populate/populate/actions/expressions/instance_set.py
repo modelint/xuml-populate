@@ -15,6 +15,7 @@ if TYPE_CHECKING:
 from xuml_populate.utility import print_mmdb
 from xuml_populate.config import mmdb
 from xuml_populate.populate.actions.traverse_action import TraverseAction
+from xuml_populate.populate.actions.create_action import CreateAction
 from xuml_populate.populate.actions.expressions.class_accessor import ClassAccessor
 from xuml_populate.populate.flow import Flow
 from xuml_populate.populate.actions.select_action import SelectAction
@@ -66,19 +67,19 @@ class InstanceSet:
         Return the boundary actions and the resultant output Instance Flow
 
         Returns:
-            output: The initial action id, the final action id, and the output instance flow
+            output: The initial_pseudo_state action id, the final action id, and the output instance flow
         """
         domain = self.activity.domain
         anum = self.activity.anum
 
-        first_action = True  # We use this to recognize the initial action
+        first_action = True  # We use this to recognize the initial_pseudo_state action
         for count, comp in enumerate(self.iset_components):
             # We use the count to recognize the final action
             match type(comp).__name__:
                 case 'PATH_a':
                     # If this path is the first component, it assumes it is traversing from an executing
                     # or instance (self) or partitioning instance of a multiple assigner.
-                    # A single assigner must specify an explicit initial flow which means that it cannot start off
+                    # A single assigner must specify an explicit initial_pseudo_state flow which means that it cannot start off
                     # with an implicit /R<n>, rather <inst set>/R<n> instead.
                     if count == 0 and self.activity.atype == ActivityType.STATE and \
                             self.activity.smtype == SMType.SA:
@@ -99,7 +100,7 @@ class InstanceSet:
                     if first_action:
                         # For the first component, there can be dflow input from another action
                         self.initial_action = aid
-                        first_action = False  # The first action has been encountered and recognized as initial
+                        first_action = False  # The first action has been encountered and recognized as initial_pseudo_state
                     if count == len(self.iset_components) - 1:
                         # For the last component, there can be no dflow output to another action
                         self.final_action = aid
@@ -147,7 +148,7 @@ class InstanceSet:
                     if first_action:
                         # For the first component, there can be dflow input from another action
                         self.initial_action = aid
-                        first_action = False  # The first action has been encountered and recognized as initial
+                        first_action = False  # The first action has been encountered and recognized as initial_pseudo_state
                     if count == len(self.iset_components) - 1:
                         # For the last component, there can be no dflow output to another action
                         self.final_action = aid
@@ -160,7 +161,7 @@ class InstanceSet:
                     if first_action:
                         # For the first component, there can be dflow input from another action
                         self.initial_action = aid
-                        first_action = False  # The first action has been encountered and recognized as initial
+                        first_action = False  # The first action has been encountered and recognized as initial_pseudo_state
                     if count == len(self.iset_components) - 1:
                         # For the last component, there can be no dflow output to another action
                         self.final_action = aid
@@ -218,6 +219,7 @@ class InstanceSet:
                         self.initial_action = ain
                     self.final_action = aout
                 case 'New_inst_a':
+                    # A New instance
                     pass
                 case _:
                     raise Exception

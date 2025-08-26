@@ -30,7 +30,7 @@ from xuml_populate.populate.mmclass_nt import (State_Model_i, Lifecycle_i, Non_D
                                                Monomorphic_Event_i, Effective_Event_i, Event_i, Parameter_i, Assigner_i,
                                                Multiple_Assigner_i, Single_Assigner_i, Activity_Input_i)
 
-ISP = 'Initial_Pseudo_State'  # Name of initial pseudo state
+ISP = 'Initial_Pseudo_State'  # Name of initial_pseudo_state pseudo state
 
 _logger = logging.getLogger(__name__)
 tr_SM = 'State Model'
@@ -65,7 +65,7 @@ class StateModel:
         # Populate
         # It is easiest to create all events and states at once before checking constraints
         Transaction.open(db=mmdb, name=tr_SM)
-        Relvar.insert(db=mmdb, tr=tr_SM, relvar='State_Model', tuples=[
+        Relvar.insert(db=mmdb, tr=tr_SM, relvar='State Model', tuples=[
             State_Model_i(Name=self.sm_name, Domain=sm.domain)
         ])
         if self.cname:  # Lifecycle state model
@@ -82,13 +82,13 @@ class StateModel:
             if self.pclass:
                 # Multiple assigner with a partitioning class
                 self.sm_type = SMType.MA
-                Relvar.insert(db=mmdb, tr=tr_SM, relvar='Multiple_Assigner', tuples=[
+                Relvar.insert(db=mmdb, tr=tr_SM, relvar='Multiple Assigner', tuples=[
                     Multiple_Assigner_i(Rnum=self.rnum, Partitioning_class=self.pclass, Domain=sm.domain)
                 ])
             else:
                 # Single assigner
                 self.sm_type = SMType.SA
-                Relvar.insert(db=mmdb, tr=tr_SM, relvar='Single_Assigner', tuples=[
+                Relvar.insert(db=mmdb, tr=tr_SM, relvar='Single Assigner', tuples=[
                     Single_Assigner_i(Rnum=self.rnum, Domain=sm.domain)
                 ])
 
@@ -100,7 +100,7 @@ class StateModel:
             ])
             # Create its Activity
             state_info = Activity.populate_state(
-                tr=tr_SM, state=s.state.name, subsys=subsys, actions=s.activity,
+                tr=tr_SM, subsys=subsys, actions=s.activity,
                 state_model=self.sm_name, domain=sm.domain,
                 parse_actions=self.parse_actions, sm_type=self.sm_type)
             self.states[s.state.name] = state_info
@@ -114,7 +114,7 @@ class StateModel:
                 # First create signature superclass instance in Activity subsystem
                 signum = Signature.populate(tr=tr_SM, subsys=subsys, domain=sm.domain)
                 self.signatures[sig_params] = signum  # Save the SIGnum as a value, keyed to the frozen params
-                Relvar.insert(db=mmdb, tr=tr_SM, relvar='State_Signature', tuples=[
+                Relvar.insert(db=mmdb, tr=tr_SM, relvar='State Signature', tuples=[
                     State_Signature_i(SIGnum=signum, State_model=self.sm_name, Domain=sm.domain)
                 ])
             else:
@@ -139,7 +139,7 @@ class StateModel:
                     Activity_Input_i(Parameter=p.name, Signature=signum, Domain=sm.domain,
                                      Flow=input_fid, Activity=anum)
                 ])
-            Relvar.insert(db=mmdb, tr=tr_SM, relvar='Real_State', tuples=[
+            Relvar.insert(db=mmdb, tr=tr_SM, relvar='Real State', tuples=[
                 Real_State_i(Name=s.state.name, State_model=self.sm_name, Domain=sm.domain, Signature=signum,
                              Activity=anum)
             ])
@@ -147,11 +147,11 @@ class StateModel:
             self.signums[s.state.name] = signum
             if self.rnum or self.cname and not s.state.deletion:
                 # Assigner cannot have a Deletion State
-                Relvar.insert(db=mmdb, tr=tr_SM, relvar='Non_Deletion_State', tuples=[
+                Relvar.insert(db=mmdb, tr=tr_SM, relvar='Non Deletion State', tuples=[
                     Non_Deletion_State_i(Name=s.state.name, State_model=self.sm_name, Domain=sm.domain)
                 ])
             else:
-                Relvar.insert(db=mmdb, tr=tr_SM, relvar='Deletion_State', tuples=[
+                Relvar.insert(db=mmdb, tr=tr_SM, relvar='Deletion State', tuples=[
                     Deletion_State_i(Name=s.state.name, Class=self.cname, Domain=sm.domain)
                 ])
 
@@ -161,13 +161,13 @@ class StateModel:
             Relvar.insert(db=mmdb, tr=tr_SM, relvar='Event', tuples=[
                 Event_i(Name=ev_name, State_model=self.sm_name, Domain=sm.domain)
             ])
-            Relvar.insert(db=mmdb, tr=tr_SM, relvar='Effective_Event', tuples=[
+            Relvar.insert(db=mmdb, tr=tr_SM, relvar='Effective Event', tuples=[
                 Effective_Event_i(Name=ev_name, State_model=self.sm_name, Domain=sm.domain)
             ])
-            Relvar.insert(db=mmdb, tr=tr_SM, relvar='Monomorphic_Event', tuples=[
+            Relvar.insert(db=mmdb, tr=tr_SM, relvar='Monomorphic Event', tuples=[
                 Monomorphic_Event_i(Name=ev_name, State_model=self.sm_name, Domain=sm.domain)
             ])
-            Relvar.insert(db=mmdb, tr=tr_SM, relvar='Monomorphic_Event_Specification', tuples=[
+            Relvar.insert(db=mmdb, tr=tr_SM, relvar='Monomorphic Event Specification', tuples=[
                 Monomorphic_Event_Specification_i(Name=ev_name, State_model=self.sm_name, Domain=sm.domain)
             ])
             # Cannot create Event Specification until we process transitions to determine signature for at least
@@ -176,24 +176,31 @@ class StateModel:
         # Populate the transitions
         inserted_especs = {}
         if sm.initial_transitions:
+            # Create a Delegated Creation Activity
+            state_info = Activity.populate_state(
+                tr=tr_SM, subsys=subsys, actions=s.activity,
+                state_model=self.sm_name, domain=sm.domain,
+                parse_actions=self.parse_actions, sm_type=self.sm_type, initial_pseudo_state=True)
+            self.states[s.state.name] = state_info
+            dc_anum = state_info["anum"]  # Delegated Creation Activity anum
             # Create the intial pseudo state
             Relvar.insert(db=mmdb, tr=tr_SM, relvar=ISP, tuples=[
-                Initial_Pseudo_State_i(Name=ISP, Class=self.sm_name, Domain=sm.domain)
+                Initial_Pseudo_State_i(Name=ISP, Class=self.sm_name, Domain=sm.domain, Creation_activity=dc_anum)
             ])
             Relvar.insert(db=mmdb, tr=tr_SM, relvar='State', tuples=[
                 State_i(Name=ISP, State_model=self.sm_name, Domain=sm.domain)
             ])
         for t in sm.initial_transitions:
-            Relvar.insert(db=mmdb, tr=tr_SM, relvar='Initial_Transition', tuples=[
+            Relvar.insert(db=mmdb, tr=tr_SM, relvar='Initial Transition', tuples=[
                 Initial_Transition_i(From_state=ISP, Class=self.sm_name, Domain=sm.domain, Event=t.event)
             ])
             signum = self.signums[t.to_state]
-            Relvar.insert(db=mmdb, tr=tr_SM, relvar='Event_Specification', tuples=[
+            Relvar.insert(db=mmdb, tr=tr_SM, relvar='Event Specification', tuples=[
                 Event_Specification_i(Name=t.event, State_model=self.sm_name, Domain=sm.domain,
                                       State_signature=signum)
             ])
             inserted_especs[t.event] = signum
-            Relvar.insert(db=mmdb, tr=tr_SM, relvar='Event_Response', tuples=[
+            Relvar.insert(db=mmdb, tr=tr_SM, relvar='Event Response', tuples=[
                 Event_Response_i(State=ISP, Event=t.event, State_model=self.sm_name, Domain=sm.domain)
             ])
             Relvar.insert(db=mmdb, tr=tr_SM, relvar='Transition', tuples=[
@@ -202,13 +209,14 @@ class StateModel:
             ])
             for e in sm.events:
                 if e != t.event:
-                    Relvar.insert(db=mmdb, tr=tr_SM, relvar='Event_Response', tuples=[
+                    Relvar.insert(db=mmdb, tr=tr_SM, relvar='Event Response', tuples=[
                         Event_Response_i(State=ISP, Event=e, State_model=self.sm_name, Domain=sm.domain)
                     ])
-                    Relvar.insert(db=mmdb, tr=tr_SM, relvar='Non_Transition', tuples=[
+                    Relvar.insert(db=mmdb, tr=tr_SM, relvar='Non Transition', tuples=[
                         Non_Transition_i(State=ISP, Event=e, State_model=self.sm_name, Domain=sm.domain,
                                          Behavior='CH',
-                                         Reason="Transition is only legal response from initial pseudo state")
+                                         Reason="Transition is only legal response from "
+                                                "initial_pseudo_state pseudo state")
                     ])
 
         for s in sm.states:
@@ -220,7 +228,7 @@ class StateModel:
                     if t.event not in inserted_especs:
                         # The event spec will assume the signature of the first target state encountered
                         signum = self.signums[t.to_state]
-                        Relvar.insert(db=mmdb, tr=tr_SM, relvar='Event_Specification', tuples=[
+                        Relvar.insert(db=mmdb, tr=tr_SM, relvar='Event Specification', tuples=[
                             Event_Specification_i(Name=t.event, State_model=self.sm_name, Domain=sm.domain,
                                                   State_signature=signum)
                         ])
@@ -234,7 +242,7 @@ class StateModel:
                                 f"Mismatched espec sig: <{t.event}:{espec_sig}> state sig: [{t.to_state}:{state_sig}]")
                             raise MismatchedStateSignature(event=t.event, state=t.to_state)
                     # Create transition event response
-                    Relvar.insert(db=mmdb, tr=tr_SM, relvar='Event_Response', tuples=[
+                    Relvar.insert(db=mmdb, tr=tr_SM, relvar='Event Response', tuples=[
                         Event_Response_i(State=s.state.name, Event=t.event, State_model=self.sm_name, Domain=sm.domain)
                     ])
                     Relvar.insert(db=mmdb, tr=tr_SM, relvar='Transition', tuples=[
@@ -242,10 +250,10 @@ class StateModel:
                                      To_state=t.to_state)
                     ])
                 else:  # Create Non Transition ignore response
-                    Relvar.insert(db=mmdb, tr=tr_SM, relvar='Event_Response', tuples=[
+                    Relvar.insert(db=mmdb, tr=tr_SM, relvar='Event Response', tuples=[
                         Event_Response_i(State=s.state.name, Event=t.event, State_model=self.sm_name, Domain=sm.domain)
                     ])
-                    Relvar.insert(db=mmdb, tr=tr_SM, relvar='Non_Transition', tuples=[
+                    Relvar.insert(db=mmdb, tr=tr_SM, relvar='Non Transition', tuples=[
                         Non_Transition_i(State=s.state.name, Event=t.event, State_model=self.sm_name, Domain=sm.domain,
                                          Behavior='IGN', Reason="<none_specified>")
                     ])
@@ -255,11 +263,11 @@ class StateModel:
             tr_ign_events = set(t.event for t in s.transitions)
             for e in sm.events:
                 if e not in tr_ign_events:
-                    Relvar.insert(db=mmdb, tr=tr_SM, relvar='Event_Response', tuples=[
+                    Relvar.insert(db=mmdb, tr=tr_SM, relvar='Event Response', tuples=[
                         Event_Response_i(State=s.state.name, Event=e, State_model=self.sm_name, Domain=sm.domain)
                     ])
                     ch_reason = "<none_specified>" if not s.state.deletion else "Event cannot happen in deletion state"
-                    Relvar.insert(db=mmdb, tr=tr_SM, relvar='Non_Transition', tuples=[
+                    Relvar.insert(db=mmdb, tr=tr_SM, relvar='Non Transition', tuples=[
                         Non_Transition_i(State=s.state.name, Event=e, State_model=self.sm_name, Domain=sm.domain,
                                          Behavior='CH', Reason=ch_reason)
                     ])
