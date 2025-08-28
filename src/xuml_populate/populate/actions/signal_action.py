@@ -19,14 +19,15 @@ if TYPE_CHECKING:
     from xuml_populate.populate.activity import Activity
 from xuml_populate.utility import print_mmdb
 from xuml_populate.config import mmdb
-from xuml_populate.populate.actions.aparse_types import Boundary_Actions
+from xuml_populate.populate.delegated_creation import DelegatedCreationActivity
+from xuml_populate.populate.actions.aparse_types import Boundary_Actions, SMType
 from xuml_populate.populate.actions.action import Action
 from xuml_populate.populate.actions.expressions.instance_set import InstanceSet
 from xuml_populate.populate.mmclass_nt import (Signal_Action_i, Supplied_Parameter_Value_i,
                                                Signal_Instance_Set_Action_i,
                                                Delivery_Time_i, Absolute_Delivery_Time_i, Relative_Delivery_Time_i,
                                                Multiple_Assigner_Partition_Instance_i, Signal_Assigner_Action_i,
-                                               Instance_Action_i)
+                                               Instance_Action_i, Initial_Signal_Action_i)
 
 _logger = logging.getLogger(__name__)
 
@@ -47,6 +48,7 @@ class SignalAction:
             statement_parse: Parsed representation of the Signal statement
             activity: Collected info about the activity
         """
+        self.event_name = statement_parse.event
         self.action_id = None
         self.statement_parse = statement_parse
         self.activity = activity
@@ -54,93 +56,88 @@ class SignalAction:
         self.dest_iflow = None
         self.parameter_values = None
         self.delay_sflow = None
+        self.aids_in: set[str] = set()
+        self.aids_out: set[str] = set()
+        self.action_id: str = None
+        self.signal_dest = None
+        self.dest_sm = None
+        self.initial_signal_action = False  # Default assumption
+        self.external_dest = False
+        self.completion_event = False
 
-        # Is the target of this signal a creation action - if so, it's an Initial Signal Action?
-        iset_comps = statement_parse.dest.target_iset.components
-        if len(iset_comps) == 1 and type(iset_comps[0]).__name__ == 'New_inst_a':
-            self.initial_signal_action = True
-        else:
-            self.initial_signal_action = False
+        if type(statement_parse).__name__ == 'External_signal_a':
+            self.external_dest = True
 
-    def populate_delegated_creation_activity(self):
+        # Is the target of this signal a creation action? - if so, it's an Initial Signal Action?
+        target_iset = statement_parse.dest.target_iset
+        if type(target_iset).__name__ == "INST_a":
+            if len(target_iset.components) == 1 and type(target_iset.components[0]).__name__ == 'New_inst_a':
+                self.initial_signal_action = True
+
+    def populate_external_signal(self):
+        pass  # TODO: Implement this case
+
+    def populate_initial_signal(self) -> str:
         """
-        We populate this signal a bit differently
-        1. We don't have a target instance set, we have a target lifecycle state machine (class)
-        2. In that target lifecycle we need to populate a Delegated Creation Activity associated with an
-           Initial Pseudo State
-        3. We'll need to find any scalar flows or reference flows required for intialization
-        4. And then we'll create a python object DelegatedCreationActivity, and it the flows and let it
-           populate itself
-        5. Finally, we instantiate our signal instance
+        Populate an Initial Signal Action
+
+        This is a signal that delegates creation of an instance to a target class
+        (asynchronous creation)
+
+        Returns:
+            Destination state model name which must be a class since an instance will be created
         """
+        # Create a Delegated Creation Activity associated with the target class Initial Pseudo State
+        # It will populate itself based on the informaiton in the statement_parse
         new_inst_parse = self.statement_parse.dest.target_iset.components[0]
-        target_class = new_inst_parse.cname.name
-        # Get the activity number of the Delegated Creation Activity for that lifecycle
-        R = f"Class:<{target_class}>, Domain:<{self.activity.domain}>"
-        ip_state_r = Relation.restrict(db=mmdb, relation='Initial Pseudo State', restriction=R)
-        if len(ip_state_r.body) != 1:
-            msg = f"Single initial_pseudo_state Pseudo State for Lifecycle: [{target_class}] not defined in metamodel"
-            _logger.error(msg)
-            raise ActionException(msg)
-        dc_anum = ip_state_r.body[0]["Creation_activity"]
-        pass
-        # Obtain a scalar flow for each attribute to be initialized
-        for a in new_inst_parse.attrs:
-            # This will be scalar expressions each producing a scalar flow
-            # Each consists of an attribute name and a scalar expr
-            # TODO: Add this when we have an example
-            pass
-        for r in new_inst_parse.rels:
-            # For each rel, we have either one (simple assoc) or two refs (associative)
-            rnum = r.rnum
-            iset = InstanceSet(input_instance_flow=None, iset_components=[r.iset1],
-                               activity=dc_anum)  # Important: All iset flows belong to Delegated Creation Activity
-            # TODO: problem -- dc_anum needs to be the activity object, not just the name
-            ain, aout, dest_flow = iset.process()
-            pass
+        DelegatedCreationActivity(parse=new_inst_parse, domain=self.activity.domain)
 
-        pass
+        # Now we just need to populate the Initial Signal Action itself
+        # Since all the heavy lifting happens in the creation activity, there isn't much to do here
+        dest_class = new_inst_parse.cname.name  # Destination must be a class (lifecycle state model)
+        Relvar.insert(db=mmdb, tr=tr_Signal, relvar='Initial Signal Action', tuples=[
+            Initial_Signal_Action_i(ID=self.action_id, Activity=self.activity.anum, Domain=self.activity.domain)
+        ])
+        # The boundary actions are always just this one signal action id
+        self.aids_in.add(self.action_id)
+        self.aids_out.add(self.action_id)
+        return dest_class
 
-    def process(self) -> Boundary_Actions:
+    def process_signal_instance_set_action(self, dest) -> str:
         """
         Returns:
-            Boundary_Actions: The signal action id is both the initial_pseudo_state and final action id
+            Destination state model so we know where event specification is defined
         """
-        if self.initial_signal_action:
-            self.populate_delegated_creation_activity()
-            pass
-        # Populate the Action superclass instance and obtain its action_id
-        Transaction.open(db=mmdb, name=tr_Signal)
-        self.action_id = Action.populate(tr=tr_Signal, anum=self.activity.anum, domain=self.activity.domain,
-                                         action_type="signal")  # Transaction open
 
-        # Extract the destination info from the parse
-        signal_dest = self.statement_parse.dest
-
-        # For now we handle two possible types of destination, a lifecycle or an assigner state machine
-        dest_sm = None  # Destination state machine to find the target Event Specification
-        if signal_dest.target_iset:
+        dest_sm = dest  # Destination state machine to find the target Event Specification
+        if self.signal_dest.target_iset:
             # An instance set destination was specified, so a signal will be sent to each instance lifecycle
             # state machine in the set
             dest_flow = None
-            iset_type = type(signal_dest.target_iset).__name__
+            iset_type = type(self.signal_dest.target_iset).__name__
             match iset_type:
                 case 'N_a':
-                    dest_name = signal_dest.target_iset.name
+                    dest_name = self.signal_dest.target_iset.name
                     if dest_name == 'me':
-                        if self.activity.xiflow:
-                            dest_flow = self.activity.xiflow
-                        dest_sm = self.activity.xiflow.tname  # The Event Spec is defined on my own state model
+                        dest_sm = self.activity.state_model
+                        # TODO: This is NOT a signal instance set action if target is assigner
+                        # TODO: In fact, this is a completion event
                     else:
-                        pass  # TODO: Destination is some other state model
+                        pass  # TODO: Destination is some other state model (via instance flow)
+                    self.aids_in.add(self.action_id)
+                    self.aids_out.add(self.action_id)
                 case 'IN_a':
                     pass  # It is an input parameter
+                    self.aids_in.add(self.action_id)
+                    self.aids_out.add(self.action_id)
                 case 'INST_a':
                     iset = InstanceSet(input_instance_flow=self.activity.xiflow,
-                                       iset_components=signal_dest.target_iset.components,
+                                       iset_components=self.signal_dest.target_iset.components,
                                        activity=self.activity)
-                    _, _, dest_flow = iset.process()
+                    ain, aout, dest_flow = iset.process()
                     dest_sm = dest_flow.tname
+                    self.aids_in.add(ain)
+                    self.aids_out.add(aout)
                 case _:
                     pass  # Includes case where a more complex instance set expression is supplied
 
@@ -148,8 +145,17 @@ class SignalAction:
                 Signal_Instance_Set_Action_i(ID=self.action_id, Activity=self.activity.anum,
                                              Domain=self.activity.domain, Instance_flow=dest_flow.fid)
             ])
-        elif signal_dest.assigner_dest:
-            dest_sm = signal_dest.assigner_dest.rnum.rnum  # The signal destination state model name
+            return dest_sm
+
+    def process_signal_assigner_action(self) -> str:
+        """
+        """
+        if self.completion_event:
+            dest_sm = self.activity.state_model
+            self.aids_in.add(self.action_id)
+            self.aids_out.add(self.action_id)
+        else:
+            dest_sm = self.statement_parse.dest.assigner_dest.rnum.rnum
             pi_flow = None
             # The signal will be addressed to an assigner state machine associated with a target association
             # Verify that the rnum is in fact an association (not an ordinal or a generalization relationship)
@@ -160,23 +166,86 @@ class SignalAction:
                 pass  # TODO: Handle case where an assigner is sending a signal to another assigner
 
             iset = InstanceSet(input_instance_flow=self.activity.xiflow,
-                               iset_components=signal_dest.assigner_dest.partition.components,
+                               iset_components=self.signal_dest.assigner_dest.partition.components,
                                activity=self.activity)
-            _, _, f = iset.process()
+            ain, aout, f = iset.process()
+            self.aids_in.add(ain)
+            self.aids_out.add(aout)
 
-            Relvar.insert(db=mmdb, tr=tr_Signal, relvar='Signal Assigner Action', tuples=[
-                Signal_Assigner_Action_i(ID=self.action_id, Activity=self.activity.anum,
-                                         Domain=self.activity.domain,
-                                         Association=dest_sm)
-            ])
-            Relvar.insert(db=mmdb, tr=tr_Signal, relvar='Multiple Assigner Partition Instance', tuples=[
-                Multiple_Assigner_Partition_Instance_i(Action=self.action_id, Activity=self.activity.anum,
-                                                       Domain=self.activity.domain,
-                                                       Partition=f.fid)
-            ])
+            # If the destination is a Multiple Assigner, populate the partition instance
+            R = f"Rnum:<{dest_sm}>, Domain<{self.activity.domain}>"
+            multiple_assigner_r = Relation.restrict(db=mmdb, relation="Multiple Assigner", restriction=R)
+            if multiple_assigner_r.body:
+                Relvar.insert(db=mmdb, tr=tr_Signal, relvar='Multiple Assigner Partition Instance', tuples=[
+                    Multiple_Assigner_Partition_Instance_i(Action=self.action_id, Activity=self.activity.anum,
+                                                           Domain=self.activity.domain,
+                                                           Partition=f.fid)
+                ])
+
+        Relvar.insert(db=mmdb, tr=tr_Signal, relvar='Signal Assigner Action', tuples=[
+            Signal_Assigner_Action_i(ID=self.action_id, Activity=self.activity.anum,
+                                     Domain=self.activity.domain,
+                                     Association=dest_sm)
+        ])
+        return dest_sm
+
+    def populate_subclass(self):
+        """
+        """
+        # Is this an signal that will be mapped to a counterpart in another domain?
+        # In early Shlaer-Mellor this was an event to an external entity
+        if self.external_dest:
+            self.populate_external_signal()  # No returned destination
+            return
+
+        # Is this a signal delegation creation of a lifecycle instance on an initial psuedo state transition?
+        if self.initial_signal_action:
+            self.dest_sm = self.populate_initial_signal()  # Returned destination is the target class name
+            return
+
+        # The destination is either an instance set or an assigner
+        target_iset = self.statement_parse.dest.target_iset
+        if target_iset and type(target_iset).__name__ == 'N_a' and target_iset.name == 'me':
+            self.completion_event = True
+        assigner_dest = self.statement_parse.dest.assigner_dest
+        if target_iset and assigner_dest:
+            # Only one of these two should be set
+            msg = (f"Instance set and assigner destinations are mutually exclusive as a signal destination.\n"
+                   f"But both have been specified for signal {self.event_name} in {self.activity.activity_path}")
+            _logger.error(msg)
+            raise ActionException(msg)
+
+
+        # It's an assigner destination if an assigner_iset is specified, or if the
+        # destination is self AND self is an assigner
+        if assigner_dest or self.completion_event and self.activity.smtype != SMType.LIFECYCLE:
+            self.dest_sm = self.process_signal_assigner_action()
+            return
+
+        # The destination must be an instance set so the target is a lifecycle state model
+        # A distinct signal may be generated for each in the target instance set, but they all share the same lifecycle
+        # so there is still only one destination state model
+        if self.signal_dest.target_iset:
+            self.dest_sm = self.process_signal_instance_set_action(dest=target_iset)
+            return
+
+    def populate(self) -> Boundary_Actions:
+        """
+        Returns:
+            Boundary_Actions: The signal action id is both the initial_pseudo_state and final action id
+        """
+        # Initiate the Signal Action transaction
+        Transaction.open(db=mmdb, name=tr_Signal)
+        # Populate the Action superclass instance and obtain its action_id
+        self.action_id = Action.populate(tr=tr_Signal, anum=self.activity.anum, domain=self.activity.domain,
+                                         action_type="signal")  # Transaction open
+
+        self.populate_subclass()
+
+        # Populate the superclasses
         Relvar.insert(db=mmdb, tr=tr_Signal, relvar='Signal Action', tuples=[
             Signal_Action_i(ID=self.action_id, Activity=self.activity.anum, Domain=self.activity.domain,
-                            Event_spec=self.statement_parse.event, State_model=dest_sm)
+                            Event_spec=self.statement_parse.event, State_model=self.dest_sm)
         ])
         Relvar.insert(db=mmdb, tr=tr_Signal, relvar='Instance Action', tuples=[
             Instance_Action_i(ID=self.action_id, Activity=self.activity.anum, Domain=self.activity.domain)
@@ -190,4 +259,4 @@ class SignalAction:
             pass
 
         Transaction.execute(db=mmdb, name=tr_Signal)
-        return Boundary_Actions(ain={self.action_id}, aout={self.action_id})
+        return Boundary_Actions(ain=self.aids_in, aout=self.aids_out)

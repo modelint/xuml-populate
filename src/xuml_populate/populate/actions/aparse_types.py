@@ -55,20 +55,23 @@ class Flow_ap(NamedTuple):
 class ActivityAP:
     anum: str  # activity number
     domain: str  # domainname
+    activity_path: str  # descriptive name of activity for logging (e.g. domain, class, method name)
+
+@dataclass(frozen=True, kw_only=True)
+class RealStateActivityAP(ActivityAP):
     signum: str  # signature number
     xiflow: Flow_ap  # executing instance flow (none for assigner state activities)
     domain_method_output_types: dict[str, Method_Output_Type]  # Dictionary of output types for all methods in domain
-    activity_path: str  # descriptive name of activity for logging (e.g. domain, class, method name)
     parse: Execution_Unit_a  # The Scrall parse of the actions
     scrall_text: str  # Full unparsed text of the activity for logging and diagnostic reference
 
 @dataclass(frozen=True, kw_only=True)
-class MethodActivityAP(ActivityAP):
+class MethodActivityAP(RealStateActivityAP):
     cname: str  # Method is defined on this class name
     opname: str  # Name of the method
 
 @dataclass(frozen=True, kw_only=True)
-class StateActivityAP(ActivityAP):
+class StateActivityAP(RealStateActivityAP):
     sname: str  # state name
     state_model: str  # state model name (class or rnum)
     smtype: SMType  # lifecycle, sa assigner, ma assigner

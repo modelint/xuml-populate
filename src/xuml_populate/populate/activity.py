@@ -121,10 +121,20 @@ class Activity:
         # These are common to both Method and State Activities
         self.anum = activity_data.anum
         self.domain = activity_data.domain
-        self.parse = activity_data.parse
-        self.signum = activity_data.signum
         self.activity_path = activity_data.activity_path
-        self.scrall_text = activity_data.scrall_text
+
+        # These are not relevant for a creation activity
+        self.parse = None
+        self.signum = None
+        self.scrall_text = None
+        self.domain_method_output_types = None
+
+        if type(activity_data).__name__ != 'DelegatedCreationActivityAP':
+            self.parse = activity_data.parse
+            self.signum = activity_data.signum
+            self.scrall_text = activity_data.scrall_text
+            self.domain_method_output_types = activity_data.domain_method_output_types
+            self.synch_output_flows: set[Flow_ap] = set()  # Tracks synch outputs of a Method Activity
 
         # These default to None since they are specific to either Method or State Activities
         self.method_name: Optional[str] = None
@@ -136,9 +146,7 @@ class Activity:
         self.xiflow: Optional[Flow_ap] = None  # Executable instance flow (for a Method or Lifecycle)
         self.piflow: Optional[Flow_ap] = None  # Partitioning instance flow (for a Multiple Assigner)
         self.flow_path = None  # Not set until flow dependencies are processed
-        self.synch_output_flows: set[Flow_ap] = set()  # Tracks synch outputs of a Method Activity
         # self.domain_method_output_types: Optional[dict[str, Method_Output_Type]] = None
-        self.domain_method_output_types = activity_data.domain_method_output_types
 
         match type(activity_data).__name__:
             case 'MethodActivityAP':
@@ -154,8 +162,11 @@ class Activity:
                 self.piflow = activity_data.piflow
                 self.xiflow = activity_data.xiflow  # None if not a Lifecycle state
                 self.smtype = activity_data.smtype
+            case 'DelegatedCreationActivityAP':
+                self.class_name = activity_data.cname
+                pass
             case _:
-                msg = f"Activity is neither a Method or State Activity"
+                msg = f"Activity is neither a Method, State, or Delegated Creation Activity"
                 _logger.error(msg)
                 raise ActionException(msg)
 

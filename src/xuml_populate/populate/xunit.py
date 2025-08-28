@@ -126,15 +126,12 @@ class ExecutionUnit:
             boundary_actions = Statement.populate(activity=activity, statement_parse=single_statement)
 
         elif block:
-            ain = None
-            aout = None
+            ain: set[str] = set()
+            aout: set[str] = set()
             for count, s in enumerate(block):
                 b = ExecutionUnit.process_statement_set(content=s.statement_set, activity=activity)
-                if ain is None:
-                    ain = b.ain  # Set the input boundary action
-                next_out = b.aout if b.aout else None
-                if next_out is not None:
-                    aout = next_out
+                ain.update(b.ain)
+                aout.update(b.aout)
             boundary_actions = Boundary_Actions(ain=ain, aout=aout)
 
             pass  # TODO: Look at the b list and figure out what to return based on example

@@ -77,9 +77,9 @@ class Statement:
             case 'Call_a':
                 call_s = CallStatement(activity=activity, call_parse=statement_parse)
                 boundary_actions = call_s.process()
-            case 'Signal_a':
+            case 'Signal_a' | 'External_signal_a':
                 sig_a = SignalAction(activity=activity, statement_parse=statement_parse)
-                boundary_actions = sig_a.process()
+                boundary_actions = sig_a.populate()
             case 'New_inst_a':
                 create_a = CreateAction(activity=activity, statement_parse=statement_parse)
                 boundary_actions = create_a.process()
