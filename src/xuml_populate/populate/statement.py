@@ -11,6 +11,7 @@ from typing import Set, TYPE_CHECKING
 if TYPE_CHECKING:
     from xuml_populate.populate.activity import Activity
 
+from xuml_populate.utility import print_mmdb
 from xuml_populate.populate.actions.call_statement import CallStatement
 from xuml_populate.populate.actions.signal_action import SignalAction
 from xuml_populate.populate.actions.instance_assignment import InstanceAssignment

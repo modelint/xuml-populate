@@ -39,8 +39,11 @@ Boundary_Actions = namedtuple("Boundary_Actions", "ain aout")
 """ Initial actions not dependent on any data flow input and output actions that do not flow to any other action"""
 Method_Output_Type = namedtuple("Method_Output_Type", 'name mult')
 """ Type name and optional multiplicity of a Method output flow so we can populate a Synchronous Output"""
-
 """ Activity identification and diagnostic data """
+
+# These are for creating instances by delegation
+New_delegated_inst = namedtuple("New_Delegated_Instance", "cname attr_flows ref_flows")
+Flow_refs = namedtuple("Ref_Flows", "rnum ref_flow1 ref_flow2")
 
 class Flow_ap(NamedTuple):
     """

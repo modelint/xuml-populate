@@ -4,7 +4,7 @@ create_action.py – Populate a create action in PyRAL
 
 # System
 import logging
-from typing import Any, TYPE_CHECKING
+from typing import Any, Optional, TYPE_CHECKING
 
 # Model Integration
 from scrall.parse.visitor import New_inst_a
@@ -18,7 +18,7 @@ if TYPE_CHECKING:
 from xuml_populate.utility import print_mmdb
 from xuml_populate.populate.actions.new_assoc_ref_action import NewAssociativeReferenceAction
 from xuml_populate.config import mmdb
-from xuml_populate.populate.actions.aparse_types import Boundary_Actions
+from xuml_populate.populate.actions.aparse_types import Boundary_Actions, New_delegated_inst
 from xuml_populate.populate.actions.action import Action
 from xuml_populate.populate.flow import Flow
 from xuml_populate.exceptions.action_exceptions import *
@@ -36,7 +36,7 @@ class CreateAction:
     """
     Create all relations for a Create Action.
     """
-    def __init__(self, statement_parse: New_inst_a, activity: 'Activity'):
+    def __init__(self, statement_parse: New_inst_a | New_delegated_inst, activity: 'Activity', delegation_map: Optional[dict] = None):
         """
         Initialize with everything the Create Action requires
 

@@ -89,12 +89,57 @@ class SignalAction:
         """
         # Create a Delegated Creation Activity associated with the target class Initial Pseudo State
         # It will populate itself based on the informaiton in the statement_parse
-        new_inst_parse = self.statement_parse.dest.target_iset.components[0]
-        DelegatedCreationActivity(parse=new_inst_parse, domain=self.activity.domain)
 
+        # Grab the parse of the destination, initial attributes and references
+        new_inst_parse = self.statement_parse.dest.target_iset.components[0]
+        attr_init_flows: set[str] = set()  # Attr flow ids for initializing attribute values
+        ref_inits: dict[str, list[str]] = {}  # Flows with references keyed by rnum
+
+        # An instance of the dest_class will be created via delegation
+        # It must have a lifecycle with an initial psuedo state
+        dest_class = new_inst_parse.cname.name
+
+        # We need to break down any instance sets in the to_refs
+        # TODO: Process attr_init_flows when we have an example
+        for ref in new_inst_parse.rels:
+            # ref holds one or two references that formalize a relationship
+            # one if its a simple association or generalization and two if it is associative
+            # A reference is a single instance flow that is either already populated in our activity
+            # or we need to create it and any required Actions that produce the flow
+
+            # Create list of one or two parsed out single-instance set references
+            # Start with iset1 which must always have a value, i.e. a relationship requires at least one reference
+            iset_parses = [ref.iset1]
+            if ref.iset1:
+                iset_parses.append(ref.iset2)
+            else:
+                msg = f"No reference instance set for event: {self.event_name} in {self.activity.activity_path}"
+                _logger.error(msg)
+                raise ActionException(msg)
+            # Supplying one or two refs for this rnum
+            ref_inits[ref.rnum] = []
+            for ip in iset_parses:
+                if type(ip).__name__ == 'N_a':
+                    # The reference is just the name of a non scalar flow already populated in our activity
+                    # InstanceSet will expect a list of components, so we'll just make this a single component list
+                    iset_comps = [ip]
+                    # After processing the InstanceSet below we'll obtain one ns flow and zero actions (ain,aout)
+                    # empty sets for ain, aout and the matching ns_flow already
+                    # populated in this Activity
+                else:
+                    # TODO: <1> Test this when we have an example
+                    iset_comps = ip # Should be a list of components
+                iset = InstanceSet(iset_components=iset_comps, activity=self.activity)
+                ain, aout, f = iset.process()
+                # Add the flow id holding the reference to the ref1 slot for the rnum
+                ref_inits[ref.rnum].append(f.fid)
+                # TODO: <1> Figure out what to do about ain, aout for else case above
+
+        DelegatedCreationActivity(parse=new_inst_parse, domain=self.activity.domain,
+                                  delegating_activity=self.activity.anum,
+                                  attr_init_flows=attr_init_flows, ref_inits=ref_inits)
         # Now we just need to populate the Initial Signal Action itself
         # Since all the heavy lifting happens in the creation activity, there isn't much to do here
-        dest_class = new_inst_parse.cname.name  # Destination must be a class (lifecycle state model)
         Relvar.insert(db=mmdb, tr=tr_Signal, relvar='Initial Signal Action', tuples=[
             Initial_Signal_Action_i(ID=self.action_id, Activity=self.activity.anum, Domain=self.activity.domain)
         ])
