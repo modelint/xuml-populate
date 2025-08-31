@@ -98,6 +98,8 @@ class Transfer
 attributes
     Shaft : Shaft ID {I, R53}
     Destination floor : Level Name {R53}
+    Tint : Dark_Medium_Light
+    Color : Color Name = red
 --
 relationships
     R1

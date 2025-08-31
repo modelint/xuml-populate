@@ -20,8 +20,10 @@ if TYPE_CHECKING:
 from xuml_populate.utility import print_mmdb
 from xuml_populate.config import mmdb
 from xuml_populate.populate.delegated_creation import DelegatedCreationActivity
+from xuml_populate.populate.actions.expressions.enumflow import EnumFlow
 from xuml_populate.populate.actions.aparse_types import Boundary_Actions, SMType
 from xuml_populate.populate.actions.action import Action
+from xuml_populate.populate.actions.expressions.scalar_expr import ScalarExpr
 from xuml_populate.populate.actions.expressions.instance_set import InstanceSet
 from xuml_populate.populate.mmclass_nt import (Signal_Action_i, Supplied_Parameter_Value_i,
                                                Signal_Instance_Set_Action_i,
@@ -92,12 +94,28 @@ class SignalAction:
 
         # Grab the parse of the destination, initial attributes and references
         new_inst_parse = self.statement_parse.dest.target_iset.components[0]
-        attr_init_flows: set[str] = set()  # Attr flow ids for initializing attribute values
         ref_inits: dict[str, list[str]] = {}  # Flows with references keyed by rnum
 
         # An instance of the dest_class will be created via delegation
         # It must have a lifecycle with an initial psuedo state
         dest_class = new_inst_parse.cname.name
+
+        # We need to break down any scalar expressions in the non-referential attribute flows
+        attr_init_flows: dict[str, str] = {}
+        attr_init_exprs = {a.attr.name: a.scalar_expr for a in new_inst_parse.attrs}
+        for attr_name, attr_expr in attr_init_exprs.items():
+            expr_type = type(attr_expr).__name__
+            match expr_type:
+                case 'Enum_a':
+                    e = EnumFlow(parse=attr_expr, activity=self.activity)
+                    ef = e.populate_attr_assignment(attr_name=attr_name, class_name=dest_class)
+                    attr_init_flows[attr_name] = ef.fid
+                case _:
+                    # se = ScalarExpr(expr=attr_expr, input_instance_flow=None, activity=self.activity)
+                    # b, sflows = se.process()
+                    pass
+            pass
+        pass
 
         # We need to break down any instance sets in the to_refs
         # TODO: Process attr_init_flows when we have an example

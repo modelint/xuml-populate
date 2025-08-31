@@ -52,7 +52,7 @@ class Flow_ap(NamedTuple):
     fid: str  # Flow ID
     content: Content
     tname: str
-    max_mult: MaxMult
+    max_mult: MaxMult | None
 
 @dataclass(frozen=True, kw_only=True)
 class ActivityAP:

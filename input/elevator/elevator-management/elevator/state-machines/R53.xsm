@@ -28,7 +28,7 @@ activity
     cabin in shaft .= /R2/Cabin
     destination aslev .= cabin in shaft.Ping both ways()
     destination aslev? {
-        Execute -> *Transfer &R53 cabin in shaft, destination aslev
+        Execute -> *Transfer(Tint: _dark) &R53 cabin in shaft, destination aslev
         Transfer created -> me
     } : No destination -> me
 transitions

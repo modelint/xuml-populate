@@ -25,7 +25,7 @@ from xuml_populate.exceptions.action_exceptions import *
 from xuml_populate.populate.mmclass_nt import (Create_Action_i, Instance_Initialization_i, Attribute_Initialization_i,
                                                Explicit_Initialization_i, Reference_Initialization_i,
                                                Default_Initialization_i, Local_Create_Action_i,
-                                               Reference_Value_Input_i, Instance_Action_i)
+                                               Reference_Value_Input_i, Instance_Action_i, Delegated_Create_Action_i)
 
 _logger = logging.getLogger(__name__)
 
@@ -36,7 +36,7 @@ class CreateAction:
     """
     Create all relations for a Create Action.
     """
-    def __init__(self, statement_parse: New_inst_a | New_delegated_inst, activity: 'Activity', delegation_map: Optional[dict] = None):
+    def __init__(self, statement_parse: New_inst_a | New_delegated_inst, activity: 'Activity'):
         """
         Initialize with everything the Create Action requires
 
@@ -47,22 +47,29 @@ class CreateAction:
         self.action_id = None
         self.activity = activity
 
+        self.delegated_inst = statement_parse if statement_parse else None
+
         # Convenience
         self.anum = self.activity.anum
         self.domain = self.activity.domain
         self.signum = self.activity.signum
-        self.to_ref_parse = statement_parse.rels
+        self.to_ref_parse = statement_parse.rels if not self.delegated_inst else None
 
         # Unpack statement parse
-        self.target_class = statement_parse.cname.name
-        self.non_ref_ivalues: dict[str, Any] = {}
+        self.target_class = statement_parse.cname if self.delegated_inst else statement_parse.cname.name
 
-        self.non_ref_inits = statement_parse.attrs
-        self.ref_inits = statement_parse.rels
+
+        self.attr_flows = statement_parse.attr_flows if self.delegated_inst else None
+        self.ref_flows = statement_parse.ref_flows if self.delegated_inst else None
+
+        self.non_ref_inits = statement_parse.attrs if not self.delegated_inst else None
+        self.ref_inits = statement_parse.rels if not self.delegated_inst else None
 
         # We will use this nested dictionary to gather all required initial_pseudo_state attribute values
         # for non referential attributes
+        self.non_ref_ivalues: dict[str, Any] = {}
         self.non_ref_ivalues: dict[str, dict[str, Any]] = {}
+
 
     def process(self) -> Boundary_Actions:
         """
@@ -81,12 +88,21 @@ class CreateAction:
         Relvar.insert(db=mmdb, tr=tr_Create, relvar='Instance Action', tuples=[
             Create_Action_i(ID=self.action_id, Activity=self.activity.anum, Domain=self.activity.domain)
         ])
-        output_flow = Flow.populate_instance_flow(cname=self.target_class, anum=self.anum, domain=self.domain,
-                                                  single=True)
-        Relvar.insert(db=mmdb, tr=tr_Create, relvar='Local Create Action', tuples=[
-            Local_Create_Action_i(ID=self.action_id, Activity=self.activity.anum, Domain=self.activity.domain,
-                                  New_instance_flow=output_flow.fid)
-        ])
+        if not self.delegated_inst:
+            output_flow = Flow.populate_instance_flow(cname=self.target_class, anum=self.anum, domain=self.domain,
+                                                      single=True)
+        else:
+            output_flow = None
+
+        if self.delegated_inst:
+            Relvar.insert(db=mmdb, tr=tr_Create, relvar='Delegated Create Action', tuples=[
+                Delegated_Create_Action_i(ID=self.action_id, Activity=self.activity.anum, Domain=self.activity.domain)
+            ])
+        else:
+            Relvar.insert(db=mmdb, tr=tr_Create, relvar='Local Create Action', tuples=[
+                Local_Create_Action_i(ID=self.action_id, Activity=self.activity.anum, Domain=self.activity.domain,
+                                      New_instance_flow=output_flow.fid)
+            ])
 
 
         # When this class does not participate in any generalization, there is only one of these
@@ -132,39 +148,47 @@ class CreateAction:
         # Failing that, look for a default value determined by the Scalar (type)
         # And if we still don't find a value (not all types provide a default) raise an exception
 
-        # Process all explicit non referential attribute initializations
-        for av_init in self.non_ref_inits:
-            attr_name = av_init.attr.name
-            sflow_name = av_init.scalar_expr
-            sflow_source = type(sflow_name).__name__
+        if self.delegated_inst:
+            for av_init_flow in self.attr_flows:
+                Relvar.insert(db=mmdb, tr=tr_Create, relvar='Explicit Initialization', tuples=[
+                    Explicit_Initialization_i(Create_action=self.action_id, Attribute=r, Class=self.target_class,
+                                              Activity=self.activity.anum, Domain=self.activity.domain,
+                                              Initial_value_flow=av_init_flow)
+                ])
+        else:
+            # Process all explicit non referential attribute initializations
+            for av_init in self.non_ref_inits:
+                attr_name = av_init.attr.name
+                sflow_name = av_init.scalar_expr
+                sflow_source = type(sflow_name).__name__
 
-            # The source of any Explicit Initialization, as described in the Create Delete Subsystem class model,
-            # is either an input parameter flowing into the activity or a Scalar Flow generated
-            # by some internal Action
-            match sflow_source:
-                case 'N_a':
-                    # Labeled scalar flow output by some other action
-                    pass  # TODO: Locate labeled flow
-                case 'IN_a':
-                    # Labeled scalar flow fed by an input parameter
-                    R = f"Parameter:<{sflow_name.name}>, Signature:<{self.signum}>, Activity:<{self.anum}>, Domain:<{self.domain}>"
-                    activity_input_r = Relation.restrict(db=mmdb, relation='Activity Input', restriction=R)
-                    if len(activity_input_r.body) != 1:
-                        msg = (f"Parameter input [{self.anum}:{sflow_name.name}] not found in metamodel db "
-                               f"for {self.activity.activity_path}")
-                        _logger.error(msg)
-                        raise ActionException(msg)
-                    # Get the corresponding parameter flow
+                # The source of any Explicit Initialization, as described in the Create Delete Subsystem class model,
+                # is either an input parameter flowing into the activity or a Scalar Flow generated
+                # by some internal Action
+                match sflow_source:
+                    case 'N_a':
+                        # Labeled scalar flow output by some other action
+                        pass  # TODO: Locate labeled flow
+                    case 'IN_a':
+                        # Labeled scalar flow fed by an input parameter
+                        R = f"Parameter:<{sflow_name.name}>, Signature:<{self.signum}>, Activity:<{self.anum}>, Domain:<{self.domain}>"
+                        activity_input_r = Relation.restrict(db=mmdb, relation='Activity Input', restriction=R)
+                        if len(activity_input_r.body) != 1:
+                            msg = (f"Parameter input [{self.anum}:{sflow_name.name}] not found in metamodel db "
+                                   f"for {self.activity.activity_path}")
+                            _logger.error(msg)
+                            raise ActionException(msg)
+                        # Get the corresponding parameter flow
 
-                    activity_input_t = activity_input_r.body[0]  # The Activity Input instance tuple
-                    # TODO: IMPORTANT Verify that parameter flow type matches the attribute type, else exception
-                    Relvar.insert(db=mmdb, tr=tr_Create, relvar='Explicit Initialization', tuples=[
-                        Explicit_Initialization_i(Create_action=self.action_id, Attribute=r, Class=self.target_class,
-                                                  Activity=self.activity.anum, Domain=self.activity.domain,
-                                                  Initial_value_flow=activity_input_t["Flow"])
-                    ])
-                case _:
-                    pass
+                        activity_input_t = activity_input_r.body[0]  # The Activity Input instance tuple
+                        # TODO: IMPORTANT Verify that parameter flow type matches the attribute type, else exception
+                        Relvar.insert(db=mmdb, tr=tr_Create, relvar='Explicit Initialization', tuples=[
+                            Explicit_Initialization_i(Create_action=self.action_id, Attribute=r, Class=self.target_class,
+                                                      Activity=self.activity.anum, Domain=self.activity.domain,
+                                                      Initial_value_flow=activity_input_t["Flow"])
+                        ])
+                    case _:
+                        pass
 
         # Now process each implicit initialization
         # Find all non referential attributes with no value explicitly specified, these will require default values

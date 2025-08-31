@@ -35,7 +35,7 @@ class DelegatedCreationActivity:
     """
 
     def __init__(self, parse: New_inst_a, domain: str, delegating_activity: str,
-                 attr_init_flows: set[str], ref_inits: dict[str, list[str]]):
+                 attr_init_flows: dict[str, str],  ref_inits: dict[str, list[str]]):
         """
 
         """
@@ -110,10 +110,7 @@ class DelegatedCreationActivity:
             rnum_refs.append(Flow_refs(rnum=rel.rnum, ref_flow1=refs[0], ref_flow2=None if len(refs) != 2 else refs[1]))
         new_inst = New_delegated_inst(cname=self.class_name, attr_flows=[], ref_flows=rnum_refs)
 
-
         # Now populate the creation action
-        # TODO: Create a revised variation of the parse as a dictionary and pass that to create_action
-        # TODO: instead of the parse?
         ca = CreateAction(statement_parse=new_inst, activity=self.activity)
         b = ca.process()
         return b  # TODO: Don't think these are ever needed since called by an external activity
