@@ -118,7 +118,6 @@ class SignalAction:
         pass
 
         # We need to break down any instance sets in the to_refs
-        # TODO: Process attr_init_flows when we have an example
         for ref in new_inst_parse.rels:
             # ref holds one or two references that formalize a relationship
             # one if its a simple association or generalization and two if it is associative
@@ -135,7 +134,7 @@ class SignalAction:
                 _logger.error(msg)
                 raise ActionException(msg)
             # Supplying one or two refs for this rnum
-            ref_inits[ref.rnum] = []
+            ref_inits[ref.rnum.rnum] = []
             for ip in iset_parses:
                 if type(ip).__name__ == 'N_a':
                     # The reference is just the name of a non scalar flow already populated in our activity
@@ -150,7 +149,7 @@ class SignalAction:
                 iset = InstanceSet(iset_components=iset_comps, activity=self.activity)
                 ain, aout, f = iset.process()
                 # Add the flow id holding the reference to the ref1 slot for the rnum
-                ref_inits[ref.rnum].append(f.fid)
+                ref_inits[ref.rnum.rnum].append(f.fid)
                 # TODO: <1> Figure out what to do about ain, aout for else case above
 
         DelegatedCreationActivity(parse=new_inst_parse, domain=self.activity.domain,
