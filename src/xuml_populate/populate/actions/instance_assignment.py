@@ -17,6 +17,7 @@ if TYPE_CHECKING:
     from xuml_populate.populate.activity import Activity
 from xuml_populate.config import mmdb
 from xuml_populate.populate.mmclass_nt import Labeled_Flow_i
+from xuml_populate.populate.flow import Flow
 from xuml_populate.populate.actions.expressions.instance_set import InstanceSet
 from xuml_populate.exceptions.action_exceptions import *
 from xuml_populate.populate.actions.aparse_types import (Flow_ap, MaxMult, Content, MethodActivityAP, StateActivityAP,
@@ -110,19 +111,7 @@ class InstanceAssignment:
             _logger.error(msg)
             raise AssignmentOperatorMismatch
 
-        # Migrate the RHS output to a labeled flow using the output flow label
-        Transaction.open(db=mmdb, name=tr_Migrate)  # LHS labeled instance flow
-
-        # Delete the Unlabeled flow
-        Relvar.deleteone(db=mmdb, tr=tr_Migrate, relvar_name="Unlabeled Flow",
-                         tid={"ID": iset_instance_flow.fid, "Activity": activity.anum,
-                              "Domain": activity.domain})
-        # Insert the labeled flow
-        Relvar.insert(db=mmdb, tr=tr_Migrate, relvar='Labeled Flow', tuples=[
-            Labeled_Flow_i(ID=iset_instance_flow.fid, Activity=activity.anum, Domain=activity.domain,
-                           Name=output_flow_label)
-        ])
-
-        Transaction.execute(db=mmdb, name=tr_Migrate)  # LHS labeled instance flow
+        # Label the RHS output flow
+        Flow.label_flow(label=output_flow_label, fid=iset_instance_flow.fid, anum=activity.anum, domain=activity.domain)
 
         return Boundary_Actions(ain={initial_aid}, aout={final_aid})

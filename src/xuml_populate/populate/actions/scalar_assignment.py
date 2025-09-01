@@ -18,6 +18,7 @@ from xuml_populate.config import mmdb
 from xuml_populate.populate.mmclass_nt import Labeled_Flow_i
 from xuml_populate.populate.actions.extract_action import ExtractAction
 from xuml_populate.populate.ns_flow import NonScalarFlow
+from xuml_populate.populate.flow import Flow
 from xuml_populate.populate.actions.aparse_types import (Flow_ap, MaxMult, Content, SMType,
                                                          Boundary_Actions, ActivityType)
 from xuml_populate.populate.actions.expressions.scalar_expr import ScalarExpr
@@ -142,17 +143,9 @@ class ScalarAssignment:
                     pass
                     continue
             sflow = scalar_flows[count]
+
             # Migrate the scalar_flow to a labeled flow
-            _logger.info(f"Labeling output of scalar expression to [{lhs}]")
-            Transaction.open(db=mmdb, name=tr_Migrate)
-            # Delete the Unlabeled flow
-            Relvar.deleteone(db=mmdb, tr=tr_Migrate, relvar_name="Unlabeled Flow",
-                             tid={"ID": sflow.fid, "Activity": self.activity.anum, "Domain": self.activity.domain})
-            # Insert the labeled flow
-            Relvar.insert(db=mmdb, tr=tr_Migrate, relvar='Labeled Flow', tuples=[
-                Labeled_Flow_i(ID=sflow.fid, Activity=self.activity.anum, Domain=self.activity.domain, Name=label)
-            ])
-            Transaction.execute(db=mmdb, name=tr_Migrate)
+            Flow.label_flow(label=label, fid=sflow.fid, anum=self.anum, domain=self.domain)
         return bactions
 
         # Create one Extract Action per attribute, label pair

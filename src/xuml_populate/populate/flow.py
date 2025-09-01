@@ -30,6 +30,7 @@ _logger = logging.getLogger(__name__)
 tr_Inst_Flow = "Instance Flow"
 tr_Rel_Flow = "Relation Flow"
 tr_Scalar_Flow = "Scalar Flow"
+tr_Label = "Label Flow"
 
 
 class Flow:
@@ -37,6 +38,54 @@ class Flow:
     Populate relevant Flow relvars
     """
     flow_id_ctr = {}  # Manage flow id numbering per anum:domain
+
+    @classmethod
+    def lookup_label(cls, fid: str, anum: str, domain: str) -> str:
+        """
+        Given a flow id, report its label, if any
+
+        Args:
+            fid: ID of the Labeled Flow
+            anum: Activity number
+            domain: Domain name
+
+        Returns:
+            Label text or empty string if the Flow is unlabeled
+        """
+        # If the flow does not exist, we want to raise an error
+        R = f"ID:<{fid}>, Activity:<{anum}>, Domain:<{domain}>"
+        flow_r = Relation.restrict(db=mmdb, relation="Flow", restriction=R)
+        if not flow_r.body:
+            msg = f"Flow {fid} in {anum}:{domain} not found"
+            _logger.error(msg)
+            raise FlowException(msg)
+
+        # Now get the related Labeled Flow subclass instance
+        labeled_flow_r = Relation.semijoin(db=mmdb, rname2="Labeled Flow")
+        if not labeled_flow_r.body:
+            return ""  # Flow exists, but must be an Unlabeled Flow
+
+        return labeled_flow_r.body[0]["Name"]
+
+
+    @classmethod
+    def label_flow(cls, label: str, fid: str, anum: str, domain: str):
+        """
+
+        Returns:
+
+        """
+        # Migrate the flow to a labeled flow
+        _logger.info(f"Labeling flow {fid} in {domain}::{anum} as [{label}]")
+        Transaction.open(db=mmdb, name=tr_Label)
+        # Delete the Unlabeled flow
+        Relvar.deleteone(db=mmdb, tr=tr_Label, relvar_name="Unlabeled Flow",
+                         tid={"ID": fid, "Activity": anum, "Domain": domain})
+        # Insert the labeled flow
+        Relvar.insert(db=mmdb, tr=tr_Label, relvar='Labeled Flow', tuples=[
+            Labeled_Flow_i(ID=fid, Activity=anum, Domain=domain, Name=label)
+        ])
+        Transaction.execute(db=mmdb, name=tr_Label)
 
     @classmethod
     def populate_switch_output(cls, label: str, ref_flow: Flow_ap, anum: str, domain: str) -> Flow_ap:
@@ -433,7 +482,8 @@ class Flow:
                        max_mult=MaxMult.ONE if is_tuple else MaxMult.MANY)
 
     @classmethod
-    def copy_data_flow(cls, tr: str, ref_fid: str, ref_anum: str, new_anum: str, domain: str) -> Flow_ap:
+    def copy_data_flow(cls, tr: str, ref_fid: str, ref_anum: str, new_anum: str, domain: str,
+                       label: Optional[str] = None) -> Flow_ap:
         """
         Given a flow associated with some Activity, populate a new flow of the same type, but with the
         supplied activity number and a new flow id.
@@ -451,7 +501,7 @@ class Flow:
         """
         ref_flow = Flow.lookup_data(fid=ref_fid, anum=ref_anum, domain=domain)
         new_flow = Flow.populate_data_flow_by_type(mm_type=ref_flow.tname, mult=ref_flow.max_mult, anum=new_anum,
-                                                   domain=domain, activity_tr=tr)
+                                                   domain=domain, label=label, activity_tr=tr)
         return new_flow
 
     @classmethod

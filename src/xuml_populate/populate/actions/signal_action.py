@@ -99,6 +99,7 @@ class SignalAction:
         # An instance of the dest_class will be created via delegation
         # It must have a lifecycle with an initial psuedo state
         dest_class = new_inst_parse.cname.name
+        self.dest_sm = dest_class
 
         # We need to break down any scalar expressions in the non-referential attribute flows
         attr_init_flows: dict[str, str] = {}
@@ -152,9 +153,6 @@ class SignalAction:
                 ref_inits[ref.rnum.rnum].append(f.fid)
                 # TODO: <1> Figure out what to do about ain, aout for else case above
 
-        DelegatedCreationActivity(parse=new_inst_parse, domain=self.activity.domain,
-                                  delegating_activity=self.activity.anum,
-                                  attr_init_flows=attr_init_flows, ref_inits=ref_inits)
         # Now we just need to populate the Initial Signal Action itself
         # Since all the heavy lifting happens in the creation activity, there isn't much to do here
         Relvar.insert(db=mmdb, tr=tr_Signal, relvar='Initial Signal Action', tuples=[
@@ -163,6 +161,10 @@ class SignalAction:
         # The boundary actions are always just this one signal action id
         self.aids_in.add(self.action_id)
         self.aids_out.add(self.action_id)
+
+        self.complete_transaction()
+        DelegatedCreationActivity(class_name=dest_class, attr_init_flows=attr_init_flows, ref_inits=ref_inits,
+                                  delegating_activity=self.activity)
         return dest_class
 
     def process_signal_instance_set_action(self, dest) -> str:
@@ -291,19 +293,7 @@ class SignalAction:
             self.dest_sm = self.process_signal_instance_set_action(dest=target_iset)
             return
 
-    def populate(self) -> Boundary_Actions:
-        """
-        Returns:
-            Boundary_Actions: The signal action id is both the initial_pseudo_state and final action id
-        """
-        # Initiate the Signal Action transaction
-        Transaction.open(db=mmdb, name=tr_Signal)
-        # Populate the Action superclass instance and obtain its action_id
-        self.action_id = Action.populate(tr=tr_Signal, anum=self.activity.anum, domain=self.activity.domain,
-                                         action_type="signal")  # Transaction open
-
-        self.populate_subclass()
-
+    def complete_transaction(self):
         # Populate the superclasses
         Relvar.insert(db=mmdb, tr=tr_Signal, relvar='Signal Action', tuples=[
             Signal_Action_i(ID=self.action_id, Activity=self.activity.anum, Domain=self.activity.domain,
@@ -321,4 +311,18 @@ class SignalAction:
             pass
 
         Transaction.execute(db=mmdb, name=tr_Signal)
+
+    def populate(self) -> Boundary_Actions:
+        """
+        Returns:
+            Boundary_Actions: The signal action id is both the initial_pseudo_state and final action id
+        """
+        # Initiate the Signal Action transaction
+        Transaction.open(db=mmdb, name=tr_Signal)
+        # Populate the Action superclass instance and obtain its action_id
+        self.action_id = Action.populate(tr=tr_Signal, anum=self.activity.anum, domain=self.activity.domain,
+                                         action_type="signal")  # Transaction open
+
+        self.populate_subclass()
+
         return Boundary_Actions(ain=self.aids_in, aout=self.aids_out)
