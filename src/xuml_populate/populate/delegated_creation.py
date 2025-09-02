@@ -129,7 +129,7 @@ class DelegatedCreationActivity:
         Transaction.execute(db=mmdb, name=tr_DelCreate)
 
         # Now populate the creation action
-        ca = CreateAction(statement_parse=new_inst, activity=self.activity)
+        ca = CreateAction.from_delegated(statement_parse=new_inst, activity=self.activity)
         b = ca.process()
         pass
 

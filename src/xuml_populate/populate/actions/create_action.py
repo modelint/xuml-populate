@@ -4,7 +4,7 @@ create_action.py – Populate a create action in PyRAL
 
 # System
 import logging
-from typing import Any, Optional, TYPE_CHECKING
+from typing import Any, Optional, TYPE_CHECKING, Self
 
 # Model Integration
 from scrall.parse.visitor import New_inst_a
@@ -36,16 +36,43 @@ class CreateAction:
     """
     Create all relations for a Create Action.
     """
-    def __init__(self, statement_parse: New_inst_a | New_delegated_inst, activity: 'Activity'):
+    @classmethod
+    def from_delegated(cls, new_inst: New_delegated_inst, activity: 'Activity') -> Self:
+        """
+        Args:
+            new_inst:
+            activity:
+
+        Returns:
+        """
+        pass
+
+    @classmethod
+    def from_local(cls, statement_parse: New_inst_a, activity: 'Activity') -> Self:
+        """
+        Args:
+            statement_parse: Parsed representation of the New Instance expression
+            activity:
+
+        Returns:
+        """
+        class_name = statement_parse.cname
+        attrs = statement_parse.attrs
+        rels = statement_parse.rels
+        to_ref_parse = statement_parse.rels
+        return cls(class_name=class_name, attr_flows=attrs, ref_flows=rels, is_delegated=False, activity=activity)
+
+
+    def __init__(self, class_name: str, attr_flows, ref_flows, is_delegated: bool, activity: 'Activity'):
         """
         Initialize with everything the Create Action requires
 
         Args:
-            statement_parse: Parsed representation of the New Instance expression
             activity: Collected info about the activity
         """
         self.action_id = None
         self.activity = activity
+        self.is_delegated = is_delegated
 
         self.delegated_inst = statement_parse if statement_parse else None
 
@@ -88,13 +115,13 @@ class CreateAction:
         Relvar.insert(db=mmdb, tr=tr_Create, relvar='Instance Action', tuples=[
             Create_Action_i(ID=self.action_id, Activity=self.activity.anum, Domain=self.activity.domain)
         ])
-        if not self.delegated_inst:
+        if not self.is_delegated:
             output_flow = Flow.populate_instance_flow(cname=self.target_class, anum=self.anum, domain=self.domain,
                                                       single=True)
         else:
             output_flow = None
 
-        if self.delegated_inst:
+        if self.is_delegated:
             Relvar.insert(db=mmdb, tr=tr_Create, relvar='Delegated Create Action', tuples=[
                 Delegated_Create_Action_i(ID=self.action_id, Activity=self.activity.anum, Domain=self.activity.domain)
             ])
@@ -149,11 +176,11 @@ class CreateAction:
         # And if we still don't find a value (not all types provide a default) raise an exception
 
         if self.delegated_inst:
-            for av_init_flow in self.attr_flows:
+            for attr_name, attr_flow in self.attr_flows.items():
                 Relvar.insert(db=mmdb, tr=tr_Create, relvar='Explicit Initialization', tuples=[
-                    Explicit_Initialization_i(Create_action=self.action_id, Attribute=r, Class=self.target_class,
+                    Explicit_Initialization_i(Create_action=self.action_id, Attribute=attr_name, Class=self.target_class,
                                               Activity=self.activity.anum, Domain=self.activity.domain,
-                                              Initial_value_flow=av_init_flow)
+                                              Initial_value_flow=attr_flow)
                 ])
         else:
             # Process all explicit non referential attribute initializations
@@ -192,7 +219,13 @@ class CreateAction:
 
         # Now process each implicit initialization
         # Find all non referential attributes with no value explicitly specified, these will require default values
-        default_init_attrs = [a for a, v in self.non_ref_ivalues.items() if not v]
+        if self.delegated_inst:
+            default_init_attrs = non_ref_attr_names - set(self.delegated_inst.attr_flows.keys())
+        else:
+            # TODO: figure this out for a non delegated create
+            # default_init_attrs = [a for a, v in self.non_ref_ivalues.items() if not v]
+            pass
+
         for da in default_init_attrs:
             R = f"Attribute:<{da}>, Class:<{self.target_class}>, Domain:<{self.domain}>"
             default_ival_r = Relation.restrict(db=mmdb, relation='Default Initial Value', restriction=R)
@@ -226,24 +259,43 @@ class CreateAction:
 
         # Now we need to obtain an input tuple flow for each linked relationship
         # So that all of the referential attributes can be initialized during model execution
-        for to_ref in self.to_ref_parse:
-            if to_ref.iset2:
-                # There are two references on this linked relationship which means that
-                # this relationship is associative -- one reference to each participating class
-                ref_action = NewAssociativeReferenceAction(create_action_id=self.action_id, action_parse=to_ref,
-                                                           activity=self.activity, tr=tr_Create)
-                tuple_fid, ref_attr_names = ref_action.populate()
-                for n in ref_attr_names:
-                    Relvar.insert(db=mmdb, tr=tr_Create, relvar='Reference Value Input', tuples=[
-                        Reference_Value_Input_i(Flow=tuple_fid, Create_action=self.action_id, Attribute=n,
-                                                Class=self.target_class,
-                                                Activity=self.activity.anum, Domain=self.activity.domain,
-                                                )
-                    ])
-            else:
+        if self.delegated_inst:
+            for rel in self.delegated_inst.ref_flows:
+                if rel.ref_flow2 is not None:
+                    # There are two references on this linked relationship which means that
+                    # this relationship is associative -- one reference to each participating class
+                    ref_action = NewAssociativeReferenceAction(create_action_id=self.action_id, ref_init_flows=rel,
+                                                               activity=self.activity, tr=tr_Create)
+                    tuple_fid, ref_attr_names = ref_action.populate()
+                    for n in ref_attr_names:
+                        Relvar.insert(db=mmdb, tr=tr_Create, relvar='Reference Value Input', tuples=[
+                            Reference_Value_Input_i(Flow=tuple_fid, Create_action=self.action_id, Attribute=n,
+                                                    Class=self.target_class,
+                                                    Activity=self.activity.anum, Domain=self.activity.domain,
+                                                    )
+                        ])
+
                 pass
-                # New simple ref action
-            pass
+
+        else:
+            for to_ref in self.to_ref_parse:
+                if to_ref.iset2:
+                    # There are two references on this linked relationship which means that
+                    # this relationship is associative -- one reference to each participating class
+                    ref_action = NewAssociativeReferenceAction(create_action_id=self.action_id, new_inst=to_ref,
+                                                               activity=self.activity, tr=tr_Create)
+                    tuple_fid, ref_attr_names = ref_action.populate()
+                    for n in ref_attr_names:
+                        Relvar.insert(db=mmdb, tr=tr_Create, relvar='Reference Value Input', tuples=[
+                            Reference_Value_Input_i(Flow=tuple_fid, Create_action=self.action_id, Attribute=n,
+                                                    Class=self.target_class,
+                                                    Activity=self.activity.anum, Domain=self.activity.domain,
+                                                    )
+                        ])
+                else:
+                    pass
+                    # New simple ref action
+                pass
 
         Transaction.execute(db=mmdb, name=tr_Create)
 

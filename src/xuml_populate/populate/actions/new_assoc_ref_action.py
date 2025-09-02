@@ -18,7 +18,7 @@ if TYPE_CHECKING:
 from xuml_populate.utility import print_mmdb
 from xuml_populate.config import mmdb
 from xuml_populate.populate.actions.table import Table
-from xuml_populate.populate.actions.aparse_types import Flow_ap, Content, MaxMult
+from xuml_populate.populate.actions.aparse_types import Flow_ap, Content, MaxMult, New_delegated_inst
 from xuml_populate.populate.actions.action import Action
 from xuml_populate.populate.flow import Flow
 from xuml_populate.exceptions.action_exceptions import *
@@ -31,21 +31,37 @@ class NewAssociativeReferenceAction:
     """
 
     """
+    @classmethod
+    def from_delegated(cls, tr: str, create_action_id: str, new_inst: New_delegated_inst, activity: 'Activity'):
+        pass
 
-    def __init__(self, tr: str, create_action_id: str, action_parse: To_ref_a, activity: 'Activity'):
+    @classmethod
+    def from_local(cls, tr: str, create_action_id: str, action_parse: To_ref_a, activity: 'Activity'):
+        pass
+
+    def __init__(self, tr: str, create_action_id: str, new_inst: To_ref_a | New_delegated_inst,
+                 activity: 'Activity'):
         """
 
         """
         self.tr = tr
         self.create_action_id = create_action_id
+        if type(new_inst).__name__ == 'New_delegated_inst':
+            self.new_delegated_inst = new_inst
+            self.new_inst = False
+        else:
+            self.new_inst
+
+
+
         self.p_class = None
         self.t_class = None
         self.ref_flows: dict[str, str] = {}
-        self.parse = action_parse
+        self.parse = new_inst
         self.activity = activity
         self.domain = activity.domain
         self.anum = activity.anum
-        self.rnum = action_parse.rnum.rnum
+        self.rnum = new_inst.rnum.rnum
         self.action_id = None
 
     def populate(self) -> tuple[str, list[str]]:

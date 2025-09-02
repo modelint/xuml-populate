@@ -1,0 +1,8 @@
+Cabin:
+
+  operations:
+    - name: Goto floor
+      parameters:
+        - name: Dest floor
+          type: Level Name
+      return: Boolean
