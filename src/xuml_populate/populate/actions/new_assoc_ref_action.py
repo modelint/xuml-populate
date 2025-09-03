@@ -36,7 +36,7 @@ class NewAssociativeReferenceAction:
         pass
 
     @classmethod
-    def from_local(cls, tr: str, create_action_id: str, action_parse: To_ref_a, activity: 'Activity'):
+    def from_local(cls, tr: str, create_action_id: str, ref1_iset, ref2_iset, activity: 'Activity'):
         pass
 
     def __init__(self, tr: str, create_action_id: str, new_inst: To_ref_a | New_delegated_inst,

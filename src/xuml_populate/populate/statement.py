@@ -82,7 +82,7 @@ class Statement:
                 sig_a = SignalAction(activity=activity, statement_parse=statement_parse)
                 boundary_actions = sig_a.populate()
             case 'New_inst_a':
-                create_a = CreateAction(activity=activity, statement_parse=statement_parse)
+                create_a = CreateAction.from_local(activity=activity, statement_parse=statement_parse)
                 boundary_actions = create_a.process()
             case 'Delete_Group_a':
                 # This statement parses into of a set of Delete Actions
