@@ -126,14 +126,11 @@ class SignalAction:
 
             # Create list of one or two parsed out single-instance set references
             # Start with iset1 which must always have a value, i.e. a relationship requires at least one reference
-            iset_parses = [ref.iset1]
-            if ref.iset1:
-                iset_parses.append(ref.iset2)
-            else:
+            if not ref.iset1:
                 msg = f"No reference instance set for event: {self.event_name} in {self.activity.activity_path}"
                 _logger.error(msg)
                 raise ActionException(msg)
-            # Supplying one or two refs for this rnum
+            iset_parses = [ref.iset1, ref.iset2] if ref.iset2 else [ref.iset1]
             ref_inits[ref.rnum.rnum] = []
             for ip in iset_parses:
                 if type(ip).__name__ == 'N_a':
@@ -205,7 +202,7 @@ class SignalAction:
         ])
         self.complete_transaction()
 
-    def process_signal_assigner_action(self) -> str:
+    def process_signal_assigner_action(self):
         """
         """
         dest_sm = self.statement_parse.dest.assigner_dest.rnum.rnum
@@ -219,7 +216,7 @@ class SignalAction:
             pass  # TODO: Handle case where an assigner is sending a signal to another assigner
 
         iset = InstanceSet(input_instance_flow=self.activity.xiflow,
-                           iset_components=self.signal_dest.assigner_dest.partition.components,
+                           iset_components=self.statement_parse.dest.assigner_dest.partition.components,
                            activity=self.activity)
         ain, aout, f = iset.process()
         self.aids_in.add(ain)
@@ -240,7 +237,7 @@ class SignalAction:
                                      Domain=self.activity.domain,
                                      Association=dest_sm)
         ])
-        return dest_sm
+        self.dest_sm = dest_sm
 
     def populate_signal_completion_action(self):
         """
@@ -251,6 +248,9 @@ class SignalAction:
             Signal_Completion_Action_i(ID=self.action_id, Activity=self.activity.anum, Domain=self.activity.domain)
         ])
         self.dest_sm = self.activity.state_model
+        # The boundary actions are always just this one signal action id
+        self.aids_in.add(self.action_id)
+        self.aids_out.add(self.action_id)
 
         self.complete_transaction()
 
@@ -285,7 +285,7 @@ class SignalAction:
 
         # It's a singal to an assigner
         if assigner_dest:
-            self.dest_sm = self.process_signal_assigner_action()
+            self.process_signal_assigner_action()
             return
 
         # The destination must be an instance set so the target is a lifecycle state model

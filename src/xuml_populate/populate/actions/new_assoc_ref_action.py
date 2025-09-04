@@ -7,7 +7,6 @@ import logging
 from typing import List, TYPE_CHECKING
 
 # Model Integration
-from scrall.parse.visitor import To_ref_a
 from pyral.relvar import Relvar
 from pyral.relation import Relation
 from pyral.transaction import Transaction
@@ -32,36 +31,30 @@ class NewAssociativeReferenceAction:
 
     """
     @classmethod
-    def from_delegated(cls, tr: str, create_action_id: str, new_inst: New_delegated_inst, activity: 'Activity'):
-        pass
+    def from_delegated(cls, tr: str, create_action_id: str, rnum: str, ref_fid1: str, ref_fid2: str,
+                       activity: 'Activity'):
+        return cls(tr=tr, create_action_id=create_action_id, rnum=rnum, ref1=ref_fid1, ref2=ref_fid2,
+                   is_delegated=True, activity=activity)
 
     @classmethod
-    def from_local(cls, tr: str, create_action_id: str, ref1_iset, ref2_iset, activity: 'Activity'):
-        pass
+    def from_local(cls, tr: str, create_action_id: str, rnum: str, ref1, ref2, activity: 'Activity'):
+        return cls(tr=tr, create_action_id=create_action_id, rnum=rnum, ref1=ref1, ref2=ref2, is_delegated=False,
+                   activity=activity)
 
-    def __init__(self, tr: str, create_action_id: str, new_inst: To_ref_a | New_delegated_inst,
-                 activity: 'Activity'):
+    def __init__(self, tr: str, create_action_id: str, rnum: str, ref1, ref2, is_delegated: bool, activity: 'Activity'):
         """
-
         """
         self.tr = tr
         self.create_action_id = create_action_id
-        if type(new_inst).__name__ == 'New_delegated_inst':
-            self.new_delegated_inst = new_inst
-            self.new_inst = False
-        else:
-            self.new_inst
-
-
+        self.is_delegated = is_delegated
+        self.rnum = rnum
+        self.ref1 = ref1
+        self.ref2 = ref2
+        self.activity = activity
 
         self.p_class = None
         self.t_class = None
         self.ref_flows: dict[str, str] = {}
-        self.parse = new_inst
-        self.activity = activity
-        self.domain = activity.domain
-        self.anum = activity.anum
-        self.rnum = new_inst.rnum.rnum
         self.action_id = None
 
     def populate(self) -> tuple[str, list[str]]:
@@ -70,50 +63,56 @@ class NewAssociativeReferenceAction:
         Returns:
             Flow ID of a tuple of referential attribute values
         """
-        self.action_id = Action.populate(tr=self.tr, anum=self.anum, domain=self.domain,
+        self.action_id = Action.populate(tr=self.tr, anum=self.activity.anum, domain=self.activity.domain,
                                          action_type="new assoc ref")
         Relvar.insert(db=mmdb, tr=self.tr, relvar="New Reference Action", tuples=[
-            New_Reference_Action_i(ID=self.action_id, Activity=self.anum, Domain=self.domain,
+            New_Reference_Action_i(ID=self.action_id, Activity=self.activity.anum, Domain=self.activity.domain,
                                    Create_action=self.create_action_id)
         ])
 
         # Now we need to create the t and p class names
-        R = f"Ref_type:<T>, Rnum:<{self.rnum}>, Domain:<{self.domain}>"
+        R = f"Ref_type:<T>, Rnum:<{self.rnum}>, Domain:<{self.activity.domain}>"
         tref_r = Relation.restrict(db=mmdb, relation='Association Reference', restriction=R)
-        R = f"Ref_type:<P>, Rnum:<{self.rnum}>, Domain:<{self.domain}>"
+        R = f"Ref_type:<P>, Rnum:<{self.rnum}>, Domain:<{self.activity.domain}>"
         pref_r = Relation.restrict(db=mmdb, relation='Association Reference', restriction=R)
 
         self.t_class = tref_r.body[0]["To_class"]
         self.p_class = pref_r.body[0]["To_class"]
 
         # Obtain the T and P instance flows typed by the participating Classes
-        self.get_iflow(iset=self.parse.iset1)
-        self.get_iflow(iset=self.parse.iset2)
+        if not self.is_delegated:
+            self.get_iflow(iset=self.ref1)
+            self.get_iflow(iset=self.ref2)
+        else:
+            ref1_flow = Flow.lookup_data(fid=self.ref1, anum=self.activity.anum, domain=self.activity.domain)
+            ref2_flow = Flow.lookup_data(fid=self.ref2, anum=self.activity.anum, domain=self.activity.domain)
+            self.ref_flows[ref1_flow.tname] = self.ref1
+            self.ref_flows[ref2_flow.tname] = self.ref2
+            pass
 
         # Populate links to the source Single Instance Flows
         Relvar.insert(db=mmdb, relvar="T Ref Instance", tuples=[
-            T_Ref_Instance_i(Flow=self.ref_flows[self.t_class], Activity=self.anum, Domain=self.domain)
-        ], tr=self.tr)
+            T_Ref_Instance_i(Flow=self.ref_flows[self.t_class], Activity=self.activity.anum,
+                             Domain=self.activity.domain) ], tr=self.tr)
         Relvar.insert(db=mmdb, relvar="Referenced Instance", tuples=[
-            Referenced_Instance_i(Flow=self.ref_flows[self.t_class], Activity=self.anum, Domain=self.domain)
-        ], tr=self.tr)
+            Referenced_Instance_i(Flow=self.ref_flows[self.t_class], Activity=self.activity.anum,
+                                  Domain=self.activity.domain)], tr=self.tr)
         Relvar.insert(db=mmdb, relvar="P Ref Instance", tuples=[
-            P_Ref_Instance_i(Flow=self.ref_flows[self.p_class], Activity=self.anum, Domain=self.domain)
-        ], tr=self.tr)
+            P_Ref_Instance_i(Flow=self.ref_flows[self.p_class], Activity=self.activity.anum,
+                             Domain=self.activity.domain)], tr=self.tr)
         Relvar.insert(db=mmdb, relvar="Referenced Instance", tuples=[
-            Referenced_Instance_i(Flow=self.ref_flows[self.p_class], Activity=self.anum, Domain=self.domain)
-        ], tr=self.tr)
+            Referenced_Instance_i(Flow=self.ref_flows[self.p_class], Activity=self.activity.anum,
+                                  Domain=self.activity.domain)], tr=self.tr)
 
         Relvar.insert(db=mmdb, relvar="New Associative Reference Action", tuples=[
-            New_Associative_Reference_Action_i(ID=self.action_id, Activity=self.anum, Domain=self.domain,
+            New_Associative_Reference_Action_i(ID=self.action_id, Activity=self.activity.anum,
+                                               Domain=self.activity.domain,
                                                T_instance=self.ref_flows[self.t_class],
-                                               P_instance=self.ref_flows[self.p_class])
-        ], tr=self.tr)
-        print_mmdb()
+                                               P_instance=self.ref_flows[self.p_class])], tr=self.tr)
 
         # Create the output tuple table type
-        # Get all referential attributes associated with the associatie relationship
-        R = f"Rnum:<{self.rnum}>, Domain:<{self.domain}>"
+        # Get all referential attributes associated with the associative relationship
+        R = f"Rnum:<{self.rnum}>, Domain:<{self.activity.domain}>"
         aref_r = Relation.restrict(db=mmdb, relation='Attribute Reference', restriction=R, svar_name="arefs")
         p_r = Relation.project(db=mmdb, attributes=("From_attribute", "From_class", "Domain"))
         a_r = Relation.semijoin(db=mmdb, rname2="Attribute", attrs={"From_attribute": "Name", "From_class": "Class",
@@ -124,21 +123,19 @@ class NewAssociativeReferenceAction:
         # Now create the tuple flow
         tflow_label = f"_{self.rnum}_ref_{self.create_action_id[4:]}"
         tf = Flow.populate_relation_flow_by_header(
-            table_header=name_type_pairs, anum=self.anum, domain=self.domain, max_mult=MaxMult.ONE,
-            label=tflow_label)
-
+            table_header=name_type_pairs, anum=self.activity.anum, domain=self.activity.domain,
+            max_mult=MaxMult.ONE, label=tflow_label
+        )
         Relvar.insert(db=mmdb, tr=self.tr, relvar="Instance Action", tuples=[
-            Instance_Action_i(ID=self.action_id, Activity=self.anum, Domain=self.domain)
-        ])
+            Instance_Action_i(ID=self.action_id, Activity=self.activity.anum,
+                              Domain=self.activity.domain)])
         Relvar.insert(db=mmdb, tr=self.tr, relvar="Reference Action", tuples=[
-            Reference_Action_i(ID=self.action_id, Activity=self.anum, Domain=self.domain,
-                               Association=self.parse.rnum.rnum, Ref_attr_values=tf.fid)
-        ])
+            Reference_Action_i(ID=self.action_id, Activity=self.activity.anum, Domain=self.activity.domain,
+                               Association=self.rnum, Ref_attr_values=tf.fid)])
 
         ref_attr_names = [k for k in name_type_pairs.keys()]
 
         return tf.fid, ref_attr_names
-
 
     def get_iflow(self, iset):
         """
@@ -154,7 +151,7 @@ class NewAssociativeReferenceAction:
                 # It's just a single name, so we don't need to create an InstanceSet
                 # since we know there won't be any new Actions or flows populated
                 # We just need to find the named flow
-                R = f"Name:<{iset.name}>, Activity:<{self.anum}>, Domain:<{self.domain}>"
+                R = f"Name:<{iset.name}>, Activity:<{self.activity.anum}>, Domain:<{self.activity.domain}>"
                 labeled_flow_r = Relation.restrict(db=mmdb, relation='Labeled Flow', restriction=R)
                 if len(labeled_flow_r.body) == 1:
                     flow_id = labeled_flow_r.body[0]['ID']

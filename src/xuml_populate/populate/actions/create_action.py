@@ -45,7 +45,8 @@ class CreateAction:
 
         Returns:
         """
-        pass
+        return cls(class_name=new_inst.cname, ref_isets=None, attr_exprs=None,
+                   attr_flows=new_inst.attr_flows, ref_flows=new_inst.ref_flows, is_delegated=True, activity=activity)
 
     @classmethod
     def from_local(cls, statement_parse: New_inst_a, activity: 'Activity') -> Self:
@@ -172,7 +173,7 @@ class CreateAction:
         if self.is_delegated:
             for attr_name, attr_flow in self.attr_flows.items():
                 Relvar.insert(db=mmdb, tr=tr_Create, relvar='Explicit Initialization', tuples=[
-                    Explicit_Initialization_i(Create_action=self.action_id, Attribute=attr_name, Class=self.target_class,
+                    Explicit_Initialization_i(Create_action=self.action_id, Attribute=attr_name, Class=self.class_name,
                                               Activity=self.activity.anum, Domain=self.activity.domain,
                                               Initial_value_flow=attr_flow)
                 ])
@@ -252,17 +253,19 @@ class CreateAction:
         # Now we need to obtain an input tuple flow for each linked relationship
         # So that all of the referential attributes can be initialized during model execution
         if self.is_delegated:
-            for rel in self.delegated_inst.ref_flows:
+            for rel in self.ref_flows:
                 if rel.ref_flow2 is not None:
                     # There are two references on this linked relationship which means that
                     # this relationship is associative -- one reference to each participating class
-                    ref_action = NewAssociativeReferenceAction(create_action_id=self.action_id, ref_init_flows=rel,
-                                                               activity=self.activity, tr=tr_Create)
+                    ref_action = NewAssociativeReferenceAction.from_delegated(
+                        tr=tr_Create, create_action_id=self.action_id, rnum=rel.rnum, ref_fid1=rel.ref_flow1,
+                        ref_fid2=rel.ref_flow2, activity=self.activity
+                    )
                     tuple_fid, ref_attr_names = ref_action.populate()
                     for n in ref_attr_names:
                         Relvar.insert(db=mmdb, tr=tr_Create, relvar='Reference Value Input', tuples=[
                             Reference_Value_Input_i(Flow=tuple_fid, Create_action=self.action_id, Attribute=n,
-                                                    Class=self.target_class,
+                                                    Class=self.class_name,
                                                     Activity=self.activity.anum, Domain=self.activity.domain,
                                                     )
                         ])
@@ -270,12 +273,15 @@ class CreateAction:
                 pass
 
         else:
-            for rnum, to_ref in self.ref_isets.items():
-                if len(to_ref) == 2:
+            for rnum, ref_isets in self.ref_isets.items():
+                if len(ref_isets) == 2:
                     # There are two references on this linked relationship which means that
                     # this relationship is associative -- one reference to each participating class
-                    ref_action = NewAssociativeReferenceAction.from_local(create_action_id=self.action_id, new_inst=to_ref,
-                                                               activity=self.activity, tr=tr_Create)
+                    ref_action = NewAssociativeReferenceAction.from_local(
+                        tr=tr_Create, create_action_id=self.action_id,
+                        rnum=rnum, ref1=ref_isets[0], ref2=ref_isets[1],
+                        activity=self.activity
+                    )
                     tuple_fid, ref_attr_names = ref_action.populate()
                     for n in ref_attr_names:
                         Relvar.insert(db=mmdb, tr=tr_Create, relvar='Reference Value Input', tuples=[

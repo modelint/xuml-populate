@@ -167,6 +167,7 @@ class DecisionAction:
         Transaction.open(db=mmdb, name=tr_Decision)
         # Populate Action / Decision Action
         self.action_id = Action.populate(tr=tr_Decision, anum=self.anum, domain=self.domain, action_type="decision")
+        input_init_aids.add(self.action_id)
         Relvar.insert(db=mmdb, tr=tr_Decision, relvar='Decision Action', tuples=[
             Decision_Action_i(ID=self.action_id, Activity=self.anum, Domain=self.domain,
                               Boolean_input=self.decision_input_flow.fid)
@@ -189,4 +190,4 @@ class DecisionAction:
             ])
         Transaction.execute(db=mmdb, name=tr_Decision)
 
-        return Boundary_Actions(ain=input_init_aids, aout=d_final_aids)
+        return Boundary_Actions(ain={self.action_id}, aout=d_final_aids)

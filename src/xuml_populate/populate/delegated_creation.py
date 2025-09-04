@@ -110,7 +110,7 @@ class DelegatedCreationActivity:
             local_attr_flows[attr_name] = local_attr_flow.fid
             # TODO: If delegated flows are unlabled, we should label the local flows to match the attr names
 
-        # Mirror any reference initialiation flows from the delegating activity
+        # Mirror any reference initialization flows from the delegating activity
         rnum_refs = []
         for rel, refs in self.ref_inits.items():
             local_ref_flows = []
@@ -129,7 +129,7 @@ class DelegatedCreationActivity:
         Transaction.execute(db=mmdb, name=tr_DelCreate)
 
         # Now populate the creation action
-        ca = CreateAction.from_delegated(statement_parse=new_inst, activity=self.activity)
+        ca = CreateAction.from_delegated(new_inst=new_inst, activity=self.activity)
         b = ca.process()
         pass
 
