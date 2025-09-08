@@ -106,12 +106,21 @@ class SelectAction:
         """
         Determine whether we are selecting an instance of a Class based on an identifier match.
 
-        There are two cases we want to consider.
+        There are two cases of identifier selection to consider each of which yields a single instance flow output.
 
-        And in both of these cases we'll refer to examples from the Elevator Case Study class model, so it will help
-        to locate a copy of the class diagram from the relevant GitHub repository to follow along.
+        Normally, we select an instance using a supplied identifier. The identifier ensures that
+        at most one instance will be selected. Here we verify that each attribute of some identifier of the target
+        class is compared using the == operator to a supplied value.
 
-        In the first case, the user wants to select a single instance using an identifier for the associated class.
+        But there is a more nuancd case to consider where we traverse to a many associative class from
+        a single instance of either participating class. We set the self.hop_to_many_assoc_from_one_instance
+        boolean to true during initialization when this case is detected.
+
+        The normal and nuanced cases are mutually exclusive.
+
+        Let's examine both of these cases with examples from the Elevator Case Study class model.
+
+        In the normal case, the user wants to select a single instance using an identifier for the associated class.
 
         Assume Floor, Shaft is an identifier defined on the Accessible Shaft Level class
         This means that if you supply a value for each identifier attribute like so
@@ -124,10 +133,8 @@ class SelectAction:
 
         you may select multiple instances since a Shaft intersects multiple Floors.
 
-        For this case we check to see if a complete identifier is specified and return the number of that identifier.
-
-        The second case applies when we select from a many associative class and when we have traversed to that class
-        from a single particiapting instance flow. With a one associative class, this traversal will always direct us
+        The nuanced case applies when we select from a many associative class and when we have traversed to that class
+        from a single participating instance flow. With a one associative class, this traversal will always direct us
         to at most a single instance without the specification of any identifier values. But the many associative case,
         by its very nature, leaves open the possibility of multiple instances. To narrow down to a single instance, the
         user must supply a value for each identifier attribute that is NOT itself a referential attribute formalizing
@@ -143,48 +150,18 @@ class SelectAction:
         actually it is part of two Identifiers! But one is enough. It turns out that all of the other attributes of
         either of these two Identifiers are referential attributes formalizing the many associative relationship.
 
-        So in this second case, if we do satisfy the above condition, we'll return the lowest numbered identifier that
-        satisfies the condition.
-
         Returns:
-
-        In either case described above, if the identity selection criteria is not met, we'll return 0 to indicate
-        that no identifier match was found.
+            In either case, normal or nuanced, we'll return the lowest numbered identifier that satisfies
+                the condition. If the identity selection criteria is not met, we'll return 0 to indicate
+                that no identifier match was found.
         """
-        # First case -- Check for selection by full identifier
-
-        # Get all attributes comparing to a supplied value with == operator
-        idcheck = {c.attr for c in self.attr_comparisons if c.op == '=='}
-
-        # Do idcheck attrs constitute an identifier of the target class?
-        R = f"Class:<{self.input_instance_flow.tname}>, Domain:<{self.domain}>"
-        Relation.restrict(db=mmdb, relation='Identifier_Attribute', restriction=R)
-        Relation.project(db=mmdb, attributes=('Identifier', 'Attribute',), svar_name='all_id_attrs')
-        # We have created a named relation with a projection of each id_attr and its id_num
-        # Now we must step through each id_num to see if we are selecting on any of them
-        i = 1  # Start with inum 1 {I}, (identifier 1). Every class has at least this identifier
-        while True:
-            # Step through every identifier of the class and see if there is a set of equivalence
-            # comparisons that forms a superset of this identifier. If we are selecting at most one instance
-            R = f"Identifier:<{str(i)}>"
-            t_id_n_attrs = Relation.restrict(db=mmdb, relation='all_id_attrs', restriction=R)
-            if not t_id_n_attrs.body:
-                # This i num is not defined on the class, no more i nums to check
-                break
-            t_id_n_attr_names = Relation.project(db=mmdb, attributes=('Attribute',))
-            id_n_attr_names = {t['Attribute'] for t in t_id_n_attr_names.body}
-            if not id_n_attr_names - idcheck:
-                # The set of identifier attributes for the current id number
-                # is present in the set of attribute equivalence matches
-                # So we are selecting on an identifier and at most one instance can flow out of the selection
-                return i
-            i += 1  # Increment to the next I num (I1, I2, etc)
-
-        # No luck with the first case. Does the second case apply?
+        # Let's check to see if this is the nuanced case described above first
+        # If so, we'll do some setup before iterating through the target class's identifiers
         if self.hop_to_many_assoc_from_one_instance:
             # Get the many associative rel name
             R = f"Class:<{self.input_instance_flow.tname}>, Domain:<{self.domain}>"
             assoc_class_r = Relation.restrict(db=mmdb, relation="Association Class", restriction=R)
+
             # Verify this is in fact a formalizing many associative class
             if not assoc_class_r.body:
                 msg = f"Formalizing many associative class {self.input_instance_flow.tname} not populated"
@@ -195,42 +172,65 @@ class SelectAction:
                        f"is not M")
                 _logger.error(msg)
                 raise ActionException(msg)
-            pass
+
+            # Now let's create a set of all referential attribute components of the identifier
+            # so that we can remove them from consideration when we iterate through the class'es identifiers
+            # futher down
             attr_ref_r = Relation.semijoin(db=mmdb, rname2="Attribute Reference", attrs={
                 "Class": "From_class", "Domain": "Domain", "Rnum": "Rnum"
             })
-            # attr_ref_r = Relation.project(db=mmdb, attributes=("From_attribute",))
             many_assoc_ref_attrs = {a["From_attribute"] for a in attr_ref_r.body}
 
-            i = 1
-            while True:
-                # Step through every identifier of the class and see if there is a set of equivalence
-                # comparisons that forms a superset of this identifier. If we are selecting at most one instance
-                R = f"Identifier:<{str(i)}>"
-                t_id_n_attrs = Relation.restrict(db=mmdb, relation='all_id_attrs', restriction=R)
-                if not t_id_n_attrs.body:
-                    # This i num is not defined on the class, no more i nums to check
-                    break
-                t_id_n_attr_names = Relation.project(db=mmdb, attributes=('Attribute',))
-                id_n_attr_names = {t['Attribute'] for t in t_id_n_attr_names.body}
+        # There is some further setup required for both the normal and nuanced cases here
+
+        # Get all attributes comparing to a supplied value with == operator
+        idcheck = {c.attr for c in self.attr_comparisons if c.op == '=='}
+
+        # Do idcheck attrs constitute an identifier of the target class?
+        R = f"Class:<{self.input_instance_flow.tname}>, Domain:<{self.domain}>"
+        Relation.restrict(db=mmdb, relation='Identifier Attribute', restriction=R)
+        Relation.project(db=mmdb, attributes=('Identifier', 'Attribute',), svar_name='all_id_attrs')
+        # We have created a named relation with a projection of each id_attr and its id_num
+
+        # Now we must step through each id_num to see if we are selecting on any of them
+        i = 1  # Start with inum 1 {I}, (identifier 1). Every class has at least this identifier
+        while True:
+            # Step through every identifier of the class and see if there is a set of equivalence
+            # comparisons that forms a superset of this identifier. If we are selecting at most one instance
+            R = f"Identifier:<{str(i)}>"
+            t_id_n_attrs = Relation.restrict(db=mmdb, relation='all_id_attrs', restriction=R)
+            if not t_id_n_attrs.body:
+                # This i num is not defined on the class, no more i nums to check
+                if i == 1:
+                    # Shlaer Mellor rules require that every class has at least one identifier
+                    msg = f"No identifier defined for class {self.input_instance_flow.tname}"
+                    _logger.error(msg)
+                    raise ActionException(msg)
+                # There are no more identifiers past or including the 2nd, so we end our search
+                return 0
+
+            # We create a set of all of the identifier attributes for the ID selected when we broke out of the loop
+            t_id_n_attr_names = Relation.project(db=mmdb, attributes=('Attribute',))
+            id_n_attr_names = {t['Attribute'] for t in t_id_n_attr_names.body}
+
+            if self.hop_to_many_assoc_from_one_instance:
+                # Nuanced selection case
+
+                # We perform a set subtraction, removing all referential attributes that formalize the
+                # many-associative relationship and compare the result with the id attributes we were selecting
+                # in our selection/restriction criteria.
+                # If the sets match, then we are selecting at most one unique instance on the current identifier number
                 if id_n_attr_names - many_assoc_ref_attrs == idcheck:
                     return i
-                i += 1  # Increment to the next I num (I1, I2, etc)
+            else:
+                # Normal id selection case
+                if not id_n_attr_names - idcheck:
+                    # The set of identifier attributes for the current id number
+                    # is present in the set of attribute equivalence matches
+                    # So we are selecting on an identifier and at most one instance can flow out of the selection
+                    return i
+            i += 1  # Increment to the next I num (I1, I2, etc)
 
-            # Restrict on Identifiers and create a dict
-            # I1: Floor, Shaft, Direction
-            # I2: Floor, Bank, Direction
-            # Get all ref attrs for the multiplicity relationship as a set
-            #  {Floor, Bank, Shaft}
-            # for each ID, subtract the ref_attr set
-            #    If result matches the selection attrs, return that ID
-
-
-
-            # Get the set of all referential attributes formalizing the many associative relationship
-            # R = f"From_class:<{self.input_instance_flow.tname}>, Domain:<{self.domain}>"
-            # attr_ref_r = Relation.restrict(db=mmdb, relation="Attribute Reference", restriction=R)
-        return 0
 
     def populate_multiplicity_subclasses(self) -> tuple[MaxMult, Flow_ap]:
         """
