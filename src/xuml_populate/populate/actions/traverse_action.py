@@ -33,8 +33,7 @@ from xuml_populate.populate.mmclass_nt import (Action_i, Traverse_Action_i, Path
                                                From_Symmetric_Association_Class_Hop_i, To_Association_Class_Hop_i,
                                                Perspective_Hop_i, Generalization_Hop_i, To_Subclass_Hop_i,
                                                To_Superclass_Hop_i, Association_Hop_i, Instance_Action_i)
-from xuml_populate.populate.actions.hop_types import (AggregationType, Hop, SymmetricHop, AsymmetricCircularHop,
-                                                      OrdinalHop, FromAsymAssocHop)
+from xuml_populate.populate.actions.hop_types import *
 
 _logger = logging.getLogger(__name__)
 
@@ -69,17 +68,25 @@ class TraverseAction:
         self.activity_path = activity.activity_path
         self.scrall_text = activity.scrall_text
         self.mult = input_instance_flow.max_mult  # Will be updated as the max mult of the current hop
+        self.to_many_assoc_on_one = False  # Set to true if final hop navigates to many associative from one inst
 
         # Initialize tracking attributes
         self.path_index = 0
         self.name = None
         self.id = None
-        self.dest_class = None  # End of path
+        self.dest_class = path.hops[-1].name
         self.class_cursor = None
         self.rel_cursor = None
         self.hops = []
         self.action_id = None
         self.dest_fid = None
+
+        # Check for hop to many associative class
+        self.many_associative_dest_class = False  # Default assumption
+        R = f"Class:<{self.dest_class}>, Domain:<{self.domain}>"
+        association_class_r = Relation.restrict(db=mmdb, relation="Association Class", restriction=R)
+        if association_class_r.body and association_class_r.body[0]["Multiplicity"] == 'M':
+            self.many_associative_dest_class = True
 
         self.output_flow = self.build_path()
 
@@ -244,22 +251,33 @@ class TraverseAction:
             Perspective_Hop_i(Number=number, Path=self.name, Domain=self.domain, Side=side, Rnum=rnum)
         ])
 
-    def to_association_class(self, *, number: int, rnum: str, to_class: str):
+    def to_association_class(self, *, number: int, rnum: str, to_class: str, input_mult: MaxMult):
         """
+        Populate a Hop landing on an Association Class
 
-        :param number:
-        :param rnum:
-        :param to_class:
-        :return:
+        Args:
+            number:
+            rnum: The traversed relationship number
+            to_class:
+            input_mult: The multiplicity leading into this hop
+
+        Returns:
+
         """
         _logger.info("ACTION:Traverse - Populating a To Association Class Hop")
-        Relvar.insert(db=mmdb, tr=tr_Traverse, relvar='To_Association_Class_Hop', tuples=[
-            To_Association_Class_Hop_i(Number=number, Path=self.name, Domain=self.domain)
+        # First check the case where this is the final hop leading to a many associative class
+        # If so, any calling Select Action using this traversal as input will take that into account
+        if self.many_associative_dest_class and to_class == self.dest_class and input_mult == MaxMult.ONE:
+            self.to_many_assoc_on_one = True
+
+        # Populate
+        Relvar.insert(db=mmdb, tr=tr_Traverse, relvar='To Association Class Hop', tuples=[
+            To_Association_Class_Hop_i(Number=number, Path=self.name, Domain=self.domain, Many_associative=False)
         ])
-        Relvar.insert(db=mmdb, tr=tr_Traverse, relvar='Association_Class_Hop', tuples=[
+        Relvar.insert(db=mmdb, tr=tr_Traverse, relvar='Association Class Hop', tuples=[
             Association_Class_Hop_i(Number=number, Path=self.name, Domain=self.domain)
         ])
-        Relvar.insert(db=mmdb, tr=tr_Traverse, relvar='Association_Hop', tuples=[
+        Relvar.insert(db=mmdb, tr=tr_Traverse, relvar='Association Hop', tuples=[
             Association_Hop_i(Number=number, Path=self.name, Domain=self.domain)
         ])
         Relvar.insert(db=mmdb, tr=tr_Traverse, relvar='Hop', tuples=[
@@ -412,7 +430,8 @@ class TraverseAction:
                         return False
                     self.mult = MaxMult.ONE if persp_r.body[0]['Multiplicity'] == '1' else MaxMult.MANY
                     self.hops.append(
-                        Hop(hoptype=self.straight_hop, to_class=self.class_cursor, rnum=self.rel_cursor))
+                        Hop(hoptype=self.straight_hop, to_class=self.class_cursor, rnum=self.rel_cursor)
+                    )
                 return
 
             if ref == 'T' or ref == 'P':
@@ -428,6 +447,9 @@ class TraverseAction:
                 # The next hop must be either a class name or a perspective phrase on the current rel
                 if type(next_hop).__name__ == 'R_a':
                     # In other words, it cannot be an rnum
+                    msg = (f"Associative relationship hop must specify target class: {self.rel_cursor} at "
+                           f"{self.activity_path}")
+                    _logger.error(msg)
                     raise NeedPerspectiveOrClassToHop(rnum=self.rel_cursor, domain=self.domain)
                 # Is the next hop the association class?
                 if next_hop.name == from_class:
@@ -439,11 +461,18 @@ class TraverseAction:
                     if not persp_r.body:
                         # TODO: raise exception
                         return False
+
+                    # Save the multiplicity going into the hop before we make adjustments
+                    # We'll need this input_mult value when we consider any hop to an association class
+                    # with a many associative multiplicity where we use an identifier to select a single instance
+                    input_mult = self.mult  # Save this to remember the input mult before the hop
+
                     # Set multiplicity based on the perspective
                     self.mult = MaxMult.ONE if persp_r.body[0]['Multiplicity'] == '1' else MaxMult.MANY
-                    # If multiplicity has been set to 1, but associative multiplicty is M, we need to set it as M
+
+                    # If multiplicity has been set to 1, but associative multiplicity is M, we need to set it as M
                     R = f"Rnum:<{self.rel_cursor}>, Domain:<{self.domain}>, Class:<{self.class_cursor}>"
-                    assoc_class_r = Relation.restrict(db=mmdb, relation='Association_Class', restriction=R)
+                    assoc_class_r = Relation.restrict(db=mmdb, relation='Association Class', restriction=R)
                     if not assoc_class_r.body:
                         # TODO: raise exception
                         return False
@@ -453,7 +482,8 @@ class TraverseAction:
 
                     self.name += self.class_cursor + '/'
                     self.hops.append(
-                        Hop(hoptype=self.to_association_class, to_class=self.class_cursor, rnum=self.rel_cursor)
+                        ToAssocClassHop(hoptype=self.to_association_class, to_class=self.class_cursor,
+                                        rnum=self.rel_cursor, input_mult=input_mult)
                     )
                     return
                 elif next_hop.name == to_class:
@@ -473,7 +503,8 @@ class TraverseAction:
                         self.class_cursor = next_hop.name
                         self.name += self.class_cursor + '/'
                         self.hops.append(
-                            Hop(hoptype=self.straight_hop, to_class=other_participating_class, rnum=self.rel_cursor))
+                            Hop(hoptype=self.straight_hop, to_class=other_participating_class, rnum=self.rel_cursor)
+                        )
                         return
                     else:
                         # Next hop must be a perspective

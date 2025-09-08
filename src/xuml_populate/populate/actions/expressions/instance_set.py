@@ -49,6 +49,7 @@ class InstanceSet:
 
         self.initial_action = None  # The first action in the chain
         self.final_action = None  # The last action in the chain
+        self.to_many_assoc_on_one = False  # Default setting
 
         if not input_instance_flow:
             # This will be None when the caller is a single assigner.
@@ -95,6 +96,7 @@ class InstanceSet:
                                                      activity=self.activity)
                     aid = traverse_action.action_id
                     self.component_flow = traverse_action.output_flow
+                    self.to_many_assoc_on_one = traverse_action.to_many_assoc_on_one
 
                     # Data flow to/from actions within the instance_set
                     if first_action:
@@ -129,7 +131,7 @@ class InstanceSet:
                     if self.component_flow.content == Content.INSTANCE:
                         sa = SelectAction(
                             input_instance_flow=self.component_flow, selection_parse=comp,
-                            activity=self.activity
+                            activity=self.activity, hop_to_many_assoc_from_one_instance=self.to_many_assoc_on_one
                         )
                         aid = sa.action_id
                         self.component_flow = sa.output_instance_flow

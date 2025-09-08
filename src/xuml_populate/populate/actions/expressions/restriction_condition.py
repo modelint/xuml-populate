@@ -53,13 +53,13 @@ class RestrictCondition:
                  activity: 'Activity'):
         """
 
-        :param tr:
-        :param action_id:
-        :param input_nsflow:
-        :param selection_parse:
-        :param activity:
+        Args:
+            tr:
+            action_id:
+            input_nsflow:
+            selection_parse:
+            activity:
         """
-
         self.action_id = action_id
         self.anum = activity.anum
         self.domain = activity.domain
@@ -70,6 +70,9 @@ class RestrictCondition:
         self.input_nsflow = input_nsflow
         self.expression = ""
         self.criterion_ctr = 0
+        # Track all id attrs we used with == operator so that we can determine whether or not
+        # the selection is limited to a single instance which overrides the selection cardinality
+        self.identifier_attrs: set[str] = set()
 
         criteria = selection_parse.criteria
         # Consider case where there is a single boolean value critieria such as:
@@ -100,10 +103,13 @@ class RestrictCondition:
         the leaf nodes. Also flatten the parse back into a language independent text representation for reference
         in the metamodel.
 
-        :param operator:  A boolean, math or unary operator
-        :param operands:  One or two operands (depending on the operator)
-        :param attr:  If true, an attribute is in the process of being compared to an expression
-        :return: Flattened selection expression as a string
+        Args:
+            operands: One or two operands (depending on the operator)
+            operator: A boolean, math or unary operator
+            attr: If not None, an attribute is in the process of being compared to an expression
+
+        Returns:
+            Flattened selection expression as a string
         """
         attr_set = attr  # Has an attribute been set for this invocation?
         text = ""
@@ -164,6 +170,12 @@ class RestrictCondition:
                         # The criterion is populated when the second operand is processed, so all we need to do
                         # now is to remember the Attribute name
                         attr_set = Attribute_ap(o.name, scalar)
+                        # Is this an identifier attribute combined with the == operator?
+                        if operator == '==':
+                            R = f"Attribute:<{o.name}>, Class:<{self.input_nsflow.tname}>, Domain:<{self.domain}>"
+                            identifier_r = Relation.restrict(db=mmdb, relation='Identifier Attribute', restriction=R)
+                            if identifier_r.body:
+                                self.identifier_attrs.add(o.name)
                     else:
                         # The scalar expression on the right side of the comparison must be a scalar flow
                         # an enum, or a boolean value
@@ -203,9 +215,33 @@ class RestrictCondition:
                                 if not ns_flow:
                                     raise ActionException
                                 if ns_flow.content == Content.INSTANCE:
-                                    # TODO: Fill out the read action case
-                                    # ReadAction.populate()
-                                    pass
+                                    # Let's first rule out some obvious error cases that shouldn't happen if the parse
+                                    # was well behaved
+                                    if len(o.projection.attrs) != 1:
+                                        # We expect to read a single attribute value here
+                                        msg = (f"Expecting to read a single attribute in restriction condition "
+                                               f"but found [{o.projection.attrs}] in {self.activity.activity_path}")
+                                        _logger.error(msg)
+                                        raise ActionException(msg)
+                                    if type(o.projection.attrs[0]).__name__ != 'N_a':
+                                        # That attribute should be in an N_a parse expression
+                                        msg = (f"Expecting to read a single attribute in restriction condition "
+                                               f"as a name, but found [{o.projection.attrs[0]}] in "
+                                               f"{self.activity.activity_path}")
+                                        _logger.error(msg)
+                                        raise ActionException(msg)
+                                    # All is well, let's populate the Read Action to get the attr value scalar flow
+                                    read_attr = o.projection.attrs[0].name
+                                    ra = ReadAction(input_single_instance_flow=ns_flow, attrs=(read_attr,),
+                                                    anum=self.anum, domain=self.domain)
+                                    read_aid, sflows = ra.populate()
+                                    # We requested only one scalar flow for the attribute read
+                                    if len(sflows) != 1:
+                                        msg = (f"Did not obtain a single attribute scalar output flow from read action"
+                                               f"for attr {read_attr} in {self.activity.activity_path}")
+                                        _logger.error(msg)
+                                        raise ActionException(msg)
+                                    sflow = sflows[0]
                                 elif ns_flow.content == Content.RELATION:
                                     if len(o.projection.attrs) != 1:
                                         # For attribute comparison, there can only be one extracted attribute
@@ -217,7 +253,7 @@ class RestrictCondition:
                                     )  # Select Action transaction is open
                                     sflow = extract_action.output_sflow
                                 # Now populate a comparison criterion
-                                criterion_id = self.pop_comparison_criterion(attr=o.projection.attrs[0].name,
+                                criterion_id = self.pop_comparison_criterion(attr=attr_set.name,
                                                                              scalar_flow=sflow, op=operator)
                                 text += f" {criterion_id}"
                             else:

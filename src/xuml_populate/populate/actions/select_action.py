@@ -13,6 +13,7 @@ from pyral.transaction import Transaction
 # xUML Populate
 if TYPE_CHECKING:
     from xuml_populate.populate.activity import Activity
+from xuml_populate.utility import print_mmdb
 from xuml_populate.config import mmdb
 from xuml_populate.populate.actions.aparse_types import Flow_ap, MaxMult, Attribute_Comparison
 from xuml_populate.populate.actions.action import Action
@@ -32,13 +33,20 @@ class SelectAction:
     Create all relations for a Select Statement
     """
 
-    def __init__(self, input_instance_flow: Flow_ap, selection_parse, activity: 'Activity'):
+    def __init__(self, input_instance_flow: Flow_ap, selection_parse, activity: 'Activity',
+                 hop_to_many_assoc_from_one_instance: bool = False):
         """
 
-        :param input_instance_flow: The source flow into this selection
-        :param selection_parse:  The parsed Scrall select action group
-        :param activity:
+        Args:
+            input_instance_flow:
+            selection_parse:
+            activity:
+            hop_to_many_assoc_from_one_instance: Even though we are hopping into a many associative association
+                class from a single instance, we still have multiple target instances to select from
+                due to the many associative multiplicity. False if not hopping to a many associative association
+                class and also False if hopping from multiple instances into a many associative association class.
         """
+        self.hop_to_many_assoc_from_one_instance = hop_to_many_assoc_from_one_instance
         self.input_instance_flow = input_instance_flow  # We are selecting instances from this instance flow
         self.selection_parse = selection_parse
         self.activity = activity
@@ -53,6 +61,7 @@ class SelectAction:
         self.restriction_text = ""
         self.criterion_ctr = 0
         self.max_mult: MaxMult
+        self.rcond = None  # Assigned after restriction condition populated
 
         # Save attribute values that we will need when creating the various select subsystem
         # classes
@@ -70,14 +79,16 @@ class SelectAction:
         ])
         # Walk through the criteria parse tree storing any attributes or input flows
         # Also check to see if we are selecting on an identifier
-        rcond = RestrictCondition(tr=tr_Select, action_id=self.action_id,
+        self.rcond = RestrictCondition(tr=tr_Select, action_id=self.action_id,
                                   input_nsflow=self.input_instance_flow,
                                   selection_parse=self.selection_parse,
-                                  activity=self.activity
+                                  activity=self.activity,
                                   )
-        self.attr_comparisons = rcond.comparison_criteria
-        self.selection_cardinality = rcond.cardinality
-        self.sflows = rcond.input_scalar_flows
+        # TODO Consolidate the four lines below, self.rcond is probably all we need
+        # id_attrs_in_selection = rcond.identifier_attrs
+        self.attr_comparisons = self.rcond.comparison_criteria
+        self.selection_cardinality = self.rcond.cardinality
+        self.sflows = self.rcond.input_scalar_flows
 
         Relvar.insert(db=mmdb, tr=tr_Select, relvar='Class Restriction Condition', tuples=[
             Class_Restriction_Condition_i(Select_action=self.action_id, Activity=self.anum, Domain=self.domain)
@@ -85,29 +96,59 @@ class SelectAction:
         # Create output flows
         self.max_mult, self.output_instance_flow = self.populate_multiplicity_subclasses()
 
+        print_mmdb()
+        pass
         # We now have a transaction with all select-action instances, enter into the metamodel db
         Transaction.execute(db=mmdb, name=tr_Select)  # Select Action
 
     def identifier_selection(self) -> int:
         """
-        | Determine whether we are selecting based on an identifier match.
-        An identifier match supplies one value per identifier attribute for some identifier defined on
-        the class.
-         | Each comparison must be == (equivalence)
-         |
-         | **For example:**
-         |
-         | Assume Floor, Shaft is an identifier defined on the Accessible Shaft Level class
-         | This means that if you supply a value for each attribute like so
-         |
-         | Accessible Shaft Level( Floor == x, Shaft == y )
-         |
-         | you will select at most one instance. But if you select based on:
-         |
-         | Accessible Shaft Level( Shaft == y )
-         |
-         | you may select multiple instances since a Shaft intersects multiple Floors
-         :returns: An identifier number 1,2, ... or 0 if none found
+        Determine whether we are selecting an instance of a Class based on an identifier match.
+
+        There are two cases we want to consider.
+
+        And in both of these cases we'll refer to examples from the Elevator Case Study class model, so it will help
+        to locate a copy of the class diagram from the relevant GitHub repository to follow along.
+
+        In the first case, the user wants to select a single instance using an identifier for the associated class.
+
+        Assume Floor, Shaft is an identifier defined on the Accessible Shaft Level class
+        This means that if you supply a value for each identifier attribute like so
+
+        Accessible Shaft Level( Floor == x, Shaft == y )
+
+        you will select at most one instance. But if you select based on only part of an identifier:
+
+        Accessible Shaft Level( Shaft == y )
+
+        you may select multiple instances since a Shaft intersects multiple Floors.
+
+        For this case we check to see if a complete identifier is specified and return the number of that identifier.
+
+        The second case applies when we select from a many associative class and when we have traversed to that class
+        from a single particiapting instance flow. With a one associative class, this traversal will always direct us
+        to at most a single instance without the specification of any identifier values. But the many associative case,
+        by its very nature, leaves open the possibility of multiple instances. To narrow down to a single instance, the
+        user must supply a value for each identifier attribute that is NOT itself a referential attribute formalizing
+        the many associative relationship.
+
+        For example, let's say that the user traverses from a single instance of Accessible Shaft Level,
+        which happens to be a participating class on a many associative relationship. This relationship is
+        formalized by the Floor Service class, which uses its non-referential 'Direction' identifier attribute to
+        discriminate between an up or down call direction.
+
+        If the Floor Service instance is selected using the == comparison on that 'Direction' attribute, we know
+        that at most one instance will be selected. This is because the 'Direction' attribute is part of an Identifier,
+        actually it is part of two Identifiers! But one is enough. It turns out that all of the other attributes of
+        either of these two Identifiers are referential attributes formalizing the many associative relationship.
+
+        So in this second case, if we do satisfy the above condition, we'll return the lowest numbered identifier that
+        satisfies the condition.
+
+        Returns:
+
+        In either case described above, if the identity selection criteria is not met, we'll return 0 to indicate
+        that no identifier match was found.
         """
         idcheck = {c.attr for c in self.attr_comparisons if c.op == '=='}
         R = f"Class:<{self.input_instance_flow.tname}>, Domain:<{self.domain}>"

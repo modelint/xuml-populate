@@ -7,6 +7,9 @@ from dataclasses import dataclass
 from typing import Callable
 from enum import Enum
 
+# xuml Populate
+from xuml_populate.populate.actions.aparse_types import MaxMult
+
 class AggregationType(Enum):
     FIRST = 1
     LAST = 2
@@ -29,6 +32,11 @@ class Hop:
     hoptype: Callable
     to_class: str
     rnum: str
+
+@dataclass
+class ToAssocClassHop(Hop):
+    input_mult: MaxMult
+    # The input_mult_one value helps us resolve multplicity when hopping across a many associative assoc
 
 @dataclass
 class SymmetricHop(Hop):

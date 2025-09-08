@@ -77,7 +77,7 @@ Straight_Hop_i = namedtuple('Straight_Hop_i', 'Number Path Domain')
 To_Subclass_Hop_i = namedtuple('To_Subclass_Hop_i', 'Number Path Domain')
 To_Superclass_Hop_i = namedtuple('To_Superclass_Hop_i', 'Number Path Domain')
 Symmetric_Hop_i = namedtuple('Symmetric_Hop_i', 'Number Path Domain')
-To_Association_Class_Hop_i = namedtuple('To_Association_Class_Hop_i', 'Number Path Domain')
+To_Association_Class_Hop_i = namedtuple('To_Association_Class_Hop_i', 'Number Path Domain Many_associative')
 Traverse_Action_i = namedtuple('Traverse_Action_i', 'ID Activity Domain Path Source_flow Destination_flow')
 
 # Action subsystem

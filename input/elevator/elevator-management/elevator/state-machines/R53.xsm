@@ -46,7 +46,7 @@ state Search for alternate destination
 activity
     cabin in shaft .= /R2/Cabin
     xfer .= cabin in shaft/R53/Transfer
-    call in progress .= xfer/R49/Floor Service( Direction: cabin in shaft.Travel direction )
+    call in progress .= xfer/R53/Accessible Shaft Level/R49/Floor Service( Direction: cabin in shaft.Travel direction )
 
     fwd dest .= cabin in shaft.Ping( dir: cabin in shaft.Travel direction )
     fwd dest? destination aslev .= fwd dest :
