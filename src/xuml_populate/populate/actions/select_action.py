@@ -18,6 +18,7 @@ from xuml_populate.config import mmdb
 from xuml_populate.populate.actions.aparse_types import Flow_ap, MaxMult, Attribute_Comparison
 from xuml_populate.populate.actions.action import Action
 from xuml_populate.populate.flow import Flow
+from xuml_populate.exceptions.action_exceptions import *
 from xuml_populate.populate.actions.expressions.restriction_condition import RestrictCondition
 from xuml_populate.populate.mmclass_nt import (Select_Action_i, Single_Select_i, Identifier_Select_i,
                                                Zero_One_Cardinality_Select_i, Many_Select_i,
@@ -150,7 +151,12 @@ class SelectAction:
         In either case described above, if the identity selection criteria is not met, we'll return 0 to indicate
         that no identifier match was found.
         """
+        # First case -- Check for selection by full identifier
+
+        # Get all attributes comparing to a supplied value with == operator
         idcheck = {c.attr for c in self.attr_comparisons if c.op == '=='}
+
+        # Do idcheck attrs constitute an identifier of the target class?
         R = f"Class:<{self.input_instance_flow.tname}>, Domain:<{self.domain}>"
         Relation.restrict(db=mmdb, relation='Identifier_Attribute', restriction=R)
         Relation.project(db=mmdb, attributes=('Identifier', 'Attribute',), svar_name='all_id_attrs')
@@ -173,6 +179,57 @@ class SelectAction:
                 # So we are selecting on an identifier and at most one instance can flow out of the selection
                 return i
             i += 1  # Increment to the next I num (I1, I2, etc)
+
+        # No luck with the first case. Does the second case apply?
+        if self.hop_to_many_assoc_from_one_instance:
+            # Get the many associative rel name
+            R = f"Class:<{self.input_instance_flow.tname}>, Domain:<{self.domain}>"
+            assoc_class_r = Relation.restrict(db=mmdb, relation="Association Class", restriction=R)
+            # Verify this is in fact a formalizing many associative class
+            if not assoc_class_r.body:
+                msg = f"Formalizing many associative class {self.input_instance_flow.tname} not populated"
+                _logger.error(msg)
+                raise ActionException(msg)
+            if assoc_class_r.body[0]["Multiplicity"] != 'M':
+                msg = (f"Expected formalizing many associative class {self.input_instance_flow.tname} but multiplicity"
+                       f"is not M")
+                _logger.error(msg)
+                raise ActionException(msg)
+            pass
+            attr_ref_r = Relation.semijoin(db=mmdb, rname2="Attribute Reference", attrs={
+                "Class": "From_class", "Domain": "Domain", "Rnum": "Rnum"
+            })
+            # attr_ref_r = Relation.project(db=mmdb, attributes=("From_attribute",))
+            many_assoc_ref_attrs = {a["From_attribute"] for a in attr_ref_r.body}
+
+            i = 1
+            while True:
+                # Step through every identifier of the class and see if there is a set of equivalence
+                # comparisons that forms a superset of this identifier. If we are selecting at most one instance
+                R = f"Identifier:<{str(i)}>"
+                t_id_n_attrs = Relation.restrict(db=mmdb, relation='all_id_attrs', restriction=R)
+                if not t_id_n_attrs.body:
+                    # This i num is not defined on the class, no more i nums to check
+                    break
+                t_id_n_attr_names = Relation.project(db=mmdb, attributes=('Attribute',))
+                id_n_attr_names = {t['Attribute'] for t in t_id_n_attr_names.body}
+                if id_n_attr_names - many_assoc_ref_attrs == idcheck:
+                    return i
+                i += 1  # Increment to the next I num (I1, I2, etc)
+
+            # Restrict on Identifiers and create a dict
+            # I1: Floor, Shaft, Direction
+            # I2: Floor, Bank, Direction
+            # Get all ref attrs for the multiplicity relationship as a set
+            #  {Floor, Bank, Shaft}
+            # for each ID, subtract the ref_attr set
+            #    If result matches the selection attrs, return that ID
+
+
+
+            # Get the set of all referential attributes formalizing the many associative relationship
+            # R = f"From_class:<{self.input_instance_flow.tname}>, Domain:<{self.domain}>"
+            # attr_ref_r = Relation.restrict(db=mmdb, relation="Attribute Reference", restriction=R)
         return 0
 
     def populate_multiplicity_subclasses(self) -> tuple[MaxMult, Flow_ap]:
