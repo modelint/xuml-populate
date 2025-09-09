@@ -45,23 +45,30 @@ transitions
 state Search for alternate destination
 activity
     cabin in shaft .= /R2/Cabin
+    fwd = cabin in shaft.Travel direction
     xfer .= cabin in shaft/R53/Transfer
-    call in progress .= xfer/R53/Accessible Shaft Level/R49/Floor Service( Direction: cabin in shaft.Travel direction )
+    call in progress .= xfer/R53/Accessible Shaft Level/R49/Floor Service( Direction: fwd )
 
-    fwd dest .= cabin in shaft.Ping( dir: cabin in shaft.Travel direction )
-    fwd dest? destination aslev .= fwd dest :
+    fwd dest .= cabin in shaft.Ping( dir: fwd )
+    fwd dest? dest aslev .= fwd dest :
         !call in progress? {
             // Search opposite the travel direction only if not servicing
             // a floor request in the current direction
-            rev dest .= cabin in shaft.Ping( dir: Travel direction.opposite )
-            rev dest? cabin in shaft.Travel direction.toggle
+            rev = fwd.opposite
+            rev dest .= cabin in shaft.Ping( dir: rev )
+            rev dest? cabin in shaft.Travel direction = rev
             // may be empty
-            destination aslev .= rev dest
+            dest aslev .= rev dest
         }
 
-    destination aslev and destination aslev.Floor != xfer.Destination floor?
-        Dest change request( new dest: destination aslev.floor ) -> xfer :
-        Dest change evaluated -> me
+    dest aslev? {
+        dest floor = dest aslev.Floor
+        dest floor != xfer.Destination floor?
+            Dest change request( new dest: dest floor ) -> xfer
+    }
+
+    Dest change evaluated -> me
+
 transitions
     Dest change evaluated > TRANSFER IN PROGRESS
 --
