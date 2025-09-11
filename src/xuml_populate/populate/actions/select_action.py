@@ -97,8 +97,6 @@ class SelectAction:
         # Create output flows
         self.max_mult, self.output_instance_flow = self.populate_multiplicity_subclasses()
 
-        print_mmdb()
-        pass
         # We now have a transaction with all select-action instances, enter into the metamodel db
         Transaction.execute(db=mmdb, name=tr_Select)  # Select Action
 

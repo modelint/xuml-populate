@@ -10,6 +10,7 @@ from pyral.relation import Relation  # Keep for debugging
 
 # xUML Populate
 from xuml_populate.config import mmdb
+from xuml_populate.utility import print_mmdb  # Debugging
 from xuml_populate.populate.actions.expressions.instance_set import InstanceSet
 from xuml_populate.populate.actions.read_action import ReadAction
 from xuml_populate.exceptions.action_exceptions import *
@@ -114,12 +115,12 @@ class ScalarExpr:
                             ra = ReadAction(input_single_instance_flow=self.component_flow, attrs=(sexpr.iset.name,),
                                             anum=self.anum, domain=self.domain)
                             aid, sflows = ra.populate()
-                        else:
-                            # We have a scalar flow
-                            input_sflow = Flow.find_labeled_scalar_flow(name=sexpr.iset.name, anum=self.anum,
-                                                                        domain=self.domain)
-                            # fid = Flow.find_labeled_flow(name=sexpr.iset.name, anum=self.anum, domain=self.domain)
+                            return sflows
 
+                        # Scalar flow check
+                        input_sflow = Flow.find_labeled_scalar_flow(name=sexpr.iset.name, anum=self.anum,
+                                                                    domain=self.domain)
+                        if input_sflow:
                             if sexpr.projection:
                                 # This has to be a type operation and potentially a chain of multiple
                                 first_action = True
@@ -134,6 +135,41 @@ class ScalarExpr:
                                 self.action_outputs[aout] = {component_flow.fid}
                                 # If the parameter flow
                                 return [component_flow]
+                            else:
+                                return [input_sflow]
+
+                        # Instance flow check
+                        input_iflow = Flow.find_labeled_ns_flow(name=sexpr.iset.name, anum=self.anum,
+                                                                domain=self.domain)
+                        if input_iflow:
+                            # Verify that we are projecting on a single attribute
+                            if not sexpr.projection:
+                                msg = f"Instance flow in scalar expr has no projection"
+                                _logger.error(msg)
+                                raise ActionException(msg)
+                            if not sexpr.projection.attrs:
+                                msg = f"Instance flow in scalar expr does not project on any attribute names"
+                                _logger.error(msg)
+                                raise ActionException(msg)
+                            if len(sexpr.projection.attrs) > 1:
+                                msg = f"Instance flow in scalar expr projects on multiple attributes"
+                                _logger.error(msg)
+                                raise ActionException(msg)
+                            attr_name = sexpr.projection.attrs[0].name
+
+                            # Create a read action to obtain the value
+                            ra = ReadAction(input_single_instance_flow=input_iflow, attrs=(attr_name,),
+                                            anum=self.anum, domain=self.domain)
+                            aid, sflows = ra.populate()
+                            self.action_inputs[aid] = {self.component_flow.fid}
+                            self.action_outputs[aid] = {s.fid for s in sflows}
+                            return sflows
+
+                        # No other recognized cases
+                        msg = (f"Unknown scalar expression input for name: {sexpr.set.name} in "
+                               f"{self.activity.activity_path}")
+                        _logger.error(msg)
+                        ActionException(msg)
 
                     case 'INST_a':
                         iset = InstanceSet(input_instance_flow=action_input, iset_components=sexpr.iset.components,

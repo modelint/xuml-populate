@@ -1,5 +1,5 @@
 """
-computation_action.py – Populate a read action instance in PyRAL
+computation_action.py – Populate a computation action instance in PyRAL
 """
 
 # System

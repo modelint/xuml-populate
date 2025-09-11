@@ -19,6 +19,7 @@ from xuml_populate.config import mmdb
 from xuml_populate.utility import print_mmdb
 from xuml_populate.populate.mmclass_nt import Labeled_Flow_i
 from xuml_populate.populate.flow import Flow
+from xuml_populate.populate.actions.pass_action import PassAction
 from xuml_populate.populate.actions.expressions.instance_set import InstanceSet
 from xuml_populate.exceptions.action_exceptions import *
 from xuml_populate.populate.actions.aparse_types import (Flow_ap, MaxMult, Content, MethodActivityAP, StateActivityAP,
@@ -90,7 +91,12 @@ class InstanceAssignment:
         elif activity.smtype == SMType.MA:
             starting_instance_flow = activity.piflow
 
-        iset = InstanceSet(input_instance_flow=starting_instance_flow, iset_components=rhs.components,
+        if type(rhs).__name__ in {'N_a', 'IN_a'}:
+            rhs_components = [rhs]
+        else:
+            rhs_components = rhs.components
+
+        iset = InstanceSet(input_instance_flow=starting_instance_flow, iset_components=rhs_components,
                            activity=activity)
         initial_aid, final_aid, iset_instance_flow = iset.process()
 
@@ -112,7 +118,17 @@ class InstanceAssignment:
             _logger.error(msg)
             raise AssignmentOperatorMismatch
 
-        # Label the RHS output flow
-        Flow.label_flow(label=output_flow_label, fid=iset_instance_flow.fid, anum=activity.anum, domain=activity.domain)
+        # Are both the rhs and lhs flows?  If so, we need to populate a pass action
+        # This will be the case the Instance Set doesn't populate any Action
+        if initial_aid is None and final_aid is None:
+            # RHS must be a flow
+            pa = PassAction(input_flow=iset_instance_flow.fid, output_flow_label=output_flow_label, activity=activity)
+            aid, _ = pa.populate()
+            initial_aid = aid
+            final_aid = aid
+            pass
+        else:
+            # Label the RHS output flow
+            Flow.label_flow(label=output_flow_label, fid=iset_instance_flow.fid, anum=activity.anum, domain=activity.domain)
 
         return Boundary_Actions(ain={initial_aid}, aout={final_aid})

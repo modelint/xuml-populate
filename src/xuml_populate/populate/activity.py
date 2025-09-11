@@ -314,27 +314,35 @@ class Activity:
         from xuml_populate.populate.actions.method_call import MethodCall
         MethodCall.complete_output_transaction()
 
-
     def pop_xunits(self):
-        for count, xunit in enumerate(self.parse):  # Use count for debugging
-            c = count + 1
+        """
+        Break each parsed Scrall statement down into any number of Actions, or at the very least, Flow
+        assignments, and populate the relevant metamodel classes.
+        """
+        # Iterate through each Scrall statement
+        for count, xunit in enumerate(self.parse):
+            c = count + 1  # Use count to assist debugging
+            # A parsed Scrall statement is delivered as an ExecutionUnit namedtuple
             boundary_actions = ExecutionUnit.process_statement_set(
                 activity=self, content=xunit.statement_set)
 
-            # # Process the Scrall execution unit
-            # statement_type = type(xunit.statement_set.statement).__name__
-            # if statement_type == 'Output_Flow_a':
-            #     if self.atype == ActivityType.STATE:
-            #         pass  # TODO Raise exception
-            #     # Synch activity can have a synch output which needs additional processing
-            #     ExecutionUnit.process_synch_output(activity_data=self.activity_data,
-            #                                        synch_output=xunit.statement_set.statement)
-            # else:
-            #     boundary_actions = ExecutionUnit.process_statement_set(
-            #         activity_data=self.activity_data, statement_set=xunit.statement_set)
+            # The boundary_actions variable gives us the initial and final actions, if any, for each populated statement
+            # This information is relevant to a statement that enables, is enabled, or both by sequence tokens.
+            # Seqence tokens are populated as Control Flows from one Action to possibly multiple other Actions
+            # triggered by control rather than data dependencies. So the boundary_actions tell us the path of each
+            # required Control Flow from one Action to another.
 
-            # Process any sequence tokens
+            # Let's say the populated ExecutionUnit above populates a chain of Actions connected by data flows like
+            # this:  ACTN4 -> ACTN2 -> ACTN7
+            # and let's also say that there is both an input <1> and output <2> sequence token defined in the
+            # ExecutionUnit.  Whichever Action enabled <1> will emit a Control Flow to ACTN4 since that is the initial
+            # action. There is no need to emit Control Flows to ACTN2 or ACTN7 since neither will execute unless ACTN4
+            # is enabled.  Similarly, <2> may be emitted from ACTN7 to some initial Action(s) reported by another
+            # ExecutionUnit.  In other words, we don't need to connect Control Flows to any Actions inside between the
+            # boundary actions to get the specified sequencing dependency.
+
             # TODO: Test case where there are no boundary actions
+            # Process any sequence tokens
             in_tokens, out_token = xunit.statement_set.input_tokens, xunit.output_token
             if out_token:
                 # The statement has set an output_token (it cannot set more than one)

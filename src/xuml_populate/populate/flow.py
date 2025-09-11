@@ -173,7 +173,7 @@ class Flow:
 
         Nothing is returned if there is no such flow.
 
-        :param name: Name that matches a Labled Flow
+        :param name: Name that matches a Labeled Flow
         :param anum: The activity number
         :param domain: The domain name
         :return: A flow summary or None if no such labeled flow is defined
@@ -181,8 +181,9 @@ class Flow:
         fid = cls.find_labeled_flow(name=name, anum=anum, domain=domain)
         if not fid:
             return None
+        # TODO: Metamodel changed and there could be multiple flows with the same label
         R = f"ID:<{fid}>, Activity:<{anum}>, Domain:<{domain}>"
-        result = Relation.restrict(mmdb, relation='Scalar_Flow', restriction=R)
+        result = Relation.restrict(db=mmdb, relation='Scalar Flow', restriction=R)
         if result.body:
             return Flow_ap(fid=fid, content=Content.SCALAR, tname=result.body[0]['Type'], max_mult=None)
         else:
