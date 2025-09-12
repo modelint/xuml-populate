@@ -15,6 +15,7 @@ from pyral.transaction import Transaction
 if TYPE_CHECKING:
     from xuml_populate.populate.activity import Activity
 from xuml_populate.config import mmdb
+from xuml_populate.utility import print_mmdb
 from xuml_populate.populate.actions.aparse_types import Flow_ap, MaxMult, Content
 from xuml_populate.populate.actions.action import Action
 from xuml_populate.populate.flow import Flow

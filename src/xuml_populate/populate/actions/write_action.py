@@ -3,13 +3,15 @@ write_action.py – Populate a write action instance in PyRAL
 """
 # System
 import logging
-from typing import Set, List, Tuple
+from typing import Set, List, Tuple, TYPE_CHECKING
 
 # Model Integration
 from pyral.relvar import Relvar
 from pyral.transaction import Transaction
 
 # xUML Populate
+if TYPE_CHECKING:
+    from xuml_populate.populate.activity import Activity
 from xuml_populate.config import mmdb
 from xuml_populate.populate.actions.aparse_types import Flow_ap, MaxMult, Content, ActivityAP
 from xuml_populate.populate.actions.action import Action
@@ -28,22 +30,21 @@ class WriteAction:
     """
 
     def __init__(self, write_to_instance_flow: Flow_ap, value_to_write_flow: Flow_ap, attr_name: str,
-                 anum: str, domain: str):
+                 activity='Activity'):
         """
 
         Args:
             write_to_instance_flow: Update an attribute value of this instance
             value_to_write_flow: Input scalar flow (the value to be written)
             attr_name: The attribute name
-            anum: The activity number
-            domain: The domain name
+            activity: The enclosing Activity
         """
         assert write_to_instance_flow.content == Content.INSTANCE
         assert write_to_instance_flow.max_mult == MaxMult.ONE
         self.write_to_instance_flow = write_to_instance_flow  # We are selecting instances from this instance flow
         self.cname = write_to_instance_flow.tname
-        self.anum = anum
-        self.domain = domain
+        self.anum = activity.anum
+        self.domain = activity.domain
         self.attr_name = attr_name
         self.value_to_write_flow = value_to_write_flow
 

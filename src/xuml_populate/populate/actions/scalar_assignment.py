@@ -15,6 +15,7 @@ from pyral.transaction import Transaction
 if TYPE_CHECKING:
     from xuml_populate.populate.activity import Activity
 from xuml_populate.config import mmdb
+from xuml_populate.utility import print_mmdb  # Debug
 from xuml_populate.populate.mmclass_nt import Labeled_Flow_i
 from xuml_populate.populate.actions.extract_action import ExtractAction
 from xuml_populate.populate.ns_flow import NonScalarFlow
@@ -93,13 +94,27 @@ class ScalarAssignment:
             # For example: Stop requested = TRUE
             if not scalar_flows:
                 # It's not an assigment if there is nothing to assign!
-                pass  # TODO: raise exception, the spice must flow
-
-            # for n in lhs[0]:
-            #     pass
-            pass
+                msg = f"No flow to assign in Scalar Assigment in: {self.activity.activity_path}"
+                _logger.error(msg)
+                raise ActionException(msg)
 
         # Extract flow label names from the left hand side (flow names become label names)
+        if type(lhs[0]).__name__ == 'Qualified_Name_a':
+            instance_flow_label = lhs[0].cname
+            attr_name = lhs[0].aname
+            # Lookup the instance flow
+            wti_flow = Flow.find_labeled_ns_flow(name=instance_flow_label, anum=self.anum, domain=self.domain)
+            wa = WriteAction(write_to_instance_flow=wti_flow, value_to_write_flow=scalar_flows[0],
+                             attr_name=attr_name, activity=self.activity)
+            write_aid = wa.populate()  # returns the write action id (not used)
+            write_out = {write_aid}
+            old_ain = bactions.ain
+            # If the scalar expression had no actions, the initial_pseudo_state action is also the final action
+            write_in = {write_aid} if not old_ain else old_ain
+            bactions = Boundary_Actions(ain=write_in, aout=write_out)
+            return bactions
+
+        # We are outputting to one or more scalar flows
         scalar_flow_labels = [n for n in lhs[0].name]
 
         # There must be a label on the LHS for each scalar output flow
@@ -131,7 +146,7 @@ class ScalarAssignment:
                 if attribute_r.body:
                     wa = WriteAction(write_to_instance_flow=self.input_instance_flow,
                                      value_to_write_flow=scalar_flows[count],
-                                     attr_name=label, anum=self.activity.anum, domain=self.activity.domain)
+                                     attr_name=label, activity=self.activity)
                     write_aid = wa.populate()  # returns the write action id (not used)
                     # Since the write action is on the lhs it is the one and only final boundary action
                     # So we replace whatever action ids might have been assigned to the set
