@@ -122,7 +122,7 @@ class InstanceAssignment:
         # This will be the case the Instance Set doesn't populate any Action
         if initial_aid is None and final_aid is None:
             # RHS must be a flow
-            pa = PassAction(input_flow=iset_instance_flow.fid, output_flow_label=output_flow_label, activity=activity)
+            pa = PassAction(input_fid=iset_instance_flow.fid, output_flow_label=output_flow_label, activity=activity)
             aid, _ = pa.populate()
             initial_aid = aid
             final_aid = aid

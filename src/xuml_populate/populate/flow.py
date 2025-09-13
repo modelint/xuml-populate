@@ -67,6 +67,21 @@ class Flow:
 
         return labeled_flow_r.body[0]["Name"]
 
+    @classmethod
+    def relabel_flow(cls, new_label: str, fid: str, anum: str, domain: str):
+        """
+        Update the label of the designated Flow
+
+        Args:
+            new_label: Change name of Labled Flow to this string
+            fid: Flow ID
+            anum: Activity Number
+            domain: Domain Name
+        """
+        # This is a simple relvar update in PyRAL
+        Relvar.updateone(db=mmdb, relvar_name='Labeled_Flow', id={
+           'ID': fid, 'Activity': anum, 'Domain': domain
+        }, update={'Name': new_label})
 
     @classmethod
     def label_flow(cls, label: str, fid: str, anum: str, domain: str):
