@@ -6,7 +6,7 @@ activity.py – Populate an Activity
 import logging
 from typing import NamedTuple, Optional
 # For debugging
-from collections import namedtuple
+from collections import namedtuple, defaultdict
 
 # Model Integration
 from pyral.relvar import Relvar
@@ -122,6 +122,15 @@ class Activity:
         self.anum = activity_data.anum
         self.domain = activity_data.domain
         self.activity_path = activity_data.activity_path
+
+        # Any Action, such as the Decision or Switch Actions that enable sets of Actions via
+        # the Scrall component_statement_set must retain the set of Action IDs that must be enabled
+        # via Control Flow within the statement set block for the enclosing Action (Decision, Switch, etc)
+        # This attribute will be set by the enclosing Action and then processed after Actin population when
+        # the Flow Dependencies for the entire Activity have been populated
+        # Organized as a dictionary of enclosing action id keys with a dictionary value
+        # keyed by an fid (flow id) with a set of potentially enabled initial action ids
+        self.block_enabled_actions: dict[str, dict[str, set[str]]] = defaultdict(lambda: defaultdict(set))
 
         # These are not relevant for a creation activity
         self.parse = None

@@ -56,7 +56,10 @@ class DecisionAction:
     def process(self) -> Boundary_Actions:
         """
         Returns:
-            Boundary_Actions: The signal action id is both the initial_pseudo_state and final action id
+            Boundary_Actions: The Decision Action is the initial action and final action. That's because a sequence
+                token might enable a decision (initial action), but a decision can't directly enable a sequence token
+                since it specifies multiple true or false condition statements. And a component block may not be
+                preceded by any sequence token (the Scrall grammar ensures this is the case).
         """
         # Process the input to the transaction to obtain an input data flow
         # This can be any kind of data, but during Model Execution, the flowing value must resolve to true or false
@@ -155,7 +158,6 @@ class DecisionAction:
                               Output_flow=pass_output_flow.fid)
             ])
             Transaction.execute(db=mmdb, name=tr_ResultPass)
-            pass
 
         if false_result:
             f_boundary_actions = ExecutionUnit.process_statement_set(activity=self.activity, content=false_result)
@@ -168,6 +170,9 @@ class DecisionAction:
         # Populate Action / Decision Action
         self.action_id = Action.populate(tr=tr_Decision, anum=self.anum, domain=self.domain, action_type="decision")
         input_init_aids.add(self.action_id)
+
+
+        # input_init_aids.add(self.action_id)
         Relvar.insert(db=mmdb, tr=tr_Decision, relvar='Decision Action', tuples=[
             Decision_Action_i(ID=self.action_id, Activity=self.anum, Domain=self.domain,
                               Boolean_input=self.decision_input_flow.fid)
@@ -176,6 +181,11 @@ class DecisionAction:
         true_result_flow = Flow.populate_control_flow(tr=tr_Decision, enabled_actions=true_init_actions,
                                                       anum=self.anum, domain=self.domain,
                                                       label=f"_{self.action_id[4:]}_true")
+
+        # Save block information for later control dependency post processing
+        if len(true_init_actions) > 1:
+            self.activity.block_enabled_actions[self.action_id][true_result_flow] = true_init_actions
+
         Relvar.insert(db=mmdb, tr=tr_Decision, relvar='Result', tuples=[
             Result_i(Decision=True, Decision_action=self.action_id, Activity=self.anum, Domain=self.domain,
                      Flow=true_result_flow)
@@ -184,10 +194,16 @@ class DecisionAction:
             false_result_flow = Flow.populate_control_flow(tr=tr_Decision, enabled_actions=false_init_actions,
                                                            anum=self.anum, domain=self.domain,
                                                            label=f"_{self.action_id[4:]}_false")
+
+            # Save block information for later control dependency post processing
+            if len(false_init_actions) > 1:
+                self.activity.block_enabled_actions[self.action_id][false_result_flow] = false_init_actions
+
             Relvar.insert(db=mmdb, tr=tr_Decision, relvar='Result', tuples=[
                 Result_i(Decision=False, Decision_action=self.action_id, Activity=self.anum, Domain=self.domain,
                          Flow=false_result_flow)
             ])
         Transaction.execute(db=mmdb, name=tr_Decision)
 
-        return Boundary_Actions(ain={self.action_id}, aout=d_final_aids)
+        # Descision action always reports self as initial and final.  See comment under process def above
+        return Boundary_Actions(ain={self.action_id}, aout={self.action_id})
