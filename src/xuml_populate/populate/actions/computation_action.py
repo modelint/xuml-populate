@@ -12,10 +12,14 @@ from pyral.relation import Relation
 from pyral.transaction import Transaction
 from scrall.parse.visitor import BOOL_a, MATH_a
 
+from xuml_populate.exceptions.action_exceptions import ActionException
+from xuml_populate.populate.actions.expressions.scalar_expr import ScalarExpr
+
 # xUML populate
 if TYPE_CHECKING:
     from xuml_populate.populate.activity import Activity
 from xuml_populate.config import mmdb
+from xuml_populate.utility import print_mmdb  # Debugging
 from xuml_populate.populate.actions.aparse_types import Flow_ap, MaxMult, Content
 from xuml_populate.populate.actions.action import Action
 from xuml_populate.populate.flow import Flow
@@ -51,6 +55,9 @@ class ComputationAction:
         self.output_type = None
         self.output_flow = None
 
+        self.input_instance_flow = activity.xiflow if activity.xiflow is not None else activity.piflow
+        # Will still be None if the Activity is in an Assigner state model
+
     def resolve_operand(self, operand: str) -> str:
         """
         Return a symbol, such as a flow ID, to represent the operand in the expression text
@@ -81,14 +88,27 @@ class ComputationAction:
             case 'BOOL_a':
                 self.output_type = 'Boolean'
                 op = self.expr.op
-                match type(self.expr.operands).__name__:
-                    case 'N_a' | 'IN_a':
-                        operand_symbol = self.resolve_operand(operand=self.expr.operands.name)
-                        if not operand_symbol:
-                            pass  # TODO: raise exception
-                        operands.append(operand_symbol)
-                    case _:
-                        pass  # TODO: Add more cases
+                if op == 'NOT':
+                    match type(self.expr.operands).__name__:
+                        case 'N_a' | 'IN_a':
+                            operand_symbol = self.resolve_operand(operand=self.expr.operands.name)
+                            if not operand_symbol:
+                                msg = f"Could not resolve operand: {self.expr.operands.name} in NOT expression at {self.activity.activity_path}"
+                                _logger.error(msg)
+                                raise ActionException(msg)
+                            operands.append(operand_symbol)
+                        case _:
+                            pass  # TODO: Add more cases
+                else:
+                    # Not a unary boolean expr, so there must be two operands
+                    for o_expr in self.expr.operands:
+                        se = ScalarExpr(expr=o_expr, input_instance_flow=self.input_instance_flow, activity=self.activity)
+                        _, sflows = se.process()
+                        if len(sflows) > 1:
+                            msg = f"Multiple scalar flows in Boolean operand {o_expr} at {self.activity.activity_path}"
+                            _logger.error(msg)
+                            raise ActionException(msg)
+                        self.operand_flows.append(sflows[0].fid)
             case 'MATH_a':
                 pass  # TODO: Fill out
             case _:
@@ -96,6 +116,8 @@ class ComputationAction:
 
         if len(operands) == 1:
             self.expr_text = f"{op} <{operands[0]}>"
+        else:
+            self.expr_text = f"<{self.operand_flows[0]}> {op} <{self.operand_flows[1]}>"
 
         Transaction.open(db=mmdb, name=tr_Compute)
         self.output_flow = Flow.populate_scalar_flow(scalar_type=self.output_type, anum=self.anum, domain=self.domain,

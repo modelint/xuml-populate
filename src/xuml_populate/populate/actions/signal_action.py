@@ -54,6 +54,8 @@ class SignalAction:
         self.action_id = None
         self.statement_parse = statement_parse
         self.activity = activity
+        self.input_instance_flow = activity.xiflow if activity.xiflow is not None else activity.piflow
+        # Will still be None if the Activity is in an Assigner state model
 
         self.dest_iflow = None
         self.parameter_values = None
@@ -178,9 +180,19 @@ class SignalAction:
                     # TODO: This is NOT a signal instance set action if target is assigner
                     # TODO: In fact, this is a completion event
                 else:
-                    pass  # TODO: Destination is some other state model (via instance flow)
-                self.aids_in.add(self.action_id)
-                self.aids_out.add(self.action_id)
+                    # Resolve the destination instance flow
+                    iset = InstanceSet(input_instance_flow=self.input_instance_flow,
+                                       iset_components=[dest],
+                                       activity=self.activity)
+                    _, _, dest_flow = iset.process()
+                    if not dest_flow:
+                        msg = (f"Cound not find destination flow: [{dest.name}] for Signal Instance Set Action "
+                               f"in {self.activity.activity_path}")
+                        _logger.error(msg)
+                        raise ActionException(msg)
+                    self.dest_sm = dest_flow.tname
+                    self.aids_in.add(self.action_id)
+                    self.aids_out.add(self.action_id)
             case 'IN_a':
                 pass  # It is an input parameter
                 self.aids_in.add(self.action_id)
