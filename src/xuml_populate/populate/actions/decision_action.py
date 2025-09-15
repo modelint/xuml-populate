@@ -71,7 +71,7 @@ class DecisionAction:
         decision_input = self.statement_parse.input  # Expression to be evaluated as true or false during execution
 
         decision_input_type = type(decision_input).__name__
-        input_init_aids: set[str] = set()  # Default to empty set of strings
+        # input_init_aids: set[str] = set()  # Default to empty set of strings
         match decision_input_type:
             case 'INST_PROJ_a':
                 # We need to evaluate an instance set and a possible projection
@@ -79,7 +79,7 @@ class DecisionAction:
                                    iset_components=decision_input.iset.components, activity=self.activity)
                 aid, _, self.decision_input_flow = iset.process()
                 # We have just one initial_pseudo_state action, so the set will be just a single aid
-                input_init_aids.add(aid)
+                # input_init_aids.add(aid)
                 # The final aids will result from the true or true/false results
                 if self.statement_parse.input.projection:
                     # We have an attribute value to extract and test as a scalar value most likely
@@ -93,7 +93,7 @@ class DecisionAction:
             case 'BOOL_a':
                 ca = ComputationAction(expr=decision_input, activity=self.activity)
                 aid, self.decision_input_flow = ca.populate()
-                input_init_aids.add(aid)  # The input is whatever action initializes the computation
+                # input_init_aids.add(aid)  # The input is whatever action initializes the computation
             case _:
                 pass
 
@@ -169,7 +169,7 @@ class DecisionAction:
         Transaction.open(db=mmdb, name=tr_Decision)
         # Populate Action / Decision Action
         self.action_id = Action.populate(tr=tr_Decision, anum=self.anum, domain=self.domain, action_type="decision")
-        input_init_aids.add(self.action_id)
+
 
 
         # input_init_aids.add(self.action_id)
