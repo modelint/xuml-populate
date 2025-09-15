@@ -13,6 +13,7 @@ from pyral.relation import Relation  # For debugging
 
 # xUML Populate
 from xuml_populate.config import mmdb
+from xuml_populate.utility import print_mmdb
 from xuml_populate.populate.actions.aparse_types import SMType, Flow_ap, Content, MaxMult, Method_Output_Type
 from xuml_populate.populate.activity import Activity
 from xuml_populate.populate.actions.aparse_types import StateActivityAP

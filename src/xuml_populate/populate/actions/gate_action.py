@@ -81,7 +81,6 @@ class GateAction:
             Gate_Action_i(ID=gate_aid, Output_flow=gate_output_flow.fid, Activity=self.anum, Domain=self.domain)
         ])
         for f in self.input_flows:
-            Flow.populate_switch_output(label=self.output_flow_label, ref_flow=f, anum=self.anum, domain=self.domain)
             Relvar.insert(db=mmdb, tr=tr_Gate, relvar='Gate Input', tuples=[
                 Gate_Input_i(Gate_action=gate_aid, Input_flow=f.fid, Activity=self.anum, Domain=self.domain)
             ])

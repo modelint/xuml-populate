@@ -34,9 +34,14 @@ PassOutput = namedtuple('PassOutput', 'aid fid')
 
 class PassAction:
     """
-    Populate a Pass Action
-    """
+    The Pass Action takes a single input data flow and outputs an identical data flow with a new name.
 
+    It is used when the action language assigns the value of some flow to another flow in an assignment statement
+
+    It is also used when conditional logic determines whether or an existing data flow will be the output result in
+    a Method. A true result Control Flow from a Decision Action, for example, might enable a Pass Action which directs
+    its output to a Gate Action.
+    """
     def __init__(self, input_fid: str, output_flow_label: str, activity: 'Activity'):
         """
         Collect the data necessary to populate a Pass Action
