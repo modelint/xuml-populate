@@ -21,20 +21,20 @@ from xuml_populate.populate.flow import Flow
 from xuml_populate.populate.actions.action import Action
 from xuml_populate.populate.actions.read_action import ReadAction
 from xuml_populate.exceptions.action_exceptions import *
-from xuml_populate.populate.actions.aparse_types import Boundary_Actions, Flow_ap, MaxMult
+from xuml_populate.populate.actions.aparse_types import Boundary_Actions, Flow_ap, MaxMult, ActivityType
 from xuml_populate.populate.mmclass_nt import (Method_Call_i, Method_Call_Parameter_i, Method_Call_Output_i,
                                                Instance_Action_i)
 
 _logger = logging.getLogger(__name__)
 
 tr_Call = "Method Call"
+tr_MethodCallOutput = "Method Call Output"
 
 class MethodCall:
     """
     Populate all components of a Method Call action and any other
     actions required by the parse
     """
-    tr_MethodCallOutput = "Method Call Output"
     method_call_transaction_open: bool = False
 
     def __init__(self, method_name: str, method_anum: str, caller_flow: Flow_ap, parse: Call_a | Op_a,
@@ -63,7 +63,7 @@ class MethodCall:
     @classmethod
     def complete_output_transaction(cls):
         if cls.method_call_transaction_open:
-            Transaction.execute(db=mmdb, name=cls.tr_MethodCallOutput)
+            Transaction.execute(db=mmdb, name=tr_MethodCallOutput)
             MethodCall.method_call_transaction_open = False
 
     def process(self) -> tuple[str, str, Flow_ap]:
@@ -195,7 +195,7 @@ class MethodCall:
                 method_call_output_flow = Flow.populate_instance_flow(activity_tr=tr_Call, cname=type_name,
                                                                       anum=self.anum, domain=self.domain, single=single)
             else:
-                # Popualte a sclaar flow if the type is a scalar, multiplicity is not applicable here
+                # Populate a scalar flow if the type is a scalar, multiplicity is not applicable here
                 scalar_r = Relation.semijoin(db=mmdb, rname1=type_rv, rname2="Scalar")
                 if scalar_r.body:
                     method_call_output_flow = Flow.populate_scalar_flow(activity_tr=tr_Call, scalar_type=type_name,
@@ -210,11 +210,15 @@ class MethodCall:
             Transaction.execute(db=mmdb, name=tr_Call)
 
             # Populate the output of the Method Call action (corresponds to the target Method's Synch Output)
-            if not MethodCall.method_call_transaction_open:
-                MethodCall.method_call_transaction_open = True
-                Transaction.open(db=mmdb, name=MethodCall.tr_MethodCallOutput)
+            if self.activity.atype == ActivityType.METHOD:
+                use_tr = tr_MethodCallOutput
+                if not MethodCall.method_call_transaction_open:
+                    MethodCall.method_call_transaction_open = True
+                    Transaction.open(db=mmdb, name=tr_MethodCallOutput)
+            else:
+                use_tr = None
 
-            Relvar.insert(db=mmdb, relvar="Method Call Output", tr=MethodCall.tr_MethodCallOutput, tuples=[
+            Relvar.insert(db=mmdb, relvar="Method Call Output", tr=use_tr, tuples=[
                 Method_Call_Output_i(Method_call=self.action_id, Activity=self.anum, Domain=self.domain,
                                      Target_method=target_method_anum, Flow=method_call_output_flow.fid)
             ])

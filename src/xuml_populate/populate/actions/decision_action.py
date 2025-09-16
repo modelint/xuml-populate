@@ -92,7 +92,8 @@ class DecisionAction:
                 _, _, self.decision_input_flow = iset.process()
             case 'BOOL_a':
                 ca = ComputationAction(expr=decision_input, activity=self.activity)
-                aid, self.decision_input_flow = ca.populate()
+                ba, self.decision_input_flow = ca.populate()
+                pass
                 # input_init_aids.add(aid)  # The input is whatever action initializes the computation
             case _:
                 pass

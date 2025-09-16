@@ -20,7 +20,7 @@ if TYPE_CHECKING:
     from xuml_populate.populate.activity import Activity
 from xuml_populate.config import mmdb
 from xuml_populate.utility import print_mmdb  # Debugging
-from xuml_populate.populate.actions.aparse_types import Flow_ap, MaxMult, Content
+from xuml_populate.populate.actions.aparse_types import Flow_ap, MaxMult, Content, Boundary_Actions
 from xuml_populate.populate.actions.action import Action
 from xuml_populate.populate.flow import Flow
 from xuml_populate.populate.mmclass_nt import Computation_Action_i, Computation_Input_i, Instance_Action_i
@@ -55,6 +55,17 @@ class ComputationAction:
         self.output_type = None
         self.output_flow = None
 
+        # self.input_aids - input action ids
+        # --
+        # Each operand may or may not be have a scalar expression that requires the population of actions
+        # to get the required input. An operand representing an attribute, for example, will require the
+        # population of a Read Action to get the value.
+
+        # Regardless of how many intermediate actions are required to get the input for an operatnd, we only care
+        # about the Action(s) on the input boundary -- those furthest out from our Computation Action, typically
+        # just one.
+        self.input_aids: set[str] = set()  # The boundary input actions of each scalar expression creating actions
+
         self.input_instance_flow = activity.xiflow if activity.xiflow is not None else activity.piflow
         # Will still be None if the Activity is in an Assigner state model
 
@@ -73,7 +84,7 @@ class ComputationAction:
         self.operand_flows.append(fid)
         return fid
 
-    def populate(self) -> tuple[str, Flow_ap]:
+    def populate(self) -> tuple[Boundary_Actions, Flow_ap]:
         """
         Populate the Compute Action
 
@@ -102,8 +113,10 @@ class ComputationAction:
                 else:
                     # Not a unary boolean expr, so there must be two operands
                     for o_expr in self.expr.operands:
-                        se = ScalarExpr(expr=o_expr, input_instance_flow=self.input_instance_flow, activity=self.activity)
-                        _, sflows = se.process()
+                        se = ScalarExpr(expr=o_expr, input_instance_flow=self.input_instance_flow,
+                                        activity=self.activity)
+                        b, sflows = se.process()
+                        self.input_aids.update(b.ain)  # Just add the input boundary actions
                         if len(sflows) > 1:
                             msg = f"Multiple scalar flows in Boolean operand {o_expr} at {self.activity.activity_path}"
                             _logger.error(msg)
@@ -136,4 +149,6 @@ class ComputationAction:
             ])
 
         Transaction.execute(db=mmdb, name=tr_Compute)
-        return self.action_id, self.output_flow
+
+        boundary_actions = Boundary_Actions(ain=self.input_aids, aout={self.action_id})
+        return boundary_actions, self.output_flow
