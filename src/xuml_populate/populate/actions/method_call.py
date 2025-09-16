@@ -27,7 +27,14 @@ from xuml_populate.populate.mmclass_nt import (Method_Call_i, Method_Call_Parame
 
 _logger = logging.getLogger(__name__)
 
+# Use this transaction to populate the Method Call without any Method Call Outputs
 tr_Call = "Method Call"
+
+# State Activities do not need a transaction to populate Method Call Outputs since all Methods have been fully
+# populated by the time we get to States.
+
+# But if the calling Activity is a Method, use this transaction for Method Call Output population
+# so populate can be deferred until all Methods have been populated and we post_process them
 tr_MethodCallOutput = "Method Call Output"
 
 class MethodCall:
@@ -35,7 +42,12 @@ class MethodCall:
     Populate all components of a Method Call action and any other
     actions required by the parse
     """
-    method_call_transaction_open: bool = False
+    # If we are calling from a Method, we'll need to open this transaction only for the first Method Call Output
+    # It will be closed in post processing by calling the complete_output_transaction class method
+    # And it will have been closed before we start processing any State Activities
+    # So this attribute is not relevant to State Activities which do not use a transaction for Method Call Output
+    # population
+    method_call_output_transaction_open: bool = False
 
     def __init__(self, method_name: str, method_anum: str, caller_flow: Flow_ap, parse: Call_a | Op_a,
                  activity: 'Activity'):
@@ -62,9 +74,13 @@ class MethodCall:
 
     @classmethod
     def complete_output_transaction(cls):
-        if cls.method_call_transaction_open:
+        """
+        After all Method Actions have been populated, we can populate all of the Method Call Output instances,
+        by closing the open transaction.  It will not be open if there are none to populate.
+        """
+        if cls.method_call_output_transaction_open:
             Transaction.execute(db=mmdb, name=tr_MethodCallOutput)
-            MethodCall.method_call_transaction_open = False
+            MethodCall.method_call_output_transaction_open = False  # Not checked later, but here for completeness
 
     def process(self) -> tuple[str, str, Flow_ap]:
         """
@@ -209,13 +225,19 @@ class MethodCall:
 
             Transaction.execute(db=mmdb, name=tr_Call)
 
+            # We have populated everything in the Method Call except for any Method Call Output instances at this point
+            # We proceed differently for Method and non-Method Activities
+
             # Populate the output of the Method Call action (corresponds to the target Method's Synch Output)
             if self.activity.atype == ActivityType.METHOD:
-                use_tr = tr_MethodCallOutput
-                if not MethodCall.method_call_transaction_open:
-                    MethodCall.method_call_transaction_open = True
+                use_tr = tr_MethodCallOutput  # We always use this transaction for a Method activity
+                if not MethodCall.method_call_output_transaction_open:
+                    # If Method and we haven't opened this transaction yet, do it now
+                    MethodCall.method_call_output_transaction_open = True
+                    # By setting this to true, we won't attempt to open it twice for the entire domain population
                     Transaction.open(db=mmdb, name=tr_MethodCallOutput)
             else:
+                # This must be a State Activity and we don't use a transaction
                 use_tr = None
 
             Relvar.insert(db=mmdb, relvar="Method Call Output", tr=use_tr, tuples=[
