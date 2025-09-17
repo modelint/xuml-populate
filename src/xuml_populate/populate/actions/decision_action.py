@@ -109,7 +109,6 @@ class DecisionAction:
         # So we need to re-specify ev1 with a complete Signal statement if we are using this shorthand
         # This is only relevant if the true_result is a Signal statement with no explicit destination
         # --
-        # TODO: Rethink shared dest so that xunits are handled properly
         shared_dest = None
         true_statement = true_result.statement  # We'll need to change this if the shorthand was used
         if type(true_result.statement).__name__ == 'Signal_a' and not true_result.statement.dest:
