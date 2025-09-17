@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING
 import logging
 
 # Model Integration
-from scrall.parse.visitor import Decision_a, Signal_a
+from scrall.parse.visitor import Decision_a, Signal_a, Comp_Statement_Set_a
 from pyral.relvar import Relvar
 from pyral.relvar import Relation
 from pyral.transaction import Transaction
@@ -110,30 +110,29 @@ class DecisionAction:
         # This is only relevant if the true_result is a Signal statement with no explicit destination
         # --
         # TODO: Rethink shared dest so that xunits are handled properly
-        # shared_dest = None
-        # true_statement = true_result.statement  # We'll need to change this if the shorthand was used
+        shared_dest = None
+        true_statement = true_result.statement  # We'll need to change this if the shorthand was used
         if type(true_result.statement).__name__ == 'Signal_a' and not true_result.statement.dest:
-            pass
-        #     # The false_result must be a Signal supplying the shared destination
-        #     # Verify that a shared destination is provided by the false result
-        #     if type(false_result.statement).__name__ != 'Signal_a':
-        #         msg = f"No destination specified for signal in true result"
-        #         _logger.error(msg)
-        #         raise ActionException(msg)
-        #     shared_dest = false_result.statement.dest  # Grab the false result signal's destination
-        #     # But make sure that the false result signal statement actually supplied a destination
-        #     if not shared_dest:
-        #         msg = f"No destination specified for signal in false result"
-        #         _logger.error(msg)
-        #         raise ActionException(msg)
-        #
-        # if shared_dest:
-        #     # We have two signal statements with a shared destination,
-        #     # so need to create a new Signal_a tuple with the shared_dest value inserted
-        #     true_statement = Signal_a(event=true_result.statement.event,
-        #                               supplied_params=true_result.statement.supplied_params, dest=shared_dest)
+            # The false_result must be a Signal supplying the shared destination
+            # Verify that a shared destination is provided by the false result
+            if type(false_result.statement).__name__ != 'Signal_a':
+                msg = f"No destination specified for signal in true result"
+                _logger.error(msg)
+                raise ActionException(msg)
+            shared_dest = false_result.statement.dest  # Grab the false result signal's destination
+            # But make sure that the false result signal statement actually supplied a destination
+            if not shared_dest:
+                msg = f"No destination specified for signal in false result"
+                _logger.error(msg)
+                raise ActionException(msg)
 
-        # We'll use true_statement instead of true_result.statement in case we had to ammend
+        if shared_dest:
+            # We have two signal statements with a shared destination,
+            # so need to create a new Signal_a tuple with the shared_dest value inserted
+            true_result = Comp_Statement_Set_a(
+                statement=Signal_a(event=true_result.statement.event,
+                                   supplied_params=true_result.statement.supplied_params, dest=shared_dest), block=None
+            )
 
         # Populate the true and false result statements and grab the initial_pseudo_state actions of each so we can enable them
         from xuml_populate.populate.xunit import ExecutionUnit

@@ -235,7 +235,7 @@ class SignalAction:
         self.aids_out.add(aout)
 
         # If the destination is a Multiple Assigner, populate the partition instance
-        R = f"Rnum:<{dest_sm}>, Domain<{self.activity.domain}>"
+        R = f"Rnum:<{dest_sm}>, Domain:<{self.activity.domain}>"
         multiple_assigner_r = Relation.restrict(db=mmdb, relation="Multiple Assigner", restriction=R)
         if multiple_assigner_r.body:
             Relvar.insert(db=mmdb, tr=tr_Signal, relvar='Multiple Assigner Partition Instance', tuples=[

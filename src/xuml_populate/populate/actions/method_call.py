@@ -131,7 +131,7 @@ class MethodCall:
             sval_type = type(sp.sval).__name__
             sval_flow = None
             match sval_type:
-                case 'N_a':
+                case 'N_a' | 'IN_a':
                     sval_name = sp.sval.name
                 case 'INST_PROJ_a':
                     se = ScalarExpr(expr=sp.sval, input_instance_flow=self.caller_flow, activity=self.activity)
@@ -189,7 +189,7 @@ class MethodCall:
 
         method_call_output_flow = None
         target_method_output_type = self.activity.domain_method_output_types[target_method_anum]
-        if target_method_output_type is not None:
+        if target_method_output_type.name is not None:
             method_call_output_flow = None
             # Determine the kind of Data Flow output by the target method
             # Instance flow if the type name is a class
@@ -223,10 +223,12 @@ class MethodCall:
                     # TODO: Construct table name from method signature (need an example)
                 pass
 
-            Transaction.execute(db=mmdb, name=tr_Call)
+        Transaction.execute(db=mmdb, name=tr_Call)
 
-            # We have populated everything in the Method Call except for any Method Call Output instances at this point
-            # We proceed differently for Method and non-Method Activities
+        # We have populated everything in the Method Call except for any Method Call Output instances at this point
+        # We proceed differently for Method and non-Method Activities
+
+        if method_call_output_flow is not None:
 
             # Populate the output of the Method Call action (corresponds to the target Method's Synch Output)
             if self.activity.atype == ActivityType.METHOD:
