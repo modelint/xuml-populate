@@ -6,3 +6,11 @@ Cabin:
         - name: Dest floor
           type: Level Name
       return: Boolean
+
+  mappings:
+    - class: transfer
+      state entry:
+        state: Creating or updating transfer
+          - UI: Set destination
+
+

@@ -109,6 +109,15 @@ Symmetric_Perspective_i = namedtuple('Symmetric_Perspective_i', 'Side Rnum Domai
 T_Perspective_i = namedtuple('T_Perspective_i', 'Side Rnum Domain')
 Unary_Association_i = namedtuple('Unary_Association_i', 'Rnum Domain')
 
+# External Service subsystem
+External_Event_i = namedtuple('External_Event_i', 'Name Domain')
+External_Operation_i = namedtuple('External_Operation_i', 'Name Domain')
+External_Operation_Output_i = namedtuple('External_Operation_Output_i', 'Operation Domain Type')
+External_Service_i = namedtuple('External_Service_i', 'Name Domain Signature')
+External_Signal_Action_i = namedtuple('External_Signal_Action_i', 'ID Activity Domain External_event')
+Operation_Call_i = namedtuple('Operation_Call_i', 'ID Activity Domain Operation')
+Operation_Call_Flow_i = namedtuple('Operation_Call_Flow_i', 'Operation_call Activity Domain Operation_name Output_flow')
+
 # Method Call subsystem
 Method_Call_i = namedtuple('Method_Call_i', 'ID Activity Domain Method Instance_flow')
 Method_Call_Output_i = namedtuple('Method_Call_Output_i', 'Method_call Activity Domain Target_method Flow')
@@ -205,7 +214,6 @@ Switch_Action_i = namedtuple('Switch_Action_i', 'ID Activity Domain')
 Activity_i = namedtuple('Activity_i', 'Anum Domain')
 Activity_Input_i = namedtuple('Activity_Input_i', 'Parameter Signature Activity Domain Flow')
 Delegated_Creation_Activity_i = namedtuple('Delegated_Creation_Activity_i', 'Anum Domain')
-External_Event_Specification_i = namedtuple('External_Event_Specification_i', 'Name Class Domain Signature')
 External_Signature_i = namedtuple('External_Signature_i', 'SIGnum Domain')
 Initialization_Source_i = namedtuple('Initialization_Source_i', 'Source_flow Delegating_activity Creation_activity Local_flow Domain')
 Lifecycle_Activity_i = namedtuple('Lifecycle_Activity_i', 'Anum Domain Executing_instance_flow')
@@ -270,7 +278,6 @@ Transition_i = namedtuple('Transition_i', 'From_state Event State_model Domain T
 # Signal Action subsystem
 Absolute_Delivery_Time_i = namedtuple('Absolute_Delivery_Time_i', 'Action Activity Domain When')
 Delivery_Time_i = namedtuple('Delivery_Time_i', 'Action Activity Domain Flow')
-External_Signal_Action_i = namedtuple('External_Signal_Action_i', 'ID Activity Domain')
 Initial_Signal_Action_i = namedtuple('Initial_Signal_Action_i', 'ID Activity Domain')
 Multiple_Assigner_Partition_Instance_i = namedtuple('Multiple_Assigner_Partition_Instance_i', 'Action Activity Domain Partition')
 Relative_Delivery_Time_i = namedtuple('Relative_Delivery_Time_i', 'Action Activity Domain Delay')

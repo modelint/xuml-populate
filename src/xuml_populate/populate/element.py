@@ -1,11 +1,16 @@
 """
 element.py – Populate an element instance in PyRAL
 """
-
+# System
 import logging
-from pyral.relvar import Relvar
+
+# xUML Populate
 from xuml_populate.config import mmdb
 from xuml_populate.populate.mmclass_nt import Element_i, Spanning_Element_i, Subsystem_Element_i
+
+# Model Integration
+from pyral.relvar import Relvar
+
 # TODO: Add spanning element support
 
 _signum_counters = {}  # A separate counter per domain
@@ -22,8 +27,11 @@ class Element:
         """
         Create a new counter using the supplied key if it does not already exist in the num counter dict
 
-        :param key: Usually the domain name but could be subsys:domain or something else
-        :return: The next available number
+        Args:
+            key:  Usually the domain name but could be subsys:domain or something else
+
+        Returns:
+            The next available number
         """
         # Should refactor this into an Element population numbering method
         if key not in cls._num_counters:
@@ -33,23 +41,25 @@ class Element:
         return cls._num_counters[key]
 
     @classmethod
-    def populate_unlabeled_subsys_element(cls, tr: str, prefix: str, subsystem: str, domain: str) -> str:
+    def populate_unlabeled_spanning_element(cls, tr: str, prefix: str, domain: str) -> str:
         """
-        Generates a label for a new Subsystem Element and populates it
+        Generates a label for a new Spanning Element and populates it
 
-        :param tr:  An open transaction name
-        :param prefix: Prefixed to counter to create unique string label
-        :param subsystem: The name of the subsystem since these are Subsystem Elements
-        :param domain: The element belongs to this domain
-        :return: generated label such as SIG12, A47, etc
+        Args:
+            tr: An open transaction name
+            prefix: Prefixed to counter to create unique string label
+            subsystem: The name of the subsystem since these are Subsystem Elements
+            domain: The element belongs to this domain
+
+        Returns:
+            generated label such as SIG12, A47, etc
         """
-
         label = f'{prefix}{cls.init_counter(key=domain)}'
-        Relvar.insert(mmdb, tr=tr, relvar='Element', tuples=[
+        Relvar.insert(db=mmdb, tr=tr, relvar='Element', tuples=[
             Element_i(Label=label, Domain=domain)
         ])
-        Relvar.insert(mmdb, tr=tr, relvar='Subsystem_Element', tuples=[
-            Subsystem_Element_i(Label=label, Domain=domain, Subsystem=subsystem)
+        Relvar.insert(db=mmdb, tr=tr, relvar='Spanning_Element', tuples=[
+            Spanning_Element_i(Label=label, Domain=domain)
         ])
         return label
 
@@ -64,21 +74,20 @@ class Element:
         Most users ignore the Cnums so they can be generated behind the scenes and kept as an internal labeling
         system for the most part. They are not specified in the xcm files for now (but may be later)
 
-        :param tr:  An open transaction name
-        :param label: The user or generated label such as R812 for rnums or C7 for cnums
-        :param subsystem: The name of the subsystem since these are Subsystem Elements
-        :param domain: The element belongs to this domain
+        Args:
+            tr: An open transaction name
+            label: The user or generated label such as R812 for rnums or C7 for cnums
+            subsystem: The name of the subsystem since these are Subsystem Elements
+            domain: The element belongs to this domain
         """
-
         # We don't need to use our counter since the label has already been specified
         # so we just insert the Element and Subystem Element classes of the Domain Subsystem
-        Relvar.insert(mmdb, tr=tr, relvar='Element', tuples=[
+        Relvar.insert(db=mmdb, tr=tr, relvar='Element', tuples=[
             Element_i(Label=label, Domain=domain)
         ])
-        Relvar.insert(mmdb, tr=tr, relvar='Subsystem_Element', tuples=[
+        Relvar.insert(db=mmdb, tr=tr, relvar='Subsystem_Element', tuples=[
             Subsystem_Element_i(Label=label, Domain=domain, Subsystem=subsystem)
         ])
-
 
     @classmethod
     def depopulate_spanning_element(cls, tr: str, label: str, domain: str):
@@ -87,9 +96,10 @@ class Element:
 
         Assumes that the spanning element subclass is managing the db transaction
 
-        :param tr:  An open transaction name
-        :param label: The user or generated label such as R812 for rnums or C7 for cnums
-        :param domain: The element belongs to this domain
+        Args:
+            tr: An open transaction name
+            label: The generated label such as A12 (for an Activity Number) for example
+            domain: The element belongs to this domain
         """
-        Relvar.deleteone(mmdb, tr=tr, relvar_name='Spanning_Element', tid={'Label': label, 'Domain': domain})
-        Relvar.deleteone(mmdb, tr=tr, relvar_name='Element', tid={'Label': label, 'Domain': domain})
+        Relvar.deleteone(db=mmdb, tr=tr, relvar_name='Spanning_Element', tid={'Label': label, 'Domain': domain})
+        Relvar.deleteone(db=mmdb, tr=tr, relvar_name='Element', tid={'Label': label, 'Domain': domain})

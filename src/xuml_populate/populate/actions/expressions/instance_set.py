@@ -172,8 +172,12 @@ class InstanceSet:
                     # Type operations and external services cannot do this
                     # So we need to validate that we have a proper method invocation statement and then
                     # populate the Method Call
+                    if comp.owner == '_external':
+                        # TODO: Process external services
+                        # At may return a scalar expression depending on external service definition
+                        pass
 
-                    single_inst_flow_label = comp.owner if comp.owner != 'implicit' else 'me'
+                    single_inst_flow_label = comp.owner if comp.owner != '_implicit' else 'me'
                     # Name on a flow delivering a single instance method target
                     method_name = comp.op_name  # op_name must be a Method name
 

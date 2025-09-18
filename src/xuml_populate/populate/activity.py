@@ -385,7 +385,7 @@ class Activity:
         :param domain: The domain name
         :return: The Activity number (Anum)
         """
-        Anum = Element.populate_unlabeled_subsys_element(tr=tr, prefix='A', subsystem=subsys, domain=domain)
+        Anum = Element.populate_unlabeled_spanning_element(tr=tr, prefix='A', domain=domain)
         Relvar.insert(db=mmdb, tr=tr, relvar='Activity', tuples=[
             Activity_i(Anum=Anum, Domain=domain)
         ])

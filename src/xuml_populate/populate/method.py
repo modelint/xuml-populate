@@ -60,7 +60,7 @@ class Method:
         _logger.info("Transaction open: Populating method")
 
         # Create the Method Signature
-        self.signum = Signature.populate(tr=tr_Method, subsys=self.subsys, domain=self.domain)
+        self.signum = Signature.populate(tr=tr_Method, domain=self.domain)
         Relvar.insert(db=mmdb, tr=tr_Method, relvar='Method Signature', tuples=[
             Method_Signature_i(SIGnum=self.signum, Method=self.name, Class=self.class_name,
                                Domain=self.domain)
