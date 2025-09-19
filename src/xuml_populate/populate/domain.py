@@ -23,6 +23,7 @@ from xuml_populate.populate.relationship import Relationship
 from xuml_populate.populate.lineage import Lineage
 from xuml_populate.populate.subsystem import Subsystem
 from xuml_populate.populate.state_model import StateModel
+from xuml_populate.populate.external_service import ExternalService
 from xuml_populate.populate.mmclass_nt import Domain_i, Modeled_Domain_i, Domain_Partition_i, Subsystem_i
 
 
@@ -100,7 +101,7 @@ class Domain:
                 self.state_models.append(pop_sm)
 
             # Insert external services
-            pass
+            ExternalService.populate_all(domain=self.name, parse=subsys_parse['external'])
 
         _logger.info("Resolving attribute types")
         Attribute.ResolveAttrTypes(domain=domain)

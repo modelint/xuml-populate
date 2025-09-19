@@ -3,6 +3,6 @@ Cabin:
   external operations:
     - name: Goto floor
       parameters:
-        - name: Dest floor
-          type: Level Name
+        name: Dest floor
+        type: Level Name
       return: Boolean
