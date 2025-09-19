@@ -49,7 +49,6 @@ class Domain:
         self.types = None
         self.parse_actions = parse_actions
         self.methods: dict[str, Method] = {}  # Methods keyed by activity number
-        # self.methods = []
         self.state_models = []
 
         _logger.info(f"Transaction open: domain and subsystems [{domain}]")
@@ -99,6 +98,9 @@ class Domain:
             for sm in subsys_parse['state_models'].values():
                 pop_sm = StateModel(subsys=subsys.name, sm=sm, parse_actions=self.parse_actions)
                 self.state_models.append(pop_sm)
+
+            # Insert external services
+            pass
 
         _logger.info("Resolving attribute types")
         Attribute.ResolveAttrTypes(domain=domain)

@@ -4,6 +4,7 @@
 import logging
 from pathlib import Path
 from contextlib import redirect_stdout
+import yaml
 
 # Model Integration
 from xcm_parser.class_model_parser import ClassModelParser
@@ -18,6 +19,8 @@ from xuml_populate.populate.domain import Domain
 from xuml_populate.populate.mmclass_nt import System_i
 
 _mmdb_fname = f"{mmdb}.ral"
+_external_fname = "external.yaml"
+
 _logger = logging.getLogger(__name__)
 
 class System:
@@ -124,17 +127,12 @@ class System:
                 else:
                     _logger.info("No state-machines dir")
 
-                # Load and parse the external entity operations
+                # Load and parse the external services
                 ext_path = subsys_path / "external"
                 if ext_path.is_dir():
-                    for ee_path in ext_path.iterdir():
-                        ee_name = ee_path.name
-                        self.content[domain_name]['subsystems'][subsys_name]['external'][ee_name] = {}
-                        for op_file in ee_path.glob("*.op"):
-                            op_name = op_file.stem
-                            _logger.info(f"Processing ee operation: [{op_file}]")
-                            op_parse = OpParser.parse_file(file_input=op_file, debug=False)
-                            self.content[domain_name]['subsystems'][subsys_name]['external'][ee_name][op_name] = op_parse
+                    with open(ext_path/_external_fname, 'r') as file:
+                        edata = yaml.safe_load(file)
+                    self.content[domain_name]['subsystems'][subsys_name]['external'] = edata
                 else:
                     _logger.info("No external dir")
 
