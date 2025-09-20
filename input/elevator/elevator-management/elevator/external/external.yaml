@@ -1,8 +1,29 @@
 Cabin:
-
   external operations:
     - name: Goto floor
       parameters:
         name: Dest floor
         type: Level Name
       return: Boolean
+
+Door:
+  bridgeable conditions:
+    state entry:
+      OPENING:
+        - SIO
+        - UI
+      OPEN:
+        - UI
+      CLOSING:
+        - SIO
+        - UI
+      CLOSED:
+        - UI
+
+  model operations:
+    event dispatch:
+      Door closed: SIO
+      Door opened: SIO
+      Door blocked: SIO
+      Passenger open: UI
+      Passenger close: UI
