@@ -36,15 +36,17 @@ state OPEN
 activity
     // UI.Door opened( Shaft )
     my Bank .= /R4/R2/Bank
-    Time to close -> me after Blocked ?
-        my Bank.Block clear time : my Bank.Passenger load time
+    Blocked?
+        delay = my Bank.Block clear time :
+        delay = my Bank.Passenger load time
+    Time to close -> me @delay
 transitions
     Passenger close > Cancel open delay
     Time to close > HOLDING OPEN
 --
 state Cancel open delay
 activity
-    !* Time to close -> me
+    Time to close ->* me
     Open delay canceled -> me
 transitions
     Open delay canceled > HOLDING OPEN
@@ -57,10 +59,11 @@ transitions
 --
 state CLOSING
 activity
-    Emergency hold? Emergency hold -> me : {
-        // Close door( Shaft ) => SIO
-        // UI.Door closing( Shaft )
-    }
+    Emergency hold? Emergency hold -> me
+    //     : {
+    // Close door( Shaft ) => SIO
+    // UI.Door closing( Shaft )
+    //    }
 transitions
     Door closed > CLOSED
     Passenger open > OPENING
@@ -73,7 +76,8 @@ activity
     Close attempts.reset
     Blocked = FALSE
     Lock requested? Lock -> me
-    Door closed -> /R4/R53/Transfer // May be none
+    // May be None
+    Door closed -> /R4/R53/Transfer
 transitions
     Lock > LOCKED
     Passenger open > OPENING
@@ -89,7 +93,7 @@ transitions
 state Count block
 activity
     Close attempts.increment
-    (Close attempts > /R4/R2/Bank.Max close attempts) ? Can’t close door -> me : {
+    (Close attempts > /R4/R2/Bank.Max close attempts) ? Cannot close door -> me : {
         Blocked = TRUE
         Keep trying -> me
     }

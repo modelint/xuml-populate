@@ -14,7 +14,7 @@ events
     Cabin arrived
     Middle floor
     Cancel
-    Top_or_bottom floor
+    Top bottom floor
 --
 initial transitions
     initial > WAITING FOR CABIN
@@ -28,10 +28,10 @@ transitions
 state Check bank level type
 activity
     /R49/R38/Middle Bank Level ?
-         Middle floor -> : Top or bottom floor -> me
+         Middle floor -> : Top bottom floor -> me
 transitions
     Middle floor > HOLDING SERVICE DIRECTION
-    Top_or_bottom floor > COMPLETED
+    Top bottom floor > COMPLETED
 --
 state HOLDING SERVICE DIRECTION
 activity
