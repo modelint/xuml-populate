@@ -44,7 +44,7 @@ class ExternalService:
 
             # Populate all external operations for this class, if any
             ops_parse = services.get('external operations')
-            if services is not None:
+            if ops_parse is not None:
                 for op in ops_parse:
                     Transaction.open(db=mmdb, name=tr_ExternalOperation)
                     # Populate the External Operation
