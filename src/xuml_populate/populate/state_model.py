@@ -30,6 +30,9 @@ from xuml_populate.populate.mmclass_nt import (State_Model_i, Lifecycle_i, Non_D
                                                Monomorphic_Event_i, Effective_Event_i, Event_i, Parameter_i, Assigner_i,
                                                Multiple_Assigner_i, Single_Assigner_i, Activity_Input_i)
 
+if __debug__:
+    from xuml_populate.utility import print_mmdb
+
 ISP = 'Initial_Pseudo_State'  # Name of initial_pseudo_state pseudo state
 
 _logger = logging.getLogger(__name__)

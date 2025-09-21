@@ -62,13 +62,15 @@ class InstanceSet:
             # hasn't yet been looked up for this staement.  Labeled flow input to a decision action, for example
             pass
 
-    def process(self) -> tuple[str, str, Flow_ap]:
+    def process(self) -> tuple[str, str, Optional[Flow_ap]]:
         """
         Populate any Actions or Flows corresponding to a sequence of instance set components.
         Return the boundary actions and the resultant output Instance Flow
 
         Returns:
-            output: The initial_pseudo_state action id, the final action id, and the output instance flow
+            output: The initial_pseudo_state action id, the final action id, and the output instance flow. If no
+                Output flow is returned, it means that the result is not an instance set and the caller should
+                probably try looking for a scalar flow (scalar expression) instead.
         """
         domain = self.activity.domain
         anum = self.activity.anum
@@ -121,10 +123,11 @@ class InstanceSet:
                         if ns_flow:
                             self.component_flow = ns_flow
                         else:
-                            # Either there is no corresponding flow or it is a Scalar Flow
-                            raise NoClassOrInstanceFlowForInstanceSetName(path=self.activity.activity_path,
-                                                                          text=self.activity.scrall_text,
-                                                                          x=self.iset_components.X)
+                            return '', '', None
+                            # Either no flow exists, or the flow is a Scalar flow
+                            # In any case, there is no instance set flow to return
+                            # TODO: The empty strings are returned instead of None's because many usages use
+                            # TODO: _, _, flow  Should change this the returned tuple as a whole is optional
                 case 'Criteria_Selection_a':
                     # Process to populate a select action, the output type does not change
                     # since we are selecting on a known class

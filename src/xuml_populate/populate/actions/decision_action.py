@@ -90,6 +90,17 @@ class DecisionAction:
                 iset = InstanceSet(iset_components=[decision_input], activity=self.activity)
                 # It's just a flow, so the returned initial_pseudo_state, final actions should be empty
                 _, _, self.decision_input_flow = iset.process()
+                if self.decision_input_flow is None:
+                    # This might be a scalar input flow
+                    se = ScalarExpr(expr=decision_input, input_instance_flow=self.activity.xiflow,
+                                    activity=self.activity)
+                    _, sflows = se.process()
+                    if sflows[0] is not None:
+                        self.decision_input_flow = sflows[0]
+                    else:
+                        msg = f"Cannot resolve Decision Action input flow: {decision_input} at {self.activity.activity_path}"
+                        _logger.error(msg)
+                        raise ActionException(msg)
             case 'BOOL_a':
                 ca = ComputationAction(expr=decision_input, activity=self.activity)
                 ba, self.decision_input_flow = ca.populate()

@@ -5,7 +5,7 @@ import logging
 from typing import TYPE_CHECKING
 
 # Model Integration
-from scrall.parse.visitor import MATH_a, BOOL_a, INST_a, N_a, Projection_a, Op_chain_a, INST_PROJ_a
+from scrall.parse.visitor import MATH_a, BOOL_a, INST_a, IN_a, N_a, Projection_a, Op_chain_a, INST_PROJ_a
 from pyral.relation import Relation  # Keep for debugging
 
 # xUML Populate
@@ -36,7 +36,7 @@ class ScalarExpr:
     So we need to walk through the parse tree through the nested operations, possibly
     building instance sets.
     """
-    def __init__(self, expr: INST_PROJ_a | BOOL_a, input_instance_flow: Flow_ap | None, activity: 'Activity'):
+    def __init__(self, expr: INST_PROJ_a | BOOL_a | N_a | IN_a, input_instance_flow: Flow_ap | None, activity: 'Activity'):
         """
 
         Args:
@@ -82,7 +82,7 @@ class ScalarExpr:
     def resolve_iset(self, iset: INST_a, op_chain: Op_chain_a = None, projection: Projection_a = None) -> list[Flow_ap]:
         pass
 
-    def walk(self, sexpr: str | INST_PROJ_a | MATH_a | BOOL_a | N_a, input_flow: Flow_ap) -> list[Flow_ap]:
+    def walk(self, sexpr: str | INST_PROJ_a | MATH_a | BOOL_a | N_a | IN_a, input_flow: Flow_ap) -> list[Flow_ap]:
         """
 
         :param sexpr:  Parsed scalar expression
@@ -190,7 +190,7 @@ class ScalarExpr:
                         self.action_inputs[aid] = {action_input.fid}
                         self.action_outputs[aid] = {s.fid for s in sflows}
                         return sflows
-            case 'N_a':
+            case 'N_a' | 'IN_a':
                 # So there are only two possibilities and in case of a shadowing conflict, we must proceed
                 # in the order of conflict resolution precedence.
                 # 1. Check for an attribute name on the component flow class
