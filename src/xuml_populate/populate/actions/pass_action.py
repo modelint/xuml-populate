@@ -135,7 +135,7 @@ class PassAction:
                               domain=self.domain)
 
             # Populate the Gate Action
-            ga = GateAction(input_flows=[pass_output_flow.fid, self.flow_to_new_gate.fid],
+            ga = GateAction(input_fids=[pass_output_flow.fid, self.flow_to_new_gate.fid],
                             output_flow_label=self.output_flow_label, activity=self.activity)
             gate_aid, gate_output_flow = ga.populate()
 

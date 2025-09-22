@@ -210,8 +210,11 @@ class RestrictCondition:
                                 # Otherwise, a Tuple Flow will have a value extracted with an Extract Action
 
                                 sflow = None  # This is the scalar flow result of the projection/extraction
-                                ns_flow = Flow.find_labeled_ns_flow(name=o.iset.name, anum=self.anum,
+                                ns_flows = Flow.find_labeled_ns_flow(name=o.iset.name, anum=self.anum,
                                                                     domain=self.domain)
+                                ns_flow = ns_flows[0] if ns_flows else None
+                                # TODO: Check case where multiple flows are returned
+
                                 if not ns_flow:
                                     raise ActionException
                                 if ns_flow.content == Content.INSTANCE:
@@ -259,10 +262,11 @@ class RestrictCondition:
                             else:
                                 # This must be a Scalar Flow
                                 # TODO: check need for mmdb param
-                                sflow = Flow.find_labeled_scalar_flow(name=o.iset.name, anum=self.anum,
+                                sflows = Flow.find_labeled_scalar_flow(name=o.iset.name, anum=self.anum,
                                                                       domain=self.domain)
-                                if not sflow:
+                                if not sflows:
                                     raise ActionException
+                                sflow = sflows[0]  # TODO: Check for case where multiple are found
                             pass
                         case 'IN_a':
                             pass
@@ -309,7 +313,8 @@ class RestrictCondition:
         if not scalar_flow:
             if not scalar_flow_label:
                 raise ActionException
-            sflow = Flow.find_labeled_scalar_flow(name=scalar_flow_label, anum=self.anum, domain=self.domain)
+            sflows = Flow.find_labeled_scalar_flow(name=scalar_flow_label, anum=self.anum, domain=self.domain)
+            sflow = sflows[0]  # TODO: Check for case where multiple are returned
         else:
             sflow = scalar_flow
         self.input_scalar_flows.add(sflow)

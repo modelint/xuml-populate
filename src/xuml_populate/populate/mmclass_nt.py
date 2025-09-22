@@ -276,11 +276,9 @@ State_Signature_i = namedtuple('State_Signature_i', 'SIGnum State_model Domain')
 Transition_i = namedtuple('Transition_i', 'From_state Event State_model Domain To_state')
 
 # Signal Action subsystem
-Absolute_Delivery_Time_i = namedtuple('Absolute_Delivery_Time_i', 'Action Activity Domain When')
-Delivery_Time_i = namedtuple('Delivery_Time_i', 'Action Activity Domain Flow')
+Delivery_Time_i = namedtuple('Delivery_Time_i', 'Action Activity Domain Flow Relative')
 Initial_Signal_Action_i = namedtuple('Initial_Signal_Action_i', 'ID Activity Domain')
 Multiple_Assigner_Partition_Instance_i = namedtuple('Multiple_Assigner_Partition_Instance_i', 'Action Activity Domain Partition')
-Relative_Delivery_Time_i = namedtuple('Relative_Delivery_Time_i', 'Action Activity Domain Delay')
 Signal_Action_i = namedtuple('Signal_Action_i', 'ID Activity Domain Event_spec State_model')
 Signal_Assigner_Action_i = namedtuple('Signal_Assigner_Action_i', 'ID Activity Domain Association')
 Signal_Completion_Action_i = namedtuple('Signal_Completion_Action_i', 'ID Activity Domain')

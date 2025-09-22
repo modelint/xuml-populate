@@ -58,8 +58,10 @@ class SwitchStatement:
         match type(sw_parse.input_flow).__name__:
             case 'IN_a':
                 # Verify that this is a scalar flow and get its flow id based on the label
-                scalar_input_flow = Flow.find_labeled_scalar_flow(name=sw_parse.input_flow.name, anum=anum,
+                scalar_input_flows = Flow.find_labeled_scalar_flow(name=sw_parse.input_flow.name, anum=anum,
                                                                   domain=domain)
+                scalar_input_flow = scalar_input_flows[0] if scalar_input_flows else None
+                # TODO: Check for case where multiple are returned
                 if not scalar_input_flow:
                     _logger.error(f"Scalar switch on parameter [{sw_parse.input_flow.name}] is not a scalar flow")
                     raise BadScalarSwitchInput

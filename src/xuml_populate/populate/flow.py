@@ -10,11 +10,12 @@ from typing import Optional, Set, List, Dict
 from pyral.relvar import Relvar
 from pyral.relation import Relation
 from pyral.transaction import Transaction
+from pyral.rtypes import SetOp
 
 # xUML Populate
 from xuml_populate.config import mmdb
 from xuml_populate.populate.actions.table import Table
-from xuml_populate.exceptions.action_exceptions import FlowException, ControlFlowHasNoTargetActions
+from xuml_populate.exceptions.action_exceptions import FlowException, ControlFlowHasNoTargetActions, ActionException
 from xuml_populate.populate.mmclass_nt import (
     Data_Flow_i, Flow_i, Multiple_Instance_Flow_i, Single_Instance_Flow_i, Instance_Flow_i,
     Control_Flow_i, Non_Scalar_Flow_i, Scalar_Flow_i, Relation_Flow_i, Labeled_Flow_i, Unlabeled_Flow_i,
@@ -147,42 +148,57 @@ class Flow:
         return True
 
     @classmethod
-    def find_labeled_ns_flow(cls, name: str, anum: str, domain: str) -> Optional[Flow_ap]:
+    def find_labeled_ns_flow(cls, name: str, anum: str, domain: str) -> List[Flow_ap]:
         """
-        Given a name, find a Non Scalar Flow labeled with that name and return its summary.
+        Given a name, find any Non Scalar Flows labeled with that name and return their summaries
 
-        Nothing is returned if there is no such flow.
+        An empty list is returned if there is no such flow.
 
-        :param name: A name that should match a Labeled Flow
-        :param anum: The activity number
-        :param domain: The domain name
-        :return:
+        Args:
+            name: A name that should match a Labeled Flow
+            anum: The activity number
+            domain: The domain name
+
+        Returns:
+            A possibly empty list of Flow summaries
         """
-        fid = cls.find_labeled_flow(name=name, anum=anum, domain=domain)
-        if not fid:
-            return None
-        # Is it an Instance Flow?
-        R = f"ID:<{fid}>, Activity:<{anum}>, Domain:<{domain}>"
-        if_result = Relation.restrict(db=mmdb, relation='Instance_Flow', restriction=R)
-        if if_result.body:
-            # Okay, it's an instance flow. Now we need the multiplicity on that flow
-            ctype = if_result.body[0]['Class']
-            many_if_result = Relation.restrict(db=mmdb, relation='Multiple_Instance_Flow', restriction=R)
-            m = MaxMult.MANY if many_if_result.body else MaxMult.ONE
-            return Flow_ap(fid=fid, content=Content.INSTANCE, tname=ctype, max_mult=m)
+        fids = cls.find_labeled_flows(name=name, anum=anum, domain=domain)
+        if not fids:
+            return []
+        flows = []
+        iflows = True
+        for fid in fids:
 
-        # Is it a Relation Flow?
-        R = f"ID:<{fid}>, Activity:<{anum}>, Domain:<{domain}>"
-        rf_result = Relation.restrict(db=mmdb, relation='Relation_Flow', restriction=R)
-        if rf_result.body:
-            # It's a Relation Flow. Tuple or Table?
-            ttype = rf_result.body[0]['Type']
-            ntuples = Relation.restrict(db=mmdb, relation='Table_Flow', restriction=R)
-            m = MaxMult.MANY if ntuples.body else MaxMult.ONE
-            return Flow_ap(fid=fid, content=Content.RELATION, tname=ttype, max_mult=m)
+            if iflows:
+                # TODO: The iflows flag is a temporary hack
+                # Are these Instance Flows?
+                R = f"ID:<{fid}>, Activity:<{anum}>, Domain:<{domain}>"
+                if_result = Relation.restrict(db=mmdb, relation='Instance_Flow', restriction=R)
+                if if_result.body:
+                    # Okay, it's an instance flow. Now we need the multiplicity on that flow
+                    ctype = if_result.body[0]['Class']
+                    many_if_result = Relation.restrict(db=mmdb, relation='Multiple_Instance_Flow', restriction=R)
+                    m = MaxMult.MANY if many_if_result.body else MaxMult.ONE
+                    flows.append(Flow_ap(fid=fid, content=Content.INSTANCE, tname=ctype, max_mult=m))
+                else:
+                    # They aren't instance flows
+                    iflows = False  # Subsequent fids, if any will be assumed as relation flows
+
+            if not iflows:
+                # It must be a Relation flow
+                R = f"ID:<{fid}>, Activity:<{anum}>, Domain:<{domain}>"
+                rf_result = Relation.restrict(db=mmdb, relation='Relation_Flow', restriction=R)
+                if rf_result.body:
+                    # It's a Relation Flow. Tuple or Table?
+                    ttype = rf_result.body[0]['Type']
+                    ntuples = Relation.restrict(db=mmdb, relation='Table_Flow', restriction=R)
+                    m = MaxMult.MANY if ntuples.body else MaxMult.ONE
+                    flows.append(Flow_ap(fid=fid, content=Content.RELATION, tname=ttype, max_mult=m))
+
+        return flows
 
     @classmethod
-    def find_labeled_scalar_flow(cls, name: str, anum: str, domain: str) -> Optional[Flow_ap]:
+    def find_labeled_scalar_flow(cls, name: str, anum: str, domain: str) -> List[Flow_ap]:
         """
         Given a name, find a Scalar Flow labeled with that name and return its summary.
 
@@ -193,33 +209,47 @@ class Flow:
         :param domain: The domain name
         :return: A flow summary or None if no such labeled flow is defined
         """
-        fid = cls.find_labeled_flow(name=name, anum=anum, domain=domain)
-        if not fid:
-            return None
-        # TODO: Metamodel changed and there could be multiple flows with the same label
-        R = f"ID:<{fid}>, Activity:<{anum}>, Domain:<{domain}>"
-        result = Relation.restrict(db=mmdb, relation='Scalar Flow', restriction=R)
-        if result.body:
-            return Flow_ap(fid=fid, content=Content.SCALAR, tname=result.body[0]['Type'], max_mult=None)
-        else:
-            return None
+        fids = cls.find_labeled_flows(name=name, anum=anum, domain=domain)
+        if not fids:
+            return []
+        sflows = []
+        for fid in fids:
+            R = f"ID:<{fid}>, Activity:<{anum}>, Domain:<{domain}>"
+            scalar_flow_r = Relation.restrict(db=mmdb, relation='Scalar Flow', restriction=R)
+            if scalar_flow_r.body:
+                for f in scalar_flow_r.body:
+                    sflows.append(Flow_ap(fid=fid, content=Content.SCALAR, tname=scalar_flow_r.body[0]['Type'], max_mult=None))
+        return sflows
 
     @classmethod
-    def find_labeled_flow(cls, name: str, anum: str, domain: str) -> Optional[str]:
+    def find_labeled_flows(cls, name: str, anum: str, domain: str) -> List[str]:
         """
-        Return the fid of a Labeled Flow if it is defined
+        Return the fids of any Labeled Flow in the Activity:Domain with the supplied name
 
-        :param name: Flow Name
-        :param anum: Activity number
-        :param domain: Domain name
-        :return: flow id (fid) or None if not found
+        Args:
+            name: Flow Name
+            anum: Activity number
+            domain: Domain name
+
+        Returns:
+            All flow ids matching the same Flow Name in the specified Activity:Domain
         """
         R = f"Name:<{name}>, Activity:<{anum}>, Domain:<{domain}>"
-        result = Relation.restrict(mmdb, relation='Labeled_Flow', restriction=R)
-        if not result.body:
-            return None
-        else:
-            return result.body[0]['ID']
+        labeled_flow_r = Relation.restrict(db=mmdb, relation='Labeled Flow', restriction=R)
+        # TODO: Verify common content and multiplicity
+        # if len(labeled_flow_r.body) > 1:
+        #     # Get the fid's of the labeled flows
+        #     Relation.project(db=mmdb, attributes=('ID', 'Activity', 'Domain'), svar_name='labeled_flowids')
+        #     # Join with a subclass - Scalar Flow in this case
+        #     subclass_r = Relation.semijoin(db=mmdb, rname1="labeled_flowids", rname2='Scalar Flow', svar_name="joined")
+        #     if subclass_r.body:
+        #         # Project again, to just get the ids
+        #         Relation.project(db=mmdb, attributes=('ID', 'Activity', 'Domain'))
+        #         if Relation.set_compare(db=mmdb, rname2='labeled_flowids', op=SetOp.eq):
+        #             # They are all from the same subclass
+        #             pass
+        #     # Verify consistent flow type
+        return [f['ID'] for f in labeled_flow_r.body]
 
     @classmethod
     def populate_control_flow(cls, tr: str, enabled_actions: Set[str], anum: str, domain: str,

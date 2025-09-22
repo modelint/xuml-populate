@@ -79,10 +79,14 @@ class ComputationAction:
         Returns:
             symbol text
         """
-        # TODO: Check for non-flow symbol cases (for now, flow assumed)
-        fid = Flow.find_labeled_flow(name=operand, anum=self.anum, domain=self.domain)
-        self.operand_flows.append(fid)
-        return fid
+        fids = Flow.find_labeled_flows(name=operand, anum=self.anum, domain=self.domain)
+        if len(fids) != 1:
+            # TODO: Check for non-flow symbol cases (for now, flow assumed)
+            msg = f"DEBUG: Expected a single flow resolving operand"
+            _logger.error(msg)
+            ActionException(msg)
+        self.operand_flows.append(fids[0])
+        return fids[0]
 
     def populate(self) -> tuple[Boundary_Actions, Flow_ap]:
         """

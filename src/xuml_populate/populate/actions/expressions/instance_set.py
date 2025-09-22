@@ -119,7 +119,9 @@ class InstanceSet:
                                                       tname=comp.name, max_mult=MaxMult.MANY)
                     else:
                         # Is it a Non Scalar Flow?
-                        ns_flow = Flow.find_labeled_ns_flow(name=comp.name, anum=anum, domain=domain)
+                        ns_flows = Flow.find_labeled_ns_flow(name=comp.name, anum=anum, domain=domain)
+                        ns_flow = ns_flows[0] if ns_flows else None
+                        # TODO: Check case where multiple flows are returned
                         if ns_flow:
                             self.component_flow = ns_flow
                         else:

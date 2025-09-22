@@ -118,8 +118,11 @@ class ScalarExpr:
                             return sflows
 
                         # Scalar flow check
-                        input_sflow = Flow.find_labeled_scalar_flow(name=sexpr.iset.name, anum=self.anum,
-                                                                    domain=self.domain)
+                        sflows = Flow.find_labeled_scalar_flow(name=sexpr.iset.name, anum=self.anum,
+                                                               domain=self.domain)
+                        input_sflow = sflows[0] if sflows else None
+                        # TODO: Check for case where multiple flows are returned
+
                         if input_sflow:
                             if sexpr.projection:
                                 # This has to be a type operation and potentially a chain of multiple
@@ -139,8 +142,15 @@ class ScalarExpr:
                                 return [input_sflow]
 
                         # Instance flow check
-                        input_iflow = Flow.find_labeled_ns_flow(name=sexpr.iset.name, anum=self.anum,
+                        input_iflows = Flow.find_labeled_ns_flow(name=sexpr.iset.name, anum=self.anum,
                                                                 domain=self.domain)
+                        if len(input_iflows) == 1:
+                            input_iflow = input_iflows[0]
+                        elif not input_iflows:
+                            pass
+                        else:
+                            # TODO: Check case where multiple are returned
+                            pass
                         if input_iflow:
                             # Verify that we are projecting on a single attribute
                             if not sexpr.projection:
@@ -207,12 +217,12 @@ class ScalarExpr:
                     self.action_outputs[aid] = {s.fid for s in sflows}
                     return sflows
                 else:
-                    sflow = Flow.find_labeled_scalar_flow(name=sexpr.name, anum=self.anum, domain=self.domain)
-                    if not sflow:
+                    sflows = Flow.find_labeled_scalar_flow(name=sexpr.name, anum=self.anum, domain=self.domain)
+                    if not sflows:
                         msg = f"Name N_a in scalar expr must be an attribute or a labeled scalar flow"
                         _logger.error(msg)
                         raise ActionException(msg)
-                    return [sflow]  # It's just a single labeled flow to return
+                    return sflows
                     # TODO: It must be a scalar flow label, handle this
                     pass
                 pass

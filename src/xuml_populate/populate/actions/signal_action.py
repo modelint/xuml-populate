@@ -23,11 +23,11 @@ from xuml_populate.populate.delegated_creation import DelegatedCreationActivity
 from xuml_populate.populate.actions.expressions.enumflow import EnumFlow
 from xuml_populate.populate.actions.aparse_types import Boundary_Actions, SMType
 from xuml_populate.populate.actions.action import Action
+from xuml_populate.populate.actions.gate_action import GateAction
 from xuml_populate.populate.actions.expressions.scalar_expr import ScalarExpr
 from xuml_populate.populate.actions.expressions.instance_set import InstanceSet
 from xuml_populate.populate.mmclass_nt import (Signal_Action_i, Supplied_Parameter_Value_i,
-                                               Signal_Instance_Set_Action_i,
-                                               Delivery_Time_i, Absolute_Delivery_Time_i, Relative_Delivery_Time_i,
+                                               Signal_Instance_Set_Action_i, Delivery_Time_i,
                                                Multiple_Assigner_Partition_Instance_i, Signal_Assigner_Action_i,
                                                Instance_Action_i, Initial_Signal_Action_i, Signal_Completion_Action_i)
 
@@ -329,6 +329,48 @@ class SignalAction:
             pass
 
         Transaction.execute(db=mmdb, name=tr_Signal)
+
+        if self.statement_parse.dest.delay:
+            self.populate_delay(delay_parse=self.statement_parse.dest.delay)
+
+    def populate_delay(self, delay_parse):
+        """
+        Populate the delay on this signal
+
+        Args:
+            delay_parse: A scalar expression flowing in a duration or time value
+        """
+        # Resolve the input flow
+        se = ScalarExpr(expr=delay_parse, input_instance_flow=self.input_instance_flow, activity=self.activity)
+        _, sflows = se.process()
+        if len(sflows) == 1:
+            signal_delay_input_flow = sflows[0]
+        elif len(sflows) > 1:
+            # We need a gate
+            ga = GateAction(input_fids=[f.fid for f in sflows], output_flow_label=delay_parse.name, activity=self.activity)
+            _, gate_output_flow = ga.populate()
+            signal_delay_input_flow = gate_output_flow
+        else:
+            msg = (f"Signal delay requires a scalar input flow and none found for: delay {delay_parse} "
+                   f"in {self.activity.activity_path}")
+            _logger.error(msg)
+            raise ActionException
+
+        # Validate the delivery time Scalar Flow type
+        delay_types = {'Duration', 'Time'}
+        if signal_delay_input_flow.tname not in delay_types:
+            msg = f"Signal delivery scalar type not in set {delay_types} at: {self.activity.activity_path}"
+            _logger.exception(msg)
+            ActionException(msg)
+
+        relative = True if signal_delay_input_flow.tname == 'Duration' else False
+
+        # Populate
+        Relvar.insert(db=mmdb, relvar='Delivery Time', tuples=[
+            Delivery_Time_i(Action=self.action_id, Activity=self.activity.anum, Domain=self.activity.domain,
+                            Flow=signal_delay_input_flow.fid, Relative=relative)
+        ])
+        pass
 
     def populate(self) -> Boundary_Actions:
         """
