@@ -106,4 +106,11 @@ class GateAction:
 
         Transaction.execute(db=mmdb, name=tr_Gate)
 
+        pass
+        # TODO: Rename the input flows
+        for f in self.input_flows:
+            source_aid_num = self.activity.labeled_outputs[f.fid][4:]
+            new_label = f'_{source_aid_num}_{self.output_flow_label}'
+            Flow.relabel_flow(new_label=new_label, fid=f.fid, anum=self.anum, domain=self.domain)
+
         return gate_aid, gate_output_flow

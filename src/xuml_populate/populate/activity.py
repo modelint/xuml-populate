@@ -122,6 +122,7 @@ class Activity:
         self.anum = activity_data.anum
         self.domain = activity_data.domain
         self.activity_path = activity_data.activity_path
+        self.labeled_outputs: dict[str, str] = {}
 
         # Any Action, such as the Decision or Switch Actions that enable sets of Actions via
         # the Scrall component_statement_set must retain the set of Action IDs that must be enabled

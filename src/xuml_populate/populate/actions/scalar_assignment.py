@@ -103,7 +103,9 @@ class ScalarAssignment:
             instance_flow_label = lhs[0].cname
             attr_name = lhs[0].aname
             # Lookup the instance flow
-            wti_flow = Flow.find_labeled_ns_flow(name=instance_flow_label, anum=self.anum, domain=self.domain)
+            wti_flows = Flow.find_labeled_ns_flow(name=instance_flow_label, anum=self.anum, domain=self.domain)
+            wti_flow = wti_flows[0]
+            # TODO: Check case where multiple wti_flows are returned
             wa = WriteAction(write_to_instance_flow=wti_flow, value_to_write_flow=scalar_flows[0],
                              attr_name=attr_name, activity=self.activity)
             write_aid = wa.populate()  # returns the write action id (not used)
@@ -130,6 +132,7 @@ class ScalarAssignment:
         # Since this is a scalar flow, we need to verify that the output flow is either a single instance or tuple
         # flow with the same number of attributes as the LHS. For now let's ignore explicit typing on the LHS
         # but we need to check that later.
+        writing_to_attribute = False  # We use this later when registering the output label
         for count, label in enumerate(scalar_flow_labels):
             # If the label is the name of an attribute of the executing instance, we need to write to that attribute
             # and in this case, there is no need for a Labeled Flow
@@ -161,6 +164,19 @@ class ScalarAssignment:
 
             # Migrate the scalar_flow to a labeled flow
             Flow.label_flow(label=label, fid=sflow.fid, anum=self.anum, domain=self.domain)
+
+            if not writing_to_attribute and bactions.aout:
+                # If we aren't writign an attr value and an action generated the output scalar
+                # we register the output
+                for f in scalar_flows:
+                    # Ensure there is exacly one source action id
+                    if len(bactions.aout) != 1:
+                        msg = (f"Expected only one action id as input to flow in scalar assignment for"
+                               f"LHS {lhs} in: {self.activity.activity_path}")
+                        _logger.error(msg)
+                        raise ActionException(msg)
+                    # Use comma to extract one element from the set
+                    self.activity.labeled_outputs[f.fid], = bactions.aout
         return bactions
 
         # Create one Extract Action per attribute, label pair

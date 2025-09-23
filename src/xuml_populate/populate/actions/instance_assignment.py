@@ -123,12 +123,15 @@ class InstanceAssignment:
         if initial_aid is None and final_aid is None:
             # RHS must be a flow
             pa = PassAction(input_fid=iset_instance_flow.fid, output_flow_label=output_flow_label, activity=activity)
-            aid, _ = pa.populate()
+            aid, pass_output_flow = pa.populate()
             initial_aid = aid
             final_aid = aid
-            pass
+            # Register the labeled output flow in case we need to merge it into a gate
+            activity.labeled_outputs[pass_output_flow.fid] = aid
         else:
             # Label the RHS output flow
             Flow.label_flow(label=output_flow_label, fid=iset_instance_flow.fid, anum=activity.anum, domain=activity.domain)
+            # Register the labeled output flow in case we need to merge it into a gate
+            activity.labeled_outputs[iset_instance_flow.fid] = final_aid
 
         return Boundary_Actions(ain={initial_aid}, aout={final_aid})
