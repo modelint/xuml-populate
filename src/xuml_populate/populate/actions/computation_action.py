@@ -82,6 +82,8 @@ class ComputationAction:
         fids = Flow.find_labeled_flows(name=operand, anum=self.anum, domain=self.domain)
         if len(fids) != 1:
             # TODO: Check for non-flow symbol cases (for now, flow assumed)
+            # TODO: For example, it might be an attribute requiring a read operation
+            # TODO: But isn't this already handled by evaluating a scalar expression?
             msg = f"DEBUG: Expected a single flow resolving operand"
             _logger.error(msg)
             ActionException(msg)
