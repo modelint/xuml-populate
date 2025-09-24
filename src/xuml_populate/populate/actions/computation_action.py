@@ -81,12 +81,13 @@ class ComputationAction:
         """
         fids = Flow.find_labeled_flows(name=operand, anum=self.anum, domain=self.domain)
         if len(fids) != 1:
-            # TODO: Check for non-flow symbol cases (for now, flow assumed)
-            # TODO: For example, it might be an attribute requiring a read operation
-            # TODO: But isn't this already handled by evaluating a scalar expression?
-            msg = f"DEBUG: Expected a single flow resolving operand"
-            _logger.error(msg)
-            ActionException(msg)
+            return []
+        #     # TODO: Check for non-flow symbol cases (for now, flow assumed)
+        #     # TODO: For example, it might be an attribute requiring a read operation
+        #     # TODO: But isn't this already handled by evaluating a scalar expression?
+        #     msg = f"DEBUG: Expected a single flow resolving operand"
+        #     _logger.error(msg)
+        #     ActionException(msg)
         self.operand_flows.append(fids[0])
         return fids[0]
 
@@ -108,12 +109,23 @@ class ComputationAction:
                 if op == 'NOT':
                     match type(self.expr.operands).__name__:
                         case 'N_a' | 'IN_a':
-                            operand_symbol = self.resolve_operand(operand=self.expr.operands.name)
-                            if not operand_symbol:
-                                msg = f"Could not resolve operand: {self.expr.operands.name} in NOT expression at {self.activity.activity_path}"
-                                _logger.error(msg)
-                                raise ActionException(msg)
-                            operands.append(operand_symbol)
+                            name_expr = self.expr.operands
+                            fids = Flow.find_labeled_flows(name=name_expr.name, anum=self.anum, domain=self.domain)
+                            if fids:
+                                operand_symbol = fids[0]
+                                self.operand_flows.append(operand_symbol)
+                                operands.append(operand_symbol)
+                            else:
+                                se = ScalarExpr(expr=name_expr, input_instance_flow=self.input_instance_flow,
+                                                activity=self.activity)
+                                b, sflows = se.process()
+                                if sflows:
+                                    operand_symbol = sflows[0].fid
+                                    self.operand_flows.append(operand_symbol)
+                                    operands.append(operand_symbol)
+                                else:
+                                    # TODO: Try instance or table expression and give up if that fails
+                                    pass
                         case _:
                             pass  # TODO: Add more cases
                 else:
