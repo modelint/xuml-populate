@@ -12,18 +12,22 @@ from pyral.relation import Relation
 from pyral.transaction import Transaction
 from scrall.parse.visitor import BOOL_a, MATH_a
 
-from xuml_populate.exceptions.action_exceptions import ActionException
-from xuml_populate.populate.actions.expressions.scalar_expr import ScalarExpr
 
 # xUML populate
 if TYPE_CHECKING:
     from xuml_populate.populate.activity import Activity
+from xuml_populate.exceptions.action_exceptions import ActionException
+from xuml_populate.populate.actions.expressions.scalar_expr import ScalarExpr
+from xuml_populate.populate.actions.expressions.instance_set import InstanceSet
+from xuml_populate.populate.actions.expressions.table_expr import TableExpr
 from xuml_populate.config import mmdb
-from xuml_populate.utility import print_mmdb  # Debugging
 from xuml_populate.populate.actions.aparse_types import Flow_ap, MaxMult, Content, Boundary_Actions
 from xuml_populate.populate.actions.action import Action
 from xuml_populate.populate.flow import Flow
 from xuml_populate.populate.mmclass_nt import Computation_Action_i, Computation_Input_i, Instance_Action_i
+
+if __debug__:
+    from xuml_populate.utility import print_mmdb
 
 _logger = logging.getLogger(__name__)
 
@@ -69,28 +73,6 @@ class ComputationAction:
         self.input_instance_flow = activity.xiflow if activity.xiflow is not None else activity.piflow
         # Will still be None if the Activity is in an Assigner state model
 
-    def resolve_operand(self, operand: str) -> str:
-        """
-        Return a symbol, such as a flow ID, to represent the operand in the expression text
-
-        Args:
-            operand:
-
-        Returns:
-            symbol text
-        """
-        fids = Flow.find_labeled_flows(name=operand, anum=self.anum, domain=self.domain)
-        if len(fids) != 1:
-            return []
-        #     # TODO: Check for non-flow symbol cases (for now, flow assumed)
-        #     # TODO: For example, it might be an attribute requiring a read operation
-        #     # TODO: But isn't this already handled by evaluating a scalar expression?
-        #     msg = f"DEBUG: Expected a single flow resolving operand"
-        #     _logger.error(msg)
-        #     ActionException(msg)
-        self.operand_flows.append(fids[0])
-        return fids[0]
-
     def populate(self) -> tuple[Boundary_Actions, Flow_ap]:
         """
         Populate the Compute Action
@@ -109,25 +91,56 @@ class ComputationAction:
                 if op == 'NOT':
                     match type(self.expr.operands).__name__:
                         case 'N_a' | 'IN_a':
-                            name_expr = self.expr.operands
+                            name_expr = self.expr.operands  # We know this is a Name_a namedtuple with a single value
                             fids = Flow.find_labeled_flows(name=name_expr.name, anum=self.anum, domain=self.domain)
-                            if fids:
+                            if len(fids) == 1:
                                 operand_symbol = fids[0]
-                                self.operand_flows.append(operand_symbol)
-                                operands.append(operand_symbol)
+                            elif len(fids) > 1:
+                                # Not sure why this would occur, but not certain it won't!
+                                msg = (f"Found multiple labeled flows with the same name as input to computation "
+                                       f"action in: {self.activity.activity_path}")
+                                _logger.error(msg)
+                                raise ActionException(msg)
                             else:
+                                # There is no matching labeled flow, so we probably have to generate
+                                # an input data flow (labled or not)
+                                # Our Computation Action can take any Data Flow input so we need to
+                                # try resolving a scalar, instance, or table expression
+
+                                # Scalar expression?
                                 se = ScalarExpr(expr=name_expr, input_instance_flow=self.input_instance_flow,
                                                 activity=self.activity)
-                                b, sflows = se.process()
+                                _, sflows = se.process()
                                 if sflows:
                                     operand_symbol = sflows[0].fid
-                                    self.operand_flows.append(operand_symbol)
-                                    operands.append(operand_symbol)
                                 else:
-                                    # TODO: Try instance or table expression and give up if that fails
-                                    pass
+                                    # Instance set?
+                                    ie = InstanceSet(iset_components=name_expr, input_instance_flow=self.input_instance_flow,
+                                                     activity=self.activity)
+                                    _, _, iflows = ie.process()
+                                    if iflows:
+                                        operand_symbol = iflows[0].fid
+                                    else:
+                                        # Table expression?
+                                        # _, tflow = TableExpr.process(tuple_output=)
+                                        # if tflow:
+                                        #     operand_symbol = tflow.fid
+                                        msg = (f"Could not resolve input to computation "
+                                               f"at: {self.activity.activity_path}")
+                                        _logger.error(msg)
+                                        raise ActionException(msg)
+                                        # TODO: Make table expression more like the other two for consitency
+                                        # TODO: It currently assumes an RHS input, for example
+                                        # TODO: also update TableExpr to return multiple flows consistency as well
+                                    # else:
+                                    #     # Give up
+
+                            self.operand_flows.append(operand_symbol)
+                            operands.append(operand_symbol)
                         case _:
-                            pass  # TODO: Add more cases
+                            # TODO: Add more cases
+                            msg = f"DEBUG: {self.activity.activity_path}"
+                            raise ActionException(msg)
                 else:
                     # Not a unary boolean expr, so there must be two operands
                     for o_expr in self.expr.operands:
