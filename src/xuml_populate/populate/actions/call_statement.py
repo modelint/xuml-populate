@@ -46,6 +46,8 @@ class CallStatement:
         """
         self.parse = call_parse
         self.activity = activity
+        self.anum = activity.anum
+        self.domain = activity.domain
         # match type(call_parse.call).__name__:
         #     case 'N_a' | 'IN_a':
         #         self.op_parse = call_parse.call.name
@@ -83,7 +85,7 @@ class CallStatement:
 
                 # If the caller flow tname matches the name of a class that also defines the op_name
                 # we know that we have an target instance of the method's defining class
-                R = f"Name:<{op_parse.op_name}>, Class:<{caller_flow.tname}>, Domain:<{self.activity.domain}>"
+                R = f"Name:<{op_parse.op_name}>, Class:<{caller_flow.tname}>, Domain:<{self.domain}>"
                 method_r = Relation.restrict(db=mmdb, relation='Method', restriction=R)
                 if len(method_r.body) == 1:
                     # We found a single matching method so we need to populate a Method Call
@@ -124,7 +126,8 @@ class CallStatement:
                         pass  # TODO: It's an attribute, the input flow will be emitted by the Read Action
 
                 # Not an attribute, try Scalar Flow
-                scalar_input_flow = Flow.find_labeled_scalar_flow(name=self.parse.call.name, anum=self.anum, domain=self.domain)
+                scalar_input_flow = Flow.find_labeled_scalar_flow(name=self.parse.call.name, anum=self.anum,
+                                                                  domain=self.domain)
 
                 if not scalar_input_flow:
                     # Must be a type name, verify that
