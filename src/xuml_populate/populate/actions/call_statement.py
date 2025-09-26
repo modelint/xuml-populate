@@ -19,6 +19,8 @@ from xuml_populate.config import mmdb
 from xuml_populate.populate.flow import Flow
 from xuml_populate.populate.actions.method_call import MethodCall
 from xuml_populate.populate.actions.read_action import ReadAction
+from xuml_populate.populate.actions.type_action import TypeAction
+from xuml_populate.populate.actions.expressions.scalar_expr import ScalarExpr
 from xuml_populate.populate.actions.expressions.instance_set import InstanceSet
 from xuml_populate.exceptions.action_exceptions import *
 from xuml_populate.populate.actions.aparse_types import Boundary_Actions, Content, MaxMult
@@ -123,7 +125,14 @@ class CallStatement:
                     attr_r = Relation.restrict(db=mmdb, relation="Attribute", restriction=R)
                     if attr_r.body:
                         # We'll need to populate a Read Action
-                        pass  # TODO: It's an attribute, the input flow will be emitted by the Read Action
+                        ra = ReadAction(input_single_instance_flow=xiflow, attrs=(self.parse.call.name,),
+                                        anum=self.anum, domain=self.domain)
+                        aid, sflow = ra.populate()
+                        for op in self.parse.op_chain:
+                            pass
+                        pass
+                        # Now we need to resolve the opchain taking the read flow as input
+                        # Now feed the output into a Type Action
 
                 # Not an attribute, try Scalar Flow
                 scalar_input_flow = Flow.find_labeled_scalar_flow(name=self.parse.call.name, anum=self.anum,
