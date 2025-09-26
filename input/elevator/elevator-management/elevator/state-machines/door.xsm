@@ -61,7 +61,7 @@ transitions
 --
 state CLOSED
 activity
-    Close attempts.reset(floor: level)
+    Close attempts.reset
     Blocked = FALSE
     Lock requested? Lock -> me
     // May be None
