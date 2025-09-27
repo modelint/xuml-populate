@@ -71,6 +71,9 @@ class CallStatement:
 
         match call_source:
             case 'INST_a':
+                components = self.parse.call.components
+                if len(components) > 1:
+                    pass
                 # We are likely invoking a method on some instance, so let's try that first
                 op_parse = self.parse.call.components[-1]
                 caller_parse = self.parse.call.components[:-1]
