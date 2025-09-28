@@ -4,7 +4,7 @@ attribute.py – Process parsed attribute to populate the metamodel db
 
 # System
 import logging
-from typing import Set
+from typing import Set, Optional
 
 # Model Integration
 from pyral.relvar import Relvar
@@ -33,6 +33,21 @@ class Attribute:
     record = None
     dtype = None
     participating_ids = None
+
+    @classmethod
+    def class_attribute(cls, name: str, domain: str) -> Optional[str]:
+        """
+        Is the specified name an Attribute of some Class in this Domain?
+
+        Returns:
+            Name of class if it is an attribute, otherwise None
+        """
+        # Attribute check
+        R = f"Name:<{name}>, Domain:<{domain}>"
+        attribute_r = Relation.restrict(db=mmdb, relation="Attribute", restriction=R)
+        if attribute_r.body:
+            return attribute_r.body[0]['Class']
+        return None
 
     @classmethod
     def scalar(cls, name: str, tname: str, domain: str) -> str:

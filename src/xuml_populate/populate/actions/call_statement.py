@@ -4,6 +4,7 @@ call_statement.py – Process a Scrall call statement
 # System
 import logging
 from typing import TYPE_CHECKING
+from collections import namedtuple
 
 # Model Integration
 from scrall.parse.visitor import Call_a
@@ -17,6 +18,7 @@ if TYPE_CHECKING:
 from xuml_populate.utility import print_mmdb
 from xuml_populate.config import mmdb
 from xuml_populate.populate.flow import Flow
+from xuml_populate.populate.attribute import Attribute
 from xuml_populate.populate.actions.method_call import MethodCall
 from xuml_populate.populate.actions.read_action import ReadAction
 from xuml_populate.populate.actions.type_action import TypeAction
@@ -27,16 +29,21 @@ from xuml_populate.populate.actions.aparse_types import Boundary_Actions, Conten
 
 _logger = logging.getLogger(__name__)
 
+
+
+
 class CallStatement:
     """
-    Populate all components of a call statement
+    A Call Statement represents the standalone invocation of a callable model element.
+    Currently, these model elements are Method, External Service, and Type Action.
+    By 'standalone' we mean that the invocation is not happening within the context of an assignment.
 
-    This can be a method call, an ee operation, or the invocation of a type operation.
+    For example:
 
-    The first component is either an Instance Set (INST_a) or just a name (N_a)
+        Close attempts.reset  // 1. Standalone Type Action invocation vs.
+        dest .= my cabin.Ping( dir: 2. current travel direction ) // Method invoccation in assignment
 
-    If it is just a name, that name must be the name of a
-
+    Only the statement 1. in the example above will result in a Call Statement.
     """
 
     def __init__(self, call_parse: Call_a, activity: 'Activity'):
@@ -50,6 +57,7 @@ class CallStatement:
         self.activity = activity
         self.anum = activity.anum
         self.domain = activity.domain
+        self.caller = None
         # match type(call_parse.call).__name__:
         #     case 'N_a' | 'IN_a':
         #         self.op_parse = call_parse.call.name
@@ -57,6 +65,124 @@ class CallStatement:
         #     case _:
         #         self.op_parse = call_parse.call.components[-1]
         #         self.caller_parse = call_parse.call.components[:-1]
+
+    def resolve_owner(self):
+        """
+        The caller what we might call the 'owner'.
+        If the owner is a single instance flow, we are either:
+            a) calling a Method or an External Service.
+            b) prefacing an Attribute:  some door.Close attempts
+
+        The owner can never be a multiple instance flow.
+
+        Otherwise, the owner is a scalar flow which means we are calling a type operation
+
+        The owner cannot be a type since this is a standalone invocation (no assignment)
+        """
+        # Collect information about the first two positions (x.y)
+        # We want to know the names of x and y and whether or not y specifies any parameters
+        call_source = type(self.parse.call).__name__
+        position1 = None
+        position2 = None
+        params = False
+
+        match call_source:
+            # These are the only anticipated parse output patterns
+
+            case 'N_a' | 'IN_a':  # (call=<N_a | IN_a>, op_chain=<Op_chain_a>) pattern
+                # Example: x.y
+                # This parse pattern starts with an N_a instance set (just a name)
+                # followed by an op_chain with one or more name components
+                position1 = self.parse.call.name  # So position1 is the name
+                comp2 = self.parse.op_chain.components[0]
+                if type(comp2).__name_ not in {'N_a', 'IN_a'}:
+                    raise ActionException
+                position2 = comp2.name  # position2 is the first op_chain component which must be a name
+                params = False  # No params with this parse pattern
+
+            case 'INST_a':
+                # Examples: x(a:b), x.y(a:b), x(a:b).y(c:d)
+                # This pattern occurs only if positions 1, 2 or both supply params
+                params = True
+                comp1 = self.parse.call.components[0]
+                match type(comp1).__name__:
+                    case 'Op_a':  # x.y(a:b)
+                        # There are two positions specified by the first component
+                        # with position2 supplying params
+                        position1 = comp1.owner
+                        position2 = comp1.op_name
+                        params = bool(comp1.supplied_params)  # False if no params
+                    case 'N_a' | 'IN_a':  # x(a:b), x(a:b).y(c:d)
+                        # There is only one position and it supplies params
+                        position1 = comp1.name
+                        if len(self.parse.call.components) < 2:
+                            raise ActionException
+                        comp2 = self.parse.call.components[1]
+                        if type(comp2).__name__ == 'Criteria_Selection_a':
+                            if len(self.parse.call.components) > 2:
+                                comp3 = self.parse.call.components[2]
+                                if type(comp3).__name__ != 'Op_a':
+                                    raise ActionException
+                                # Both positions supply params
+                                position2 = comp3.op_name
+                            else:
+                                # Only one position and it supplies params
+                                position2 = None
+                            params = True
+                        else:
+                            raise ActionException
+
+
+                        pass
+            case _:
+                msg = f"Unknown call source in Call Statement at {self.activity.activity_path}"
+                _logger.error(msg)
+                raise ActionException(msg)
+
+        # Is the first position an attribute?
+        if self.activity.xiflow and not params:
+            class_name = Attribute.class_attribute(name=position1, domain=self.domain)
+            if class_name == self.activity.xiflow.tname:
+
+
+
+        # Is the first element the name of an instance flow?
+        f = Flow.find_labeled_ns_flow(name=owner_name, anum=self.anum, domain=self.domain)
+        if f:
+            flow_name = f[0].tname
+            if second_params:
+                # The second name specfies parameters so it cannot be an attribute
+
+            # The second element must be an attribute, a method, or an external service
+            if not second_params:
+            class_name = Attribute.class_attribute(name=owner_name, domain=self.domain)
+            if class_name is not None and class_name == self.f.tname:
+            # We are starting with an instance flow, but are we calling a method or qualifying an attribute?
+
+
+
+
+
+
+            # Attribute is the first assumption
+            if calling_iset:
+                # The 2nd element in the chain specifies parameters which means it cannot be an attribute
+
+        # Is the owner an attribute of the current class?
+        if self.activity.xiflow:
+            class_name = Attribute.class_attribute(name=owner_name, domain=self.domain)
+            if class_name is not None and class_name == self.activity.xiflow.tname:
+                self.attribute_caller = owner_name
+                # There is a matching attribute in this executing instance's Class
+                # This will override any scalar flow with the same name and so we've resolved the owner
+                return
+
+        # Not an attribute of this class, try scalar flow
+        f = Flow.find_labeled_scalar_flow()
+
+    def resolve_opchain(self):
+        pass
+
 
     def process(self) -> Boundary_Actions:
         """
@@ -66,6 +192,8 @@ class CallStatement:
         """
         # We are calling an operation on an instance set, in which case we are calling a method
         # OR we are calling an operation on a scalar flow
+        self.resolve_owner()
+        pass
 
         call_source = type(self.parse.call).__name__
 
