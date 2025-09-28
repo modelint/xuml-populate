@@ -35,19 +35,16 @@ class Attribute:
     participating_ids = None
 
     @classmethod
-    def class_attribute(cls, name: str, domain: str) -> Optional[str]:
+    def defined(cls, name: str, class_name: str, domain: str) -> bool:
         """
-        Is the specified name an Attribute of some Class in this Domain?
+        Is this attribute defined?
 
         Returns:
-            Name of class if it is an attribute, otherwise None
+            True if the attribute is defined
         """
-        # Attribute check
-        R = f"Name:<{name}>, Domain:<{domain}>"
+        R = f"Name:<{name}>, Class:<{class_name}>, Domain:<{domain}>"
         attribute_r = Relation.restrict(db=mmdb, relation="Attribute", restriction=R)
-        if attribute_r.body:
-            return attribute_r.body[0]['Class']
-        return None
+        return bool(attribute_r.body)
 
     @classmethod
     def scalar(cls, name: str, tname: str, domain: str) -> str:

@@ -57,16 +57,13 @@ class CallStatement:
         self.activity = activity
         self.anum = activity.anum
         self.domain = activity.domain
-        self.caller = None
-        # match type(call_parse.call).__name__:
-        #     case 'N_a' | 'IN_a':
-        #         self.op_parse = call_parse.call.name
-        #         self.caller_parse = None
-        #     case _:
-        #         self.op_parse = call_parse.call.components[-1]
-        #         self.caller_parse = call_parse.call.components[:-1]
+        self.calling_iflow = None
+        self.calling_sflow = None
+        self.calling_attribute = None
+        self.calling_method_name = None
+        self.calling_external_service_name = None
 
-    def resolve_owner(self):
+    def resolve_caller(self):
         """
         The caller what we might call the 'owner'.
         If the owner is a single instance flow, we are either:
@@ -96,7 +93,8 @@ class CallStatement:
                 position1 = self.parse.call.name  # So position1 is the name
                 comp2 = self.parse.op_chain.components[0]
                 if type(comp2).__name_ not in {'N_a', 'IN_a'}:
-                    raise ActionException
+                    msg = f"Parse pattern error: {self.activity.activity_path}"
+                    raise UnexpectedParsePattern(msg)
                 position2 = comp2.name  # position2 is the first op_chain component which must be a name
                 params = False  # No params with this parse pattern
 
@@ -116,13 +114,15 @@ class CallStatement:
                         # There is only one position and it supplies params
                         position1 = comp1.name
                         if len(self.parse.call.components) < 2:
-                            raise ActionException
+                            msg = f"Parse pattern error: {self.activity.activity_path}"
+                            raise UnexpectedParsePattern(msg)
                         comp2 = self.parse.call.components[1]
                         if type(comp2).__name__ == 'Criteria_Selection_a':
                             if len(self.parse.call.components) > 2:
                                 comp3 = self.parse.call.components[2]
                                 if type(comp3).__name__ != 'Op_a':
-                                    raise ActionException
+                                    msg = f"Parse pattern error: {self.activity.activity_path}"
+                                    raise UnexpectedParsePattern(msg)
                                 # Both positions supply params
                                 position2 = comp3.op_name
                             else:
@@ -130,10 +130,8 @@ class CallStatement:
                                 position2 = None
                             params = True
                         else:
-                            raise ActionException
-
-
-                        pass
+                            msg = f"Parse pattern error: {self.activity.activity_path}"
+                            raise UnexpectedParsePattern(msg)
             case _:
                 msg = f"Unknown call source in Call Statement at {self.activity.activity_path}"
                 _logger.error(msg)
@@ -141,44 +139,54 @@ class CallStatement:
 
         # Is the first position an attribute?
         if self.activity.xiflow and not params:
-            class_name = Attribute.class_attribute(name=position1, domain=self.domain)
-            if class_name == self.activity.xiflow.tname:
+            # Must be an attribute of the executing instance with a dot and no signature on the right
+            if Attribute.defined(name=position1, class_name=self.activity.xiflow.tname, domain=self.domain)
+                self.calling_attribute = position1
+                return # It's an attribute name in position one
 
+            # Do we have a qualified attribute (attribute in second position, instance flow in first, no params)
+            iflow = None
+            ns_flows = Flow.find_labeled_ns_flow(name=position1, anum=self.anum, domain=self.domain)
+            if len(ns_flows) > 1:
+                msg = f"Duplicate flow labels encountered processing Call Statement in: {self.activity.activity_path}"
+                _logger.error(msg)
+                raise ActionException
+            if ns_flows:
+                # There is one matching non scalar flow in this activity
+                # This is a labeled non_scalar flow matching the position1 name
+                if ns_flows[0].content == Content.INSTANCE and ns_flows[0].max_mult == MaxMult.ONE:
+                    # It must be a single instance flow (not a table or many instance flow)
+                    iflow = ns_flows[0]
+                    if Attribute.defined(name=position2, class_name=iflow.tname, domain=self.domain):
+                        self.calling_iflow = iflow
+                        self.calling_attribute = position2
+                        return  # It's an attribute name in position two qualifying a single instnace flow in position 1
+                    # Maybe the second position is a method?
+                    R = f"Name:<{position2}>, Class:<{iflow.tname}>, Domain:<{self.domain}>"
+                    method_r = Relation.restrict(db=mmdb, relation="Method", restriction=R)
+                    if method_r.body:
+                        self.calling_iflow = iflow
+                        self.calling_method_name = position2
+                        return
+                    R = f"Name:<{position2}>, Class:<{iflow.tname}>, Domain:<{self.domain}>"
+                    external_service_r = Relation.restrict(db=mmdb, relation="External Service", restriction=R)
+                    if external_service_r.body:
+                        self.calling_iflow = iflow
+                        self.calling_external_service_name = position2
+                        return
 
-
-        # Is the first element the name of an instance flow?
-        f = Flow.find_labeled_ns_flow(name=owner_name, anum=self.anum, domain=self.domain)
-        if f:
-            flow_name = f[0].tname
-            if second_params:
-                # The second name specfies parameters so it cannot be an attribute
-
-            # The second element must be an attribute, a method, or an external service
-            if not second_params:
-            class_name = Attribute.class_attribute(name=owner_name, domain=self.domain)
-            if class_name is not None and class_name == self.f.tname:
-            # We are starting with an instance flow, but are we calling a method or qualifying an attribute?
-
-
-
-
-
-
-            # Attribute is the first assumption
-            if calling_iset:
-                # The 2nd element in the chain specifies parameters which means it cannot be an attribute
-
-        # Is the owner an attribute of the current class?
-        if self.activity.xiflow:
-            class_name = Attribute.class_attribute(name=owner_name, domain=self.domain)
-            if class_name is not None and class_name == self.activity.xiflow.tname:
-                self.attribute_caller = owner_name
-                # There is a matching attribute in this executing instance's Class
-                # This will override any scalar flow with the same name and so we've resolved the owner
-                return
-
-        # Not an attribute of this class, try scalar flow
-        f = Flow.find_labeled_scalar_flow()
+        # The first position is not an attribute or an instance flow
+        # The only other possibility is a scalar flow
+        sflows = Flow.find_labeled_scalar_flow(name=position1, anum=self.anum, domain=self.domain)
+        if not sflows:
+            msg = f"No caller found in call statement at: {self.activity.activity_path}"
+            _logger.error(msg)
+            raise ActionException(msg)
+        if len(sflows) > 1:
+            msg = f"Duplicate flow labels encountered processing Call Statement in: {self.activity.activity_path}"
+            _logger.error(msg)
+            raise ActionException
+        self.calling_sflow = sflows[0]
 
     def resolve_opchain(self):
         pass
@@ -192,7 +200,7 @@ class CallStatement:
         """
         # We are calling an operation on an instance set, in which case we are calling a method
         # OR we are calling an operation on a scalar flow
-        self.resolve_owner()
+        self.resolve_caller()
         pass
 
         call_source = type(self.parse.call).__name__
