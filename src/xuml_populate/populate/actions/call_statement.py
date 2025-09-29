@@ -62,6 +62,50 @@ class CallStatement:
         self.calling_attribute = None
         self.calling_method_name = None
         self.calling_external_service_name = None
+        self.positions: list[dict] = []  # List of actions to populate
+
+    def add_write_action(self, name: str) -> bool:
+        if self.activity.xiflow and Attribute.defined(
+                name=name, class_name=self.activity.xiflow.tname, domain=self.domain):
+            self.positions.append({'write': {'attr': name}})
+            return True
+        return False
+
+    def add_si_flow(self, name: str) -> bool:
+        ns_flows = Flow.find_labeled_ns_flow(name=name, anum=self.anum, domain=self.domain)
+        if len(ns_flows) > 1:
+            msg = f"Duplicate flow labels encountered processing Call Statement in: {self.activity.activity_path}"
+            _logger.error(msg)
+            raise ActionException
+        if ns_flows:
+            # There is one matching non scalar flow in this activity matching the name
+            # But we need a single instance flow (not a table or many instance flow)
+            if ns_flows[0].content == Content.INSTANCE and ns_flows[0].max_mult == MaxMult.ONE:
+                self.positions.append({'si_flow': ns_flows[0]})
+                return True
+        return False
+
+
+    def walk(self):
+        call_source = self.parse.call
+        op_chain = self.parse.op_chain
+
+        # Process call_source
+        match call_source:
+            # These are the only anticipated parse output patterns
+
+            case 'N_a' | 'IN_a':  # (call=<N_a | IN_a>, op_chain=<Op_chain_a>) pattern
+                # We have a name without any parameters in the first position
+                # It is either an attribute name or a single instance iflow label
+
+                if not self.add_write_action(name=call_source.name):  # Write to this attribute
+                    if not self.add_si_flow(name=):  # Single instance flow
+                        raise ActionException
+
+            case 'INST_a':
+                pass
+
+        pass
 
     def resolve_caller(self):
         """
@@ -92,7 +136,7 @@ class CallStatement:
                 # followed by an op_chain with one or more name components
                 position1 = self.parse.call.name  # So position1 is the name
                 comp2 = self.parse.op_chain.components[0]
-                if type(comp2).__name_ not in {'N_a', 'IN_a'}:
+                if type(comp2).__name__ not in {'N_a', 'IN_a'}:
                     msg = f"Parse pattern error: {self.activity.activity_path}"
                     raise UnexpectedParsePattern(msg)
                 position2 = comp2.name  # position2 is the first op_chain component which must be a name
@@ -140,7 +184,7 @@ class CallStatement:
         # Is the first position an attribute?
         if self.activity.xiflow and not params:
             # Must be an attribute of the executing instance with a dot and no signature on the right
-            if Attribute.defined(name=position1, class_name=self.activity.xiflow.tname, domain=self.domain)
+            if Attribute.defined(name=position1, class_name=self.activity.xiflow.tname, domain=self.domain):
                 self.calling_attribute = position1
                 return # It's an attribute name in position one
 
@@ -175,6 +219,10 @@ class CallStatement:
                         self.calling_external_service_name = position2
                         return
 
+        # TODO: Cannot be a scalar flow outside of an assignment statement
+        # TODO: Either writing to an attribute or calling a method/ext service
+
+        # TODO: Let's break this down with a decision tree (see tablet)
         # The first position is not an attribute or an instance flow
         # The only other possibility is a scalar flow
         sflows = Flow.find_labeled_scalar_flow(name=position1, anum=self.anum, domain=self.domain)
@@ -188,9 +236,6 @@ class CallStatement:
             raise ActionException
         self.calling_sflow = sflows[0]
 
-    def resolve_opchain(self):
-        pass
-
 
     def process(self) -> Boundary_Actions:
         """
@@ -200,8 +245,10 @@ class CallStatement:
         """
         # We are calling an operation on an instance set, in which case we are calling a method
         # OR we are calling an operation on a scalar flow
-        self.resolve_caller()
+        self.walk()
         pass
+
+        # self.resolve_caller()
 
         call_source = type(self.parse.call).__name__
 

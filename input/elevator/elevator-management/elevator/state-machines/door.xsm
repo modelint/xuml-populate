@@ -61,7 +61,7 @@ transitions
 --
 state CLOSED
 activity
-    my other door.Close attempts.reset
+    Close attempts.reset
     Blocked = FALSE
     Lock requested? Lock -> me
     // May be None
