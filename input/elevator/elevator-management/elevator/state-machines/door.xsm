@@ -61,7 +61,7 @@ transitions
 --
 state CLOSED
 activity
-    /R4/Cabin.Ping
+    ~Goto to floor
     Blocked = FALSE
     Lock requested? Lock -> me
     // May be None

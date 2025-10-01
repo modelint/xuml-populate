@@ -191,28 +191,37 @@ class CallStatement:
             # These are the only anticipated parse output patterns
 
             case 'N_a' | 'IN_a':  # (call=<N_a | IN_a>, op_chain=<Op_chain_a>) pattern
-                # Here in the first position we could have:
-                # attr, op (method or ext service) with no params, iflow
-                # We need to check in this name collision assumption order
-                # So first, we see if it is an attribute of this executing instance
-                # and that requires us to have an executing instance
+                # Here we are getting an instance set that has no components, it's just a name
+                # We know that we are writing an attribute value.
+
+                # The attribute is either a self-attribute or it is qualified by an instance flow
+                # The name must match an attribute of the executing instance to be a self-attribute
+                # Otherwise, the instance flow must be a single instance flow and the first comonent
+                # in the op_chain must be a name (not a scalar op) that matches an attribute of
+                # that instance flow's class.
+
+                # We cannot be calling a method since a method must use parentheses even if it
+                # doesn't require any parameters. And that will cause it to be scanned as an operation
+                # which means it will be delivered as a component of an INST_a.
+
                 class_name = self.activity.xiflow.tname
                 if class_name:
+                    # We have an executing instance (lifecycle, method activity) so it is possible
+                    # to specify an unqualified (self) attribute to write.
+                    # See if the attribute is defined on the xi class
                     if Attribute.defined(name=call_source.name, class_name=class_name, domain=self.domain):
                         # First position is an unqualified attribute and we are starting off with a write action
                         self.add_write_action(class_name=class_name, attr_name=call_source.name)
                         flow_content = 'scalar'
                     else:
-                        op_name_type = self.op_defined(class_name=class_name, op_name=call_source.name)
-                        if op_name_type:  # Name and type of the operation, e.g. ('method', 'scalar')
-                            self.add_call_op(caller_name=class_name, op_name=call_source.name, params=[])
-                            flow_content = op_name_type[1]  # The type of the service output (siflow, scalar, other)
-                        else:
-                            # Must be an iflow, it is unresolved until we check the next position
-                            unresolved_iflow = self.find_iflow(name=call_source.name)
-                            if not unresolved_iflow:
-                                raise ActionException  # Last possibility for first position
-                            flow_content = 'instance' if unresolved_iflow.max_mult == MaxMult.ONE else 'other'
+                        # Must be an iflow, it is unresolved until we check the next position
+                        unresolved_iflow = self.find_iflow(name=call_source.name)
+                        if not unresolved_iflow:
+                            msg = (f"Could not match name at beginning of a call statement to either a local attribute"
+                                   f"or a single instance flow in: {self.activity.activity_path}")
+                            _logger.error(msg)
+                            raise ActionException(msg)  # Last possibility for first position
+                        flow_content = 'instance' if unresolved_iflow.max_mult == MaxMult.ONE else 'other'
 
 
             case 'INST_a':
