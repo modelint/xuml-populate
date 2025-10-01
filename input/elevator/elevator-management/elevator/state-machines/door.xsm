@@ -61,7 +61,7 @@ transitions
 --
 state CLOSED
 activity
-    Close attempts.reset.convert(a: b)
+    /R4/Cabin.Ping
     Blocked = FALSE
     Lock requested? Lock -> me
     // May be None

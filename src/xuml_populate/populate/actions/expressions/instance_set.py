@@ -37,12 +37,15 @@ class InstanceSet:
     that the requested elements are consistent with the underlying class model and any Flows previously defined
     in the same Activity. An exception is thrown if there is any inconsistency.
 
-    Args:
-        input_instance_flow: This Flow provides input at the beginning of the chain
-        iset_components: The components in the instance set
-        activity_data: General information about the enclosing anum, anum, domain, etc
     """
     def __init__(self, iset_components, activity: 'Activity', input_instance_flow: Optional[Flow_ap] = None):
+        """
+
+        Args:
+            iset_components:
+            activity: The enclosing activity object
+            input_instance_flow: This Flow provides input at the beginning of the chain
+        """
         self.component_flow = input_instance_flow
         self.activity = activity
         self.iset_components = iset_components
