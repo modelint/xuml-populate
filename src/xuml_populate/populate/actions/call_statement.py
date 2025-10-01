@@ -78,7 +78,31 @@ class CallStatement:
         R = f"Name:<{op_name}>, Class<{caller_name}>, Domain:<{self.domain}>"
         method_r = Relation.restrict(db=mmdb, relation="Method", restriction=R)
         if method_r.body:
-            self.positions.append({'method call': {'caller': }})
+            pass
+            # self.positions.append({'method call': {'caller': }})
+
+    def op_defined(self, class_name: str, op_name: str) -> Optional[tuple[str, str]]:
+        """
+
+        Args:
+            class_name:
+            op_name:
+
+        Returns:
+            The op type and type of returned value (si_flow, scalar, other)
+        """
+        R = f"Name:<{op_name}>, Class:<{class_name}>, Domain:<{self.domain}>"
+        method_r = Relation.restrict(db=mmdb, relation="Method", restriction=R)
+        if method_r.body:
+            # TODO: look up the return value
+            return 'method', ''  # put return value of method here also
+        R = f"Name:<{op_name}>, Class:<{class_name}>, Domain:<{self.domain}>"
+        external_service_r = Relation.restrict(db=mmdb, relation="External Service", restriction=R)
+        if external_service_r.body:
+            # TODO: look up the return value
+            return 'external service', ''  # put return value of service here also
+        return None
+
 
     def add_type_action(self, name:str, params:list[Supplied_Parameter_a]):
         """
@@ -109,6 +133,29 @@ class CallStatement:
         _logger.error(msg)
         raise ActionException(msg)
 
+    def find_iflow(self, name: str) -> Optional[Flow_ap]:
+        """
+        If the name matches the label of an instance flow, that flow summary is returned.
+
+        Args:
+            name: Flow name
+
+        Returns:
+            Flow_ap (flow summary) if found, otherwise None
+        """
+        ns_flows = Flow.find_labeled_ns_flow(name=name, anum=self.anum, domain=self.domain)
+        if len(ns_flows) > 1:
+            msg = f"Duplicate flow labels encountered processing Call Statement in: {self.activity.activity_path}"
+            _logger.error(msg)
+            raise ActionException
+        if ns_flows:
+            # There is one matching non scalar flow in this activity matching the name
+            # But we need a single instance flow (not a table or many instance flow)
+            if ns_flows[0].content == Content.INSTANCE:
+                return ns_flows[0]
+
+        return None
+
     def find_si_flow(self, name: str) -> Optional[Flow_ap]:
         """
         If the name matches the label of a single instance flow, that flow summary is returned.
@@ -136,30 +183,37 @@ class CallStatement:
     def resolve_actions(self):
         call_source = self.parse.call
         op_chain = self.parse.op_chain
-        initial_si_flow = None
+        flow_content = None  # Flow content at most recent position
+        unresolved_iflow = None
 
         # Process call_source
         match type(call_source).__name__:
             # These are the only anticipated parse output patterns
 
             case 'N_a' | 'IN_a':  # (call=<N_a | IN_a>, op_chain=<Op_chain_a>) pattern
-                # We have a name without any parameters in the first position
-                # It is either an attribute name or a single instance iflow label
-                initial_si_flow = self.find_si_flow(name=call_source.name)
-                if initial_si_flow:
-                    # The attribute name must be the first iname in the op_chain
-                    if not op_chain:
-                        raise ActionException
-                    attr_comp = op_chain.components.pop(0)
-                    attr_name = attr_comp.name
-                    class_name = initial_si_flow.tname  # Write attribute of input instance flow class
-                else:
-                    if self.activity.xiflow:
-                        class_name = self.activity.xiflow.tname  # Write self attribute value
-                        attr_name = call_source.name
+                # Here in the first position we could have:
+                # attr, op (method or ext service) with no params, iflow
+                # We need to check in this name collision assumption order
+                # So first, we see if it is an attribute of this executing instance
+                # and that requires us to have an executing instance
+                class_name = self.activity.xiflow.tname
+                if class_name:
+                    if Attribute.defined(name=call_source.name, class_name=class_name, domain=self.domain):
+                        # First position is an unqualified attribute and we are starting off with a write action
+                        self.add_write_action(class_name=class_name, attr_name=call_source.name)
+                        flow_content = 'scalar'
                     else:
-                        raise ActionException
-                self.add_write_action(class_name=class_name, attr_name=attr_name)
+                        op_name_type = self.op_defined(class_name=class_name, op_name=call_source.name)
+                        if op_name_type:  # Name and type of the operation, e.g. ('method', 'scalar')
+                            self.add_call_op(caller_name=class_name, op_name=call_source.name, params=[])
+                            flow_content = op_name_type[1]  # The type of the service output (siflow, scalar, other)
+                        else:
+                            # Must be an iflow, it is unresolved until we check the next position
+                            unresolved_iflow = self.find_iflow(name=call_source.name)
+                            if not unresolved_iflow:
+                                raise ActionException  # Last possibility for first position
+                            flow_content = 'instance' if unresolved_iflow.max_mult == MaxMult.ONE else 'other'
+
 
             case 'INST_a':
                 for c in call_source.components:
@@ -176,20 +230,22 @@ class CallStatement:
                             # a type action with params.  That's our first assumption.
                             if not self.positions:  # empty dictionary indicates first position
                                 if self.activity.xiflow and Attribute.defined(
-                                        name=call_source.owner, class_name=self.activity.xiflow.tname,
+                                        name=c.owner, class_name=self.activity.xiflow.tname,
                                         domain=self.domain):
-                                    self.add_write_action(class_name=call_source.owner,
-                                                          attr_name=self.activity.xiflow.tname)
-                                    self.add_type_action(name=call_source.op_name, params=call_source.supplied_params)
+                                    self.add_write_action(class_name=self.activity.xiflow.tname,
+                                                          attr_name=c.owner)
+                                    self.add_type_action(name=c.op_name, params=c.supplied_params)
+                                    flow_content = 'scalar'
                                 else:
                                     # Otherwise, at the first position, the owner is an si_flow
                                     # followed by a method or ext service with params
-                                    self.add_call_op(caller_name=call_source.owner, op_name=call_source.op_name,
-                                                     params=call_source.supplied_params)
+                                    self.add_call_op(caller_name=c.owner, op_name=c.op_name,
+                                                     params=c.supplied_params)
                             else:
                                 # If this is NOT the first position, this must be a type action with
                                 # params
-                                self.add_type_action(name=call_source.op_name, params=call_source.supplied_params)
+                                self.add_type_action(name=c.op_name, params=c.supplied_params)
+                                flow_content = 'scalar'
                         case 'N_a' | 'IN_a':
                             pass
                         case 'Criteria_Selection_a':
@@ -204,12 +260,23 @@ class CallStatement:
         for c in op_chain.components:
             match type(c).__name__:
                 case 'N_a' | 'IN_a':
-                    pass
+                    match flow_content:
+                        case 'scalar':
+                            # Populate a type operation with no params
+                            self.add_type_action(name=c.name, params=[])
+                        case 'instance':
+                            # Could be a method/ext service or attribute
+                            pass
+                        case 'other':
+                            raise UnexpectedParsePattern
+                        case _:
+                            raise UnexpectedParsePattern
                 case 'Scalar_op_a':
-                    pass
+                    if type(c.name).__name__ not in {'N_a', 'IN_a'}:
+                        raise UnexpectedParsePattern
+                    self.add_type_action(name=c.name.name, params=c.supplied_params)
                 case _:
-                    pass
-            self.add_type_action(name=c.name, params=[])
+                    raise UnexpectedParsePattern
 
     def process(self) -> Boundary_Actions:
         """
@@ -223,3 +290,6 @@ class CallStatement:
         pass
         # TODO: Populate the positions moving right to left (ignoring any write attr)
         # TODO: Populate the write attribute action, if any
+
+
+        # TODO: NOTE: consider case where there is a chain of methods returning single instance flows
