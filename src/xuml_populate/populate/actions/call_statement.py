@@ -4,7 +4,6 @@ call_statement.py – Process a Scrall call statement
 # System
 import logging
 from typing import TYPE_CHECKING, Optional
-from collections import namedtuple
 
 # Model Integration
 from scrall.parse.visitor import Call_a, Supplied_Parameter_a
@@ -28,8 +27,6 @@ from xuml_populate.exceptions.action_exceptions import *
 from xuml_populate.populate.actions.aparse_types import Boundary_Actions, Content, MaxMult
 
 _logger = logging.getLogger(__name__)
-
-
 
 
 class CallStatement:
@@ -58,7 +55,10 @@ class CallStatement:
         self.anum = activity.anum
         self.domain = activity.domain
 
-        self.positions: list[dict] = []  # List of actions to populate
+        # These two are set if a type action is writing its output back into an attribute
+        # Close attempts.reset, for example, where the reset type action writes 0 to the Door.Close attempts attr
+        self.write_to_iflow: Optional[Flow_ap] = None
+        self.write_to_attr: Optional[str] = None
 
     def add_call_op(self, caller_name: str, op_name: str, params: list[Supplied_Parameter_a]) -> bool:
         """
@@ -115,21 +115,23 @@ class CallStatement:
         """
         self.positions.append({'type action': {'name': name, 'params': params}})
 
-    def add_write_action(self, class_name: str, attr_name: str):
+    def prep_write_action(self, iflow: Flow_ap, attr_name: str):
         """
-        Add an attribute write action to the list of positions. Raises exception if the attribute is not defined.
+        Prepare a write action so that it can be created later (when the input flow is determined)
+
+        Raises exception if the attribute is not defined.
 
         Args:
-            class_name: A class name
+            iflow: A single instance flow name
             attr_name: An attribute of this class
         """
-        if Attribute.defined(name=attr_name, class_name=class_name, domain=self.domain):
-            self.positions = [{'write action': {'class': class_name, 'attr': attr_name}}]
-            # Note that we are initializng the positiosn decitionary and not appending a position
+        if Attribute.defined(name=attr_name, class_name=iflow.tname, domain=self.domain):
+            self.write_to_iflow = iflow
+            self.write_to_attr = attr_name
             return
 
         # No such attribute found in the mmdb
-        msg = f"Attribute {class_name}.{attr_name} not defined in: {self.activity.activity_path}"
+        msg = f"Attribute {iflow.tname}.{attr_name} not defined in: {self.activity.activity_path}"
         _logger.error(msg)
         raise ActionException(msg)
 
@@ -219,7 +221,7 @@ class CallStatement:
                         # Set the read action output as the current sflow
                         active_sflow = sflows[0]
                         # First name is an unqualified attribute and we are starting off with a write action
-                        self.add_write_action(class_name=class_name, attr_name=call_source.name)
+                        self.prep_write_action(iflow=self.activity.xiflow, attr_name=call_source.name)
                     else:
                         # Must be an iflow, it is unresolved until we check the next position
                         unresolved_iflow = self.find_iflow(name=call_source.name)
@@ -288,8 +290,9 @@ class CallStatement:
                             raise ActionException
                         # Set the read action output as the current sflow
                         active_sflow = sflows[0]
-                        # First two names deifne a qualified attribute and we are starting off with a write action
-                        self.add_write_action(class_name=unresolved_iflow.tname, attr_name=c.name.name)
+                        # First two names define a qualified attribute and we are starting off with a write action
+                        # so we can now resolve the saved iflow
+                        self.prep_write_action(iflow=unresolved_iflow, attr_name=c.name.name)
                     else:
                         msg = (f"Call statement could not resolve initial attribute in: {self.parse} "
                                f"at: {self.activity.activity_path}")
@@ -298,10 +301,10 @@ class CallStatement:
                 case 'Scalar_op_a':
                     if type(c.name).__name__ not in {'N_a', 'IN_a'}:
                         raise UnexpectedParsePattern
-                    # Populate a type operation with no params
-                    ta = TypeAction(op_name=c.name.name, anum=self.anum, domain=self.domain, input_flow=self.sflow)
+                    # Populate a type operation with supplied params
+                    ta = TypeAction(op_name=c.name.name, anum=self.anum, domain=self.domain, input_flow=self.sflow,
+                                    params=c.supplied_params)
                     _, _, active_sflow = ta.populate()
-                    self.add_type_action(name=c.name.name, params=c.supplied_params)
                 case _:
                     raise UnexpectedParsePattern
 
