@@ -65,10 +65,19 @@ class InstanceSet:
             # hasn't yet been looked up for this staement.  Labeled flow input to a decision action, for example
             pass
 
-    def process(self) -> tuple[str, str, Optional[Flow_ap]]:
+    def process(self, write_to_attr: bool = False) -> tuple[str, str, Optional[Flow_ap]]:
         """
         Populate any Actions or Flows corresponding to a sequence of instance set components.
         Return the boundary actions and the resultant output Instance Flow
+
+        Args:
+            write_to_attr: By default, we assume that this expression is the right hand side of an assignment.
+                This means that the output flow will be passed back to the caller so it can be processed and assign
+                assigned to some flow on the the lhs.
+
+                But if this expression is a call invocation AND it starts off with a qualified or unqualified attribute,
+                set this to False and a write action will be appended at the end targeting the initiating attribute and
+                no output flow will be returned.
 
         Returns:
             output: The initial_pseudo_state action id, the final action id, and the output instance flow. If no

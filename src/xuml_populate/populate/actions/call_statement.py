@@ -187,6 +187,7 @@ class CallStatement:
         op_chain = self.parse.op_chain
         unresolved_iflow: Optional[Flow_ap] = None
         active_sflow: Optional[Flow_ap] = None
+        ie_output_flow: Optional[Flow_ap] = None
 
         # Process call_source
         match type(call_source).__name__:
@@ -231,8 +232,17 @@ class CallStatement:
                             _logger.error(msg)
                             raise ActionException(msg)  # Last possibility for first position
 
-
             case 'INST_a':
+                ie = InstanceSet(iset_components=call_source.components, activity=self.activity,
+                                 input_instance_flow=self.activity.xiflow)
+                ain, aout, ie_output_flow = ie.process(write_to_attr=True)
+                active_sflow = None if ie_output_flow.content != Content.SCALAR else ie_output_flow
+                # If we get an f back, we know this was not an attr write
+                # We still might get an empty flow if it was a method or ext service that did not specify an output
+                # But we cannot tack on any op_chain components if the output is not scalar
+                # so we need to clear the active_sflow unless we obtain a scalar output from the instance expression
+                # in which case, that becomes the active_sflow
+
                 for c in call_source.components:
                     match type(c).__name__:
                         case 'Op_a':
@@ -274,6 +284,7 @@ class CallStatement:
 
         # Handle any remaining op_chain components
         # These will all be type actions without any params
+        first_comp = True
         for c in op_chain.components:
             match type(c).__name__:
                 case 'N_a' | 'IN_a':
@@ -294,19 +305,25 @@ class CallStatement:
                         # so we can now resolve the saved iflow
                         self.prep_write_action(iflow=unresolved_iflow, attr_name=c.name.name)
                     else:
-                        msg = (f"Call statement could not resolve initial attribute in: {self.parse} "
-                               f"at: {self.activity.activity_path}")
+                        msg = (f"Cannot perform type operation on non-scalar input for call statement {self.parse} "
+                               f"in: {self.activity.activity_path}")
                         _logger.error(msg)
-                        raise UnexpectedParsePattern(msg)
+                        raise ActionException(msg)
                 case 'Scalar_op_a':
-                    if type(c.name).__name__ not in {'N_a', 'IN_a'}:
+                    if first_comp:
+                        # If the first name specifies parameters in the call statement, this will have been scanned
+                        # in an INST_a and shouldn't happen here. So the first component is never a Scalar_op_a
                         raise UnexpectedParsePattern
-                    # Populate a type operation with supplied params
-                    ta = TypeAction(op_name=c.name.name, anum=self.anum, domain=self.domain, input_flow=self.sflow,
-                                    params=c.supplied_params)
-                    _, _, active_sflow = ta.populate()
+                    if type(c.name).__name__ in {'N_a', 'IN_a'}:
+                        # Populate a type operation with supplied params
+                        ta = TypeAction(op_name=c.name.name, anum=self.anum, domain=self.domain, input_flow=self.sflow,
+                                        params=c.supplied_params)
+                        _, _, active_sflow = ta.populate()
+                    else:
+                        raise UnexpectedParsePattern
                 case _:
                     raise UnexpectedParsePattern
+            first_comp = False
 
     def process(self) -> Boundary_Actions:
         """
