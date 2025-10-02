@@ -6,6 +6,7 @@ import logging
 from typing import Optional
 
 # Model Integration
+from scrall.parse.visitor import Supplied_Parameter_a
 from pyral.relvar import Relvar
 from pyral.relation import Relation
 from pyral.transaction import Transaction
@@ -28,7 +29,8 @@ class TypeAction:
     Populate a Type Action
     """
 
-    def __init__(self, op_name: str, anum: str, domain: str, input_flow: Optional[Flow_ap] = None):
+    def __init__(self, op_name: str, anum: str, domain: str, input_flow: Optional[Flow_ap] = None,
+                 params: Optional[Supplied_Parameter_a] = None):
         """
         Initialize and populate
 
@@ -37,6 +39,7 @@ class TypeAction:
             anum:  The method's activity number
             domain: The name of the domain
             input_flow:  A Scalar Flow providing input to the Type Operation Action, none if this is selector op
+            params: An optional parse expression with a set of parameters
         """
         self.name = op_name
         self.anum = anum

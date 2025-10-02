@@ -183,8 +183,8 @@ class CallStatement:
     def resolve_actions(self):
         call_source = self.parse.call
         op_chain = self.parse.op_chain
-        flow_content = None  # Flow content at most recent position
-        unresolved_iflow = None
+        unresolved_iflow: Optional[Flow_ap] = None
+        active_sflow: Optional[Flow_ap] = None
 
         # Process call_source
         match type(call_source).__name__:
@@ -210,9 +210,16 @@ class CallStatement:
                     # to specify an unqualified (self) attribute to write.
                     # See if the attribute is defined on the xi class
                     if Attribute.defined(name=call_source.name, class_name=class_name, domain=self.domain):
-                        # First position is an unqualified attribute and we are starting off with a write action
+                        # Read the attribute
+                        ra = ReadAction(input_single_instance_flow=self.activity.xiflow, attrs=(call_source.name,),
+                                        anum=self.anum, domain=self.domain)
+                        _, sflows = ra.populate()
+                        if not sflows:
+                            raise ActionException
+                        # Set the read action output as the current sflow
+                        active_sflow = sflows[0]
+                        # First name is an unqualified attribute and we are starting off with a write action
                         self.add_write_action(class_name=class_name, attr_name=call_source.name)
-                        flow_content = 'scalar'
                     else:
                         # Must be an iflow, it is unresolved until we check the next position
                         unresolved_iflow = self.find_iflow(name=call_source.name)
@@ -221,7 +228,6 @@ class CallStatement:
                                    f"or a single instance flow in: {self.activity.activity_path}")
                             _logger.error(msg)
                             raise ActionException(msg)  # Last possibility for first position
-                        flow_content = 'instance' if unresolved_iflow.max_mult == MaxMult.ONE else 'other'
 
 
             case 'INST_a':
@@ -269,20 +275,32 @@ class CallStatement:
         for c in op_chain.components:
             match type(c).__name__:
                 case 'N_a' | 'IN_a':
-                    match flow_content:
-                        case 'scalar':
-                            # Populate a type operation with no params
-                            self.add_type_action(name=c.name, params=[])
-                        case 'instance':
-                            # Could be a method/ext service or attribute
-                            pass
-                        case 'other':
-                            raise UnexpectedParsePattern
-                        case _:
-                            raise UnexpectedParsePattern
+                    if active_sflow:
+                        # Populate a type operation with no params
+                        ta = TypeAction(op_name=c.name, anum=self.anum, domain=self.domain, input_flow=self.sflow)
+                        _, _, active_sflow = ta.populate()
+                    elif unresolved_iflow:
+                        # Read the attribute
+                        ra = ReadAction(input_single_instance_flow=unresolved_iflow, attrs=(c.name.name,),
+                                        anum=self.anum, domain=self.domain)
+                        _, sflows = ra.populate()
+                        if not sflows:
+                            raise ActionException
+                        # Set the read action output as the current sflow
+                        active_sflow = sflows[0]
+                        # First two names deifne a qualified attribute and we are starting off with a write action
+                        self.add_write_action(class_name=unresolved_iflow.tname, attr_name=c.name.name)
+                    else:
+                        msg = (f"Call statement could not resolve initial attribute in: {self.parse} "
+                               f"at: {self.activity.activity_path}")
+                        _logger.error(msg)
+                        raise UnexpectedParsePattern(msg)
                 case 'Scalar_op_a':
                     if type(c.name).__name__ not in {'N_a', 'IN_a'}:
                         raise UnexpectedParsePattern
+                    # Populate a type operation with no params
+                    ta = TypeAction(op_name=c.name.name, anum=self.anum, domain=self.domain, input_flow=self.sflow)
+                    _, _, active_sflow = ta.populate()
                     self.add_type_action(name=c.name.name, params=c.supplied_params)
                 case _:
                     raise UnexpectedParsePattern
