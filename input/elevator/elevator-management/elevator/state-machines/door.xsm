@@ -61,8 +61,8 @@ transitions
 --
 state CLOSED
 activity
-    ~Goto to floor
-    Blocked = FALSE
+    Close attempts.reset
+    Blocked.unset
     Lock requested? Lock -> me
     // May be None
     Door closed -> /R4/R53/Transfer

@@ -11,6 +11,8 @@ from pyral.relvar import Relvar
 from pyral.relation import Relation
 from pyral.transaction import Transaction
 
+from xuml_populate.populate.actions.write_action import WriteAction
+
 # xUML Populate
 if TYPE_CHECKING:
     from xuml_populate.populate.activity import Activity
@@ -59,6 +61,10 @@ class CallStatement:
         # Close attempts.reset, for example, where the reset type action writes 0 to the Door.Close attempts attr
         self.write_to_iflow: Optional[Flow_ap] = None
         self.write_to_attr: Optional[str] = None
+
+        # Boundary actions
+        self.ain: Optional[str] = None
+        self.aout: Optional[str] = None
 
     def add_call_op(self, caller_name: str, op_name: str, params: list[Supplied_Parameter_a]) -> bool:
         """
@@ -181,12 +187,24 @@ class CallStatement:
 
         return None
 
+    def process(self) -> Boundary_Actions:
+        """
 
-    def resolve_actions(self):
+        Returns:
+
+        """
+        # Break out the two fields of the Call_Statement_a parse output
         call_source = self.parse.call
         op_chain = self.parse.op_chain
+
+        # If the call source is an iflow, we save it until we determine what kind of action
+        # to populate (write, method call)?
         unresolved_iflow: Optional[Flow_ap] = None
+
+        # We keep track of the scalar output of the most recently populated action
         active_sflow: Optional[Flow_ap] = None
+
+        # If we need to parse an instance set expression, this is its output flow
         ie_output_flow: Optional[Flow_ap] = None
 
         # Process call_source
@@ -216,7 +234,7 @@ class CallStatement:
                         # Read the attribute
                         ra = ReadAction(input_single_instance_flow=self.activity.xiflow, attrs=(call_source.name,),
                                         anum=self.anum, domain=self.domain)
-                        _, sflows = ra.populate()
+                        self.ain, sflows = ra.populate()  # Set the input boundary action
                         if not sflows:
                             raise ActionException
                         # Set the read action output as the current sflow
@@ -235,7 +253,7 @@ class CallStatement:
             case 'INST_a':
                 ie = InstanceSet(iset_components=call_source.components, activity=self.activity,
                                  input_instance_flow=self.activity.xiflow)
-                ain, aout, ie_output_flow = ie.process(write_to_attr=True)
+                self.ain, self.aout, ie_output_flow = ie.process(write_to_attr=True)
                 active_sflow = None if ie_output_flow.content != Content.SCALAR else ie_output_flow
                 # If we get an f back, we know this was not an attr write
                 # We still might get an empty flow if it was a method or ext service that did not specify an output
@@ -243,42 +261,6 @@ class CallStatement:
                 # so we need to clear the active_sflow unless we obtain a scalar output from the instance expression
                 # in which case, that becomes the active_sflow
 
-                for c in call_source.components:
-                    match type(c).__name__:
-                        case 'Op_a':
-                            # We have an owner and op_name and a list of one or more params
-                            # The owner can be named or '_implicit' in which case it takes input from the prior
-                            # action
-                            #
-                            # Let's assume we are at the first position (empty dict)
-                            # There are only two possibilities:
-                            #
-                            # The owner could be an unqualified attribute (write action) followed by
-                            # a type action with params.  That's our first assumption.
-                            if not self.positions:  # empty dictionary indicates first position
-                                if self.activity.xiflow and Attribute.defined(
-                                        name=c.owner, class_name=self.activity.xiflow.tname,
-                                        domain=self.domain):
-                                    self.add_write_action(class_name=self.activity.xiflow.tname,
-                                                          attr_name=c.owner)
-                                    self.add_type_action(name=c.op_name, params=c.supplied_params)
-                                    flow_content = 'scalar'
-                                else:
-                                    # Otherwise, at the first position, the owner is an si_flow
-                                    # followed by a method or ext service with params
-                                    self.add_call_op(caller_name=c.owner, op_name=c.op_name,
-                                                     params=c.supplied_params)
-                            else:
-                                # If this is NOT the first position, this must be a type action with
-                                # params
-                                self.add_type_action(name=c.op_name, params=c.supplied_params)
-                                flow_content = 'scalar'
-                        case 'N_a' | 'IN_a':
-                            pass
-                        case 'Criteria_Selection_a':
-                            pass
-                        case _:
-                            raise ActionException
             case _:
                 raise UnexpectedParsePattern
 
@@ -290,13 +272,14 @@ class CallStatement:
                 case 'N_a' | 'IN_a':
                     if active_sflow:
                         # Populate a type operation with no params
-                        ta = TypeAction(op_name=c.name, anum=self.anum, domain=self.domain, input_flow=self.sflow)
-                        _, _, active_sflow = ta.populate()
+                        ta = TypeAction(op_name=c.name, anum=self.anum, domain=self.domain, input_flow=active_sflow)
+                        tin, self.aout, active_sflow = ta.populate()
+                        self.ain = tin if not self.ain else self.ain  # Update the input only if it has not been set
                     elif unresolved_iflow:
                         # Read the attribute
                         ra = ReadAction(input_single_instance_flow=unresolved_iflow, attrs=(c.name.name,),
                                         anum=self.anum, domain=self.domain)
-                        _, sflows = ra.populate()
+                        self.ain, sflows = ra.populate()  # Any attribute read must be the input action
                         if not sflows:
                             raise ActionException
                         # Set the read action output as the current sflow
@@ -318,25 +301,21 @@ class CallStatement:
                         # Populate a type operation with supplied params
                         ta = TypeAction(op_name=c.name.name, anum=self.anum, domain=self.domain, input_flow=self.sflow,
                                         params=c.supplied_params)
-                        _, _, active_sflow = ta.populate()
+                        tin, self.aout, active_sflow = ta.populate()
+                        self.ain = tin if not self.ain else self.ain  # Update the input only if it has not been set
                     else:
                         raise UnexpectedParsePattern
                 case _:
                     raise UnexpectedParsePattern
             first_comp = False
 
-    def process(self) -> Boundary_Actions:
-        """
+        # If a write action has been prepared, we an create it now with the active_sflow as the value input
+        if self.write_to_attr:
+            wa = WriteAction(write_to_instance_flow=self.write_to_iflow, value_to_write_flow=active_sflow,
+                             attr_name=self.write_to_attr, activity=self.activity)
+            self.aout = wa.populate()
 
-        Returns:
-
-        """
-        # We are calling an operation on an instance set, in which case we are calling a method
-        # OR we are calling an operation on a scalar flow
-        self.resolve_actions()
-        pass
-        # TODO: Populate the positions moving right to left (ignoring any write attr)
-        # TODO: Populate the write attribute action, if any
-
-
-        # TODO: NOTE: consider case where there is a chain of methods returning single instance flows
+        # Since we are either parsing a full instance expression or
+        # just a simple name (which is just the simple case of an instance expression,
+        # we know that there is only one input action and one output action in the call statement data flow
+        return Boundary_Actions(ain={self.ain}, aout={self.aout})
