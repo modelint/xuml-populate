@@ -3,7 +3,7 @@ metadata
     Author : Leon Starr
     Document ID : mint.elevator3.td.7
     Modification date : October 3, 2025
-    Version : 3.4.1
+    Version : 3.4.2
     Organization : Model Integration, LLC
     Copyright notice > MIT
     Organization logo > mint
@@ -73,7 +73,7 @@ transitions
 state LOCKED
 activity
     // Tell the cabin that we’re ready to go
-    Lock requested = FALSE
+    Lock requested.unset
     Doors secure -> /R4/Cabin
 transitions
     Unlock > OPENING
@@ -82,7 +82,7 @@ state Count block
 activity
     Close attempts.increment
     (Close attempts > /R4/R2/Bank.Max close attempts) ? Cannot close door -> me : {
-        Blocked = TRUE
+        Blocked.set
         Keep trying -> me
     }
 transitions

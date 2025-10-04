@@ -69,7 +69,7 @@ class TypeAction:
             # If it is labeled, we can copy that label into the suffix
             R = f"ID:<{self.input_flow.fid}>, Activity:<{self.anum}>, Domain:<{self.domain}>"
             labeled_flow_r = Relation.restrict(db=mmdb, relation="Labeled Flow", restriction=R)
-            suffix = self.action_id[:4]  # Just take the number at the end
+            suffix = self.action_id[4:]  # Just take the number at the end
             if labeled_flow_r.body:
                 # Op name and input label if it is labeled, otherwise, use action number
                 suffix = labeled_flow_r.body[0]["Name"]
