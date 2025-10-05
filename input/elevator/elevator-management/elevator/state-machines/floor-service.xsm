@@ -2,8 +2,9 @@ metadata
     Title : Floor Service State Machine Diagram
     Author : Leon Starr
     Document ID : mint.elevator3.td.3
-    Modification date : May 12, 2019
-    Version : 3.1.1
+    // Creation date : May 12, 2019
+    Modification date : October 4, 2025
+    Version : 3.2.0
     Organization : Model Integration, LLC
     Copyright notice > MIT
     Organization logo > mint
@@ -21,7 +22,6 @@ initial transitions
 --
 state WAITING FOR CABIN
 activity
-    // Cabin hasn't arrived yet
 transitions
     Cabin arrived > Check bank level type
 --
