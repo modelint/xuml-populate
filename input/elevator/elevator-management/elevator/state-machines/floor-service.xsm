@@ -27,7 +27,7 @@ transitions
 --
 state Check bank level type
 activity
-    /R49/R38/Middle Bank Level ?
+    /R49/Bank Level/R38/Middle Bank Level ?
          Middle floor -> : Top bottom floor -> me
 transitions
     Middle floor > HOLDING SERVICE DIRECTION

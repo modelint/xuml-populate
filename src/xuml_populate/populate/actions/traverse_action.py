@@ -24,7 +24,8 @@ from xuml_populate.exceptions.action_exceptions import (UndefinedRelationship, I
                                                         MissingTorPrefInAssociativeRel, NoSubclassInHop,
                                                         SubclassNotInGeneralization, PerspectiveNotDefined,
                                                         UndefinedAssociation, NeedPerspectiveOrClassToHop,
-                                                        NeedPerspectiveToHop, UnexpectedClassOrPerspectiveInPath)
+                                                        NeedPerspectiveToHop, UnexpectedClassOrPerspectiveInPath,
+                                                        ActionException)
 from xuml_populate.populate.actions.aparse_types import Flow_ap, MaxMult, Content
 from xuml_populate.populate.mmclass_nt import (Action_i, Traverse_Action_i, Path_i, Hop_i, Association_Class_Hop_i,
                                                Circular_Hop_i, Symmetric_Hop_i, Asymmetric_Circular_Hop_i,
@@ -518,6 +519,11 @@ class TraverseAction:
             next_hop = self.path.hops[self.path_index]
             # Does the next hop match either of the participating classes
             particip_classes = {refs[0]['To_class'], refs[1]['To_class']}
+            if type(next_hop).__name__ != 'N_a':
+                msg = (f"Next hop {next_hop} not a name. Traversal path does not specify a class name where expected "
+                       f"in: {self.activity_path}")
+                _logger.error(msg)
+                raise ActionException(msg)
             if next_hop.name in particip_classes:
                 # The particpating class is explicitly named
                 self.class_cursor = next_hop.name
