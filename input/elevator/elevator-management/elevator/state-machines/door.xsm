@@ -2,8 +2,8 @@ metadata
     Title : Door State Machine
     Author : Leon Starr
     Document ID : mint.elevator3.td.7
-    Modification date : October 3, 2025
-    Version : 3.4.2
+    Modification date : October 4, 2025
+    Version : 3.4.3
     Organization : Model Integration, LLC
     Copyright notice > MIT
     Organization logo > mint
@@ -91,6 +91,5 @@ transitions
 --
 state CANNOT CLOSE
 activity
-    // Take the shaft out of service
-    Take out of service -> /R4/R2/Shaft
+    Take out of service -> /R4/Cabin
 --
