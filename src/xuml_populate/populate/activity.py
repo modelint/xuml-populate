@@ -421,7 +421,8 @@ class Activity:
 
         # Create the Susbystem Element and obtain a unique Anum
         Anum = cls.populate(tr=tr, action_text=action_text, subsys=subsys, domain=domain)
-        state_info = {'anum': Anum, 'sm_type': sm_type, 'parse': parsed_activity[0],
+        pa = parsed_activity[0] if parsed_activity else None
+        state_info = {'anum': Anum, 'sm_type': sm_type, 'parse': pa,
                       'text': action_text, 'domain': domain}
         Relvar.insert(db=mmdb, tr=tr, relvar='State Activity', tuples=[
             State_Activity_i(Anum=Anum, Domain=domain)

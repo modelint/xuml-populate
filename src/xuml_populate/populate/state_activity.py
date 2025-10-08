@@ -13,6 +13,7 @@ from pyral.relation import Relation  # For debugging
 
 # xUML Populate
 from xuml_populate.config import mmdb
+from xuml_populate.names import IPS_name
 from xuml_populate.utility import print_mmdb
 from xuml_populate.populate.actions.aparse_types import SMType, Flow_ap, Content, MaxMult, Method_Output_Type
 from xuml_populate.populate.activity import Activity
@@ -62,6 +63,9 @@ class StateActivity:
         """
 
         """
+        # TODO: Update this check once we resolve where initial pseudo state activity is populated
+        if self.name == IPS_name:
+            return
         _logger.info(f"Populating state activity execution units: {self.path}")
         # Look up signature
         R = f"Name:<{self.name}>, State_model:<{self.sm_name}>, Domain:<{self.domain}>"

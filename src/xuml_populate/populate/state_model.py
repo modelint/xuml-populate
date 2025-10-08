@@ -23,6 +23,7 @@ from xuml_populate.populate.flow import Flow
 from xuml_populate.populate.signature import Signature
 from xuml_populate.populate.activity import Activity
 from xuml_populate.populate.mm_type import MMtype
+from xuml_populate.names import IPS_name
 from xuml_populate.populate.mmclass_nt import (State_Model_i, Lifecycle_i, Non_Deletion_State_i, State_i, Real_State_i,
                                                Deletion_State_i, Initial_Pseudo_State_i, State_Signature_i,
                                                Initial_Transition_i, Event_Response_i, Transition_i, Non_Transition_i,
@@ -32,8 +33,6 @@ from xuml_populate.populate.mmclass_nt import (State_Model_i, Lifecycle_i, Non_D
 
 if __debug__:
     from xuml_populate.utility import print_mmdb
-
-ISP = 'Initial_Pseudo_State'  # Name of initial_pseudo_state pseudo state
 
 _logger = logging.getLogger(__name__)
 tr_SM = 'State Model'
@@ -97,6 +96,7 @@ class StateModel:
 
         # Populate the states
         for s in sm.states:
+            pass
             # Create Real State and all associated model elements
             Relvar.insert(db=mmdb, tr=tr_SM, relvar='State', tuples=[
                 State_i(Name=s.state.name, State_model=self.sm_name, Domain=sm.domain)
@@ -180,22 +180,23 @@ class StateModel:
         inserted_especs = {}
         if sm.initial_transitions:
             # Create a Delegated Creation Activity
+            # We set the actions to an empty string since they will generated later
             state_info = Activity.populate_state(
-                tr=tr_SM, subsys=subsys, actions=s.activity,
+                tr=tr_SM, subsys=subsys, actions='',
                 state_model=self.sm_name, domain=sm.domain,
                 parse_actions=self.parse_actions, sm_type=self.sm_type, initial_pseudo_state=True)
-            self.states[s.state.name] = state_info
+            self.states[IPS_name] = state_info
             dc_anum = state_info["anum"]  # Delegated Creation Activity anum
             # Create the intial pseudo state
-            Relvar.insert(db=mmdb, tr=tr_SM, relvar=ISP, tuples=[
-                Initial_Pseudo_State_i(Name=ISP, Class=self.sm_name, Domain=sm.domain, Creation_activity=dc_anum)
+            Relvar.insert(db=mmdb, tr=tr_SM, relvar='Initial Pseudo State', tuples=[
+                Initial_Pseudo_State_i(Name=IPS_name, Class=self.sm_name, Domain=sm.domain, Creation_activity=dc_anum)
             ])
             Relvar.insert(db=mmdb, tr=tr_SM, relvar='State', tuples=[
-                State_i(Name=ISP, State_model=self.sm_name, Domain=sm.domain)
+                State_i(Name=IPS_name, State_model=self.sm_name, Domain=sm.domain)
             ])
         for t in sm.initial_transitions:
             Relvar.insert(db=mmdb, tr=tr_SM, relvar='Initial Transition', tuples=[
-                Initial_Transition_i(From_state=ISP, Class=self.sm_name, Domain=sm.domain, Event=t.event)
+                Initial_Transition_i(From_state=IPS_name, Class=self.sm_name, Domain=sm.domain, Event=t.event)
             ])
             signum = self.signums[t.to_state]
             Relvar.insert(db=mmdb, tr=tr_SM, relvar='Event Specification', tuples=[
@@ -204,19 +205,19 @@ class StateModel:
             ])
             inserted_especs[t.event] = signum
             Relvar.insert(db=mmdb, tr=tr_SM, relvar='Event Response', tuples=[
-                Event_Response_i(State=ISP, Event=t.event, State_model=self.sm_name, Domain=sm.domain)
+                Event_Response_i(State=IPS_name, Event=t.event, State_model=self.sm_name, Domain=sm.domain)
             ])
             Relvar.insert(db=mmdb, tr=tr_SM, relvar='Transition', tuples=[
-                Transition_i(From_state=ISP, Event=t.event, State_model=self.sm_name, Domain=sm.domain,
+                Transition_i(From_state=IPS_name, Event=t.event, State_model=self.sm_name, Domain=sm.domain,
                              To_state=t.to_state)
             ])
             for e in sm.events:
                 if e != t.event:
                     Relvar.insert(db=mmdb, tr=tr_SM, relvar='Event Response', tuples=[
-                        Event_Response_i(State=ISP, Event=e, State_model=self.sm_name, Domain=sm.domain)
+                        Event_Response_i(State=IPS_name, Event=e, State_model=self.sm_name, Domain=sm.domain)
                     ])
                     Relvar.insert(db=mmdb, tr=tr_SM, relvar='Non Transition', tuples=[
-                        Non_Transition_i(State=ISP, Event=e, State_model=self.sm_name, Domain=sm.domain,
+                        Non_Transition_i(State=IPS_name, Event=e, State_model=self.sm_name, Domain=sm.domain,
                                          Behavior='CH',
                                          Reason="Transition is only legal response from "
                                                 "initial_pseudo_state pseudo state")

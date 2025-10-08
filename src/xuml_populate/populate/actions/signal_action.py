@@ -19,6 +19,7 @@ if TYPE_CHECKING:
     from xuml_populate.populate.activity import Activity
 from xuml_populate.utility import print_mmdb
 from xuml_populate.config import mmdb
+from xuml_populate.names import IPS_name  # Initial pseudo-state name
 from xuml_populate.populate.delegated_creation import DelegatedCreationActivity
 from xuml_populate.populate.actions.expressions.enumflow import EnumFlow
 from xuml_populate.populate.actions.aparse_types import Boundary_Actions, SMType
@@ -39,7 +40,6 @@ _logger = logging.getLogger(__name__)
 
 # Transactions
 tr_Signal = "Signal Action"
-ips_name = 'Initial_Pseudo_State'  # All Initial Pseudo States have the same name
 
 class SignalAction:
     """
@@ -165,7 +165,7 @@ class SignalAction:
         # Since all the heavy lifting happens in the creation activity, there isn't much to do here
         Relvar.insert(db=mmdb, tr=tr_Signal, relvar='Initial Signal Action', tuples=[
             Initial_Signal_Action_i(ID=self.action_id, Activity=self.activity.anum, Domain=self.activity.domain,
-                                    Class=dest_class, Pseudo_state=ips_name)
+                                    Class=dest_class, Pseudo_state=IPS_name)
         ])
         # The boundary actions are always just this one signal action id
         self.aids_in.add(self.action_id)

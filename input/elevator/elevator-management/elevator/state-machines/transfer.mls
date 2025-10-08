@@ -8,7 +8,6 @@ padding l150 b100
 frame Model Integration Diagram
 frame_presentation default
 nodes
-    Creating or updating transfer 14,3
     WAITING FOR CABIN 25% 11,3
     Changing destination before cabin moves 12,1
     Dispatching cabin 9,3
@@ -22,8 +21,7 @@ nodes
     WAITING FOR REQUESTS TO CLEAR 8,6
     Delete 6,6
 connectors
-    +Execute : t|Creating or updating transfer
-    +Wait for cabin : b|Creating or updating transfer : t*|WAITING FOR CABIN
+    +Execute : t|WAITING FOR CABIN
     +Dest change request.2-2 : t-2|WAITING FOR CABIN : r|Changing destination before cabin moves
     +Stationary update.2 : b|Changing destination before cabin moves : l|WAITING FOR CABIN
     +Ready to go : b|WAITING FOR CABIN : t*|Dispatching cabin
