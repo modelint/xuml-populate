@@ -85,6 +85,17 @@ class DelegatedCreationActivity:
             raise ActionException(msg)
         self.anum = ip_state_r.body[0]["Creation_activity"]
 
+        # Has population of the delegated creation activity already triggered by some other
+        # Initial Signal Action?
+        R = f"Activity:<{self.anum}>, Domain:<{self.domain}>"
+        dc_actions = Relation.restrict(db=mmdb, relation="Action", restriction=R)
+        if dc_actions.body:
+            # TODO: replace these
+            print("It's been populated already")
+        else:
+            print("It has not been populated yet")
+        pass
+
         # Gather activity data and create an activity object for our delegated creation activity
         creation_activity_data = DelegatedCreationActivityAP(
             anum=self.anum, domain=self.domain, cname=self.class_name,

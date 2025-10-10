@@ -174,6 +174,7 @@ class SignalAction:
         self.complete_transaction()
         DelegatedCreationActivity(class_name=dest_class, attr_init_flows=attr_init_flows, ref_inits=ref_inits,
                                   delegating_activity=self.activity)
+        pass
 
     def find_dest_flow(self) -> Optional[Flow_ap]:
         """

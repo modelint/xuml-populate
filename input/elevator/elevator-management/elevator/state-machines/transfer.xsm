@@ -2,8 +2,8 @@ metadata
     Title : Transfer State Machine Diagram
     Author : Leon Starr
     Document ID : mint.elevator3.td.5
-    Modification date : October 7, 2025
-    Version : 3.4.2
+    Modification date : October 8, 2025
+    Version : 3.4.3
     Organization : Model Integration, LLC
     Copyright notice > MIT
     Organization logo > mint
@@ -39,7 +39,7 @@ state Changing destination before cabin moves( new dest: Level Name )
 activity
     // The cabin isn’t moving, so we can safely
     // relink to the new destination
-    &R53 Accessible Shaft Level(Floor: ^new dest, Shaft: Shaft)
+    //    &R53 Accessible Shaft Level(Floor: ^new dest, Shaft: Shaft)
     Stationary update -> me
 transitions
     Stationary update > WAITING FOR CABIN
@@ -61,14 +61,14 @@ transitions
 --
 state Request redirect( new dest: Level Name )
 activity
-        Try redirect( ^new dest ) -> /R53/Cabin
-        Redirect requested -> me
+    //        Try redirect( ^new dest ) -> /R53/Cabin
+    Redirect requested -> me
 transitions
     Redirect requested > CABIN IN MOTION
 --
 state Match new destination of cabin( updated dest: Level Name )
 activity
-    &/R53 Accessible Shaft Level(Floor: ^updated dest, Shaft: Shaft)
+    //    &/R53 Accessible Shaft Level(Floor: ^updated dest, Shaft: Shaft)
     Update in motion -> me
 transitions
     Update in motion > CABIN IN MOTION
@@ -79,10 +79,10 @@ activity
     // and no stop request or call in the Cabin’s current travel direction,
     // we must reverse the cabin’s travel direction
     //
-    call behind .= /R53/R49/Floor Service( Direction: /R53/Cabin.Travel direction.opposite )
-    call fwd .= /R53/R49/Floor Service( Direction: /R53/Cabin.Travel direction )
-    switch dir = (call behind and !call fwd and !/R53/Accessible Shaft Level.Stop requested)
-    switch dir? /R53/Cabin.Travel direction.toggle
+    //    call behind .= /R53/R49/Floor Service( Direction: /R53/Cabin.Travel direction.opposite )
+    //    call fwd .= /R53/R49/Floor Service( Direction: /R53/Cabin.Travel direction )
+    //    switch dir = (call behind and !call fwd and !/R53/Accessible Shaft Level.Stop requested)
+    //    switch dir? /R53/Cabin.Travel direction.toggle
 
     Reversal checked -> me
 transitions
@@ -93,13 +93,13 @@ activity
     //    UI.Cabin arrived( Shaft, direction: /R53/Cabin.Travel direction )
     //    pending floor service .= /R53/R49/Floor Service( Direction: /R53/Cabin.Travel direction )
     //
-    pending floor service? {
-        Call in progress -> meCabin
-        Cabin arrived -> pending floor service
-    } : {
-        Serviced stop -> /R53/Accessible Shaft Level
-        Wait to clear -> me
-    }
+    //    pending floor service? {
+    //        Call in progress -> meCabin
+    //        Cabin arrived -> pending floor service
+    //    } : {
+    //        Serviced stop -> /R53/Accessible Shaft Level
+    //        Wait to clear -> me
+    //    }
 transitions
     Call in progress > CALL IN PROGRESS
     Wait to clear > WAITING FOR REQUESTS TO CLEAR
@@ -112,8 +112,8 @@ transitions
 --
 state Canceling floor service
 activity
-    Cancel -> /R53/R49/Floor Service( Direction: /R53/Cabin.Travel direction )
-    Wait to clear -> me
+    //    Cancel -> /R53/R49/Floor Service( Direction: /R53/Cabin.Travel direction )
+    //    Wait to clear -> me
 transitions
     Wait to clear > WAITING FOR REQUESTS TO CLEAR
 --
@@ -125,5 +125,5 @@ transitions
 --
 state Delete !*
 activity
-    Transfer completed -> R53( Shaft )
+    //    Transfer completed -> R53( Shaft )
 --
