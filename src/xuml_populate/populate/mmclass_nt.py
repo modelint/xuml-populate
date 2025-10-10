@@ -212,10 +212,9 @@ Switch_Action_i = namedtuple('Switch_Action_i', 'ID Activity Domain')
 
 # Activity subsystem
 Activity_i = namedtuple('Activity_i', 'Anum Domain')
-Activity_Input_i = namedtuple('Activity_Input_i', 'Parameter Signature Activity Domain Flow')
 Delegated_Creation_Activity_i = namedtuple('Delegated_Creation_Activity_i', 'Anum Domain')
 External_Signature_i = namedtuple('External_Signature_i', 'SIGnum Domain')
-Initialization_Source_i = namedtuple('Initialization_Source_i', 'Source_flow Delegating_activity Creation_activity Local_flow Domain')
+Initialization_Source_i = namedtuple('Initialization_Source_i', 'Signal_action Signal_activity Domain Creation_activity Source_flow Local_flow')
 Lifecycle_Activity_i = namedtuple('Lifecycle_Activity_i', 'Anum Domain Executing_instance_flow')
 Method_i = namedtuple('Method_i', 'Anum Name Class Domain Executing_instance_flow')
 Method_Signature_i = namedtuple('Method_Signature_i', 'SIGnum Method Class Domain')
@@ -224,8 +223,9 @@ Parameter_i = namedtuple('Parameter_i', 'Name Signature Domain Type')
 Real_State_Activity_i = namedtuple('Real_State_Activity_i', 'Anum Domain')
 Signature_i = namedtuple('Signature_i', 'SIGnum Domain')
 Single_Assigner_Activity_i = namedtuple('Single_Assigner_Activity_i', 'Anum Domain')
+Signaled_Creation_i = namedtuple('Signaled_Creation_i', 'Signal_action Signal_activity Domain Creation_activity')
 State_Activity_i = namedtuple('State_Activity_i', 'Anum Domain')
-Synchronous_Output_i = namedtuple('Synchronous_Output_i', 'Anum Domain Output_flow Type')
+Synchronous_Output_i = namedtuple('Synchronous_Output_i', 'Anum Domain Type')
 
 # Creation Deletion subsystem
 Attribute_Initialization_i = namedtuple('Attribute_Initialization_i', 'Create_action Activity Attribute Class Domain')

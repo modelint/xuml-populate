@@ -228,8 +228,7 @@ class Activity:
         if len(self.synch_output_flows) == 1:
             single_output_flow = self.synch_output_flows.pop()
             Relvar.insert(db=mmdb, relvar='Synchronous Output', tuples=[
-                Synchronous_Output_i(Anum=self.anum, Domain=self.domain,
-                                     Output_flow=single_output_flow.fid, Type=single_output_flow.tname)
+                Synchronous_Output_i(Anum=self.anum, Domain=self.domain, Type=single_output_flow.tname)
             ])
             _logger.info(f"INSERT Synchronous operation output flow): ["
                          f"{self.activity_path}:^{single_output_flow.fid}]")
@@ -316,8 +315,7 @@ class Activity:
         # Now we can populate the Synchronous Output with the gate output flow
         # (no transaction required since it's just one relvar)
         Relvar.insert(db=mmdb, relvar='Synchronous Output', tuples=[
-            Synchronous_Output_i(Anum=self.anum, Domain=self.domain,
-                                 Output_flow=gate_output_flow.fid, Type=gate_output_flow.tname)
+            Synchronous_Output_i(Anum=self.anum, Domain=self.domain, Type=gate_output_flow.tname)
         ])
 
         # Finally, we can populate Method Call Outputs
@@ -474,7 +472,7 @@ class Activity:
 
     def initially_enabled_flows(self):
         """
-        For a Method Activity, there are three kinds of Flows that are enabled prior to any Action execution.
+        There are three kinds of Flows that are enabled prior to any Action execution in an Activity.
         In other words, these Flows are enabled before the first Wave executes.
 
         These are all parameter flows, the executing instance flow, and the optional output flow
@@ -484,21 +482,20 @@ class Activity:
         # Get the executing instance flow (probably always F1, but just to be safe...)
         # It's a referential attribute of Method, so we just project on that
 
-        # Get the method for our Anum and Domain
-        R = f"Anum:<{self.anum}>, Domain:<{self.domain}>"
-        Relation.restrict(db=mmdb, relation='Method', restriction=R)
-        # Project on the referential attribute to the flow
-        Relation.project(db=mmdb, attributes=("Executing_instance_flow",))
-        # Rename it to "Flow"
-        Relation.rename(db=mmdb, names={"Executing_instance_flow": "Flow"}, svar_name="xiflow")
-        # Relation.print(db=mmdb, variable_name="xiflow")
+        # Parameter flows
+        # We already found the parameter input flows when computing functional dependencies as 'param_flows'
 
-        # Get the parameter input flows for our Anum and Domain
-        R = f"Activity:<{self.anum}>, Domain:<{self.domain}>"
-        Relation.restrict(db=mmdb, relation='Activity Input', restriction=R)
-        # Project on the referential attribute to the flow
-        r = Relation.project(db=mmdb, attributes=("Flow",), svar_name="param_flows")
-        # Relation.print(db=mmdb, variable_name="param_flows")
+        # Executing instance flow
+        # We already know our executing instance flow id, but we need it as a relation
+        xi_fid = self.xiflow.fid if self.xiflow else 'NONE'  # NONE is not a legal fid, so it will return zero tuples
+        FID = namedtuple('FID', 'Flow')  # We need a named tuple to spedicify the flow value as a tuple
+        Relation.create(db=mmdb, attrs=[Attribute(name='Flow', type='string')], tuples=[FID(Flow=xi_fid)],
+                        svar_name="xi_flow")
+        # TODO: Here was the alternate way of creating the xi_fid relation, keeping until below is tested
+        # R = f"ID:<{xi_fid}>, Activity:<{self.anum}>, Domain:<{self.domain}>"
+        # Relation.restrict(db=mmdb, relation='Flow', restriction=R)
+        # Relation.project(db=mmdb, attributes=("ID",))
+        # Relation.rename(db=mmdb, names={'ID': 'Flow'}, svar_name="xi_flow")
 
         # Get any class accessor flows for our Anum and Domain
         R = f"Activity:<{self.anum}>, Domain:<{self.domain}>"
@@ -507,11 +504,9 @@ class Activity:
         Relation.project(db=mmdb, attributes=("Output_flow",))
         # Rename it to "Flow"
         Relation.rename(db=mmdb, names={"Output_flow": "Flow"}, svar_name="class_flows")
-        # Relation.print(db=mmdb, variable_name="class_flows")
 
-        # Now take the union of all three
-        Relation.union(db=mmdb, relations=("xiflow", "param_flows", "class_flows"), svar_name="wave_enabled_flows")
-        # Relation.print(db=mmdb, variable_name="wave_enabled_flows")
+        # Now take the union of all three categories of initally available flows
+        Relation.union(db=mmdb, relations=("xi_flow", "param_flows", "class_flows"), svar_name="wave_enabled_flows")
 
     def initially_executable_actions(self) -> RelationValue:
         """
@@ -724,10 +719,23 @@ class Activity:
             self.flow_path[self.xiflow.fid]['available'] = True
 
         # All activity parameter flows are available
+        # Get the parameters of this Activity's signature
+        R = f"Signature:<{self.signum}>, Domain:<{self.domain}>"
+        Relation.restrict(db=mmdb, relation='Parameter', restriction=R)
+        # All parameters have labeled flows, so let's find all matching parameter names
+        Relation.semijoin(db=mmdb, rname2='Labeled Flow', attrs={
+            'Name': 'Name', 'Domain': 'Domain',
+        })
+        # We'll pick up labeled flows for multiple activities, so we need to narrow it down to
+        # just our activity
         R = f"Activity:<{self.anum}>, Domain:<{self.domain}>"
-        activity_input_r = Relation.restrict(db=mmdb, relation='Activity Input', restriction=R)
-        for ai_flow in activity_input_r.body:
-            self.flow_path[ai_flow['Flow']]['available'] = True
+        Relation.restrict(db=mmdb, restriction=R)
+        Relation.project(db=mmdb, attributes=("ID",))
+        param_flows_r = Relation.rename(db=mmdb, names={'ID': 'Flow'}, svar_name='param_flows')
+        # We save this query result using svar_name for use during wave assignement
+        # Set all of our input param flows to available
+        for p in param_flows_r.body:
+            self.flow_path[p['Flow']]['available'] = True
 
         # All class accessor flows are available
         R = f"Activity:<{self.anum}>, Domain:<{self.domain}>"
