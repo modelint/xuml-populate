@@ -491,11 +491,6 @@ class Activity:
         FID = namedtuple('FID', 'Flow')  # We need a named tuple to spedicify the flow value as a tuple
         Relation.create(db=mmdb, attrs=[Attribute(name='Flow', type='string')], tuples=[FID(Flow=xi_fid)],
                         svar_name="xi_flow")
-        # TODO: Here was the alternate way of creating the xi_fid relation, keeping until below is tested
-        # R = f"ID:<{xi_fid}>, Activity:<{self.anum}>, Domain:<{self.domain}>"
-        # Relation.restrict(db=mmdb, relation='Flow', restriction=R)
-        # Relation.project(db=mmdb, attributes=("ID",))
-        # Relation.rename(db=mmdb, names={'ID': 'Flow'}, svar_name="xi_flow")
 
         # Get any class accessor flows for our Anum and Domain
         R = f"Activity:<{self.anum}>, Domain:<{self.domain}>"

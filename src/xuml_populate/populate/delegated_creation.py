@@ -14,7 +14,7 @@ from scrall.parse.visitor import New_inst_a
 # xUML Populate
 if TYPE_CHECKING:
     from xuml_populate.populate.activity import Activity
-from xuml_populate.populate.mmclass_nt import Initialization_Source_i
+from xuml_populate.populate.mmclass_nt import Initialization_Source_i, Signaled_Creation_i
 from xuml_populate.populate.actions.create_action import CreateAction
 from xuml_populate.populate.actions.new_assoc_ref_action import NewAssociativeReferenceAction
 from xuml_populate.populate.actions.aparse_types import (DelegatedCreationActivityAP, Boundary_Actions,
@@ -35,8 +35,8 @@ class DelegatedCreationActivity:
     populate the creation activity associated with a corresponding event on an initial psuedo state transition.
     """
 
-    def __init__(self, class_name: str, attr_init_flows: dict[str, str],  ref_inits: dict[str, list[str]],
-                 delegating_activity: 'Activity'):
+    def __init__(self, signal_action: str, signal_activity: 'Activity', class_name: str,
+                 creation_activity_anum: str, attr_init_flows: dict[str, str], ref_inits: dict[str, list[str]]):
         """
         Gather the data from the delegating signal and then initiate the population of the creation
         activity.
@@ -46,21 +46,25 @@ class DelegatedCreationActivity:
         (See the Activity Subsystem class model)
 
         Args:
+            tr: Name of the outer transaction
+            signal_action: ID of the Action sending the signal to create
+            signal_activity: The activity obj where the delegating signal emanates
             class_name: We are creating an instance of this class
+            creation_activity_anum: Number of this activity
             attr_init_flows: Attribute name, flow id pairs from delegating activity
             ref_inits: List of one or two refs for each rnum from delegating activity
-            delegating_activity: The activity obj where the delegating signal emanates
         """
         # From input params
         self.class_name = class_name
+        self.anum = creation_activity_anum
         self.attr_init_flows = attr_init_flows
         self.ref_inits = ref_inits
-        self.domain = delegating_activity.domain
-        self.delegating_anum = delegating_activity.anum
+        self.domain = signal_activity.domain
+        self.signal_action = signal_action
+        self.signal_anum = signal_activity.anum
 
         # Determined while populating
         self.activity: str = ""
-        self.anum: str = ""
 
         self.populate()
 
@@ -76,15 +80,6 @@ class DelegatedCreationActivity:
            populate itself
         5. Finally, we instantiate our signal instance
         """
-        # Look up the Initial Pseudo State and get the associated activity number
-        R = f"Class:<{self.class_name}>, Domain:<{self.domain}>"
-        ip_state_r = Relation.restrict(db=mmdb, relation='Initial Pseudo State', restriction=R)
-        if len(ip_state_r.body) != 1:
-            msg = f"Single initial_pseudo_state Pseudo State for Lifecycle: [{self.class_name}] not defined in metamodel"
-            _logger.error(msg)
-            raise ActionException(msg)
-        self.anum = ip_state_r.body[0]["Creation_activity"]
-
         # Has population of the delegated creation activity already triggered by some other
         # Initial Signal Action?
         R = f"Activity:<{self.anum}>, Domain:<{self.domain}>"
@@ -110,13 +105,14 @@ class DelegatedCreationActivity:
         local_attr_flows: dict[str, str] = {}
         for attr_name, source_fid in self.attr_init_flows.items():
             # TODO: Think about how we want to label this flow
-            source_label = Flow.lookup_label(fid=source_fid, anum=self.delegating_anum, domain=self.domain)
-            local_attr_flow = Flow.copy_data_flow(ref_fid=source_fid, ref_anum=self.delegating_anum,
+            source_label = Flow.lookup_label(fid=source_fid, anum=self.signal_anum, domain=self.domain)
+            local_attr_flow = Flow.copy_data_flow(ref_fid=source_fid, ref_anum=self.signal_anum,
                                                   new_anum=self.anum, domain=self.domain, label=source_label,
                                                   tr=tr_DelCreate)
             Relvar.insert(db=mmdb, tr=tr_DelCreate, relvar='Initialization Source', tuples=[
-                Initialization_Source_i(Source_flow=source_fid, Delegating_activity=self.delegating_anum,
-                                        Creation_activity=self.anum, Local_flow=local_attr_flow.fid, Domain=self.domain)
+                Initialization_Source_i(Signal_action=self.signal_action, Signal_activity=self.signal_anum,
+                                        Domain=self.domain, Creation_activity=self.anum, Source_flow=source_fid,
+                                        Local_flow=local_attr_flow.fid)
             ])
             local_attr_flows[attr_name] = local_attr_flow.fid
             # TODO: If delegated flows are unlabled, we should label the local flows to match the attr names
@@ -126,13 +122,13 @@ class DelegatedCreationActivity:
         for rel, refs in self.ref_inits.items():
             local_ref_flows = []
             for ref in refs:
-                local_ref_flow = Flow.copy_data_flow(tr=tr_DelCreate, ref_fid=ref, ref_anum=self.delegating_anum,
+                local_ref_flow = Flow.copy_data_flow(tr=tr_DelCreate, ref_fid=ref, ref_anum=self.signal_anum,
                                                      new_anum=self.anum, domain=self.domain)
                 local_ref_flows.append(local_ref_flow.fid)
                 Relvar.insert(db=mmdb, tr=tr_DelCreate, relvar='Initialization Source', tuples=[
-                    Initialization_Source_i(Source_flow=ref, Delegating_activity=self.delegating_anum,
-                                            Creation_activity=self.anum, Local_flow=local_ref_flow.fid,
-                                            Domain=self.domain)
+                    Initialization_Source_i(Signal_action=self.signal_action, Signal_activity=self.signal_anum,
+                                            Domain=self.domain, Creation_activity=self.anum, Source_flow=ref,
+                                            Local_flow=local_ref_flow.fid)
                 ])
             rnum_refs.append(Flow_refs(rnum=rel, ref_flow1=refs[0], ref_flow2=None if len(refs) != 2 else refs[1]))
         new_inst = New_delegated_inst(cname=self.class_name, attr_flows=local_attr_flows, ref_flows=rnum_refs)

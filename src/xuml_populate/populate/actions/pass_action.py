@@ -133,6 +133,8 @@ class PassAction:
             gate_input_label = f"_{self.flow_to_new_gate.aid[4:]}_{self.output_flow_label}"
             Flow.relabel_flow(new_label=gate_input_label, fid=self.flow_to_new_gate.fid, anum=self.anum,
                               domain=self.domain)
+            # Update this activity's labeled output flows
+            self.activity.labeled_outputs[pass_output_flow.fid] = pass_aid
 
             # Populate the Gate Action
             ga = GateAction(input_fids=[pass_output_flow.fid, self.flow_to_new_gate.fid],

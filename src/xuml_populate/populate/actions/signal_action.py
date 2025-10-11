@@ -34,7 +34,7 @@ from xuml_populate.populate.mmclass_nt import (Signal_Action_i, Supplied_Paramet
                                                Instance_Action_i, Initial_Signal_Action_i, Signal_Completion_Action_i,
                                                Signal_Instance_Action_i, Cancel_Delayed_Signal_Action_i,
                                                Cancel_Delayed_Interaction_Signal_i, Interaction_Signal_Action_i,
-                                               Cancel_Delayed_Completion_Signal_i)
+                                               Cancel_Delayed_Completion_Signal_i, Signaled_Creation_i)
 
 _logger = logging.getLogger(__name__)
 
@@ -167,13 +167,29 @@ class SignalAction:
             Initial_Signal_Action_i(ID=self.action_id, Activity=self.activity.anum, Domain=self.activity.domain,
                                     Class=dest_class, Pseudo_state=IPS_name)
         ])
+        # Look up the Initial Pseudo State and get the associated activity number
+        R = f"Class:<{dest_class}>, Domain:<{self.activity.domain}>"
+        ip_state_r = Relation.restrict(db=mmdb, relation='Initial Pseudo State', restriction=R)
+        if len(ip_state_r.body) != 1:
+            msg = f"Single initial_pseudo_state Pseudo State for Lifecycle: [{self.class_name}] not defined in metamodel"
+            _logger.error(msg)
+            raise ActionException(msg)
+        creation_activity_anum = ip_state_r.body[0]["Creation_activity"]
+
+        # The Initial Signal Action is signaling this Delegated Creation Activity
+        Relvar.insert(db=mmdb, tr=tr_Signal, relvar='Signaled Creation', tuples=[
+            Signaled_Creation_i(Signal_action=self.action_id, Signal_activity=self.activity.anum,
+                                Domain=self.activity.domain, Creation_activity=creation_activity_anum)
+        ])
         # The boundary actions are always just this one signal action id
         self.aids_in.add(self.action_id)
         self.aids_out.add(self.action_id)
 
         self.complete_transaction()
-        DelegatedCreationActivity(class_name=dest_class, attr_init_flows=attr_init_flows, ref_inits=ref_inits,
-                                  delegating_activity=self.activity)
+
+        DelegatedCreationActivity(signal_action=self.action_id, signal_activity=self.activity,
+                                  creation_activity_anum=creation_activity_anum,
+                                  class_name=dest_class, attr_init_flows=attr_init_flows, ref_inits=ref_inits)
         pass
 
     def find_dest_flow(self) -> Optional[Flow_ap]:
