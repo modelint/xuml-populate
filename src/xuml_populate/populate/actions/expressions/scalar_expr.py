@@ -206,26 +206,27 @@ class ScalarExpr:
                 # 1. Check for an attribute name on the component flow class
                 # 2. Check for a scalar flow with this name
                 # Just in case there's a nother possibility, leave a placeholder for anything else
-                R = f"Name:<{sexpr.name}>, Class:<{self.component_flow.tname}>, Domain:<{self.domain}>"
-                attribute_r = Relation.restrict(db=mmdb, relation="Attribute", restriction=R)
-                if attribute_r.body:
-                    # Create a read action to obtain the value
-                    ra = ReadAction(input_single_instance_flow=self.component_flow, attrs=(sexpr.name,),
-                                    anum=self.anum, domain=self.domain)
-                    aid, sflows = ra.populate()
-                    self.action_inputs[aid] = {self.component_flow.fid}
-                    self.action_outputs[aid] = {s.fid for s in sflows}
-                    return sflows
-                else:
-                    sflows = Flow.find_labeled_scalar_flow(name=sexpr.name, anum=self.anum, domain=self.domain)
-                    if not sflows:
-                        msg = f"Name N_a in scalar expr must be an attribute or a labeled scalar flow"
-                        _logger.error(msg)
-                        raise ActionException(msg)
-                    return sflows
-                    # TODO: It must be a scalar flow label, handle this
-                    pass
-                pass
+                if self.component_flow:
+                    # Check for attribute only if there is an available component flow
+                    # (which we won't have if this is an assigner activity, for example)
+                    R = f"Name:<{sexpr.name}>, Class:<{self.component_flow.tname}>, Domain:<{self.domain}>"
+                    attribute_r = Relation.restrict(db=mmdb, relation="Attribute", restriction=R)
+                    if attribute_r.body:
+                        # Create a read action to obtain the value
+                        ra = ReadAction(input_single_instance_flow=self.component_flow, attrs=(sexpr.name,),
+                                        anum=self.anum, domain=self.domain)
+                        aid, sflows = ra.populate()
+                        self.action_inputs[aid] = {self.component_flow.fid}
+                        self.action_outputs[aid] = {s.fid for s in sflows}
+                        return sflows
+                # Not an attribute flow, look for a labeled scalar flow
+                sflows = Flow.find_labeled_scalar_flow(name=sexpr.name, anum=self.anum, domain=self.domain)
+                if not sflows:
+                    msg = f"Name N_a in scalar expr must be an attribute or a labeled scalar flow"
+                    _logger.error(msg)
+                    raise ActionException(msg)
+                return sflows
+
             case 'BOOL_a':
                 pass
             case 'MATH_a':

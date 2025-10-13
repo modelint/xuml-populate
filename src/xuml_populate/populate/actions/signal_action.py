@@ -65,6 +65,8 @@ class SignalAction:
         else:
             self.completion_event = False
         self.activity = activity
+        self.anum = activity.anum
+        self.domain = activity.domain
         self.input_instance_flow = activity.xiflow if activity.xiflow is not None else activity.piflow
         # Will still be None if the Activity is in an Assigner state model
 
@@ -76,6 +78,7 @@ class SignalAction:
         self.action_id: str = None
         self.signal_dest = None
         self.dest_sm = None
+        self.dest_sig = None
         self.initial_signal_action = False  # Default assumption
         self.external_dest = False
 
@@ -164,11 +167,11 @@ class SignalAction:
         # Now we just need to populate the Initial Signal Action itself
         # Since all the heavy lifting happens in the creation activity, there isn't much to do here
         Relvar.insert(db=mmdb, tr=tr_Signal, relvar='Initial Signal Action', tuples=[
-            Initial_Signal_Action_i(ID=self.action_id, Activity=self.activity.anum, Domain=self.activity.domain,
+            Initial_Signal_Action_i(ID=self.action_id, Activity=self.anum, Domain=self.domain,
                                     Class=dest_class, Pseudo_state=IPS_name)
         ])
         # Look up the Initial Pseudo State and get the associated activity number
-        R = f"Class:<{dest_class}>, Domain:<{self.activity.domain}>"
+        R = f"Class:<{dest_class}>, Domain:<{self.domain}>"
         ip_state_r = Relation.restrict(db=mmdb, relation='Initial Pseudo State', restriction=R)
         if len(ip_state_r.body) != 1:
             msg = f"Single initial_pseudo_state Pseudo State for Lifecycle: [{self.class_name}] not defined in metamodel"
@@ -178,8 +181,8 @@ class SignalAction:
 
         # The Initial Signal Action is signaling this Delegated Creation Activity
         Relvar.insert(db=mmdb, tr=tr_Signal, relvar='Signaled Creation', tuples=[
-            Signaled_Creation_i(Signal_action=self.action_id, Signal_activity=self.activity.anum,
-                                Domain=self.activity.domain, Creation_activity=creation_activity_anum)
+            Signaled_Creation_i(Signal_action=self.action_id, Signal_activity=self.anum,
+                                Domain=self.domain, Creation_activity=creation_activity_anum)
         ])
         # The boundary actions are always just this one signal action id
         self.aids_in.add(self.action_id)
@@ -190,7 +193,6 @@ class SignalAction:
         DelegatedCreationActivity(signal_action=self.action_id, signal_activity=self.activity,
                                   creation_activity_anum=creation_activity_anum,
                                   class_name=dest_class, attr_init_flows=attr_init_flows, ref_inits=ref_inits)
-        pass
 
     def find_dest_flow(self) -> Optional[Flow_ap]:
         """
@@ -276,15 +278,15 @@ class SignalAction:
                 pass  # Includes case where a more complex instance set expression is supplied
 
         Relvar.insert(db=mmdb, tr=tr_Signal, relvar='Signal Instance Action', tuples=[
-            Signal_Instance_Action_i(ID=self.action_id, Activity=self.activity.anum, Domain=self.activity.domain)
+            Signal_Instance_Action_i(ID=self.action_id, Activity=self.anum, Domain=self.domain)
         ])
         Relvar.insert(db=mmdb, tr=tr_Signal, relvar='Interaction Signal Action', tuples=[
-            Interaction_Signal_Action_i(ID=self.action_id, Activity=self.activity.anum, Domain=self.activity.domain,
+            Interaction_Signal_Action_i(ID=self.action_id, Activity=self.anum, Domain=self.domain,
                                         Instance_flow=dest_flow.fid)
         ])
         Relvar.insert(db=mmdb, tr=tr_Signal, relvar='Signal Instance Set Action', tuples=[
-            Signal_Instance_Set_Action_i(ID=self.action_id, Activity=self.activity.anum,
-                                         Domain=self.activity.domain)
+            Signal_Instance_Set_Action_i(ID=self.action_id, Activity=self.anum,
+                                         Domain=self.domain)
         ])
         self.complete_transaction()
 
@@ -309,18 +311,18 @@ class SignalAction:
         self.aids_out.add(aout)
 
         # If the destination is a Multiple Assigner, populate the partition instance
-        R = f"Rnum:<{dest_sm}>, Domain:<{self.activity.domain}>"
+        R = f"Rnum:<{dest_sm}>, Domain:<{self.domain}>"
         multiple_assigner_r = Relation.restrict(db=mmdb, relation="Multiple Assigner", restriction=R)
         if multiple_assigner_r.body:
             Relvar.insert(db=mmdb, tr=tr_Signal, relvar='Multiple Assigner Partition Instance', tuples=[
-                Multiple_Assigner_Partition_Instance_i(Action=self.action_id, Activity=self.activity.anum,
-                                                       Domain=self.activity.domain,
+                Multiple_Assigner_Partition_Instance_i(Action=self.action_id, Activity=self.anum,
+                                                       Domain=self.domain,
                                                        Partition=f.fid)
             ])
 
         Relvar.insert(db=mmdb, tr=tr_Signal, relvar='Signal Assigner Action', tuples=[
-            Signal_Assigner_Action_i(ID=self.action_id, Activity=self.activity.anum,
-                                     Domain=self.activity.domain,
+            Signal_Assigner_Action_i(ID=self.action_id, Activity=self.anum,
+                                     Domain=self.domain,
                                      Association=dest_sm)
         ])
         self.dest_sm = dest_sm
@@ -332,23 +334,23 @@ class SignalAction:
         if self.completion_event:
             # Destination is self, so no instance input flow required
             Relvar.insert(db=mmdb, tr=tr_Signal, relvar='Cancel Delayed Completion Signal', tuples=[
-                Cancel_Delayed_Completion_Signal_i(ID=self.action_id, Activity=self.activity.anum, Domain=self.activity.domain)
+                Cancel_Delayed_Completion_Signal_i(ID=self.action_id, Activity=self.anum, Domain=self.domain)
             ])
             self.dest_sm = self.activity.state_model
         else:
             # It's an interaction event, so we need to set the target instance flow
             dest_flow = self.find_dest_flow()
             Relvar.insert(db=mmdb, tr=tr_Signal, relvar='Cancel Delayed Interaction Signal', tuples=[
-                Cancel_Delayed_Interaction_Signal_i(ID=self.action_id, Activity=self.activity.anum,
-                                                    Domain=self.activity.domain)
+                Cancel_Delayed_Interaction_Signal_i(ID=self.action_id, Activity=self.anum,
+                                                    Domain=self.domain)
             ])
             Relvar.insert(db=mmdb, tr=tr_Signal, relvar='Interaction Signal Action', tuples=[
-                Interaction_Signal_Action_i(ID=self.action_id, Activity=self.activity.anum,
-                                            Domain=self.activity.domain, Instance_flow=dest_flow.fid)
+                Interaction_Signal_Action_i(ID=self.action_id, Activity=self.anum,
+                                            Domain=self.domain, Instance_flow=dest_flow.fid)
             ])
 
         Relvar.insert(db=mmdb, tr=tr_Signal, relvar='Cancel Delayed Signal Action', tuples=[
-            Cancel_Delayed_Signal_Action_i(ID=self.action_id, Activity=self.activity.anum, Domain=self.activity.domain)
+            Cancel_Delayed_Signal_Action_i(ID=self.action_id, Activity=self.anum, Domain=self.domain)
         ])
 
         # The boundary actions are always just this one signal action id
@@ -363,10 +365,10 @@ class SignalAction:
         it originated. So we simply populate the Signal Action subclass instance
         """
         Relvar.insert(db=mmdb, tr=tr_Signal, relvar='Signal Instance Action', tuples=[
-            Signal_Instance_Action_i(ID=self.action_id, Activity=self.activity.anum, Domain=self.activity.domain)
+            Signal_Instance_Action_i(ID=self.action_id, Activity=self.anum, Domain=self.domain)
         ])
         Relvar.insert(db=mmdb, tr=tr_Signal, relvar='Signal Completion Action', tuples=[
-            Signal_Completion_Action_i(ID=self.action_id, Activity=self.activity.anum, Domain=self.activity.domain)
+            Signal_Completion_Action_i(ID=self.action_id, Activity=self.anum, Domain=self.domain)
         ])
         self.dest_sm = self.activity.state_model
         # The boundary actions are always just this one signal action id
@@ -424,13 +426,17 @@ class SignalAction:
         raise ActionException(msg)
 
     def complete_transaction(self):
+        """
+        """
+        self.populate_supplied_params()
+
         # Populate the superclasses
         Relvar.insert(db=mmdb, tr=tr_Signal, relvar='Signal Action', tuples=[
-            Signal_Action_i(ID=self.action_id, Activity=self.activity.anum, Domain=self.activity.domain,
+            Signal_Action_i(ID=self.action_id, Activity=self.anum, Domain=self.domain,
                             Event_spec=self.statement_parse.event, State_model=self.dest_sm)
         ])
         Relvar.insert(db=mmdb, tr=tr_Signal, relvar='Instance Action', tuples=[
-            Instance_Action_i(ID=self.action_id, Activity=self.activity.anum, Domain=self.activity.domain)
+            Instance_Action_i(ID=self.action_id, Activity=self.anum, Domain=self.domain)
         ])
 
         if self.statement_parse.supplied_params:
@@ -444,6 +450,43 @@ class SignalAction:
 
         if self.statement_parse.dest.delay:
             self.populate_delay(delay_parse=self.statement_parse.dest.delay)
+
+    def populate_supplied_params(self):
+        """
+        Populate any Supplied Parmaeters
+        """
+        # Make sure the event spec exists while setting its state sig num
+        R = f"Name:<{self.event_name}>, State_model:<{self.dest_sm}>, Domain:<{self.domain}>"
+        event_spec_r = Relation.restrict(db=mmdb, relation="Event Specification", restriction=R)
+        if not event_spec_r.body:
+            msg = f"Event specification {self.event_name} in {self.activity.activity_path} not found"
+            _logger.error(msg)
+            raise ActionException(msg)
+        evspec_sig = event_spec_r.body[0]['State_signature']
+
+        for p in self.statement_parse.supplied_params:
+            # Validate the parameter
+            R = f"Name:<{p.pname}>, Signature:<{evspec_sig}>, Domain:<{self.domain}>"
+            parameter_r = Relation.restrict(db=mmdb, relation="Parameter", restriction=R)
+            if not parameter_r.body:
+                msg = f"No parameters defined for event {self.event_name} with signature: {evspec_sig}"
+                _logger.error(msg)
+                raise ActionException(msg)
+            pass
+
+            se = ScalarExpr(expr=p.sval, input_instance_flow=self.activity.xiflow, activity=self.activity)
+            b, sflows = se.process()
+            # Verify that a scalar flow was found
+            if len(sflows) != 1:
+                msg = f"Scalar flow not found for parameter {p.pname} in scalar expression at {self.activity.path}"
+                _logger.error(msg)
+                ActionException(msg)
+            param_flow = sflows[0]
+            Relvar.insert(db=mmdb, tr=tr_Signal, relvar='Supplied Parameter Value', tuples=[
+                Supplied_Parameter_Value_i(Parameter=p.pname, Signature=evspec_sig, Action=self.action_id,
+                                           Activity=self.anum, Domain=self.domain, Data_flow=param_flow.fid)
+            ])
+
 
     def populate_delay(self, delay_parse):
         """
@@ -479,7 +522,7 @@ class SignalAction:
 
         # Populate
         Relvar.insert(db=mmdb, relvar='Delivery Time', tuples=[
-            Delivery_Time_i(Action=self.action_id, Activity=self.activity.anum, Domain=self.activity.domain,
+            Delivery_Time_i(Action=self.action_id, Activity=self.anum, Domain=self.domain,
                             Flow=signal_delay_input_flow.fid, Relative=relative)
         ])
         pass
@@ -492,7 +535,7 @@ class SignalAction:
         # Initiate the Signal Action transaction
         Transaction.open(db=mmdb, name=tr_Signal)
         # Populate the Action superclass instance and obtain its action_id
-        self.action_id = Action.populate(tr=tr_Signal, anum=self.activity.anum, domain=self.activity.domain,
+        self.action_id = Action.populate(tr=tr_Signal, anum=self.anum, domain=self.domain,
                                          action_type="signal")  # Transaction open
 
         self.populate_subclass()
