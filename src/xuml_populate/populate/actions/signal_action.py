@@ -439,13 +439,6 @@ class SignalAction:
             Instance_Action_i(ID=self.action_id, Activity=self.anum, Domain=self.domain)
         ])
 
-        if self.statement_parse.supplied_params:
-            # TODO: Populate Supplied Parameter Value instances for each
-            pass
-        if self.statement_parse.dest.delay != 0:
-            # TODO: Populate Delivery Time
-            pass
-
         Transaction.execute(db=mmdb, name=tr_Signal)
 
         if self.statement_parse.dest.delay:
@@ -486,7 +479,6 @@ class SignalAction:
                 Supplied_Parameter_Value_i(Parameter=p.pname, Signature=evspec_sig, Action=self.action_id,
                                            Activity=self.anum, Domain=self.domain, Data_flow=param_flow.fid)
             ])
-
 
     def populate_delay(self, delay_parse):
         """
