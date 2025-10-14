@@ -15,9 +15,12 @@ from pyral.transaction import Transaction
 from xuml_populate.exceptions.action_exceptions import ActionException
 
 # xUML populate
+if __debug__:
+    from xuml_populate.utility import print_mmdb
+
 if TYPE_CHECKING:
     from xuml_populate.populate.activity import Activity
-from xuml_populate.utility import print_mmdb
+
 from xuml_populate.config import mmdb
 from xuml_populate.names import IPS_name  # Initial pseudo-state name
 from xuml_populate.populate.delegated_creation import DelegatedCreationActivity
@@ -28,13 +31,11 @@ from xuml_populate.populate.flow import Flow_ap
 from xuml_populate.populate.actions.gate_action import GateAction
 from xuml_populate.populate.actions.expressions.scalar_expr import ScalarExpr
 from xuml_populate.populate.actions.expressions.instance_set import InstanceSet
-from xuml_populate.populate.mmclass_nt import (Signal_Action_i, Supplied_Parameter_Value_i,
-                                               Signal_Instance_Set_Action_i, Delivery_Time_i,
-                                               Multiple_Assigner_Partition_Instance_i, Signal_Assigner_Action_i,
-                                               Instance_Action_i, Initial_Signal_Action_i, Signal_Completion_Action_i,
-                                               Signal_Instance_Action_i, Cancel_Delayed_Signal_Action_i,
-                                               Cancel_Delayed_Interaction_Signal_i, Interaction_Signal_Action_i,
-                                               Cancel_Delayed_Completion_Signal_i, Signaled_Creation_i)
+from xuml_populate.populate.mmclass_nt import (
+    Signal_Action_i, Supplied_Parameter_Value_i, Signal_Instance_Action_i, Delivery_Time_i,
+    Multiple_Assigner_Partition_Instance_i, Signal_Assigner_Action_i, Instance_Action_i, Initial_Signal_Action_i,
+    Signal_Completion_Action_i, Signal_Instance_Action_i, Cancel_Delayed_Signal_Action_i, Signaled_Creation_i
+)
 
 _logger = logging.getLogger(__name__)
 
@@ -43,33 +44,36 @@ tr_Signal = "Signal Action"
 
 class SignalAction:
     """
-    Create all relations for a Signal Action.
+    Populate all Signal Action subsystem model elements
     """
-    # TODO: Implement other Signal Action subclasses
-    # TODO: activity type should be ActivityAP
     def __init__(self, statement_parse: Signal_a, activity: 'Activity'):
         """
         Initialize with everything the Signal statement requires
 
         Args:
             statement_parse: Parsed representation of the Signal statement
-            activity: Collected info about the activity
+            activity: The enclosing Activity object
         """
-        self.event_name = statement_parse.event
-        self.action_id = None
-        self.statement_parse = statement_parse
-        self.target_iset = statement_parse.dest.target_iset
-        # Check for completion event
+        self.event_name = statement_parse.event  # Event specification name
+        self.action_id = None  # Assigned during population of Action
+        self.statement_parse = statement_parse  # The parsed Scrall signal statement
+        self.target_iset = statement_parse.dest.target_iset  # The destination, if any of this Action
+
+        # Check for event to self
+        # We'll assume this is a Completion Event, but can't be sure until we rule out a delayed event to self
+        # when we branch out to each subclass population method
         if self.target_iset is not None and type(self.target_iset).__name__ == 'N_a' and self.target_iset.name == 'me':
             self.completion_event = True
         else:
             self.completion_event = False
-        self.activity = activity
+
+        self.activity = activity  # The enclosing Activity object
         self.anum = activity.anum
         self.domain = activity.domain
+        # xiflow for Lifecycle or Method, piflow for Multiple Assigner, or None for Single Assigner
         self.input_instance_flow = activity.xiflow if activity.xiflow is not None else activity.piflow
-        # Will still be None if the Activity is in an Assigner state model
 
+        # These are set during population
         self.dest_iflow = None
         self.parameter_values = None
         self.delay_sflow = None
@@ -80,12 +84,10 @@ class SignalAction:
         self.dest_sm = None
         self.dest_sig = None
         self.initial_signal_action = False  # Default assumption
-        self.external_dest = False
+        self.external_dest = True if type(statement_parse).__name__ == 'External_signal_a' else False
 
-        if type(statement_parse).__name__ == 'External_signal_a':
-            self.external_dest = True
-
-        # Is the target of this signal a creation action? - if so, it's an Initial Signal Action?
+        # Does this signal delegate creation of a new instance?
+        # If so, it's an Initial Signal Action  (asynchronous creation)
         if type(self.target_iset).__name__ == "INST_a":
             if len(self.target_iset.components) == 1 and type(self.target_iset.components[0]).__name__ == 'New_inst_a':
                 self.initial_signal_action = True
@@ -379,49 +381,54 @@ class SignalAction:
 
     def populate_subclass(self):
         """
+        Branch to the appropriate population method for the specific Signal Action subclass
         """
-        # Is this a signal that will be mapped to a counterpart in another domain?
-        # In early Shlaer-Mellor this was an event to an external entity
+        # External signal (mapped to service outside our domain)
         if self.external_dest:
             self.populate_external_signal()  # No returned destination
             return
 
+        # Cancel Delayed Signal Action
         if self.statement_parse.dest.cancel:
             self.populate_cancel_delayed_signal_action()
             return
 
-        # Is this a signal delegation creation of a lifecycle instance on an initial psuedo state transition?
+        # Initial Signal Action (asynchronous creation)
         if self.initial_signal_action:
             self.populate_initial_signal()  # Returned destination is the target class name
             return
 
+        # Signal Completion Action
         # If the destination is 'me' this must be a Signal Completion Action
         # since we've alredy ruled out a Cancel Delayed Completion Signal Action
         if self.completion_event:
             self.populate_signal_completion_action()
             return
 
-        assigner_dest = self.statement_parse.dest.assigner_dest
-        if self.target_iset and assigner_dest:
+        # Signal Assigner Action
+        # Check for invalid parse
+        if self.target_iset and self.statement_parse.dest.assigner_dest:
             # Only one of these two should be set
             msg = (f"Instance set and assigner destinations are mutually exclusive as a signal destination.\n"
                    f"But both have been specified for signal {self.event_name} in {self.activity.activity_path}")
             _logger.error(msg)
             raise ActionException(msg)
 
-        # It's a signal to an assigner
-        if assigner_dest:
+        if self.statement_parse.dest.assigner_dest:
             self.process_signal_assigner_action()
             return
 
-        # The destination must be an instance set so the target is a lifecycle state model
-        # A distinct signal may be generated for each in the target instance set, but they all share the same lifecycle
-        # so there is still only one destination state model
+        # Signal Instance Action
+        # The target is a Lifecycle
+        # A distinct signal may be generated for each target instance, but they all target the same lifecycle
+        # so there is still only one destination State Model
         if self.target_iset:
             self.process_signal_instance_set_action(dest=self.target_iset)
             return
 
-        msg = f"No destination defined for event {self.event_name} in {self.activity.activity_path}"
+        # No recognized subclass
+        msg = (f"Unrecognized signal action subclass defined for event {self.event_name} in:"
+               f" {self.activity.activity_path}")
         _logger.error(msg)
         raise ActionException(msg)
 
