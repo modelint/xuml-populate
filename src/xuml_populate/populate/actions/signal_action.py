@@ -55,19 +55,29 @@ class SignalAction:
             statement_parse: Parsed representation of the Signal statement
             activity: The enclosing Activity object
         """
+        # Ensure that this is a state model activity
+        # Signals may only be issued by State Activities
+        if not activity.state_model:
+            msg = f"Only a State Activity can send a signal. Signal action encounterd in: {self.activity.path}"
+            _logger.error(msg)
+            ActionException(msg)
         self.event_name = statement_parse.event  # Event specification name
         self.action_id = None  # Assigned during population of Action
         self.statement_parse = statement_parse  # The parsed Scrall signal statement
-        self.target_iset = statement_parse.dest.target_iset  # The destination, if any of this Action
-        self.self_directed = False
-        if self.target_iset is not None and type(self.target_iset).__name__ == 'N_a' and self.target_iset.name == 'me':
-            self.self_directed = True
+        self.target_iset = statement_parse.dest.target_iset  # The destination parse, if any of this Action
 
         self.activity = activity  # The enclosing Activity object
         self.anum = activity.anum
         self.domain = activity.domain
         # xiflow for Lifecycle or Method, piflow for Multiple Assigner, or None for Single Assigner
         self.input_instance_flow = activity.xiflow if activity.xiflow is not None else activity.piflow
+
+        # If this is a self directed signal, set the destination and status
+        self.self_directed = False  # Status set for convenient future reference
+        self.dest_sm = None  # Determined during population if not to self
+        if self.target_iset is not None and type(self.target_iset).__name__ == 'N_a' and self.target_iset.name == 'me':
+            self.dest_sm = activity.state_model
+            self.self_directed = True
 
         # These are set during population
         self.dest_iflow = None
@@ -77,7 +87,6 @@ class SignalAction:
         self.aids_out: set[str] = set()
         self.action_id: str = None
         self.signal_dest = None
-        self.dest_sm = None
         self.dest_sig = None
         self.initial_signal_action = False  # Default assumption
         self.external_dest = True if type(statement_parse).__name__ == 'External_signal_a' else False
@@ -166,10 +175,10 @@ class SignalAction:
         """
         Populate a Cancel Delayed Signal Action
         """
-        # TODO: Verify that this works for self directed events
+        dest_iflow = self.find_dest_flow()
         Relvar.insert(db=mmdb, tr=tr_Signal, relvar='Cancel Delayed Signal Action', tuples=[
             Cancel_Delayed_Signal_Action_i(ID=self.action_id, Activity=self.anum, Domain=self.domain,
-                                           Instance_flow=self.target_iset.fid)
+                                           Instance_flow=dest_iflow.fid)
         ])
         Relvar.insert(db=mmdb, tr=tr_Signal, relvar='Signal Action', tuples=[
             Signal_Action_i(ID=self.action_id, Activity=self.anum, Domain=self.domain)
@@ -178,8 +187,6 @@ class SignalAction:
         # The boundary actions are always just this one signal action id
         self.aids_in.add(self.action_id)
         self.aids_out.add(self.action_id)
-
-        self.complete_send_signal_transaction()
 
     def populate_initial_signal(self):
         """
@@ -287,8 +294,8 @@ class SignalAction:
         Returns:
             Summary of the destination flow or None if not found or its a completion event
         """
-        if self.completion_event:
-            return None
+        if self.self_directed:
+            return self.input_instance_flow
         iset_type = type(self.target_iset).__name__
         match iset_type:
             case 'N_a' | 'IN_a':
@@ -322,17 +329,14 @@ class SignalAction:
     def process_signal_instance_action(self, dest):
         """
         """
-        # An instance set destination was specified, so a signal will be sent to each instance lifecycle
-        # state machine in the set
+        # An instance set destination was specified, so a signal will be sent to each instance in the set
         dest_flow = None
         iset_type = type(dest).__name__
         match iset_type:
             case 'N_a':
                 if dest.name == 'me':
                     self.dest_sm = self.activity.state_model
-                    dest_flow = self.activity.xiflow
-                    # TODO: This is NOT a signal instance set action if target is assigner
-                    # TODO: In fact, this is a completion event
+                    dest_flow = self.input_instance_flow
                 else:
                     # Resolve the destination instance flow
                     iset = InstanceSet(input_instance_flow=self.input_instance_flow,
@@ -514,7 +518,7 @@ class SignalAction:
         relative = True if signal_delay_input_flow.tname == 'Duration' else False
 
         # Populate
-        Relvar.insert(db=mmdb, relvar='Delivery Time', tuples=[
+        Relvar.insert(db=mmdb, tr=tr_Signal, relvar='Delivery Time', tuples=[
             Delivery_Time_i(Action=self.action_id, Activity=self.anum, Domain=self.domain,
                             Flow=signal_delay_input_flow.fid, Relative=relative)
         ])
