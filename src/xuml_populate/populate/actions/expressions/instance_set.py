@@ -192,7 +192,20 @@ class InstanceSet:
                     if comp.owner == '_external':
                         # TODO: Process external services
                         # At may return a scalar expression depending on external service definition
-                        pass
+                        # So we look up the type External Operation Output
+                        R = f"Name:<{comp.op_name}>, Domain:<{domain}>"
+                        ext_service_r = Relation.restrict(db=mmdb, relation="External Service", restriction=R)
+                        if not ext_service_r.body:
+                            msg = f"Undefined external service {comp.op_name} in: {self.activity.activity_path}"
+                            _logger.error(msg)
+                            raise ActionException(msg)
+                        ext_op_output_r = Relation.semijoin(db=mmdb, rname2='External Operation Output', attrs={
+                            'Name': 'Operation', 'Domain':'Domain'
+                        })
+                        if ext_op_output_r.body:
+                            pass
+                        else:
+                            pass
 
                     single_inst_flow_label = comp.owner if comp.owner != '_implicit' else 'me'
                     # Name on a flow delivering a single instance method target
