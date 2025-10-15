@@ -116,7 +116,8 @@ External_Operation_Output_i = namedtuple('External_Operation_Output_i', 'Operati
 External_Service_i = namedtuple('External_Service_i', 'Name Domain Signature Class')
 External_Signal_Action_i = namedtuple('External_Signal_Action_i', 'ID Activity Domain External_event')
 Operation_Call_i = namedtuple('Operation_Call_i', 'ID Activity Domain Operation')
-Operation_Call_Flow_i = namedtuple('Operation_Call_Flow_i', 'Operation_call Activity Domain Operation_name Output_flow')
+Operation_Call_Output_i = namedtuple('Operation_Call_Output_i', 'Operation_call Activity Domain Operation_name Flow')
+Operation_Call_Parameter_i = namedtuple('Operation_Call_Parameter_i', 'Operation_call Activity Parameter Signature Domain Flow')
 
 # Method Call subsystem
 Method_Call_i = namedtuple('Method_Call_i', 'ID Activity Domain Method Instance_flow')

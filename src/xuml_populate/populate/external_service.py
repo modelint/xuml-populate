@@ -58,7 +58,7 @@ class ExternalService:
                     ])
 
                     # If the operation returns a value, populate the External Operation Output
-                    rtype = op.get('return')
+                    rtype = op.get('output')
                     if rtype is not None:
                         Relvar.insert(db=mmdb, tr=tr_ExternalOperation, relvar='External Operation Output', tuples=[
                             External_Operation_Output_i(Operation=op["name"], Domain=domain, Type=rtype)
@@ -81,7 +81,7 @@ class ExternalService:
                 Transaction.execute(db=mmdb, name=tr_ExternalEvent)
 
     @classmethod
-    def populate_sig(cls, tr: str, params: dict[str, str], domain: str) -> str:
+    def populate_sig(cls, tr: str, params: list[dict[str, str]], domain: str) -> str:
         """
         Populate an External Signature instance in the current traansaction
 
@@ -97,12 +97,12 @@ class ExternalService:
         Relvar.insert(db=mmdb, tr=tr, relvar='External Signature', tuples=[
             External_Signature_i(SIGnum=signum, Domain=domain)
         ])
-        for n, t in params.items():
+        for p in params:
             # TODO: Consider supporting table type output (not classes)
             # Populate the type if it is not already populated
-            MMtype.populate_scalar(name=t, domain=domain)
+            MMtype.populate_scalar(name=p['type'], domain=domain)
             # Populate the Parameter
             Relvar.insert(db=mmdb, tr=tr, relvar='Parameter', tuples=[
-                Parameter_i(Name=n, Signature=signum, Domain=domain, Type=t)
+                Parameter_i(Name=p['name'], Signature=signum, Domain=domain, Type=p['type'])
             ])
         return signum

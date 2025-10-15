@@ -12,10 +12,11 @@ from pyral.transaction import Transaction
 # xUML Populate
 if TYPE_CHECKING:
     from xuml_populate.populate.activity import Activity
-from xuml_populate.utility import print_mmdb
+
 from xuml_populate.config import mmdb
 from xuml_populate.populate.actions.traverse_action import TraverseAction
 from xuml_populate.populate.actions.create_action import CreateAction
+from xuml_populate.populate.actions.external_operation import ExternalOperation
 from xuml_populate.populate.actions.expressions.class_accessor import ClassAccessor
 from xuml_populate.populate.flow import Flow
 from xuml_populate.populate.actions.select_action import SelectAction
@@ -23,6 +24,9 @@ from xuml_populate.populate.actions.restrict_action import RestrictAction
 from xuml_populate.populate.actions.rank_restrict_action import RankRestrictAction
 from xuml_populate.populate.actions.aparse_types import Flow_ap, MaxMult, Content, SMType, ActivityType
 from xuml_populate.exceptions.action_exceptions import *
+
+if __debug__:
+    from xuml_populate.utility import print_mmdb
 
 _logger = logging.getLogger(__name__)
 
@@ -203,6 +207,8 @@ class InstanceSet:
                             'Name': 'Operation', 'Domain':'Domain'
                         })
                         if ext_op_output_r.body:
+                            eop = ExternalOperation(parse=comp, activity=self.activity)
+                            ain, aout, output_flow = eop.populate()
                             pass
                         else:
                             pass

@@ -2,9 +2,9 @@ Cabin:
   external operations:
     - name: Go to floor
       parameters:
-        name: Dest floor
-        type: Level Name
-      return: Boolean
+        - name: Dest floor
+          type: Level Name
+      output: Boolean
 
 Door:
   bridgeable conditions:
