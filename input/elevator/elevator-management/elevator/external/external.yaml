@@ -4,7 +4,9 @@ Cabin:
       parameters:
         - name: Dest floor
           type: Level Name
-      output: Boolean
+      output:
+        name: stopping
+        type: Boolean
 
 Door:
   bridgeable conditions:

@@ -61,7 +61,8 @@ class ExternalService:
                     rtype = op.get('output')
                     if rtype is not None:
                         Relvar.insert(db=mmdb, tr=tr_ExternalOperation, relvar='External Operation Output', tuples=[
-                            External_Operation_Output_i(Operation=op["name"], Domain=domain, Type=rtype)
+                            External_Operation_Output_i(Operation=op["name"], Domain=domain,
+                                                        Type=rtype['type'], Name=rtype['name'])
                         ])
                     Transaction.execute(db=mmdb, name=tr_ExternalOperation)
 

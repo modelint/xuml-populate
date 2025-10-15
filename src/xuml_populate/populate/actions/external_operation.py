@@ -21,7 +21,9 @@ from xuml_populate.populate.actions.action import Action
 from xuml_populate.populate.actions.read_action import ReadAction
 from xuml_populate.exceptions.action_exceptions import *
 from xuml_populate.populate.actions.aparse_types import Boundary_Actions, Flow_ap, MaxMult, ActivityType
-from xuml_populate.populate.mmclass_nt import Operation_Call_i, Operation_Call_Parameter_i, Instance_Action_i
+from xuml_populate.populate.mmclass_nt import (
+    Operation_Call_i, Operation_Call_Parameter_i, Operation_Call_Output_i, Instance_Action_i
+)
 
 if __debug__:
     from xuml_populate.utility import print_mmdb
@@ -78,8 +80,9 @@ class ExternalOperation:
 
         # Validate Operation Call params (ensure that the call matches the Operation's populated signature
         R = f"Name:<{self.op_name}>, Domain:<{self.domain}>"
+        ext_service_sv = 'ext_service_sv'
         ext_service_r = Relation.restrict(db=mmdb, relation='External Service', restriction=R,
-                                          svar_name="ext_service_sv")
+                                          svar_name=ext_service_sv)
         if len(ext_service_r.body) != 1:
             msg = f"External operation not defined in: {self.activity.activity_path}"
             _logger.error(msg)
@@ -151,6 +154,24 @@ class ExternalOperation:
                     Operation_call=self.action_id, Activity=self.anum, Parameter=pname,
                     Signature=self.signum, Domain=self.domain, Flow=sval_flow.fid)
             ])
-            pass
+
+        # Populate the Operation Call Output if an output flow is specified
+        output_r = Relation.semijoin(db=mmdb, rname1=ext_service_sv, rname2='External Operation Output', attrs={
+            'Name': 'Operation', 'Domain': 'Domain'
+        })
+        if output_r.body:
+            # There is an output defined
+            output_scalar = output_r.body[0]['Type']
+            flow_name = output_r.body[0]['Name']
+            sflow_label = f"_{self.action_id[4:]}_{flow_name}"
+            sflow = Flow.populate_scalar_flow(scalar_type=output_scalar, anum=self.anum, domain=self.domain,
+                                              label=sflow_label)
+            Relvar.insert(db=mmdb, tr=tr_ExtOp, relvar='Operation Call Output', tuples=[
+                Operation_Call_Output_i(
+                    Operation_call=self.action_id, Activity=self.anum, Domain=self.domain,
+                    Operation_name=self.op_name, Flow=sflow.fid)
+            ])
+
+        Transaction.execute(db=mmdb, name=tr_ExtOp)
 
         return self.action_id, self.action_id, None
