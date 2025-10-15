@@ -159,7 +159,7 @@ class SignalAction:
         # A distinct signal may be generated for each target instance, but they all target the same lifecycle
         # so there is still only one destination State Model
         if self.target_iset:
-            self.process_signal_instance_action(dest=self.target_iset)
+            self.process_signal_instance_action()
             return
 
         # No recognized subclass
@@ -326,48 +326,15 @@ class SignalAction:
                 _logger.error(msg)
                 raise ActionException(msg)
 
-    def process_signal_instance_action(self, dest):
+    def process_signal_instance_action(self):
         """
         """
         # An instance set destination was specified, so a signal will be sent to each instance in the set
-        dest_flow = None
-        iset_type = type(dest).__name__
-        match iset_type:
-            case 'N_a':
-                if dest.name == 'me':
-                    self.dest_sm = self.activity.state_model
-                    dest_flow = self.input_instance_flow
-                else:
-                    # Resolve the destination instance flow
-                    iset = InstanceSet(input_instance_flow=self.input_instance_flow,
-                                       iset_components=[dest],
-                                       activity=self.activity)
-                    _, _, dest_flow = iset.process()
-                    if not dest_flow:
-                        msg = (f"Cound not find destination flow: [{dest.name}] for Signal Instance Set Action "
-                               f"in {self.activity.activity_path}")
-                        _logger.error(msg)
-                        raise ActionException(msg)
-                    self.dest_sm = dest_flow.tname
-                    self.aids_in.add(self.action_id)
-                    self.aids_out.add(self.action_id)
-            case 'IN_a':
-                self.aids_in.add(self.action_id)
-                self.aids_out.add(self.action_id)
-            case 'INST_a':
-                iset = InstanceSet(input_instance_flow=self.activity.xiflow,
-                                   iset_components=dest.components,
-                                   activity=self.activity)
-                ain, aout, dest_flow = iset.process()
-                self.dest_sm = dest_flow.tname
-                self.aids_in.add(ain)
-                self.aids_out.add(aout)
-            case _:
-                pass  # Includes case where a more complex instance set expression is supplied
+        dest_iflow = self.find_dest_flow()
 
         Relvar.insert(db=mmdb, tr=tr_Signal, relvar='Signal Instance Action', tuples=[
             Signal_Instance_Action_i(ID=self.action_id, Activity=self.anum, Domain=self.domain,
-                                     Instance_flow=dest_flow.fid)
+                                     Instance_flow=dest_iflow.fid)
         ])
 
         self.complete_send_signal_transaction()
