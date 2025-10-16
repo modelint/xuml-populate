@@ -159,6 +159,7 @@ class ExternalOperation:
         output_r = Relation.semijoin(db=mmdb, rname1=ext_service_sv, rname2='External Operation Output', attrs={
             'Name': 'Operation', 'Domain': 'Domain'
         })
+        sflow = None
         if output_r.body:
             # There is an output defined
             output_scalar = output_r.body[0]['Type']
@@ -174,4 +175,4 @@ class ExternalOperation:
 
         Transaction.execute(db=mmdb, name=tr_ExtOp)
 
-        return self.action_id, self.action_id, None
+        return self.action_id, self.action_id, sflow
