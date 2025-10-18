@@ -2,8 +2,8 @@ metadata
     Title : Cabin State Machine Diagram
     Author : Leon Starr
     Document ID : mint.elevator3.td.6
-    Modification date : Aug 5, 2025
-    Version : 3.2.0
+    Modification date : October 17, 2025
+    Version : 3.2.3
     Organization : Model Integration, LLC
     Copyright notice > MIT
     Organization logo > mint
@@ -23,8 +23,8 @@ events
 --
 state Changing destination( new dest: Level Name )
 activity
-    ~.Go to floor( Dest floor: ^new dest )? {
-        Cabin redirected( Updated dest: ^new dest ) -> /R53/Transfer
+    ~.Go to floor( dest floor: ^new dest )? {
+        Cabin redirected( updated dest: ^new dest ) -> /R53/Transfer
         Change requested -> me
     }
 transitions
@@ -39,8 +39,9 @@ transitions
 --
 state SECURING DOORS
 activity
-    /R4/Door.Lock requested = TRUE
-    Lock -> /R4/Door
+    my door .= /R4/Door
+    my door.Lock requested.set
+    Lock -> my door
 transitions
     Doors secure > READY TO GO
     Take out of service > OUT OF SERVICE
@@ -63,7 +64,7 @@ transitions
 --
 state OUT OF SERVICE
 activity
-    /R4/Door.Emergency hold = TRUE
+    /R4/Door.Emergency hold.set
     Passenger open -> /R4/Door
 --
 state EMERGENCY BRAKING
@@ -82,7 +83,7 @@ transitions
 --
 state Requesting transport
 activity
-    ~.Goto floor( Dest floor: /R53/Transfer.Destination floor ) ?
+    ~.Goto floor( dest floor: /R53/Transfer.Destination floor ) ?
         Transport in progress -> : Transport unavailable -> me
 transitions
     Transport unavailable > OUT OF SERVICE

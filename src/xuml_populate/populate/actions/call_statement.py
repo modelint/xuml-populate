@@ -254,7 +254,17 @@ class CallStatement:
                 ie = InstanceSet(iset_components=call_source.components, activity=self.activity,
                                  input_instance_flow=self.activity.xiflow)
                 self.ain, self.aout, ie_output_flow = ie.process(write_to_attr=True)
-                active_sflow = None if ie_output_flow.content != Content.SCALAR else ie_output_flow
+                active_sflow = None
+                match ie_output_flow.content:
+                    case Content.SCALAR:
+                        active_sflow = ie_output_flow
+                    case Content.INSTANCE:
+                        unresolved_iflow = ie_output_flow
+                    case Content.RELATION:
+                        msg = f"Call action not supported on relation flow in scalar expression at {self.activity.path}"
+                        _logger.error(msg)
+                        ActionException(msg)
+
                 # If we get an f back, we know this was not an attr write
                 # We still might get an empty flow if it was a method or ext service that did not specify an output
                 # But we cannot tack on any op_chain components if the output is not scalar
@@ -277,16 +287,18 @@ class CallStatement:
                         self.ain = tin if not self.ain else self.ain  # Update the input only if it has not been set
                     elif unresolved_iflow:
                         # Read the attribute
-                        ra = ReadAction(input_single_instance_flow=unresolved_iflow, attrs=(c.name.name,),
+                        # TODO: Check for any cases where it should be c.name.name
+                        ra = ReadAction(input_single_instance_flow=unresolved_iflow, attrs=(c.name,),
                                         anum=self.anum, domain=self.domain)
-                        self.ain, sflows = ra.populate()  # Any attribute read must be the input action
+                        rin, sflows = ra.populate()  # Any attribute read must be the input action
+                        self.ain = rin if not self.ain else self.ain  # Update the input only if it has not been set
                         if not sflows:
                             raise ActionException
                         # Set the read action output as the current sflow
                         active_sflow = sflows[0]
                         # First two names define a qualified attribute and we are starting off with a write action
                         # so we can now resolve the saved iflow
-                        self.prep_write_action(iflow=unresolved_iflow, attr_name=c.name.name)
+                        self.prep_write_action(iflow=unresolved_iflow, attr_name=c.name)
                     else:
                         msg = (f"Cannot perform type operation on non-scalar input for call statement {self.parse} "
                                f"in: {self.activity.activity_path}")

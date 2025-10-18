@@ -2,7 +2,7 @@ Cabin:
   external operations:
     - name: Go to floor
       parameters:
-        - name: Dest floor
+        - name: dest floor
           type: Level Name
       output:
         name: stopping

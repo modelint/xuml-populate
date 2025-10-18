@@ -212,7 +212,6 @@ class InstanceSet:
                             self.initial_action = ain
                             self.final_action = aout
                             self.component_flow = output_flow
-                            pass
                         else:
                             pass
                     else:

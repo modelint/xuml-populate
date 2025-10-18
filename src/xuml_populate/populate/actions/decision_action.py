@@ -215,5 +215,5 @@ class DecisionAction:
             ])
         Transaction.execute(db=mmdb, name=tr_Decision)
 
-        # Descision action always reports self as initial and final.  See comment under process def above
+        # Decision action always reports self as initial and final.  See comment under process def above
         return Boundary_Actions(ain={self.action_id}, aout={self.action_id})
