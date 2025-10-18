@@ -2,8 +2,8 @@ metadata
     Title : Cabin State Machine Diagram
     Author : Leon Starr
     Document ID : mint.elevator3.td.6
-    Modification date : October 17, 2025
-    Version : 3.2.3
+    Modification date : October 18, 2025
+    Version : 3.2.4
     Organization : Model Integration, LLC
     Copyright notice > MIT
     Organization logo > mint
@@ -48,7 +48,7 @@ transitions
 --
 state Are we already there?
 activity
-    (/R53/Transfer.Destination floor == /R43/is at/Shaft Level/Floor) ?
+    (/R53/Transfer.Destination floor == /R43/Shaft Level.Floor) ?
         Already there -> : Prepare to move -> me
 transitions
     Prepare to move > SECURING DOORS
