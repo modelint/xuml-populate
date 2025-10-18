@@ -46,7 +46,7 @@ transitions
     Doors secure > READY TO GO
     Take out of service > OUT OF SERVICE
 --
-state Are we already there
+state Are we already there?
 activity
     (/R53/Transfer.Destination floor == /R43/is at/Shaft Level/Floor) ?
         Already there -> : Prepare to move -> me
@@ -60,7 +60,7 @@ activity
     Unlock -> /R4/Door
     !(/R2/Shaft.In service) ? Take out of service -> me
 transitions
-    New transfer > Are we already there
+    New transfer > Are we already there?
 --
 state OUT OF SERVICE
 activity
