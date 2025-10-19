@@ -36,6 +36,9 @@ from xuml_populate.populate.mmclass_nt import (Action_i, Traverse_Action_i, Path
                                                To_Superclass_Hop_i, Association_Hop_i, Instance_Action_i)
 from xuml_populate.populate.actions.hop_types import *
 
+if __debug__:
+    from xuml_populate.utility import print_mmdb
+
 _logger = logging.getLogger(__name__)
 
 # Transactions
@@ -90,6 +93,7 @@ class TraverseAction:
             self.many_associative_dest_class = True
 
         self.output_flow = self.build_path()
+        pass
 
     def build_path(self) -> Flow_ap:
         """
@@ -415,6 +419,7 @@ class TraverseAction:
                     # (If it isn't a perspective, an exception will be raised in the perspective resolveer)
                     self.path_index += 1
                     self.resolve_perspective(phrase=self.path.hops[self.path_index])
+                    # TODO: Verify that self.name is updated properly
                 else:
                     # Add a straight hop to the hop list and update the class_cursor to either the to or from class
                     # whichever does not match the class_cursor
@@ -433,6 +438,7 @@ class TraverseAction:
                     self.hops.append(
                         Hop(hoptype=self.straight_hop, to_class=self.class_cursor, rnum=self.rel_cursor)
                     )
+                    self.name += self.class_cursor + '/'
                 return
 
             if ref == 'T' or ref == 'P':
