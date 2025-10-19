@@ -91,7 +91,18 @@ class ComputationAction:
                 if op == 'NOT':
                     match type(self.expr.operands).__name__:
                         case 'INST_PROJ_a':
-                            pass
+                            se = ScalarExpr(expr=self.expr.operands, input_instance_flow=self.input_instance_flow,
+                                            activity=self.activity)
+                            b, sflows = se.process()
+                            if len(sflows) != 1:
+                                msg = (f"Scalar flow not resolved in instance projection: [{self.expr_text}]"
+                                       f" at: {self.activity.activity_path}")
+                                _logger.error(msg)
+                                ActionException(msg)
+                            operand_symbol = sflows[0].fid
+                            self.operand_flows.append(operand_symbol)
+                            operands.append(operand_symbol)
+                            self.input_aids.update(b.ain)  # Just add the input boundary actions
                         case 'N_a' | 'IN_a':
                             name_expr = self.expr.operands  # We know this is a Name_a namedtuple with a single value
                             fids = Flow.find_labeled_flows(name=name_expr.name, anum=self.anum, domain=self.domain)
