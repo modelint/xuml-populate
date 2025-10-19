@@ -114,7 +114,8 @@ class SignalAction:
 
         self.populate_subclass()
 
-        return Boundary_Actions(ain=self.aids_in, aout=self.aids_out)
+        # We return the upstream aids as ain and our signal acction as the aout
+        return Boundary_Actions(ain=self.aids_in, aout={self.action_id})
 
     def populate_subclass(self):
         """
@@ -310,7 +311,7 @@ class SignalAction:
                     raise ActionException(msg)
                 self.dest_sm = dest_flow.tname
                 self.aids_in.add(self.action_id)
-                self.aids_out.add(self.action_id)
+                # self.aids_out.add(self.action_id)
                 return dest_flow
             case 'INST_a':
                 iset = InstanceSet(input_instance_flow=self.activity.xiflow,
@@ -319,7 +320,7 @@ class SignalAction:
                 ain, aout, dest_flow = iset.process()
                 self.dest_sm = dest_flow.tname
                 self.aids_in.add(ain)
-                self.aids_out.add(aout)
+                # self.aids_out.add(aout)
                 return dest_flow
             case _:
                 msg = f"Unimplemented or undefined instance set in: {self.activity.activity_path}"

@@ -90,6 +90,8 @@ class ComputationAction:
                 op = self.expr.op
                 if op == 'NOT':
                     match type(self.expr.operands).__name__:
+                        case 'INST_PROJ_a':
+                            pass
                         case 'N_a' | 'IN_a':
                             name_expr = self.expr.operands  # We know this is a Name_a namedtuple with a single value
                             fids = Flow.find_labeled_flows(name=name_expr.name, anum=self.anum, domain=self.domain)

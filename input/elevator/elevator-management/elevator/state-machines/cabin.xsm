@@ -48,7 +48,7 @@ transitions
 --
 state Are we already there?
 activity
-    (/R53/Transfer.Destination floor == /R43/Shaft Level.Floor) ?
+    /R53/Transfer.Destination floor == /R43/Shaft Level.Floor ?
         Already there -> : Prepare to move -> me
 transitions
     Prepare to move > SECURING DOORS
@@ -58,7 +58,7 @@ state PICKUP DROPOFF
 activity
     Cabin at destination -> /R53/Transfer
     Unlock -> /R4/Door
-    !(/R2/Shaft.In service) ? Take out of service -> me
+    ! /R2/Shaft.In service ? Take out of service -> me
 transitions
     New transfer > Are we already there?
 --
