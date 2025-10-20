@@ -2,8 +2,8 @@ metadata
     Title : Cabin State Machine Diagram
     Author : Leon Starr
     Document ID : mint.elevator3.td.6
-    Modification date : October 19, 2025
-    Version : 3.2.5
+    Modification date : October 20, 2025
+    Version : 3.3.0
     Organization : Model Integration, LLC
     Copyright notice > MIT
     Organization logo > mint
@@ -16,6 +16,8 @@ events
     New transfer
     Take out of service
     Arrived at floor
+    Cabin stopping
+    Emergency stop at floor
     Change requested
     Try redirect
     Transport unavailable
@@ -62,6 +64,12 @@ activity
 transitions
     New transfer > Are we already there?
 --
+state Set emergency stop( nearest safe stop : Level Name)
+activity
+    Cabin redirected( updated dest: ^nearest safe stop) -> /R53/Transfer
+transitions
+    Arrived at floor > OUT OF SERVICE
+--
 state OUT OF SERVICE
 activity
     /R4/Door.Emergency hold.set
@@ -71,7 +79,7 @@ state EMERGENCY BRAKING
 activity
     Stop at nearest floor -> ~
 transitions
-    Arrived at floor > OUT OF SERVICE
+    Cabin stopping > Set emergency stop
 --
 state MOVING
 activity
