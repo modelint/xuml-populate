@@ -277,8 +277,12 @@ class StateModel:
     def process_states(self, method_output_types: dict[str, Method_Output_Type]):
         """
         """
+        if __debug__:
+            print(f"Populating lifecycle: {self.sm_name}")
         for name, s_data in self.states.items():
             sa = StateActivity(state_name=name, state_model=self, state_parse=s_data,
                                method_output_types=method_output_types)
+            if __debug__:
+                print(f"Populated: [{name}]")
             pass
 

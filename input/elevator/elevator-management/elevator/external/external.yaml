@@ -7,6 +7,8 @@ Cabin:
       output:
         name: stopping
         type: Boolean
+  external events:
+    - name: Stop at nearest floor
 
 Door:
   bridgeable conditions:

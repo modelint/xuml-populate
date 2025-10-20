@@ -43,41 +43,42 @@ class ExternalService:
         for class_name, services in parse.items():
 
             # Populate all external operations for this class, if any
-            ops_parse = services.get('external operations')
-            if ops_parse is not None:
-                for op in ops_parse:
-                    Transaction.open(db=mmdb, name=tr_ExternalOperation)
-                    # Populate the External Operation
-                    Relvar.insert(db=mmdb, tr=tr_ExternalOperation, relvar='External Operation', tuples=[
-                        External_Operation_i(Name=op["name"], Domain=domain)
-                    ])
-                    # Populate the External Signature
-                    signum = cls.populate_sig(tr=tr_ExternalOperation, params=op['parameters'], domain=domain)
-                    Relvar.insert(db=mmdb, tr=tr_ExternalOperation, relvar='External Service', tuples=[
-                        External_Service_i(Name=op["name"], Signature=signum, Domain=domain, Class=class_name)
-                    ])
+            ops_parse = services.get('external operations', [])
+            for op in ops_parse:
+                Transaction.open(db=mmdb, name=tr_ExternalOperation)
+                # Populate the External Operation
+                Relvar.insert(db=mmdb, tr=tr_ExternalOperation, relvar='External Operation', tuples=[
+                    External_Operation_i(Name=op["name"], Domain=domain)
+                ])
+                # Populate the External Signature
+                op_params = op.get('parameters', [])
+                signum = cls.populate_sig(tr=tr_ExternalOperation, params=op_params, domain=domain)
+                Relvar.insert(db=mmdb, tr=tr_ExternalOperation, relvar='External Service', tuples=[
+                    External_Service_i(Name=op["name"], Signature=signum, Domain=domain, Class=class_name)
+                ])
 
-                    # If the operation returns a value, populate the External Operation Output
-                    rtype = op.get('output')
-                    if rtype is not None:
-                        Relvar.insert(db=mmdb, tr=tr_ExternalOperation, relvar='External Operation Output', tuples=[
-                            External_Operation_Output_i(Operation=op["name"], Domain=domain,
-                                                        Type=rtype['type'], Name=rtype['name'])
-                        ])
-                    Transaction.execute(db=mmdb, name=tr_ExternalOperation)
+                # If the operation returns a value, populate the External Operation Output
+                rtype = op.get('output')
+                if rtype is not None:
+                    Relvar.insert(db=mmdb, tr=tr_ExternalOperation, relvar='External Operation Output', tuples=[
+                        External_Operation_Output_i(Operation=op["name"], Domain=domain,
+                                                    Type=rtype['type'], Name=rtype['name'])
+                    ])
+                Transaction.execute(db=mmdb, name=tr_ExternalOperation)
 
             # Populate all external events for this class, if any
-            event_parse = services.get('external events')
-            if event_parse is not None:
+            event_parse = services.get('external events', [])
+            for e in event_parse:
                 Transaction.open(db=mmdb, name=tr_ExternalEvent)
                 # Populate External Event
                 Relvar.insert(db=mmdb, tr=tr_ExternalEvent, relvar='External Event', tuples=[
-                    External_Event_i(Name=op["name"], Domain=domain)
+                    External_Event_i(Name=e["name"], Domain=domain)
                 ])
                 # Populate the External Signature
-                signum = cls.populate_sig(tr=tr_ExternalEvent, params=op['parameters'], domain=domain)
+                event_params = e.get('parameters', [])
+                signum = cls.populate_sig(tr=tr_ExternalEvent, params=event_params, domain=domain)
                 Relvar.insert(db=mmdb, tr=tr_ExternalEvent, relvar='External Service', tuples=[
-                    External_Service_i(Name=op["name"], Signature=signum, Domain=domain, Class=class_name)
+                    External_Service_i(Name=e["name"], Signature=signum, Domain=domain, Class=class_name)
                 ])
                 Transaction.execute(db=mmdb, name=tr_ExternalEvent)
 

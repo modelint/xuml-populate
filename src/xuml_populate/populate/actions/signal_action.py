@@ -7,7 +7,7 @@ import logging
 from typing import TYPE_CHECKING, Optional
 
 # Model Integration
-from scrall.parse.visitor import Signal_a
+from scrall.parse.visitor import Signal_a, External_Signal_a
 from pyral.relvar import Relvar
 from pyral.relation import Relation
 from pyral.transaction import Transaction
@@ -35,7 +35,7 @@ from xuml_populate.populate.mmclass_nt import (
     Signal_Action_i, Supplied_Parameter_Value_i, Signal_Instance_Action_i, Delivery_Time_i,
     Multiple_Assigner_Partition_Instance_i, Signal_Assigner_Action_i, Instance_Action_i, Initial_Signal_Action_i,
     Signal_Completion_Action_i, Signal_Instance_Action_i, Cancel_Delayed_Signal_Action_i, Signaled_Creation_i,
-    Send_Signal_Action_i
+    Send_Signal_Action_i, External_Service_i, External_Signal_Action_i, External_Event_i
 )
 
 _logger = logging.getLogger(__name__)
@@ -47,7 +47,7 @@ class SignalAction:
     """
     Populate all Signal Action subsystem model elements
     """
-    def __init__(self, statement_parse: Signal_a, activity: 'Activity'):
+    def __init__(self, statement_parse: Signal_a | External_Signal_a, activity: 'Activity'):
         """
         Initialize with everything the Signal statement requires
 
@@ -55,6 +55,7 @@ class SignalAction:
             statement_parse: Parsed representation of the Signal statement
             activity: The enclosing Activity object
         """
+        self.external_dest = type(statement_parse).__name__ == 'External_Signal_a'
         # Ensure that this is a state model activity
         # Signals may only be issued by State Activities
         if not activity.state_model:
@@ -64,7 +65,7 @@ class SignalAction:
         self.event_name = statement_parse.event  # Event specification name
         self.action_id = None  # Assigned during population of Action
         self.statement_parse = statement_parse  # The parsed Scrall signal statement
-        self.target_iset = statement_parse.dest.target_iset  # The destination parse, if any of this Action
+        self.target_iset = None if self.external_dest else statement_parse.dest.target_iset  # The destination parse, if any of this Action
 
         self.activity = activity  # The enclosing Activity object
         self.anum = activity.anum
@@ -89,7 +90,6 @@ class SignalAction:
         self.signal_dest = None
         self.dest_sig = None
         self.initial_signal_action = False  # Default assumption
-        self.external_dest = True if type(statement_parse).__name__ == 'External_signal_a' else False
 
         # Does this signal delegate creation of a new instance?
         # If so, it's an Initial Signal Action  (asynchronous creation)
@@ -170,7 +170,23 @@ class SignalAction:
         raise ActionException(msg)
 
     def populate_external_signal(self):
-        pass  # TODO: Implement this case
+        """
+        Populate an External Event
+        (will be mapped to an external service in some other Domain through implicit bridging)
+        """
+        # Validate the External Event and lookup the signature
+        R = f"Name:<{self.event_name}>, Domain:<{self.domain}>"
+        external_event_r = Relation.restrict(db=mmdb, relation="External Event", restriction=R)
+        if not external_event_r.body:
+            msg = f"External Event {self.domain}::{self.event_name} not defined in: {self.activity.activity_path}"
+            _logger.error(msg)
+            raise ActionException(msg)
+        Relvar.insert(db=mmdb, tr=tr_Signal, relvar='External Signal Action', tuples=[
+                External_Signal_Action_i(ID=self.action_id, Activity=self.anum, Domain=self.domain,
+                                         External_event=self.event_name)
+            ])
+
+        pass  # TODO: Need to populate any parameters
 
     def populate_cancel_delayed_signal_action(self):
         """
