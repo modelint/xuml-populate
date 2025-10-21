@@ -214,6 +214,39 @@ class InstanceSet:
                             self.component_flow = output_flow
                         else:
                             pass
+                    elif comp.owner == '_implicit':
+                        # We use the component flow as input if there is one
+                        method_name = comp.op_name  # op_name must be a Method name
+
+                        # Verify that the input flow is a single instance flow
+                        if self.component_flow.max_mult != MaxMult.ONE:
+                            msg = (f"Method call target [{self.component_flow}] in {self.activity.activity_path} "
+                                   f"must be a single instance flow")
+                            _logger.error(msg)
+                            raise ActionException(msg)
+
+                        # Verify that the method is defined on the component flow class
+                        R = f"Name:<{method_name}>, Class:<{self.component_flow.tname}>, Domain:<{self.activity.domain}>"
+                        method_r = Relation.restrict(db=mmdb, relation='Method', restriction=R)
+                        if not method_r:
+                            msg = (f"Called method [{method_name}] not defined on [{self.component_flow.tname}] in "
+                                   f"{self.activity.activity_path}")
+                            _logger.error(msg)
+                            raise ActionException(msg)
+
+                        # Method and instance target valid
+                        method_t = method_r.body[0]
+                        from xuml_populate.populate.actions.method_call import MethodCall
+                        mcall = MethodCall(
+                            method_name=method_name, method_anum=method_t["Anum"],
+                            caller_flow=self.component_flow,
+                            parse=comp, activity=self.activity
+                        )
+                        ain, aout, self.component_flow = mcall.process()
+                        if first_action:
+                            self.initial_action = ain
+                        self.final_action = aout
+                        pass
                     else:
                         single_inst_flow_label = comp.owner if comp.owner != '_implicit' else 'me'
                         # Name on a flow delivering a single instance method target

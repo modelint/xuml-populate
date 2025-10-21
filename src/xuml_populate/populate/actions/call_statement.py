@@ -255,15 +255,18 @@ class CallStatement:
                                  input_instance_flow=self.activity.xiflow)
                 self.ain, self.aout, ie_output_flow = ie.process(write_to_attr=True)
                 active_sflow = None
-                match ie_output_flow.content:
-                    case Content.SCALAR:
-                        active_sflow = ie_output_flow
-                    case Content.INSTANCE:
-                        unresolved_iflow = ie_output_flow
-                    case Content.RELATION:
-                        msg = f"Call action not supported on relation flow in scalar expression at {self.activity.path}"
-                        _logger.error(msg)
-                        ActionException(msg)
+                if ie_output_flow:
+                    match ie_output_flow.content:
+                        case Content.SCALAR:
+                            active_sflow = ie_output_flow
+                        case Content.INSTANCE:
+                            unresolved_iflow = ie_output_flow
+                        case Content.RELATION:
+                            msg = f"Call action not supported on relation flow in scalar expression at {self.activity.path}"
+                            _logger.error(msg)
+                            raise ActionException(msg)
+                else:
+                    unresolved_iflow = None
 
                 # If we get an f back, we know this was not an attr write
                 # We still might get an empty flow if it was a method or ext service that did not specify an output
@@ -276,56 +279,57 @@ class CallStatement:
 
         # Handle any remaining op_chain components
         # These will all be type actions without any params
-        first_comp = True
-        for c in op_chain.components:
-            match type(c).__name__:
-                case 'N_a' | 'IN_a':
-                    if active_sflow:
-                        # Populate a type operation with no params
-                        ta = TypeAction(op_name=c.name, anum=self.anum, domain=self.domain, input_flow=active_sflow)
-                        tin, self.aout, active_sflow = ta.populate()
-                        self.ain = tin if not self.ain else self.ain  # Update the input only if it has not been set
-                    elif unresolved_iflow:
-                        # Read the attribute
-                        # TODO: Check for any cases where it should be c.name.name
-                        ra = ReadAction(input_single_instance_flow=unresolved_iflow, attrs=(c.name,),
-                                        anum=self.anum, domain=self.domain)
-                        rin, sflows = ra.populate()  # Any attribute read must be the input action
-                        self.ain = rin if not self.ain else self.ain  # Update the input only if it has not been set
-                        if not sflows:
-                            raise ActionException
-                        # Set the read action output as the current sflow
-                        active_sflow = sflows[0]
-                        # First two names define a qualified attribute and we are starting off with a write action
-                        # so we can now resolve the saved iflow
-                        self.prep_write_action(iflow=unresolved_iflow, attr_name=c.name)
-                    else:
-                        msg = (f"Cannot perform type operation on non-scalar input for call statement {self.parse} "
-                               f"in: {self.activity.activity_path}")
-                        _logger.error(msg)
-                        raise ActionException(msg)
-                case 'Scalar_op_a':
-                    if first_comp:
-                        # If the first name specifies parameters in the call statement, this will have been scanned
-                        # in an INST_a and shouldn't happen here. So the first component is never a Scalar_op_a
+        if op_chain:
+            first_comp = True
+            for c in op_chain.components:
+                match type(c).__name__:
+                    case 'N_a' | 'IN_a':
+                        if active_sflow:
+                            # Populate a type operation with no params
+                            ta = TypeAction(op_name=c.name, anum=self.anum, domain=self.domain, input_flow=active_sflow)
+                            tin, self.aout, active_sflow = ta.populate()
+                            self.ain = tin if not self.ain else self.ain  # Update the input only if it has not been set
+                        elif unresolved_iflow:
+                            # Read the attribute
+                            # TODO: Check for any cases where it should be c.name.name
+                            ra = ReadAction(input_single_instance_flow=unresolved_iflow, attrs=(c.name,),
+                                            anum=self.anum, domain=self.domain)
+                            rin, sflows = ra.populate()  # Any attribute read must be the input action
+                            self.ain = rin if not self.ain else self.ain  # Update the input only if it has not been set
+                            if not sflows:
+                                raise ActionException
+                            # Set the read action output as the current sflow
+                            active_sflow = sflows[0]
+                            # First two names define a qualified attribute and we are starting off with a write action
+                            # so we can now resolve the saved iflow
+                            self.prep_write_action(iflow=unresolved_iflow, attr_name=c.name)
+                        else:
+                            msg = (f"Cannot perform type operation on non-scalar input for call statement {self.parse} "
+                                   f"in: {self.activity.activity_path}")
+                            _logger.error(msg)
+                            raise ActionException(msg)
+                    case 'Scalar_op_a':
+                        if first_comp:
+                            # If the first name specifies parameters in the call statement, this will have been scanned
+                            # in an INST_a and shouldn't happen here. So the first component is never a Scalar_op_a
+                            raise UnexpectedParsePattern
+                        if type(c.name).__name__ in {'N_a', 'IN_a'}:
+                            # Populate a type operation with supplied params
+                            ta = TypeAction(op_name=c.name.name, anum=self.anum, domain=self.domain, input_flow=self.sflow,
+                                            params=c.supplied_params)
+                            tin, self.aout, active_sflow = ta.populate()
+                            self.ain = tin if not self.ain else self.ain  # Update the input only if it has not been set
+                        else:
+                            raise UnexpectedParsePattern
+                    case _:
                         raise UnexpectedParsePattern
-                    if type(c.name).__name__ in {'N_a', 'IN_a'}:
-                        # Populate a type operation with supplied params
-                        ta = TypeAction(op_name=c.name.name, anum=self.anum, domain=self.domain, input_flow=self.sflow,
-                                        params=c.supplied_params)
-                        tin, self.aout, active_sflow = ta.populate()
-                        self.ain = tin if not self.ain else self.ain  # Update the input only if it has not been set
-                    else:
-                        raise UnexpectedParsePattern
-                case _:
-                    raise UnexpectedParsePattern
-            first_comp = False
+                first_comp = False
 
-        # If a write action has been prepared, we an create it now with the active_sflow as the value input
-        if self.write_to_attr:
-            wa = WriteAction(write_to_instance_flow=self.write_to_iflow, value_to_write_flow=active_sflow,
-                             attr_name=self.write_to_attr, activity=self.activity)
-            self.aout = wa.populate()
+            # If a write action has been prepared, we an create it now with the active_sflow as the value input
+            if self.write_to_attr:
+                wa = WriteAction(write_to_instance_flow=self.write_to_iflow, value_to_write_flow=active_sflow,
+                                 attr_name=self.write_to_attr, activity=self.activity)
+                self.aout = wa.populate()
 
         # Since we are either parsing a full instance expression or
         # just a simple name (which is just the simple case of an instance expression,
