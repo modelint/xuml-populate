@@ -13,7 +13,6 @@ nodes
     HOLDING SERVICE DIRECTION 4,2
     COMPLETED 2,2
 connectors
-    +initial : t|WAITING FOR CABIN
     +Cabin arrived : b|WAITING FOR CABIN : t*|Check bank level type
     +Middle floor : b|Check bank level type : t*|HOLDING SERVICE DIRECTION
     +Cancel : b|HOLDING SERVICE DIRECTION : t*|COMPLETED
