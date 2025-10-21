@@ -75,6 +75,8 @@ class CreateAction:
         """
         self.action_id = None
         self.activity = activity
+        self.anum = activity.anum
+        self.domain = activity.domain
         self.class_name = class_name
         self.is_delegated = is_delegated
 
@@ -89,10 +91,7 @@ class CreateAction:
             self.attr_exprs = attr_exprs
             self.ref_isets = ref_isets
 
-        # We will use this nested dictionary to gather all required initial_pseudo_state attribute values
-        # for non referential attributes
-        # self.non_ref_ivalues: dict[str, Any] = {}
-        # self.non_ref_ivalues: dict[str, dict[str, Any]] = {}
+        self.input_aids: set[str] = set()  # The boundary input actions of each scalar expression creating actions
 
     def process(self) -> Boundary_Actions:
         """
@@ -103,27 +102,27 @@ class CreateAction:
         # Begin by populating the Action itself
         # Populate the Action superclass instance and obtain an action_id
         Transaction.open(db=mmdb, name=tr_Create)
-        self.action_id = Action.populate(tr=tr_Create, anum=self.activity.anum, domain=self.activity.domain,
+        self.action_id = Action.populate(tr=tr_Create, anum=self.anum, domain=self.domain,
                                          action_type="create")  # Transaction open
         Relvar.insert(db=mmdb, tr=tr_Create, relvar='Create Action', tuples=[
-            Create_Action_i(ID=self.action_id, Activity=self.activity.anum, Domain=self.activity.domain)
+            Create_Action_i(ID=self.action_id, Activity=self.anum, Domain=self.domain)
         ])
         Relvar.insert(db=mmdb, tr=tr_Create, relvar='Instance Action', tuples=[
-            Create_Action_i(ID=self.action_id, Activity=self.activity.anum, Domain=self.activity.domain)
+            Create_Action_i(ID=self.action_id, Activity=self.anum, Domain=self.activity.domain)
         ])
         if not self.is_delegated:
             output_flow = Flow.populate_instance_flow(cname=self.class_name, anum=self.activity.anum,
-                                                      domain=self.activity.domain, single=True)
+                                                      domain=self.domain, single=True)
         else:
             output_flow = None
 
         if self.is_delegated:
             Relvar.insert(db=mmdb, tr=tr_Create, relvar='Delegated Create Action', tuples=[
-                Delegated_Create_Action_i(ID=self.action_id, Activity=self.activity.anum, Domain=self.activity.domain)
+                Delegated_Create_Action_i(ID=self.action_id, Activity=self.anum, Domain=self.domain)
             ])
         else:
             Relvar.insert(db=mmdb, tr=tr_Create, relvar='Local Create Action', tuples=[
-                Local_Create_Action_i(ID=self.action_id, Activity=self.activity.anum, Domain=self.activity.domain,
+                Local_Create_Action_i(ID=self.action_id, Activity=self.anum, Domain=self.domain,
                                       New_instance_flow=output_flow.fid)
             ])
 
@@ -131,13 +130,13 @@ class CreateAction:
         # TODO: Check for generalization
         Relvar.insert(db=mmdb, tr=tr_Create, relvar='Instance Initialization', tuples=[
             Instance_Initialization_i(Create_action=self.action_id, Class=self.class_name,
-                                      Activity=self.activity.anum, Domain=self.activity.domain)
+                                      Activity=self.anum, Domain=self.domain)
         ])
 
         # We need to verify that each attribute of the target class is initialized
 
         # Get all attribute names for the target class and split into referential and non-referential
-        R = f"Class:<{self.class_name}>, Domain:<{self.activity.domain}>"
+        R = f"Class:<{self.class_name}>, Domain:<{self.domain}>"
         Relation.restrict(db=mmdb, relation='Attribute', restriction=R, svar_name="attrs")
         attr_ref_r = Relation.semijoin(db=mmdb, rname2="Attribute Reference",
                                        attrs={"Name": "From_attribute", "Class": "From_class", "Domain": "Domain"})
@@ -153,14 +152,14 @@ class CreateAction:
         for a in attr_names:
             Relvar.insert(db=mmdb, tr=tr_Create, relvar='Attribute Initialization', tuples=[
                 Attribute_Initialization_i(Create_action=self.action_id, Attribute=a, Class=self.class_name,
-                                           Activity=self.activity.anum, Domain=self.activity.domain)
+                                           Activity=self.anum, Domain=self.domain)
             ])
 
         # Populate Referential Initializations
         for r in ref_attr_names:
             Relvar.insert(db=mmdb, tr=tr_Create, relvar='Reference Initialization', tuples=[
                 Reference_Initialization_i(Create_action=self.action_id, Attribute=r, Class=self.class_name,
-                                           Activity=self.activity.anum, Domain=self.activity.domain)
+                                           Activity=self.anum, Domain=self.domain)
             ])
 
         # Obtain initial_pseudo_state values for each non-referential attribute as follows:
@@ -174,43 +173,41 @@ class CreateAction:
             for attr_name, attr_flow in self.attr_flows.items():
                 Relvar.insert(db=mmdb, tr=tr_Create, relvar='Explicit Initialization', tuples=[
                     Explicit_Initialization_i(Create_action=self.action_id, Attribute=attr_name, Class=self.class_name,
-                                              Activity=self.activity.anum, Domain=self.activity.domain,
+                                              Activity=self.anum, Domain=self.domain,
                                               Initial_value_flow=attr_flow)
                 ])
         else:
             # Process all explicit non referential attribute initializations
+            from xuml_populate.populate.actions.expressions.scalar_expr import ScalarExpr
             for name, sexpr in self.attr_exprs.items():
-                sflow_source = type(sexpr).__name__
+                se = ScalarExpr(expr=sexpr, input_instance_flow=self.activity.xiflow, activity=self.activity)
+                b, sflows = se.process()
+                if len(sflows) != 1:
+                    msg = f"Scalar flow not found for parameter {name} in scalar expression at {self.activity.path}"
+                    _logger.error(msg)
+                    ActionException(msg)
+                self.input_aids.update(b.ain)  # Add the initial action feeding the scalar expression
+                sflow = sflows[0]
 
-                # The source of any Explicit Initialization, as described in the Create Delete Subsystem class model,
-                # is either an input parameter flowing into the activity or a Scalar Flow generated
-                # by some internal Action
-                sexpr_type = type(sexpr).__name__
-                match sexpr_type:
-                    case 'N_a':
-                        # Labeled scalar flow output by some other action
-                        pass  # TODO: Locate labeled flow
-                    case 'IN_a':
-                        # Labeled scalar flow fed by an input parameter
-                        R = (f"Parameter:<{sexpr.name}>, Signature:<{self.activity.signum}>, "
-                             f"Activity:<{self.activity.anum}>, Domain:<{self.activity.domain}>")
-                        activity_input_r = Relation.restrict(db=mmdb, relation='Activity Input', restriction=R)
-                        if len(activity_input_r.body) != 1:
-                            msg = (f"Parameter input [{self.activity.anum}:{sexpr.name}] not found in metamodel db "
-                                   f"for {self.activity.activity_path}")
-                            _logger.error(msg)
-                            raise ActionException(msg)
-                        # Get the corresponding parameter flow
+                # Verify that the scalar input matches the attribute scalar
+                R = f"Name:<{name}>, Class:<{self.class_name}>, Domain:<{self.domain}>"
+                attribute_r = Relation.restrict(db=mmdb, relation="Attribute", restriction=R)
+                if not attribute_r.body:
+                    msg = f"Attribute {self.domain}::{self.class_name}.{name} not defined"
+                    _logger.error(msg)
+                    raise ActionException(msg)
+                attr_type = attribute_r.body[0]['Scalar']
+                if attr_type != sflow.tname:
+                    msg = (f"Explicit attribute initialization type mismatch input flow type: {sflow.tname} : does "
+                           f"not match attribute type: {attr_type}")
+                    _logger.error(msg)
+                    ActionException(msg)
 
-                        activity_input_t = activity_input_r.body[0]  # The Activity Input instance tuple
-                        # TODO: IMPORTANT Verify that parameter flow type matches the attribute type, else exception
-                        Relvar.insert(db=mmdb, tr=tr_Create, relvar='Explicit Initialization', tuples=[
-                            Explicit_Initialization_i(Create_action=self.action_id, Attribute=name, Class=self.class_name,
-                                                      Activity=self.activity.anum, Domain=self.activity.domain,
-                                                      Initial_value_flow=activity_input_t["Flow"])
-                        ])
-                    case _:
-                        pass
+                Relvar.insert(db=mmdb, tr=tr_Create, relvar='Explicit Initialization', tuples=[
+                    Explicit_Initialization_i(Create_action=self.action_id, Attribute=name, Class=self.class_name,
+                                              Activity=self.anum, Domain=self.domain,
+                                              Initial_value_flow=sflow.fid)
+                ])
 
         # Now process each implicit initialization
         # Find all non referential attributes with no value explicitly specified, these will require default values
@@ -220,19 +217,19 @@ class CreateAction:
             default_init_attrs = non_ref_attr_names - set(self.attr_exprs.keys())
 
         for da in default_init_attrs:
-            R = f"Attribute:<{da}>, Class:<{self.class_name}>, Domain:<{self.activity.domain}>"
+            R = f"Attribute:<{da}>, Class:<{self.class_name}>, Domain:<{self.domain}>"
             default_ival_r = Relation.restrict(db=mmdb, relation='Default Initial Value', restriction=R)
             if len(default_ival_r.body) == 1:
                 # Indicate that there is a value available in the metamodel
                 Relvar.insert(db=mmdb, tr=tr_Create, relvar='Default Initialization', tuples=[
                     Default_Initialization_i(Create_action=self.action_id, Attribute=r, Class=self.class_name,
-                                             Activity=self.activity.anum, Domain=self.activity.domain,
+                                             Activity=self.anum, Domain=self.domain,
                                              Initial_value_specified=True)
                 ])
             else:
                 Relvar.insert(db=mmdb, tr=tr_Create, relvar='Default Initialization', tuples=[
                     Default_Initialization_i(Create_action=self.action_id, Attribute=r, Class=self.class_name,
-                                             Activity=self.activity.anum, Domain=self.activity.domain,
+                                             Activity=self.anum, Domain=self.domain,
                                              Initial_value_specified=False)
                 ])
                 # Last chance... Look for a default value defined on the Attribute's type
@@ -266,7 +263,7 @@ class CreateAction:
                         Relvar.insert(db=mmdb, tr=tr_Create, relvar='Reference Value Input', tuples=[
                             Reference_Value_Input_i(Flow=tuple_fid, Create_action=self.action_id, Attribute=n,
                                                     Class=self.class_name,
-                                                    Activity=self.activity.anum, Domain=self.activity.domain,
+                                                    Activity=self.anum, Domain=self.domain,
                                                     )
                         ])
 
@@ -287,7 +284,7 @@ class CreateAction:
                         Relvar.insert(db=mmdb, tr=tr_Create, relvar='Reference Value Input', tuples=[
                             Reference_Value_Input_i(Flow=tuple_fid, Create_action=self.action_id, Attribute=n,
                                                     Class=self.class_name,
-                                                    Activity=self.activity.anum, Domain=self.activity.domain,
+                                                    Activity=self.anum, Domain=self.domain,
                                                     )
                         ])
                 else:
@@ -297,4 +294,9 @@ class CreateAction:
 
         Transaction.execute(db=mmdb, name=tr_Create)
 
-        return Boundary_Actions(ain={self.action_id}, aout={self.action_id})
+        # If no actions were created to feed input to this action, just report our action id
+        # The final action is always our action id since we never generate any downstream actions
+        if not self.input_aids:
+            self.input_aids.add(self.action_id)
+
+        return Boundary_Actions(ain=self.input_aids, aout={self.action_id})
