@@ -32,4 +32,5 @@ connectors
     +Try redirect-1 : r+1|MOVING : l*|Changing destination
     -Change requested-2 : l*|Changing destination : r-1|MOVING
     +Transport unavailable.2 : r|Requesting transport : t+2|OUT OF SERVICE
+    +Transport in progress.2 : b*|Requesting transport : t|MOVING
     +Go.2 : t-2|READY TO GO : l|Requesting transport

@@ -108,7 +108,7 @@ class ExternalOperation:
                 case 'N_a' | 'IN_a':
                     sval_name = sp.sval.name
                 case 'INST_PROJ_a':
-                    se = ScalarExpr(expr=sp.sval, input_instance_flow=self.caller_flow, activity=self.activity)
+                    se = ScalarExpr(expr=sp.sval, input_instance_flow=self.activity.xiflow, activity=self.activity)
                     bactions, scalar_flows = se.process()
                     if len(scalar_flows) != 1:
                         msg = f"Type operation output is not a single scalar flow, instead got {scalar_flows}"
@@ -118,29 +118,25 @@ class ExternalOperation:
                 case '_':
                     pass
 
-            # Populate parameter data flows
-            if sval_name is not None:
-                # We have either a flow label or an attribute name
-                R = f"Name:<{sval_name}>, Class:<{self.class_name}>, Domain:<{self.domain}>"
-                attr_r = Relation.restrict(db=mmdb, relation="Attribute", restriction=R)
-                if attr_r.body:
-                    ra = ReadAction(input_single_instance_flow=self.activity.xiflow,
-                                    attrs=(sval_name,), anum=self.anum, domain=self.domain)
-                    aid, sflows = ra.populate()
-                    sval_flow = sflows[0]
-                else:
-                    sval_flows = Flow.find_labeled_scalar_flow(name=sval_name, anum=self.anum, domain=self.domain)
-                    sval_flow = sval_flows[0] if sval_flows else None
-                    # TODO: Check for case where multiple are returned
-            else:
-                msg = f"Cannot find method call {self.action_id} input source for param {pname}"
-                _logger.error(msg)
-                raise ActionException(msg)
-
             if sval_flow is None:
-                msg = f"No input flow found for method call {self.action_id} input source for param {pname}"
-                _logger.error(msg)
-                raise ActionException(msg)
+                # Populate parameter data flows
+                if sval_name is not None:
+                    # We have either a flow label or an attribute name
+                    R = f"Name:<{sval_name}>, Class:<{self.class_name}>, Domain:<{self.domain}>"
+                    attr_r = Relation.restrict(db=mmdb, relation="Attribute", restriction=R)
+                    if attr_r.body:
+                        ra = ReadAction(input_single_instance_flow=self.activity.xiflow,
+                                        attrs=(sval_name,), anum=self.anum, domain=self.domain)
+                        aid, sflows = ra.populate()
+                        sval_flow = sflows[0]
+                    else:
+                        sval_flows = Flow.find_labeled_scalar_flow(name=sval_name, anum=self.anum, domain=self.domain)
+                        sval_flow = sval_flows[0] if sval_flows else None
+                        # TODO: Check for case where multiple are returned
+                else:
+                    msg = f"No input flow found for operation call {self.action_id} input source for param {pname}"
+                    _logger.error(msg)
+                    raise ActionException(msg)
 
             # Validate type match
             if sval_flow.tname != sig_params[pname]:

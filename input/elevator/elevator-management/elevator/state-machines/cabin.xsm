@@ -3,7 +3,7 @@ metadata
     Author : Leon Starr
     Document ID : mint.elevator3.td.6
     Modification date : October 20, 2025
-    Version : 3.3.0
+    Version : 3.3.1
     Organization : Model Integration, LLC
     Copyright notice > MIT
     Organization logo > mint
@@ -17,10 +17,10 @@ events
     Take out of service
     Arrived at floor
     Cabin stopping
-    Emergency stop at floor
     Change requested
     Try redirect
     Transport unavailable
+    Transport in progress
     Go
 --
 state Changing destination( new dest: Level Name )
@@ -91,8 +91,9 @@ transitions
 --
 state Requesting transport
 activity
-    ~.Goto floor( dest floor: /R53/Transfer.Destination floor ) ?
+    ~.Go to floor( dest floor: /R53/Transfer.Destination floor ) ?
         Transport in progress -> : Transport unavailable -> me
 transitions
     Transport unavailable > OUT OF SERVICE
+    Transport in progress > MOVING
 --

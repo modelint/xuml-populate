@@ -181,12 +181,29 @@ class SignalAction:
             msg = f"External Event {self.domain}::{self.event_name} not defined in: {self.activity.activity_path}"
             _logger.error(msg)
             raise ActionException(msg)
+        # We need the External Signature number so we can populate any supplied params
+        external_service_r = Relation.semijoin(db=mmdb, rname2='External Service')
+        signum = external_service_r.body[0]['Signature']
         Relvar.insert(db=mmdb, tr=tr_Signal, relvar='External Signal Action', tuples=[
                 External_Signal_Action_i(ID=self.action_id, Activity=self.anum, Domain=self.domain,
                                          External_event=self.event_name)
             ])
 
-        pass  # TODO: Need to populate any parameters
+        # Populate any parameters in the External Signature
+        param_r = Relation.semijoin(db=mmdb, rname2='Parameter', attrs={'Signature': 'Signature', 'Domain': 'Domain'})
+        sig_params = {t["Name"]: t["Type"] for t in param_r.body}
+        if sig_params:
+            # TODO: When we have an example ext signal with params factor out common code from ExternalOperation
+            pass
+
+        Relvar.insert(db=mmdb, tr=tr_Signal, relvar='Instance Action', tuples=[
+            Instance_Action_i(ID=self.action_id, Activity=self.anum, Domain=self.domain)
+        ])
+
+        # TODO: Delayed external events not yet supported, requires Delivery Time from Signal Instance Action
+
+        Transaction.execute(db=mmdb, name=tr_Signal)
+
 
     def populate_cancel_delayed_signal_action(self):
         """
