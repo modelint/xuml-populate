@@ -2,8 +2,8 @@ metadata
     Title : Accessible Shaft Level State Machine Diagram
     Author : Leon Starr
     Document ID : mint.elevator3.td.2
-    Modification date : July 29, 2025
-    Version : 3.2.0
+    Modification date : October 20, 2025
+    Version : 3.3.0
     Organization : Model Integration, LLC
     Copyright notice > MIT
     Organization logo > mint
@@ -37,7 +37,7 @@ transitions
 --
 state Registering floor call( dir: Direction )
 activity
-    *Floor Service(Direction: ^dir) &R49 me, /R3/Bank Level
+    *Floor Service(Direction: ^dir) &R49 me, /R3/Bank Level > WAITING FOR CABIN
     Floor call registered -> me
 transitions
     Floor call registered > Requesting service
