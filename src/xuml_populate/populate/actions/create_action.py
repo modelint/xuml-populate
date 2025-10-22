@@ -15,7 +15,6 @@ from pyral.transaction import Transaction
 # xUML populate
 if TYPE_CHECKING:
     from xuml_populate.populate.activity import Activity
-from xuml_populate.utility import print_mmdb
 from xuml_populate.populate.actions.new_assoc_ref_action import NewAssociativeReferenceAction
 from xuml_populate.config import mmdb
 from xuml_populate.populate.actions.aparse_types import Boundary_Actions, New_delegated_inst
@@ -26,6 +25,9 @@ from xuml_populate.populate.mmclass_nt import (Create_Action_i, Instance_Initial
                                                Explicit_Initialization_i, Reference_Initialization_i,
                                                Default_Initialization_i, Local_Create_Action_i,
                                                Reference_Value_Input_i, Instance_Action_i, Delegated_Create_Action_i)
+
+if __debug__:
+    from xuml_populate.utility import print_mmdb
 
 _logger = logging.getLogger(__name__)
 
@@ -108,10 +110,10 @@ class CreateAction:
             Create_Action_i(ID=self.action_id, Activity=self.anum, Domain=self.domain)
         ])
         Relvar.insert(db=mmdb, tr=tr_Create, relvar='Instance Action', tuples=[
-            Create_Action_i(ID=self.action_id, Activity=self.anum, Domain=self.activity.domain)
+            Create_Action_i(ID=self.action_id, Activity=self.anum, Domain=self.domain)
         ])
         if not self.is_delegated:
-            output_flow = Flow.populate_instance_flow(cname=self.class_name, anum=self.activity.anum,
+            output_flow = Flow.populate_instance_flow(cname=self.class_name, anum=self.anum,
                                                       domain=self.domain, single=True)
         else:
             output_flow = None

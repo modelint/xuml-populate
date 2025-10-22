@@ -38,8 +38,8 @@ transitions
 state Changing destination before cabin moves( new dest: Level Name )
 activity
     // The cabin isn’t moving, so we can safely
-    // relink to the new destination
-    //    &R53 Accessible Shaft Level(Floor: ^new dest, Shaft: Shaft)
+    //     relink to the new destination
+    &R53 Accessible Shaft Level(Floor: ^new dest; Shaft: Shaft)
     Stationary update -> me
 transitions
     Stationary update > WAITING FOR CABIN

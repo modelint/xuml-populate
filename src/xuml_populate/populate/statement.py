@@ -21,6 +21,7 @@ from xuml_populate.populate.actions.switch_statement import SwitchStatement
 from xuml_populate.populate.actions.decision_action import DecisionAction
 from xuml_populate.populate.actions.create_action import CreateAction
 from xuml_populate.populate.actions.delete_statement import DeleteStatement
+from xuml_populate.populate.actions.update_ref_action import UpdateReferenceAction
 from xuml_populate.populate.actions.aparse_types import ActivityAP, Boundary_Actions, Labeled_Flow
 
 _logger = logging.getLogger(__name__)
@@ -81,6 +82,10 @@ class Statement:
             case 'Signal_a' | 'External_Signal_a':
                 sig_a = SignalAction(activity=activity, statement_parse=statement_parse)
                 boundary_actions = sig_a.populate()
+            case 'Update_ref_a':
+                update_s = UpdateReferenceAction(activity=activity, statement_parse=statement_parse)
+                boundary_actions = update_s.populate()
+                pass
             case 'New_inst_a':
                 create_a = CreateAction.from_local(activity=activity, statement_parse=statement_parse)
                 boundary_actions = create_a.process()
