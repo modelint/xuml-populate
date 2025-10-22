@@ -14,7 +14,6 @@ from pyral.transaction import Transaction
 # xUML Populate
 if TYPE_CHECKING:
     from xuml_populate.populate.activity import Activity
-from xuml_populate.utility import print_mmdb
 from xuml_populate.config import mmdb
 from xuml_populate.populate.actions.table import Table
 from xuml_populate.populate.actions.aparse_types import Flow_ap, Content, MaxMult, New_delegated_inst
@@ -25,6 +24,9 @@ from xuml_populate.populate.mmclass_nt import (New_Associative_Reference_Action_
                                                New_Reference_Action_i, T_Ref_Instance_i, P_Ref_Instance_i,
                                                Referenced_Instance_i, Instance_Action_i)
 _logger = logging.getLogger(__name__)
+
+if __debug__:
+    from xuml_populate.utility import print_mmdb
 
 class NewAssociativeReferenceAction:
     """
@@ -65,10 +67,6 @@ class NewAssociativeReferenceAction:
         """
         self.action_id = Action.populate(tr=self.tr, anum=self.activity.anum, domain=self.activity.domain,
                                          action_type="new assoc ref")
-        Relvar.insert(db=mmdb, tr=self.tr, relvar="New Reference Action", tuples=[
-            New_Reference_Action_i(ID=self.action_id, Activity=self.activity.anum, Domain=self.activity.domain,
-                                   Create_action=self.create_action_id)
-        ])
 
         # Now we need to create the t and p class names
         R = f"Ref_type:<T>, Rnum:<{self.rnum}>, Domain:<{self.activity.domain}>"
@@ -131,7 +129,11 @@ class NewAssociativeReferenceAction:
                               Domain=self.activity.domain)])
         Relvar.insert(db=mmdb, tr=self.tr, relvar="Reference Action", tuples=[
             Reference_Action_i(ID=self.action_id, Activity=self.activity.anum, Domain=self.activity.domain,
-                               Association=self.rnum, Ref_attr_values=tf.fid)])
+                               Association=self.rnum)])
+        Relvar.insert(db=mmdb, tr=self.tr, relvar="New Reference Action", tuples=[
+            New_Reference_Action_i(ID=self.action_id, Activity=self.activity.anum, Domain=self.activity.domain,
+                                   Create_action=self.create_action_id, Ref_attr_values=tf.fid)
+        ])
 
         ref_attr_names = [k for k in name_type_pairs.keys()]
 

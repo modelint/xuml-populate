@@ -49,7 +49,6 @@ class UpdateReferenceAction:
         self.action_id = None
 
         self.input_aids: set[str] = set()  # The boundary input actions
-        pass
 
     def populate(self) -> Boundary_Actions:
         """
