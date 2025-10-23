@@ -60,6 +60,7 @@ class RestrictCondition:
             selection_parse:
             activity:
         """
+        self.ain = None  # The outermost input action
         self.action_id = action_id
         self.anum = activity.anum
         self.domain = activity.domain
@@ -188,9 +189,20 @@ class RestrictCondition:
                             # This name is a boolean value
                             criterion_id = self.pop_boolean_equivalence_criterion(not_op=False, attr=attr_set, value=n)
                         else:
-                            # It must be the name of a scalar flow that should have been set with some value
-                            criterion_id = self.pop_comparison_criterion(scalar_flow_label=o.name, attr=attr_set.name,
-                                                                         op=operator)
+                            # This could be either the name of a scalar flow, or the name of a local attribute that we
+                            # need to read into a scalar flow
+                            # We start by processing the scalar expression to see if we resolve it to a scalar flow
+                            from xuml_populate.populate.actions.expressions.scalar_expr import ScalarExpr
+                            se = ScalarExpr(expr=o, input_instance_flow=self.activity.xiflow, activity=self.activity)
+                            b, sflows = se.process()
+                            self.ain = b.ain if b.ain else None
+                            if not sflows:
+                                msg = (f"Scalar flow not found for name {o.name} in scalar expression "
+                                       f"at {self.activity.path}")
+                                _logger.error(msg)
+                                ActionException(msg)
+                            criterion_id = self.pop_comparison_criterion(
+                                scalar_flow=sflows[0], attr=attr_set.name, op=operator)
                         text += f" {criterion_id}"
 
                 case 'BOOL_a':
@@ -321,7 +333,7 @@ class RestrictCondition:
         if not sflow:
             raise ActionException  # TODO: Make specific
         criterion_id = self.pop_criterion(attr)
-        Relvar.insert(db=mmdb, tr=self.tr, relvar='Comparison_Criterion', tuples=[
+        Relvar.insert(db=mmdb, tr=self.tr, relvar='Comparison Criterion', tuples=[
             Comparison_Criterion_i(ID=criterion_id, Action=self.action_id, Activity=self.anum, Attribute=attr,
                                    Comparison=op, Value=sflow.fid, Domain=self.domain)
         ])

@@ -45,7 +45,7 @@ class UpdateReferenceAction:
         self.anum = activity.anum
         self.domain = activity.domain
 
-        self.rnum = statement_parse.to_ref.rnum
+        self.rnum = statement_parse.to_ref.rnum.rnum
         self.action_id = None
 
         self.input_aids: set[str] = set()  # The boundary input actions
@@ -63,7 +63,6 @@ class UpdateReferenceAction:
         Relvar.insert(db=mmdb, tr=tr_Update, relvar='Instance Action', tuples=[
             Instance_Action_i(ID=self.action_id, Activity=self.anum, Domain=self.domain)
         ])
-        # TODO: Update mmdb to move R791 to New Reference Action, not needed for Update Reference
         Relvar.insert(db=mmdb, tr=tr_Update, relvar='Reference Action', tuples=[
             Reference_Action_i(ID=self.action_id, Activity=self.anum, Domain=self.domain,
                                Association=self.rnum)
@@ -79,11 +78,10 @@ class UpdateReferenceAction:
             self.input_aids.add(ain)
 
         # Resolve the instance flow of the instance to be referenced
-        ie = InstanceSet(iset_components=self.parse.to_ref.iset.components, activity=self.activity,
+        ie = InstanceSet(iset_components=self.parse.to_ref.iset1.components, activity=self.activity,
                          input_instance_flow=self.activity.xiflow)
         ain, _, to_ref_iflow = ie.process()
-        self.input_aids.add(ain)
-
+        self.input_aids.update(ain)
 
         Relvar.insert(db=mmdb, tr=tr_Update, relvar='Update Reference Action', tuples=[
             Update_Reference_Action_i(

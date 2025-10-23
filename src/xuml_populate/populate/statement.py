@@ -85,7 +85,6 @@ class Statement:
             case 'Update_ref_a':
                 update_s = UpdateReferenceAction(activity=activity, statement_parse=statement_parse)
                 boundary_actions = update_s.populate()
-                pass
             case 'New_inst_a':
                 create_a = CreateAction.from_local(activity=activity, statement_parse=statement_parse)
                 boundary_actions = create_a.process()

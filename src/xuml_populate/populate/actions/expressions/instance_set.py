@@ -44,9 +44,10 @@ class InstanceSet:
     """
     def __init__(self, iset_components, activity: 'Activity', input_instance_flow: Optional[Flow_ap] = None):
         """
+        Gather all of the data required to resolve an instance set into an instance flow
 
         Args:
-            iset_components:
+            iset_components: The Scrall grammar series of components forming a linear instance data flow
             activity: The enclosing activity object
             input_instance_flow: This Flow provides input at the beginning of the chain
         """
@@ -84,21 +85,21 @@ class InstanceSet:
                 no output flow will be returned.
 
         Returns:
-            output: The initial_pseudo_state action id, the final action id, and the output instance flow. If no
+            output: The initial action id, the final action id, and the output instance flow. If no
                 Output flow is returned, it means that the result is not an instance set and the caller should
                 probably try looking for a scalar flow (scalar expression) instead.
         """
         domain = self.activity.domain
         anum = self.activity.anum
 
-        first_action = True  # We use this to recognize the initial_pseudo_state action
+        first_action = True  # We use this to recognize the initial action
         for count, comp in enumerate(self.iset_components):
             # We use the count to recognize the final action
             match type(comp).__name__:
                 case 'PATH_a':
                     # If this path is the first component, it assumes it is traversing from an executing
                     # or instance (self) or partitioning instance of a multiple assigner.
-                    # A single assigner must specify an explicit initial_pseudo_state flow which means that it cannot start off
+                    # A single assigner must specify an explicit initial_which means that it cannot start off
                     # with an implicit /R<n>, rather <inst set>/R<n> instead.
                     if count == 0 and self.activity.atype == ActivityType.STATE and \
                             self.activity.smtype == SMType.SA:
@@ -112,15 +113,15 @@ class InstanceSet:
                     # Process the path to create the traverse action and obtain the resultant output instance flow
                     traverse_action = TraverseAction(input_instance_flow=self.component_flow, path=comp,
                                                      activity=self.activity)
-                    aid = traverse_action.action_id
+                    aid = traverse_action.action_id  # Action ID
                     self.component_flow = traverse_action.output_flow
                     self.to_many_assoc_on_one = traverse_action.to_many_assoc_on_one
 
                     # Data flow to/from actions within the instance_set
                     if first_action:
-                        # For the first component, there can be dflow input from another action
+                        # For the first component, there can be data flow input from another action
                         self.initial_action = aid
-                        first_action = False  # The first action has been encountered and recognized as initial_pseudo_state
+                        first_action = False  # The first action has been encountered and recognized as initial action
                     if count == len(self.iset_components) - 1:
                         # For the last component, there can be no dflow output to another action
                         self.final_action = aid
@@ -154,7 +155,11 @@ class InstanceSet:
                             input_instance_flow=self.component_flow, selection_parse=comp,
                             activity=self.activity, hop_to_many_assoc_from_one_instance=self.to_many_assoc_on_one
                         )
-                        aid = sa.action_id
+                        if sa.ain:
+                            # If the select action created any upstream action, make that the initial action
+                            # of this instance set
+                            self.initial_action = sa.ain
+                        aid = sa.action_id if not sa.ain else sa.ain
                         self.component_flow = sa.output_instance_flow
                         sflows = sa.sflows
                     elif self.component_flow.content == Content.RELATION:
@@ -171,7 +176,7 @@ class InstanceSet:
                     if first_action:
                         # For the first component, there can be dflow input from another action
                         self.initial_action = aid
-                        first_action = False  # The first action has been encountered and recognized as initial_pseudo_state
+                        first_action = False  # The first action has been encountered and recognized as initial action
                     if count == len(self.iset_components) - 1:
                         # For the last component, there can be no dflow output to another action
                         self.final_action = aid
@@ -184,7 +189,7 @@ class InstanceSet:
                     if first_action:
                         # For the first component, there can be dflow input from another action
                         self.initial_action = aid
-                        first_action = False  # The first action has been encountered and recognized as initial_pseudo_state
+                        first_action = False  # The first action has been encountered and recognized as initial action
                     if count == len(self.iset_components) - 1:
                         # For the last component, there can be no dflow output to another action
                         self.final_action = aid

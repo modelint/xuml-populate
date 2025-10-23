@@ -47,6 +47,7 @@ class SelectAction:
                 due to the many associative multiplicity. False if not hopping to a many associative association
                 class and also False if hopping from multiple instances into a many associative association class.
         """
+        self.ain = None
         self.hop_to_many_assoc_from_one_instance = hop_to_many_assoc_from_one_instance
         self.input_instance_flow = input_instance_flow  # We are selecting instances from this instance flow
         self.selection_parse = selection_parse
@@ -85,6 +86,7 @@ class SelectAction:
                                   selection_parse=self.selection_parse,
                                   activity=self.activity,
                                   )
+        self.ain = self.rcond.ain  # If any input actions were created this is the outermost input action
         # TODO Consolidate the four lines below, self.rcond is probably all we need
         # id_attrs_in_selection = rcond.identifier_attrs
         self.attr_comparisons = self.rcond.comparison_criteria

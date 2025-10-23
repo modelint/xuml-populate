@@ -61,14 +61,14 @@ transitions
 --
 state Request redirect( new dest: Level Name )
 activity
-    //        Try redirect( ^new dest ) -> /R53/Cabin
+    Try redirect( ^new dest ) -> /R53/Cabin
     Redirect requested -> me
 transitions
     Redirect requested > CABIN IN MOTION
 --
 state Match new destination of cabin( updated dest: Level Name )
 activity
-    //    &/R53 Accessible Shaft Level(Floor: ^updated dest, Shaft: Shaft)
+    &R53 Accessible Shaft Level(Floor: ^updated dest; Shaft: Shaft)
     Update in motion -> me
 transitions
     Update in motion > CABIN IN MOTION
@@ -79,10 +79,10 @@ activity
     // and no stop request or call in the Cabin’s current travel direction,
     // we must reverse the cabin’s travel direction
     //
-    //    call behind .= /R53/R49/Floor Service( Direction: /R53/Cabin.Travel direction.opposite )
-    //    call fwd .= /R53/R49/Floor Service( Direction: /R53/Cabin.Travel direction )
-    //    switch dir = (call behind and !call fwd and !/R53/Accessible Shaft Level.Stop requested)
-    //    switch dir? /R53/Cabin.Travel direction.toggle
+    call behind .= /R53/R49/Floor Service( Direction: /R53/Cabin.Travel direction.opposite )
+    call fwd .= /R53/R49/Floor Service( Direction: /R53/Cabin.Travel direction )
+    switch dir = (call behind and !call fwd and !/R53/Accessible Shaft Level.Stop requested)
+    switch dir? /R53/Cabin.Travel direction.toggle
 
     Reversal checked -> me
 transitions
