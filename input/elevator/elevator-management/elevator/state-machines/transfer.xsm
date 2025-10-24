@@ -2,8 +2,8 @@ metadata
     Title : Transfer State Machine Diagram
     Author : Leon Starr
     Document ID : mint.elevator3.td.5
-    Modification date : October 17, 2025
-    Version : 3.4.5
+    Modification date : October 24, 2025
+    Version : 3.4.7
     Organization : Model Integration, LLC
     Copyright notice > MIT
     Organization logo > mint
@@ -79,8 +79,8 @@ activity
     // and no stop request or call in the Cabin’s current travel direction,
     // we must reverse the cabin’s travel direction
     //
-    call behind .= /R53/R49/Floor Service( Direction: /R53/Cabin.Travel direction.opposite )
-    call fwd .= /R53/R49/Floor Service( Direction: /R53/Cabin.Travel direction )
+    call behind .= /R53/Accessible Shaft Level/R49/Floor Service(1, Direction: /R53/Cabin.Travel direction.opposite )
+    call fwd .= /R53/Accessible Shaft Level/R49/Floor Service(1, Direction: /R53/Cabin.Travel direction )
     switch dir = (call behind and !call fwd and !/R53/Accessible Shaft Level.Stop requested)
     switch dir? /R53/Cabin.Travel direction.toggle
 

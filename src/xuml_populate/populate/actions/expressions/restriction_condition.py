@@ -27,6 +27,9 @@ from xuml_populate.populate.mmclass_nt import (Restriction_Condition_i, Equivale
                                                Comparison_Criterion_i, Criterion_i, Table_Restriction_Condition_i)
 from xuml_populate.populate.flow import Flow
 
+if __debug__:
+    from xuml_populate.utility import print_mmdb
+
 _logger = logging.getLogger(__name__)
 
 # Transactions
@@ -283,6 +286,12 @@ class RestrictCondition:
                         case 'IN_a':
                             pass
                         case 'INST_a':
+                            if o.projection:
+                                pass
+                            from xuml_populate.populate.actions.expressions.instance_set import InstanceSet
+                            ie = InstanceSet(iset_components=o.iset.components, activity=self.activity,
+                                             input_instance_flow=self.activity.xiflow)
+                            ain, aout, iflow = ie.process()
                             pass
                             # TODO: create what's needed when we hit this case (previously order expr)
                         case _:
