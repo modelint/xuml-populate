@@ -49,17 +49,17 @@ class ExtractAction:
         tuple_header = NonScalarFlow.header(ns_flow=tuple_flow, domain=domain)
 
         Transaction.open(db=mmdb, name=tr_Extract)
-        action_id = Action.populate(tr=tr_Extract, anum=anum, domain=domain, action_type="extract")
+        self.action_id = Action.populate(tr=tr_Extract, anum=anum, domain=domain, action_type="extract")
 
         # Create the labeled Scalar Flow
         self.output_sflow = Flow.populate_scalar_flow(label=label, scalar_type=tuple_header[attr], anum=anum,
                                                       domain=domain)
 
         Relvar.insert(db=mmdb, tr=tr_Extract, relvar='Relational_Action', tuples=[
-            Relational_Action_i(ID=action_id, Activity=anum, Domain=domain)
+            Relational_Action_i(ID=self.action_id, Activity=anum, Domain=domain)
         ])
         Relvar.insert(db=mmdb, tr=tr_Extract, relvar='Extract_Action', tuples=[
-            Extract_Action_i(ID=action_id, Activity=anum, Domain=domain, Input_tuple=tuple_flow.fid,
+            Extract_Action_i(ID=self.action_id, Activity=anum, Domain=domain, Input_tuple=tuple_flow.fid,
                              Table=tuple_flow.tname, Attribute=attr, Output_scalar=self.output_sflow.fid)
         ])
         Transaction.execute(db=mmdb, name=tr_Extract)

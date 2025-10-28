@@ -201,7 +201,7 @@ class RestrictCondition:
                             self.ain = b.ain if b.ain else None
                             if not sflows:
                                 msg = (f"Scalar flow not found for name {o.name} in scalar expression "
-                                       f"at {self.activity.path}")
+                                       f"at {self.activity.activity_path}")
                                 _logger.error(msg)
                                 ActionException(msg)
                             criterion_id = self.pop_comparison_criterion(
@@ -217,89 +217,14 @@ class RestrictCondition:
                 case 'UNARY_a':
                     pass # TODO: tbd
                 case 'INST_PROJ_a':
-                    match type(o.iset).__name__:
-                        case 'N_a':
-                            if o.projection:
-                                # This must be a Non Scalar Flow
-                                # If it is an Instance Flow, an attribute will be read with a Read Action
-                                # Otherwise, a Tuple Flow will have a value extracted with an Extract Action
-
-                                sflow = None  # This is the scalar flow result of the projection/extraction
-                                ns_flows = Flow.find_labeled_ns_flow(name=o.iset.name, anum=self.anum,
-                                                                    domain=self.domain)
-                                ns_flow = ns_flows[0] if ns_flows else None
-                                # TODO: Check case where multiple flows are returned
-
-                                if not ns_flow:
-                                    raise ActionException
-                                if ns_flow.content == Content.INSTANCE:
-                                    # Let's first rule out some obvious error cases that shouldn't happen if the parse
-                                    # was well behaved
-                                    if len(o.projection.attrs) != 1:
-                                        # We expect to read a single attribute value here
-                                        msg = (f"Expecting to read a single attribute in restriction condition "
-                                               f"but found [{o.projection.attrs}] in {self.activity.activity_path}")
-                                        _logger.error(msg)
-                                        raise ActionException(msg)
-                                    if type(o.projection.attrs[0]).__name__ != 'N_a':
-                                        # That attribute should be in an N_a parse expression
-                                        msg = (f"Expecting to read a single attribute in restriction condition "
-                                               f"as a name, but found [{o.projection.attrs[0]}] in "
-                                               f"{self.activity.activity_path}")
-                                        _logger.error(msg)
-                                        raise ActionException(msg)
-                                    # All is well, let's populate the Read Action to get the attr value scalar flow
-                                    read_attr = o.projection.attrs[0].name
-                                    ra = ReadAction(input_single_instance_flow=ns_flow, attrs=(read_attr,),
-                                                    anum=self.anum, domain=self.domain)
-                                    read_aid, sflows = ra.populate()
-                                    # We requested only one scalar flow for the attribute read
-                                    if len(sflows) != 1:
-                                        msg = (f"Did not obtain a single attribute scalar output flow from read action"
-                                               f"for attr {read_attr} in {self.activity.activity_path}")
-                                        _logger.error(msg)
-                                        raise ActionException(msg)
-                                    sflow = sflows[0]
-                                elif ns_flow.content == Content.RELATION:
-                                    if len(o.projection.attrs) != 1:
-                                        # For attribute comparison, there can only be one extracted attribute
-                                        raise ActionException
-                                    attr_to_extract = o.projection.attrs[0].name
-                                    extract_action = ExtractAction(
-                                        tuple_flow=ns_flow, attr=attr_to_extract, anum=self.anum,
-                                        domain=self.domain, activity=self.activity
-                                    )  # Select Action transaction is open
-                                    sflow = extract_action.output_sflow
-                                # Now populate a comparison criterion
-                                criterion_id = self.pop_comparison_criterion(attr=attr_set.name,
-                                                                             scalar_flow=sflow, op=operator)
-                                text += f" {criterion_id}"
-                            else:
-                                # This must be a Scalar Flow
-                                # TODO: check need for mmdb param
-                                sflows = Flow.find_labeled_scalar_flow(name=o.iset.name, anum=self.anum,
-                                                                      domain=self.domain)
-                                if not sflows:
-                                    raise ActionException
-                                sflow = sflows[0]  # TODO: Check for case where multiple are found
-                            pass
-                        case 'IN_a':
-                            pass
-                        case 'INST_a':
-                            if o.projection:
-                                pass
-                            from xuml_populate.populate.actions.expressions.instance_set import InstanceSet
-                            ie = InstanceSet(iset_components=o.iset.components, activity=self.activity,
-                                             input_instance_flow=self.activity.xiflow)
-                            ain, aout, iflow = ie.process()
-                            pass
-                            # TODO: create what's needed when we hit this case (previously order expr)
-                        case _:
-                            raise ActionException
-                    # TODO: Now process the projection
+                    from xuml_populate.populate.actions.expressions.scalar_expr import ScalarExpr
+                    se = ScalarExpr(expr=o, input_instance_flow=self.activity.xiflow, activity=self.activity)
+                    b, sflows = se.process()
                     pass
                 case _:
-                    raise Exception
+                    msg = f"No case matched for operand {o} in: {self.activity.activity_path}"
+                    _logger.error(msg)
+                    raise ActionException(msg)
         return text
 
     def pop_xi_comparison_criterion(self, attr: str) -> int:

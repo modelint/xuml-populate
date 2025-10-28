@@ -13,6 +13,7 @@ from xuml_populate.config import mmdb
 from xuml_populate.utility import print_mmdb  # Debugging
 from xuml_populate.populate.actions.expressions.instance_set import InstanceSet
 from xuml_populate.populate.actions.read_action import ReadAction
+from xuml_populate.populate.actions.extract_action import ExtractAction
 from xuml_populate.exceptions.action_exceptions import *
 from xuml_populate.populate.flow import Flow
 from xuml_populate.populate.actions.aparse_types import Flow_ap, MaxMult, Content, Boundary_Actions
@@ -143,14 +144,9 @@ class ScalarExpr:
 
                         # Instance flow check
                         input_iflows = Flow.find_labeled_ns_flow(name=sexpr.iset.name, anum=self.anum,
-                                                                domain=self.domain)
-                        if len(input_iflows) == 1:
-                            input_iflow = input_iflows[0]
-                        elif not input_iflows:
-                            pass
-                        else:
-                            # TODO: Check case where multiple are returned
-                            pass
+                                                                 domain=self.domain)
+                        input_iflow = input_iflows[0] if len(input_iflows) == 1 else None
+
                         if input_iflow:
                             # Verify that we are projecting on a single attribute
                             if not sexpr.projection:
@@ -167,16 +163,37 @@ class ScalarExpr:
                                 raise ActionException(msg)
                             attr_name = sexpr.projection.attrs[0].name
 
-                            # Create a read action to obtain the value
-                            ra = ReadAction(input_single_instance_flow=input_iflow, attrs=(attr_name,),
-                                            anum=self.anum, domain=self.domain)
-                            aid, sflows = ra.populate()
-                            self.action_inputs[aid] = {self.component_flow.fid}
-                            self.action_outputs[aid] = {s.fid for s in sflows}
+                            # Extract a scalar flow via either read or extract operations dependient on the flow
+                            # content (Instance or Relation).
+
+                            # Relation?  Populate Extract Action
+                            if input_iflow.content == Content.RELATION:
+                                if len(sexpr.projection.attrs) != 1:
+                                    # For attribute comparison, there can only be one extracted attribute
+                                    raise ActionException
+                                attr_to_extract = sexpr.projection.attrs[0].name
+                                xa = ExtractAction(
+                                    tuple_flow=input_iflow, attr=attr_to_extract, anum=self.anum,
+                                    domain=self.domain, activity=self.activity
+                                )  # Select Action transaction is open
+                                sflows = [xa.output_sflow]  # Extract outputs only a single flow
+                                self.action_inputs[xa.action_id] = {input_iflow.fid}
+                                self.action_outputs[xa.action_id] = {s.fid for s in sflows}
+                                # TODO: Might want to change extract to make it output multiple like read
+                                # TODO: For now, let's just make it single flow list for consistency with read output
+                            elif input_iflow.content == Content.INSTANCE:
+                                # Create a read action to obtain the value
+                                ra = ReadAction(input_single_instance_flow=input_iflow, attrs=(attr_name,),
+                                                anum=self.anum, domain=self.domain)
+                                aid, sflows = ra.populate()
+                                self.action_inputs[aid] = {input_iflow.fid}
+                                self.action_outputs[aid] = {s.fid for s in sflows}
+                            else:
+                                pass
                             return sflows
 
                         # No other recognized cases
-                        msg = (f"Unknown scalar expression input for name: {sexpr.set.name} in "
+                        msg = (f"Unknown scalar expression input for name: {sexpr.iset.name} in "
                                f"{self.activity.activity_path}")
                         _logger.error(msg)
                         ActionException(msg)
