@@ -45,19 +45,14 @@ class RestrictCondition:
         * Restriction Criterian (Comparison or Ranking)
         * Scalar Flow inputs to any Comparison Criterion
         Sift through criteria to ensure that each terminal is either an attribute, input flow, or value.
-        :param tr:  The select or restrict action transaction
-        :param action_id:
-        :param input_nsflow:
-        :param activity_data:
-        :param selection_parse:
-        :return: Selection cardinality, attribute comparisons, and a set of scalar flows input for attribute comparison
     """
     def __init__(self, tr: str, action_id: str, input_nsflow: Flow_ap, selection_parse: Criteria_Selection_a,
                  activity: 'Activity'):
         """
+        Gather the data necessary to begin processing and population of a Restrict Condition
 
         Args:
-            tr:
+            tr: The enclosing db transaction (already open)
             action_id:
             input_nsflow:
             selection_parse:
@@ -118,7 +113,8 @@ class RestrictCondition:
         attr_set = attr  # Has an attribute been set for this invocation?
         text = ""
         assert len(operands) <= 2
-        for o in operands:
+        # We'll keep count since we prepend the operator (AND, for example) before the 2nd operand
+        for count, o in enumerate(operands):
             match type(o).__name__:
                 case 'IN_a':
                     # Verify that this input is defined on the enclosing Activity
@@ -210,7 +206,8 @@ class RestrictCondition:
 
                 case 'BOOL_a':
                     criterion_id = self.walk_criteria(operands=o.operands, operator=o.op, attr=attr_set)
-                    text += f" {criterion_id}"
+                    prepend_op = operator if count == 1 else ""
+                    text += f" {prepend_op}{criterion_id}"
                 case 'MATH_a':
                     criterion_id = self.walk_criteria(operands=o.operands, operator=o.op, attr=attr_set)
                     text += f" {criterion_id}"
@@ -220,7 +217,9 @@ class RestrictCondition:
                     from xuml_populate.populate.actions.expressions.scalar_expr import ScalarExpr
                     se = ScalarExpr(expr=o, input_instance_flow=self.activity.xiflow, activity=self.activity)
                     b, sflows = se.process()
-                    pass
+                    criterion_id = self.pop_comparison_criterion(
+                        scalar_flow=sflows[0], attr=attr_set.name, op=operator)
+                    text += f" {criterion_id}"
                 case _:
                     msg = f"No case matched for operand {o} in: {self.activity.activity_path}"
                     _logger.error(msg)

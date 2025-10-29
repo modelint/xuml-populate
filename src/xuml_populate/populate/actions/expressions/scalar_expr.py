@@ -14,6 +14,7 @@ from xuml_populate.utility import print_mmdb  # Debugging
 from xuml_populate.populate.actions.expressions.instance_set import InstanceSet
 from xuml_populate.populate.actions.read_action import ReadAction
 from xuml_populate.populate.actions.extract_action import ExtractAction
+from xuml_populate.populate.actions.expressions.op_chain import OpChain
 from xuml_populate.exceptions.action_exceptions import *
 from xuml_populate.populate.flow import Flow
 from xuml_populate.populate.actions.aparse_types import Flow_ap, MaxMult, Content, Boundary_Actions
@@ -216,6 +217,12 @@ class ScalarExpr:
                         aid, sflows = ra.populate()
                         self.action_inputs[aid] = {action_input.fid}
                         self.action_outputs[aid] = {s.fid for s in sflows}
+
+                        component_sflow = sflows[0]
+                        if sexpr.op_chain:
+                            oc = OpChain(iflow=None, sflow=component_sflow, parse=sexpr.op_chain, activity=self.activity)
+                            b, s = oc.process()
+                            sflows = [s]
                         return sflows
             case 'N_a' | 'IN_a':
                 # So there are only two possibilities and in case of a shadowing conflict, we must proceed
