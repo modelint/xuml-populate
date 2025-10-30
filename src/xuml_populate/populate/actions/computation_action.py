@@ -17,7 +17,6 @@ from scrall.parse.visitor import BOOL_a, MATH_a
 if TYPE_CHECKING:
     from xuml_populate.populate.activity import Activity
 from xuml_populate.exceptions.action_exceptions import ActionException
-from xuml_populate.populate.actions.expressions.scalar_expr import ScalarExpr
 from xuml_populate.populate.actions.expressions.instance_set import InstanceSet
 from xuml_populate.populate.actions.expressions.table_expr import TableExpr
 from xuml_populate.config import mmdb
@@ -82,6 +81,7 @@ class ComputationAction:
         """
         # At this point I don't have a good enough example to think this thing through
         # so this is just a placeholder.
+        from xuml_populate.populate.actions.expressions.scalar_expr import ScalarExpr
         op = None
         operands = list()
         match type(self.expr).__name__:
@@ -155,17 +155,47 @@ class ComputationAction:
                             msg = f"DEBUG: {self.activity.activity_path}"
                             raise ActionException(msg)
                 else:
-                    # Not a unary boolean expr, so there must be two operands
-                    for o_expr in self.expr.operands:
-                        se = ScalarExpr(expr=o_expr, input_instance_flow=self.input_instance_flow,
-                                        activity=self.activity)
-                        b, sflows = se.process()
-                        self.input_aids.update(b.ain)  # Just add the input boundary actions
-                        if len(sflows) > 1:
-                            msg = f"Multiple scalar flows in Boolean operand {o_expr} at {self.activity.activity_path}"
-                            _logger.error(msg)
-                            raise ActionException(msg)
-                        self.operand_flows.append(sflows[0].fid)
+                    # Not a unary boolean expr, so there can be multiple operands (using the same op)
+                    # For example: A and B and C
+                    for count, o_expr in enumerate(self.expr.operands):
+                        if type(o_expr).__name__ in {'N_a', 'IN_a'}:
+                            # See if the name matches a labeled scalar or non scalar flow
+                            labeled_flow_ids = Flow.find_labeled_flows(name=o_expr.name, anum=self.anum, domain=self.domain)
+                            if len(labeled_flow_ids) > 1:
+                                msg = f"Multiple labeled flows in Boolean operand {o_expr} at {self.activity.activity_path}"
+                                _logger.error(msg)
+                                raise ActionException(msg)
+                            if labeled_flow_ids:
+                                expr_fid = labeled_flow_ids[0]
+                                self.operand_flows.append(expr_fid)
+                            else:
+                                # Process as a scalar expression
+                                se = ScalarExpr(expr=o_expr, input_instance_flow=self.input_instance_flow,
+                                                activity=self.activity)
+                                b, sflows = se.process()
+                                self.input_aids.update(b.ain)  # Just add the input boundary actions
+                                if len(sflows) > 1:
+                                    msg = f"Multiple scalar flows in Boolean operand {o_expr} at {self.activity.activity_path}"
+                                    _logger.error(msg)
+                                    raise ActionException(msg)
+                                expr_fid = sflows[0].fid
+                                self.operand_flows.append(expr_fid)
+                        else:  # Not a simple name
+                            # Process as a scalar expression
+                            se = ScalarExpr(expr=o_expr, input_instance_flow=self.input_instance_flow,
+                                            activity=self.activity)
+                            b, sflows = se.process()
+                            self.input_aids.update(b.ain)  # Just add the input boundary actions
+                            if len(sflows) > 1:
+                                msg = f"Multiple scalar flows in Boolean operand {o_expr} at {self.activity.activity_path}"
+                                _logger.error(msg)
+                                raise ActionException(msg)
+                            expr_fid = sflows[0].fid
+                            self.operand_flows.append(expr_fid)
+                        # Append the flow and op to the expression text
+                        op_text = f" {op} " if count+1 < len(self.expr.operands) else ""
+                        self.expr_text = f"{self.expr_text} <{expr_fid}>{op_text}"
+                        pass
             case 'MATH_a':
                 pass  # TODO: Fill out
             case _:

@@ -81,7 +81,7 @@ activity
     //
     call behind .= /R53/Accessible Shaft Level/R49/Floor Service(1, Direction: /R53/Cabin.Travel direction.opposite )
     call fwd .= /R53/Accessible Shaft Level/R49/Floor Service(1, Direction: /R53/Cabin.Travel direction )
-    switch dir = (call behind and !call fwd and !/R53/Accessible Shaft Level.Stop requested)
+    switch dir = call behind and !call fwd and !/R53/Accessible Shaft Level.Stop requested
     switch dir? /R53/Cabin.Travel direction.toggle
 
     Reversal checked -> me

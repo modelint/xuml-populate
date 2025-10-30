@@ -10,16 +10,19 @@ from pyral.relation import Relation  # Keep for debugging
 
 # xUML Populate
 from xuml_populate.config import mmdb
-from xuml_populate.utility import print_mmdb  # Debugging
 from xuml_populate.populate.actions.expressions.instance_set import InstanceSet
 from xuml_populate.populate.actions.read_action import ReadAction
 from xuml_populate.populate.actions.extract_action import ExtractAction
 from xuml_populate.populate.actions.expressions.op_chain import OpChain
+from xuml_populate.populate.actions.computation_action import ComputationAction
 from xuml_populate.exceptions.action_exceptions import *
 from xuml_populate.populate.flow import Flow
 from xuml_populate.populate.actions.aparse_types import Flow_ap, MaxMult, Content, Boundary_Actions
 from xuml_populate.populate.actions.project_action import ProjectAction
 from xuml_populate.populate.actions.type_action import TypeAction
+
+if __debug__:
+    from xuml_populate.utility import print_mmdb  # Debugging
 
 _logger = logging.getLogger(__name__)
 
@@ -38,7 +41,8 @@ class ScalarExpr:
     So we need to walk through the parse tree through the nested operations, possibly
     building instance sets.
     """
-    def __init__(self, expr: INST_PROJ_a | BOOL_a | N_a | IN_a | Op_chain_a, input_instance_flow: Flow_ap | None, activity: 'Activity'):
+    def __init__(self, expr: INST_PROJ_a | BOOL_a | N_a | IN_a | Op_chain_a, input_instance_flow: Flow_ap | None,
+                 activity: 'Activity'):
         """
 
         Args:
@@ -87,9 +91,10 @@ class ScalarExpr:
     def walk(self, sexpr: str | INST_PROJ_a | MATH_a | BOOL_a | N_a | IN_a, input_flow: Flow_ap) -> list[Flow_ap]:
         """
 
-        :param sexpr:  Parsed scalar expression
-        :param input_flow:
-        :return:  Output scalar flow
+        Args
+            sexpr:  Parsed scalar expression
+            :param input_flow:
+            :return:  Output scalar flow
         """
         self.component_flow = input_flow
         match type(sexpr).__name__:
@@ -252,6 +257,8 @@ class ScalarExpr:
                 return sflows
 
             case 'BOOL_a':
+                ca = ComputationAction(expr=sexpr, activity=self.activity)
+                b, sflow = ca.populate()
                 pass
             case 'MATH_a':
                 action_input = self.component_flow
