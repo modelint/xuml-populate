@@ -44,7 +44,7 @@ class ScalarAssignment:
             activity: The enclosing activity object
             scalar_assign_parse: A parsed scalar assignment
 
-        Returns:
+        Returns
             a list of scalar flows
         """
         self.scalar_assign_parse = scalar_assign_parse
