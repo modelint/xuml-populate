@@ -164,8 +164,8 @@ class ComputationAction:
                         o_expr_type = type(o_expr).__name__
                         match o_expr_type:
                             case 'BOOL_a' | 'MATH_a':
-                                if count > 0:
-                                    self.expr_text = f"{self.expr_text} {op} "
+                                if count > 1:
+                                    self.expr_text = f"{self.expr_text} {op}"
                                 self.walk(o_expr)
                                 pass
                             case 'N_a' | 'IN_a':
@@ -179,9 +179,8 @@ class ComputationAction:
                                     expr_fid = labeled_flow_ids[0]
                                     self.operand_flows.append(expr_fid)
                                     # Append the flow and op to the expression text
-                                    # op_text = f" {op} " if count + 1 < len(comp_expr.operands) else ""
-                                    # self.expr_text = f"{self.expr_text} <{expr_fid}>{op_text}"
-                                    self.expr_text = f"{self.expr_text} <{expr_fid}>"
+                                    op_text = f"{op}" if count + 1 < len(comp_expr.operands) else ""
+                                    self.expr_text = f"{self.expr_text} <{expr_fid}> {op_text}"
                                 else:
                                     # Process as a scalar expression
                                     se = ScalarExpr(expr=o_expr, input_instance_flow=self.input_instance_flow,
@@ -195,8 +194,8 @@ class ComputationAction:
                                     expr_fid = sflows[0].fid
                                     self.operand_flows.append(expr_fid)
                                     # Append the flow and op to the expression text
-                                    op_text = f" {op} " if count+1 < len(comp_expr.operands) else ""
-                                    self.expr_text = f"{self.expr_text} <{expr_fid}>{op_text}"
+                                    op_text = f"{op}" if count+1 < len(comp_expr.operands) else ""
+                                    self.expr_text = f"{self.expr_text} <{expr_fid}> {op_text}"
                             case _:  # Not a simple name
                                 # Process as a scalar expression
                                 se = ScalarExpr(expr=o_expr, input_instance_flow=self.input_instance_flow,
@@ -211,7 +210,7 @@ class ComputationAction:
                                 expr_fid = sflows[0].fid
                                 self.operand_flows.append(expr_fid)
                                 # Append the flow and op to the expression text
-                                op_text = f" {op} " if count+1 < len(comp_expr.operands) else ""
+                                op_text = f" {op}" if count+1 < len(comp_expr.operands) else ""
                                 self.expr_text = f"{self.expr_text} <{expr_fid}>{op_text}"
                         pass
             case 'MATH_a':
@@ -234,7 +233,7 @@ class ComputationAction:
 
         Transaction.open(db=mmdb, name=tr_Compute)
         self.output_flow = Flow.populate_scalar_flow(scalar_type=self.output_type, anum=self.anum, domain=self.domain,
-                                                     label=f"_{self.expr_text}", activity_tr=tr_Compute)
+                                                     label=f"_{self.expr_text.strip()}", activity_tr=tr_Compute)
         self.action_id = Action.populate(tr=tr_Compute, anum=self.anum, domain=self.domain, action_type="computation")
         Relvar.insert(db=mmdb, tr=tr_Compute, relvar='Instance Action', tuples=[
             Instance_Action_i(ID=self.action_id, Activity=self.anum, Domain=self.domain)
