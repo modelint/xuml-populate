@@ -229,7 +229,6 @@ class ComputationAction:
         # At this point I don't have a good enough example to think this thing through
         # so this is just a placeholder.
         self.walk(self.expr)
-        pass
 
         Transaction.open(db=mmdb, name=tr_Compute)
         self.output_flow = Flow.populate_scalar_flow(scalar_type=self.output_type, anum=self.anum, domain=self.domain,

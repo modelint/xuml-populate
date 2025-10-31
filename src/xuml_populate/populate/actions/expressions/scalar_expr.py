@@ -259,7 +259,9 @@ class ScalarExpr:
             case 'BOOL_a':
                 ca = ComputationAction(expr=sexpr, activity=self.activity)
                 b, sflow = ca.populate()
-                pass
+                self.action_inputs = {aid: {} for aid in b.ain}
+                self.action_outputs = {aid: {} for aid in b.aout}
+                return [sflow]
             case 'MATH_a':
                 action_input = self.component_flow
                 operand_flows = []

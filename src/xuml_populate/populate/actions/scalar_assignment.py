@@ -165,8 +165,13 @@ class ScalarAssignment:
                     continue
             sflow = scalar_flows[count]
 
-            # Migrate the scalar_flow to a labeled flow
-            Flow.label_flow(label=label, fid=sflow.fid, anum=self.anum, domain=self.domain)
+            # Relabel or migrate sflow to a labeled flow maching the LHS flow name
+            pre_labeled_sflow = Flow.lookup_label(fid=sflow.fid, anum=self.anum, domain=self.domain)
+            if pre_labeled_sflow:
+                Flow.relabel_flow(new_label=label, fid=sflow.fid, anum=self.anum, domain=self.domain)
+            else:
+                # Migrate the scalar_flow to a labeled flow
+                Flow.label_flow(label=label, fid=sflow.fid, anum=self.anum, domain=self.domain)
 
             if not writing_to_attribute and bactions.aout:
                 # If we aren't writign an attr value and an action generated the output scalar
