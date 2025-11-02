@@ -22,11 +22,13 @@ if TYPE_CHECKING:
     from xuml_populate.populate.activity import Activity
 
 from xuml_populate.config import mmdb
+from xuml_populate.populate.flow import Flow
 from xuml_populate.names import IPS_name  # Initial pseudo-state name
 from xuml_populate.populate.delegated_creation import DelegatedCreationActivity
 from xuml_populate.populate.actions.expressions.enumflow import EnumFlow
 from xuml_populate.populate.actions.aparse_types import Boundary_Actions, SMType
 from xuml_populate.populate.actions.action import Action
+from xuml_populate.populate.actions.read_action import ReadAction
 from xuml_populate.populate.flow import Flow_ap
 from xuml_populate.populate.actions.gate_action import GateAction
 from xuml_populate.populate.actions.expressions.scalar_expr import ScalarExpr
@@ -35,7 +37,7 @@ from xuml_populate.populate.mmclass_nt import (
     Signal_Action_i, Supplied_Parameter_Value_i, Signal_Instance_Action_i, Delivery_Time_i,
     Multiple_Assigner_Partition_Instance_i, Signal_Assigner_Action_i, Instance_Action_i, Initial_Signal_Action_i,
     Signal_Completion_Action_i, Signal_Instance_Action_i, Cancel_Delayed_Signal_Action_i, Signaled_Creation_i,
-    Send_Signal_Action_i, External_Service_i, External_Signal_Action_i, External_Event_i
+    Send_Signal_Action_i, External_Service_i, External_Signal_Action_i, External_Event_i, External_Signal_Parameter_i
 )
 
 _logger = logging.getLogger(__name__)
@@ -193,8 +195,7 @@ class SignalAction:
         param_r = Relation.semijoin(db=mmdb, rname2='Parameter', attrs={'Signature': 'Signature', 'Domain': 'Domain'})
         sig_params = {t["Name"]: t["Type"] for t in param_r.body}
         if sig_params:
-            # TODO: When we have an example ext signal with params factor out common code from ExternalOperation
-            pass
+            self.populate_ext_sig_params()
 
         Relvar.insert(db=mmdb, tr=tr_Signal, relvar='Instance Action', tuples=[
             Instance_Action_i(ID=self.action_id, Activity=self.anum, Domain=self.domain)
@@ -450,6 +451,92 @@ class SignalAction:
             self.populate_delay(delay_parse=self.statement_parse.dest.delay)
 
         Transaction.execute(db=mmdb, name=tr_Signal)
+
+    def populate_ext_sig_params(self):
+        """
+        Populate any External Signal Parameters
+        """
+        # Validate Operation Call params (ensure that the call matches the Operation's populated signature
+        R = f"Name:<{self.event_name}>, Domain:<{self.domain}>"
+        ext_service_sv = 'ext_service_sv'
+        ext_service_r = Relation.restrict(db=mmdb, relation='External Service', restriction=R,
+                                          svar_name=ext_service_sv)
+        if len(ext_service_r.body) != 1:
+            msg = f"External operation not defined in: {self.activity.activity_path}"
+            _logger.error(msg)
+            raise ActionException(msg)
+        signum = ext_service_r.body[0]['Signature']
+        param_r = Relation.semijoin(db=mmdb, rname2='Parameter', attrs={'Signature': 'Signature', 'Domain': 'Domain'})
+        sig_params = {t["Name"]: t["Type"] for t in param_r.body}
+
+        # Populate each Parameter specified in the signature with an incoming Data Flow
+        from xuml_populate.populate.actions.expressions.scalar_expr import ScalarExpr
+        sp_pnames: set[str] = set()
+
+        for sp in self.statement_parse.supplied_params:
+            # Set the supplied parameter name
+            pname = sp.pname.lower()
+            # Scrall short hand lets you omit the parameter name when the value name matches.
+            # So instead of typing 'shaft: Shaft', the user can just supply the value, attribute name, in this example.
+            # leaving us with just 'Shaft'.
+            # Attribute names are initial title case by convention. So we would end up with 'Shaft' as the pname.
+            # So we make it lcase to obtain the actual parameter name. This avoids an issue when we validate the
+            # input flow type match further down.
+            sp_pnames.add(pname)
+
+            # Resolve the supplied value to a flow or constant value
+            sval_name = None
+            sval_type = type(sp.sval).__name__
+            sval_flow = None
+            match sval_type:
+                case 'N_a' | 'IN_a':
+                    sval_name = sp.sval.name
+                case 'INST_PROJ_a':
+                    se = ScalarExpr(expr=sp.sval, input_instance_flow=self.activity.xiflow, activity=self.activity)
+                    bactions, scalar_flows = se.process()
+                    if len(scalar_flows) != 1:
+                        msg = f"Type operation output is not a single scalar flow, instead got {scalar_flows}"
+                        _logger.error(msg)
+                        raise ActionException(msg)
+                    sval_flow = scalar_flows[0]
+                    self.aids_in.update(bactions.ain)
+                case '_':
+                    pass
+
+            if sval_flow is None:
+                # Populate parameter data flows
+                if sval_name is not None:
+                    # We have either a flow label or an attribute name
+                    R = f"Name:<{sval_name}>, Class:<{self.activity.xiflow.tname}>, Domain:<{self.domain}>"
+                    attr_r = Relation.restrict(db=mmdb, relation="Attribute", restriction=R)
+                    if attr_r.body:
+                        ra = ReadAction(input_single_instance_flow=self.activity.xiflow,
+                                        attrs=(sval_name,), anum=self.anum, domain=self.domain)
+                        aid, sflows = ra.populate()
+                        self.aids_in.add(aid)  # Read action is an initial input to this signal action
+                        sval_flow = sflows[0]
+                    else:
+                        sval_flows = Flow.find_labeled_scalar_flow(name=sval_name, anum=self.anum, domain=self.domain)
+                        sval_flow = sval_flows[0] if sval_flows else None
+                        # TODO: Check for case where multiple are returned
+                else:
+                    msg = f"No input flow found for operation call {self.action_id} input source for param {pname}"
+                    _logger.error(msg)
+                    raise ActionException(msg)
+
+            # Validate type match
+            if sval_flow.tname != sig_params[pname]:
+                msg = (f"Supplied parameter flow type for {pname} does not match signature Parameter type "
+                       f"{sig_params[pname]}")
+                _logger.error(msg)
+                raise ActionException  # TODO : Type define mismatch exception
+
+            Relvar.insert(db=mmdb, tr=tr_Signal, relvar='External Signal Parameter', tuples=[
+                External_Signal_Parameter_i(
+                    Signal_action=self.action_id, Activity=self.anum, Parameter=pname,
+                    Signature=signum, Domain=self.domain, Flow=sval_flow.fid)
+            ])
+
 
     def populate_supplied_params(self):
         """

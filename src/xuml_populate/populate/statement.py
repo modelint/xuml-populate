@@ -82,6 +82,7 @@ class Statement:
             case 'Signal_a' | 'External_Signal_a':
                 sig_a = SignalAction(activity=activity, statement_parse=statement_parse)
                 boundary_actions = sig_a.populate()
+                pass
             case 'Update_ref_a':
                 update_s = UpdateReferenceAction(activity=activity, statement_parse=statement_parse)
                 boundary_actions = update_s.populate()

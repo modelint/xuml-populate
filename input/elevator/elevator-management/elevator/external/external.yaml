@@ -10,6 +10,15 @@ Cabin:
   external events:
     - name: Stop at nearest floor
 
+Transfer:
+  external events:
+    - name: Cabin arrived
+      parameters:
+        - name: shaft
+          type: Shaft ID
+        - name: direction
+          type: Direction
+
 Door:
   bridgeable conditions:
     state entry:
@@ -23,6 +32,9 @@ Door:
         - UI
       CLOSED:
         - UI
+    external event:
+      Cabin arrived: UI
+      Stop at nearest floor: TRANS
 
   model operations:
     event dispatch:

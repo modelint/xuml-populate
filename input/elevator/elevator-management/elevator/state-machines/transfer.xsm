@@ -2,8 +2,8 @@ metadata
     Title : Transfer State Machine Diagram
     Author : Leon Starr
     Document ID : mint.elevator3.td.5
-    Modification date : October 24, 2025
-    Version : 3.4.7
+    Modification date : November 2, 2025
+    Version : 3.4.9
     Organization : Model Integration, LLC
     Copyright notice > MIT
     Organization logo > mint
@@ -90,16 +90,16 @@ transitions
 --
 state Check for active floor service
 activity
-    //    UI.Cabin arrived( Shaft, direction: /R53/Cabin.Travel direction )
-    //    pending floor service .= /R53/R49/Floor Service( Direction: /R53/Cabin.Travel direction )
-    //
-    //    pending floor service? {
-    //        Call in progress -> meCabin
-    //        Cabin arrived -> pending floor service
-    //    } : {
-    //        Serviced stop -> /R53/Accessible Shaft Level
-    //        Wait to clear -> me
-    //    }
+        Cabin arrived( Shaft, direction: /R53/Cabin.Travel direction ) -> ~
+        pending floor service .= /R53/Accessible Shaft Level/R49/Floor Service(1, Direction: /R53/Cabin.Travel direction )
+
+        pending floor service? {
+            Call in progress -> me
+            Cabin arrived -> pending floor service
+        } : {
+            Stop serviced -> /R53/Accessible Shaft Level
+            Wait to clear -> me
+        }
 transitions
     Call in progress > CALL IN PROGRESS
     Wait to clear > WAITING FOR REQUESTS TO CLEAR
@@ -112,8 +112,8 @@ transitions
 --
 state Canceling floor service
 activity
-    //    Cancel -> /R53/R49/Floor Service( Direction: /R53/Cabin.Travel direction )
-    //    Wait to clear -> me
+        Cancel -> /R53/Accessible Shaft Level/R49/Floor Service( Direction: /R53/Cabin.Travel direction )
+        Wait to clear -> me
 transitions
     Wait to clear > WAITING FOR REQUESTS TO CLEAR
 --
@@ -125,5 +125,5 @@ transitions
 --
 state Delete !*
 activity
-    //    Transfer completed -> R53( Shaft )
+        Transfer completed -> R53( Shaft )
 --
