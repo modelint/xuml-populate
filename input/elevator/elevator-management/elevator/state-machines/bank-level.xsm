@@ -1,0 +1,46 @@
+metadata
+    Title : Bank Level State Machine Diagram
+    Author : Leon Starr
+    Document ID : mint.elevator3.td.5
+    Creation date : November 4, 2025
+    Modification date : November 4, 2025
+    Version : 0.1.0
+    Organization : Model Integration, LLC
+    Copyright notice > MIT
+    Organization logo > mint
+domain Elevator Management
+class Floor Service
+events
+    Floor requested
+    Cabin selected
+--
+state WAITING FOR CALL
+activity
+transitions
+    Floor requested > Select cabin
+--
+state Select cabin
+activity
+    R38? {
+        _Top Bank Level:
+            ^dir == _down?
+                /R38/Top Bank Level.Calling down.set : Direction unavailable ( ^dir ) -> ~
+
+        _Bottom Bank Level:
+            ^dir == _up?
+                /R38/Bottom Bank Level.Calling up.set : Direction unavailable ( ^dir ) -> ~
+
+        _Middle Bank Level:
+            ^dir? {
+                _up: /R38/Middle Bank Level.Calling up.set
+                _down: /R38/Middle Bank Level.Calling down.set
+            }
+    }
+
+    Floor calling( ^dir ) ->
+        Accessible Shaft Level (Bank, Floor,
+            Shaft: Choose shaft( calling floor: Floor, service dir: ^dir ) )
+    Cabin selected -> me
+transitions
+    Cabin selected > WAITING FOR CALL
+--
