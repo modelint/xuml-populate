@@ -57,6 +57,29 @@ class SwitchStatement:
         self.output_actions = set()
         self.labeled_outputs = {}  # { <case>: [output_flow, ...], }  labeled output flows keyed by case
 
+        self.subclass_switch_rnum = None  # Default assumption
+        self.superclass_fid = None
+
+    def validate_gen(self):
+        """
+        Raises exception if the input to a Subclass Switch Action is invalid
+        """
+        rnum = self.parse.input_flow.rnum
+        cases = {enum for c in self.parse.cases for enum in c.enums}
+        R = f"Rnum:<{rnum}>, Domain:<{self.domain}>"
+        superclass_r = Relation.restrict(db=mmdb, relation="Superclass", restriction=R)
+        if not superclass_r.body:
+            msg = f"Switch input rnum {self.domain}::{rnum} not defined in at {self.activity.path}"
+            _logger.error(msg)
+            ActionException(msg)
+        subclasses_r = Relation.restrict(db=mmdb, relation="Subclass", restriction=R)
+        subclass_names = {s["Class"] for s in subclasses_r.body}
+        if subclass_names != cases:
+            msg = f"Switch input cases {cases} do not match subclass names {subclass_names} at {self.activity.path}"
+            _logger.error(msg)
+            ActionException(msg)
+
+
     def populate(self) -> Boundary_Actions:
         """
         """
@@ -66,7 +89,7 @@ class SwitchStatement:
             case 'IN_a':
                 # Verify that this is a scalar flow and get its flow id based on the label
                 scalar_input_flows = Flow.find_labeled_scalar_flow(name=self.parse.input_flow.name, anum=self.anum,
-                                                                  domain=self.domain)
+                                                                   domain=self.domain)
                 scalar_input_flow = scalar_input_flows[0] if scalar_input_flows else None
                 # TODO: Check for case where multiple are returned
                 if not scalar_input_flow:
@@ -76,10 +99,13 @@ class SwitchStatement:
                 pass
             case 'R_a':
                 # This is a subclass switch action
-                pass
+                self.validate_gen()  # Validate the generalization and subclasses
+                self.subclass_switch_rnum = self.parse.input_flow.rnum
+                self.superclass_fid = self.activity.xiflow.fid
             case _:
                 # TODO: implement other cases (N_a, ?)
                 pass
+
         # For each case, create actions (open/close transaction) and create list of action ids
         cactions = {}
         for c in self.parse.cases:
@@ -87,7 +113,7 @@ class SwitchStatement:
             # Combined with the action_id to ensure label is unique within the Activity
             # Need to create all component set statements and obtain a set of initial_pseudo_state action ids
             if c.comp_statement_set.statement:
-                case_name = f"{'_'.join(c.enums)}"
+                case_name = f"_{'_'.join(c.enums)}"
                 self.labeled_outputs[case_name] = set()
                 from xuml_populate.populate.statement import Statement
                 boundary_actions = Statement.populate(activity=self.activity,
@@ -109,13 +135,20 @@ class SwitchStatement:
         Relvar.insert(db=mmdb, tr=tr_Switch, relvar='Instance Action', tuples=[
             Instance_Action_i(ID=action_id, Activity=self.anum, Domain=self.domain)
         ])
-        Relvar.insert(db=mmdb, tr=tr_Switch, relvar='Switch_Action', tuples=[
+        Relvar.insert(db=mmdb, tr=tr_Switch, relvar='Switch Action', tuples=[
             Switch_Action_i(ID=action_id, Activity=self.anum, Domain=self.domain)
         ])
-        Relvar.insert(db=mmdb, tr=tr_Switch, relvar='Scalar_Switch_Action', tuples=[
-            Scalar_Switch_Action_i(ID=action_id, Activity=self.anum, Domain=self.domain,
-                                   Scalar_input=scalar_input_flow.fid)
-        ])
+        if not self.subclass_switch_rnum:
+            Relvar.insert(db=mmdb, tr=tr_Switch, relvar='Scalar Switch Action', tuples=[
+                Scalar_Switch_Action_i(ID=action_id, Activity=self.anum, Domain=self.domain,
+                                       Scalar_input=scalar_input_flow.fid)
+            ])
+        else:
+            Relvar.insert(db=mmdb, tr=tr_Switch, relvar='Subclass Switch Action', tuples=[
+                Subclass_Switch_Action_i(ID=action_id, Activity=self.anum, Domain=self.domain,
+                                         Superclass_instance=self.superclass_fid, Generalization=self.subclass_switch_rnum)
+            ])
+
         for k, v in cactions.items():
             control_flow_fid = Flow.populate_control_flow(tr=tr_Switch, label=k, enabled_actions=v.target_actions,
                                                           anum=self.anum, domain=self.domain)
@@ -123,7 +156,7 @@ class SwitchStatement:
                 Case_i(Flow=control_flow_fid, Activity=self.anum, Domain=self.domain, Switch_action=action_id)
             ])
             for mv in v.match_values:
-                Relvar.insert(db=mmdb, tr=tr_Switch, relvar='Match_Value', tuples=[
+                Relvar.insert(db=mmdb, tr=tr_Switch, relvar='Match Value', tuples=[
                     Match_Value_i(Case_flow=control_flow_fid, Activity=self.anum, Domain=self.domain, Value=mv)
                 ])
                 pass

@@ -163,6 +163,10 @@ class ComputationAction:
                     for count, o_expr in enumerate(comp_expr.operands):
                         o_expr_type = type(o_expr).__name__
                         match o_expr_type:
+                            case 'Enum_a':
+                                op_text = f"{op}" if count + 1 < len(comp_expr.operands) else ""
+                                self.expr_text = f"{self.expr_text} <{o_expr.value.name}> {op_text}"
+                                pass
                             case 'BOOL_a' | 'MATH_a':
                                 if count > 1:
                                     self.expr_text = f"{self.expr_text} {op}"

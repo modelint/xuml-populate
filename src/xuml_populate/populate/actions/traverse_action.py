@@ -311,8 +311,25 @@ class TraverseAction:
     def to_superclass_hop(self):
         _logger.info("ACTION:Traverse - Populating a to superclass hop")
 
-    def to_subclass_hop(self, sub_class: str):
+    def to_subclass_hop(self, *, number: int, rnum: str, to_class: str):
+        """
+
+        Args:
+            number:  Hop number
+            rnum: Rnum
+            to_class: Subclass name
+        """
         _logger.info("ACTION:Traverse - Populating a to subclass hop")
+        pass
+        Relvar.insert(db=mmdb, tr=tr_Traverse, relvar='To Subclass Hop', tuples=[
+            To_Subclass_Hop_i(Number=number, Path=self.name, Domain=self.domain)
+        ])
+        Relvar.insert(db=mmdb, tr=tr_Traverse, relvar='Generalization Hop', tuples=[
+            Generalization_Hop_i(Number=number, Path=self.name, Domain=self.domain)
+        ])
+        Relvar.insert(db=mmdb, tr=tr_Traverse, relvar='Hop', tuples=[
+            Hop_i(Number=number, Path=self.name, Domain=self.domain, Rnum=rnum, Class_step=to_class)
+        ])
 
     def is_assoc_class(self, cname: str, rnum: str) -> bool:
         """
@@ -393,7 +410,10 @@ class TraverseAction:
             if next_hop.name not in subclasses:
                 raise NoSubclassInHop(superclass=super_class, rnum=self.rel_cursor, domain=self.domain)
             self.class_cursor = next_hop.name
-            self.to_subclass_hop(sub_class=self.class_cursor)
+            self.hops.append(
+                Hop(hoptype=self.to_subclass_hop, to_class=self.class_cursor, rnum=self.rel_cursor)
+            )
+            self.name += self.class_cursor + '/'
             return
         else:
             # # Superclass to subclass
