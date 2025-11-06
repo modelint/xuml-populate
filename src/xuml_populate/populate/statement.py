@@ -11,7 +11,6 @@ from typing import Set, TYPE_CHECKING
 if TYPE_CHECKING:
     from xuml_populate.populate.activity import Activity
 
-from xuml_populate.utility import print_mmdb
 from xuml_populate.populate.actions.call_statement import CallStatement
 from xuml_populate.populate.actions.signal_action import SignalAction
 from xuml_populate.populate.actions.instance_assignment import InstanceAssignment
@@ -23,6 +22,10 @@ from xuml_populate.populate.actions.create_action import CreateAction
 from xuml_populate.populate.actions.delete_statement import DeleteStatement
 from xuml_populate.populate.actions.update_ref_action import UpdateReferenceAction
 from xuml_populate.populate.actions.aparse_types import ActivityAP, Boundary_Actions, Labeled_Flow
+
+if __debug__:
+    from xuml_populate.utility import print_mmdb
+
 
 _logger = logging.getLogger(__name__)
 
@@ -75,7 +78,8 @@ class Statement:
                 decision_a = DecisionAction(activity=activity, statement_parse=statement_parse)
                 boundary_actions = decision_a.process()
             case 'Switch_a':
-                boundary_actions = SwitchStatement.populate(activity=activity, sw_parse=statement_parse)
+                switch_a = SwitchStatement(activity=activity, sw_parse=statement_parse)
+                boundary_actions = switch_a.populate()
             case 'Call_a':
                 call_s = CallStatement(activity=activity, call_parse=statement_parse)
                 boundary_actions = call_s.process()
