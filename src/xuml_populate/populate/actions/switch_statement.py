@@ -67,6 +67,9 @@ class SwitchStatement:
                     raise BadScalarSwitchInput
             case 'INST_PROJ_a':
                 pass
+            case 'R_a':
+                # This is a subclass switch action
+                pass
             case _:
                 # TODO: implement other cases (N_a, ?)
                 pass
