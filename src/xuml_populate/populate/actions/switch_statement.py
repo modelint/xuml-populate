@@ -100,7 +100,9 @@ class SwitchStatement:
             case 'R_a':
                 # This is a subclass switch action
                 self.validate_gen()  # Validate the generalization and subclasses
+                # Set the rnum used for switching to the subclass cases
                 self.subclass_switch_rnum = self.parse.input_flow.rnum
+                # Since the R_a was supplied directly, we know that the executing instance must be the superclass
                 self.superclass_fid = self.activity.xiflow.fid
             case _:
                 # TODO: implement other cases (N_a, ?)

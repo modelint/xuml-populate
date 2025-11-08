@@ -1,0 +1,6 @@
+--
+Cabin.Estimate delay( calling floor : Floor name, call dir : Direction )
+--
+
+calling floor name, calling height = Floor( Name: ^calling floor ).(Name, Height)
+cabin floor name, cabin height = /R43/R28/Floor.(Name, Height)
