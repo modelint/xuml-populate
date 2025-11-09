@@ -19,6 +19,7 @@ from xuml_populate.populate.statement import Statement
 from xuml_populate.populate.actions.aparse_types import ActivityAP, Boundary_Actions
 from xuml_populate.populate.actions.expressions.instance_set import InstanceSet
 from xuml_populate.populate.mmclass_nt import Synchronous_Output_i
+from xuml_populate.populate.actions.type_selector import TypeSelector
 from xuml_populate.exceptions.action_exceptions import *
 
 tr_OutputFlow = "OutputFlow"
@@ -59,7 +60,8 @@ class ExecutionUnit:
         :return:
         """
         cls.activity = activity
-        match type(synch_output.output).__name__:
+        output_type = type(synch_output.output).__name__
+        match output_type:
             case 'INST_a':
                 iset = InstanceSet(iset_components=synch_output.output.components,
                                    activity=activity)
@@ -73,6 +75,9 @@ class ExecutionUnit:
                 iset = InstanceSet(iset_components=[synch_output.output],
                                    activity=activity)
                 _, _, output_flow = iset.process()
+            case 'Type_expr_a':
+                ta = TypeSelector(scalar=synch_output.output.type.name, value=synch_output.output.selector, activity=activity)
+                output_flow = ta.populate()
             case _:
                 # Unexpected or unimplemented synch output case
                 msg = f"No case for synch output exec unit type: [{type(synch_output.output).__name__}]"

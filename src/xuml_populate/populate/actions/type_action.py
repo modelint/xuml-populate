@@ -12,13 +12,15 @@ from pyral.relation import Relation
 from pyral.transaction import Transaction
 
 # xUML Populate
-from xuml_populate.utility import print_mmdb
 from xuml_populate.config import mmdb
 from xuml_populate.populate.flow import Flow
 from xuml_populate.populate.actions.action import Action
 from xuml_populate.exceptions.action_exceptions import *
 from xuml_populate.populate.actions.aparse_types import ActivityAP, Boundary_Actions, Flow_ap
-from xuml_populate.populate.mmclass_nt import Type_Action_i, Type_Operation_i, Selector_i
+from xuml_populate.populate.mmclass_nt import Type_Action_i, Type_Operation_i
+
+if __debug__:
+    from xuml_populate.utility import print_mmdb
 
 _logger = logging.getLogger(__name__)
 
@@ -29,7 +31,7 @@ class TypeAction:
     Populate a Type Action
     """
 
-    def __init__(self, op_name: str, anum: str, domain: str, input_flow: Optional[Flow_ap] = None,
+    def __init__(self, op_name: str, anum: str, domain: str, input_flow: Flow_ap,
                  params: Optional[Supplied_Parameter_a] = None):
         """
         Initialize and populate
@@ -65,18 +67,14 @@ class TypeAction:
         # Construct a label for the output scalar flow we need to populate for either a type or selector operation
         # This is just a default label that will be superceded by any user specified label by the caller of this
         # action, an assigment statement, for example.
-        if self.input_flow:
-            # If it is labeled, we can copy that label into the suffix
-            R = f"ID:<{self.input_flow.fid}>, Activity:<{self.anum}>, Domain:<{self.domain}>"
-            labeled_flow_r = Relation.restrict(db=mmdb, relation="Labeled Flow", restriction=R)
-            suffix = self.action_id[4:]  # Just take the number at the end
-            if labeled_flow_r.body:
-                # Op name and input label if it is labeled, otherwise, use action number
-                suffix = labeled_flow_r.body[0]["Name"]
-            self.default_label = f"_{self.name}_{suffix}"
-        else:
-            # The scalar name and the selected value
-            self.default_label = f"_{self.input_flow.tname}_{self.name}"
+        # If it is labeled, we can copy that label into the suffix
+        R = f"ID:<{self.input_flow.fid}>, Activity:<{self.anum}>, Domain:<{self.domain}>"
+        labeled_flow_r = Relation.restrict(db=mmdb, relation="Labeled Flow", restriction=R)
+        suffix = self.action_id[4:]  # Just take the number at the end
+        if labeled_flow_r.body:
+            # Op name and input label if it is labeled, otherwise, use action number
+            suffix = labeled_flow_r.body[0]["Name"]
+        self.default_label = f"_{self.name}_{suffix}"
 
         # Populate the output scalar flow (but don't use the generated label)
         self.sflow_out = Flow.populate_scalar_flow(scalar_type=self.input_flow.tname, anum=self.anum,
@@ -88,16 +86,10 @@ class TypeAction:
                           Output_flow=self.sflow_out.fid)
         ])
 
-        if self.input_flow:
-            Relvar.insert(db=mmdb, tr=tr_Type, relvar='Type Operation', tuples=[
-                Type_Operation_i(ID=self.action_id, Activity=self.anum, Domain=self.domain,
-                                 Name=self.name, Input_flow=self.input_flow.fid)
-            ])
-        else:
-            Relvar.insert(db=mmdb, tr=tr_Type, relvar='Selector', tuples=[
-                Selector_i(ID=self.action_id, Activity=self.anum, Domain=self.domain, Value=self.name)
-            ])
-
+        Relvar.insert(db=mmdb, tr=tr_Type, relvar='Type Operation', tuples=[
+            Type_Operation_i(ID=self.action_id, Activity=self.anum, Domain=self.domain,
+                             Name=self.name, Input_flow=self.input_flow.fid)
+        ])
         Transaction.execute(db=mmdb, name=tr_Type)
         return self.action_id, self.action_id, self.sflow_out
 
