@@ -50,11 +50,11 @@ class TypeSelector:
         self.action_id = None
         self.sflow_out = None
 
-    def populate(self) -> Flow_ap:
+    def populate(self) -> tuple[str, str, Flow_ap]:
         """
 
         Returns:
-            Scalar flow with the selected value
+            This action as the input and output boundary action and the Scalar flow with the selected value
         """
         # Open transaction to populate the Type Selector Action
         Transaction.open(db=mmdb, name=tr_Selector)
@@ -80,4 +80,4 @@ class TypeSelector:
         ])
 
         Transaction.execute(db=mmdb, name=tr_Selector)
-        return self.sflow_out
+        return self.action_id, self.action_id, self.sflow_out

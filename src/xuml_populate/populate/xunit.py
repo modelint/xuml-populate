@@ -52,32 +52,37 @@ class ExecutionUnit:
     """
 
     @classmethod
-    def process_synch_output(cls, activity: 'Activity', synch_output: Output_Flow_a):
+    def process_synch_output(cls, activity: 'Activity', synch_output: Output_Flow_a) -> Boundary_Actions:
         """
 
         :param activity:
         :param synch_output:  Output flow execution unit parse
         :return:
         """
+        actions_in = set()
+        actions_out = set()
         cls.activity = activity
         output_type = type(synch_output.output).__name__
+        output_flow = None
+        ain = None
+        aout = None
         match output_type:
             case 'INST_a':
                 iset = InstanceSet(iset_components=synch_output.output.components,
                                    activity=activity)
-                _, _, output_flow = iset.process()
+                ain, aout, output_flow = iset.process()
                 pass
             case 'INST_PROJ_a':
                 iset = InstanceSet(iset_components=synch_output.output.iset.components,
                                    activity=activity)
-                _, _, output_flow = iset.process()
+                ain, aout, output_flow = iset.process()
             case 'N_a':
                 iset = InstanceSet(iset_components=[synch_output.output],
                                    activity=activity)
-                _, _, output_flow = iset.process()
+                ain, aout, output_flow = iset.process()
             case 'Type_expr_a':
                 ta = TypeSelector(scalar=synch_output.output.type.name, value=synch_output.output.selector, activity=activity)
-                output_flow = ta.populate()
+                ain, aout, output_flow = ta.populate()
             case _:
                 # Unexpected or unimplemented synch output case
                 msg = f"No case for synch output exec unit type: [{type(synch_output.output).__name__}]"
@@ -88,6 +93,12 @@ class ExecutionUnit:
 
         # Add the output flow to this Activity's set so they can be resolved to a single output later
         activity.synch_output_flows.add(output_flow)
+        if ain:
+            actions_in.add(ain)
+        if aout:
+            actions_out.add(aout)
+        Boundary_actions = Boundary_Actions(ain=actions_in, aout=actions_out)
+        return Boundary_actions
 
 
 
@@ -113,8 +124,8 @@ class ExecutionUnit:
         """
         # Let's first check to see if we have an output_flow
         if type(content.statement).__name__ == 'Output_Flow_a':
-            ExecutionUnit.process_synch_output(synch_output=content.statement, activity=activity)
-            return Boundary_Actions(ain=set(), aout=set())
+            boundary_actions = ExecutionUnit.process_synch_output(synch_output=content.statement, activity=activity)
+            return boundary_actions
 
         # Its a statement_set
 
