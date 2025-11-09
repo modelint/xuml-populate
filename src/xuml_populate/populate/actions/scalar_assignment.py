@@ -120,7 +120,8 @@ class ScalarAssignment:
             return bactions
 
         # We are outputting to one or more scalar flows
-        scalar_flow_labels = [n for n in lhs[0].name]
+        scalar_flow_labels = [n.name.name for n in lhs]
+        pass
 
         # There must be a label on the LHS for each scalar output flow
         if len(scalar_flows) != len(scalar_flow_labels):
