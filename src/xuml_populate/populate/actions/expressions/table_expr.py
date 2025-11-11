@@ -26,6 +26,9 @@ from xuml_populate.exceptions.action_exceptions import (ActionException, TableOp
                                                         UndefinedHeaderExpressionOp)
 _logger = logging.getLogger(__name__)
 
+if __debug__:
+    from xuml_populate.utility import print_mmdb
+
 
 class TableExpr:
     """
@@ -45,52 +48,45 @@ class TableExpr:
 
     Here we focus on unnesting all those table ops and operands.
     """
-    tuple_output = None
-    text = None  # A text representation of the expression
-    domain = None
-    anum = None
-    scrall_text = None
-    activity_path = None
-    component_flow = None
-    output_tflow_id = None
-    activity_data = None
-    action_inputs = None
-    action_outputs = None
-
-    @classmethod
-    def process(cls, tuple_output: bool, activity: 'Activity', rhs: TOP_a | Table_term_a, input_instance_flow: Flow_ap
-                ) -> tuple[Boundary_Actions, Flow_ap]:
+    def __init__(self, tuple_output: bool, activity: 'Activity', parse: TOP_a | Table_term_a, input_instance_flow: Flow_ap):
         """
-        Initiate the recursive descent through a table expression and yield a final result as either a
-        Table or Tuple Flow.
+        Gather data necessary to process a table expression
 
-        :param tuple_output: The final output is a Tuple Flow
-        :param activity: Context of the enclosing activity
-        :param rhs: The right hand side of a table assignment
-        :param input_instance_flow: This instance flow is available
-        :return: boundary actions and a flow summary
+        Args:
+            tuple_output: The final output is a Tuple Flow
+            activity: The enclosing activity object
+            parse: Parse of the table expression
+            input_instance_flow: The executing instance
         """
-        cls.activity = activity
-        cls.domain = activity.domain
-        cls.anum = activity.anum
-        cls.activity_path = activity.activity_path
-        cls.scrall_text = activity.scrall_text
+        self.tuple_output = tuple_output
+        self.activity = activity
+        self.domain = activity.domain
+        self.anum = activity.anum
+        self.parse = parse
+        self.component_flow = input_instance_flow
 
-        cls.action_outputs = {}  # ID's of all Action output Data Flows
-        cls.action_inputs = {}  # ID's of all Action input Data Flows
+        self.output_tflow_id = None
+        self.action_outputs = {}  # ID's of all Action output Data Flows
+        self.action_inputs = {}  # ID's of all Action input Data Flows
 
-        final_output_flow = cls.walk(table_expr=rhs, input_nsflow=input_instance_flow)
+    def process(self) -> tuple[Boundary_Actions, Flow_ap]:
+        """
+        Populate all elements in the expression
+
+        Returns:
+            boundary actions and a flow summary
+        """
+        final_output_flow = self.walk(table_expr=self.parse, input_nsflow=self.component_flow)
         # If tuple output has been specified, for a tuple assignment for example, tighten the max multiplicity to one
 
-        all_ins = {v for s in cls.action_inputs.values() for v in s}
-        all_outs = {v for s in cls.action_outputs.values() for v in s}
-        init_aids = {a for a in cls.action_inputs.keys() if not cls.action_inputs[a].intersection(all_outs)}
-        final_aids = {a for a in cls.action_outputs.keys() if not cls.action_outputs[a].intersection(all_ins)}
+        all_ins = {v for s in self.action_inputs.values() for v in s}
+        all_outs = {v for s in self.action_outputs.values() for v in s}
+        init_aids = {a for a in self.action_inputs.keys() if not self.action_inputs[a].intersection(all_outs)}
+        final_aids = {a for a in self.action_outputs.keys() if not self.action_outputs[a].intersection(all_ins)}
 
         return Boundary_Actions(ain=init_aids, aout=final_aids), final_output_flow
 
-    @classmethod
-    def walk(cls, table_expr: TOP_a | Table_term_a, input_nsflow: Flow_ap) -> Flow_ap:
+    def walk(self, table_expr: TOP_a | Table_term_a, input_nsflow: Flow_ap) -> Flow_ap:
         """
         Args:
             table_expr:
@@ -110,28 +106,27 @@ class TableExpr:
                 # insert Computation and set its operator attribute with texpr.op
                 operand_flows = []
                 for o in table_expr.operands:
-                    top_expr = o if type(o).__name__ == 'TOP_a' else TOP_a(op=None, operands=o)
-                    operand_flows.append(cls.walk(table_expr=top_expr, input_nsflow=component_flow))
+                    operand_flows.append(self.walk(table_expr=o, input_nsflow=component_flow))
                 op_name = table_expr.op
                 aid, component_flow = SetAction.populate(a_input=operand_flows[0], b_input=operand_flows[1],
-                                                         setop=op_name, activity=cls.activity)
-                cls.action_inputs[aid] = {operand_flows[0].fid, operand_flows[1].fid}
-                cls.action_outputs[aid] = {component_flow.fid}
+                                                         setop=op_name, activity=self.activity)
+                self.action_inputs[aid] = {operand_flows[0].fid, operand_flows[1].fid}
+                self.action_outputs[aid] = {component_flow.fid}
             case 'Table_term_a':
                 tt_type = type(table_expr.table).__name__
                 match tt_type:
                     case 'N_a' | 'IN_a':
                         # Is the name an existing Labeled Flow?
-                        R = f"Name:<{table_expr.table.name}>, Activity:<{cls.anum}>, Domain:<{cls.domain}>"
+                        R = f"Name:<{table_expr.table.name}>, Activity:<{self.anum}>, Domain:<{self.domain}>"
                         result = Relation.restrict(db=mmdb, relation='Labeled_Flow', restriction=R)
                         if result.body:
                             # Name corresponds to some Labeled Flow instance
                             label_fid = result.body[0]['ID']
-                            component_flow = Flow.lookup_data(fid=label_fid, anum=cls.anum, domain=cls.domain)
+                            component_flow = Flow.lookup_data(fid=label_fid, anum=self.anum, domain=self.domain)
                         else:
                             # Not a Labled Flow instance
                             # Is it a class name?  If so, we'll need a Class Accessor populated if we don't have one already
-                            class_flow = ClassAccessor.populate(name=table_expr.table.name, anum=cls.anum, domain=cls.domain)
+                            class_flow = ClassAccessor.populate(name=table_expr.table.name, anum=self.anum, domain=self.domain)
                             if class_flow:
                                 # We have a Class Accessor either previously or just now populated
                                 # Set its output flow to the current component output
@@ -147,17 +142,18 @@ class TableExpr:
                         # Process the instance set and obtain its flow id
                         input_flow = component_flow
                         iset = InstanceSet(input_instance_flow=input_flow, iset_components=table_expr.table.components,
-                                           activity=cls.activity)
+                                           activity=self.activity)
                         initial_aid, final_aid, component_flow = iset.process()
                         # Add the output flow generated by the instance set expression to the set of ouput flows
                         if initial_aid:
                             # For an InstanceSet with a single labeled flow component, no action is created
                             # So don't process action inputs and outputs unless there is an initial_aid
-                            cls.action_inputs[initial_aid] = {input_flow.fid}
+                            self.action_inputs[initial_aid] = {input_flow.fid}
                             if final_aid:
-                                cls.action_outputs[final_aid] = {component_flow.fid}
+                                self.action_outputs[final_aid] = {component_flow.fid}
                     case _:
-                        msg = f"Unmatched table term case: {tt_type} during table_expr walk at {cls.activity.path}"
+                        msg = (f"Unmatched table term case: {tt_type} during table_expr walk "
+                               f"at {self.activity.activity_path}")
                         _logger.error(msg)
                         raise ActionException(msg)
 
@@ -172,9 +168,9 @@ class TableExpr:
                                 aid, component_flow = RenameAction.populate(input_nsflow=input_flow,
                                                                             from_attr=header_op.from_name,
                                                                             to_attr=header_op.to_name,
-                                                                            activity=cls.activity)
-                                cls.action_inputs[aid] = {input_flow.fid}
-                                cls.action_outputs[aid] = {component_flow.fid}
+                                                                            activity=self.activity)
+                                self.action_inputs[aid] = {input_flow.fid}
+                                self.action_outputs[aid] = {component_flow.fid}
                             case 'Extend':
                                 pass
                                 # print()
@@ -185,27 +181,27 @@ class TableExpr:
                     # If there is a selection on the instance set, create the action and obtain its flow id
                     input_flow = component_flow  # TODO: input/component_flow redundant, just use component_flow
                     if input_flow.content == Content.RELATION:
-                        aid, component_flow, input_sflows = RestrictAction.populate(input_relation_flow=input_flow,
-                                                                                    selection_parse=table_expr.selection,
-                                                                                    activity=cls.activity)
-                        cls.action_inputs[aid] = {input_flow.fid}.union({f.fid for f in input_sflows})
-                        cls.action_outputs[aid] = {component_flow.fid}
+                        RestrictAction(input_relation_flow=input_flow, selection_parse=table_expr.selection,
+                                       activity=self.activity)
+                        # TODO: Check statement, restrict does not return a flow
+                        # self.action_inputs[aid] = {input_flow.fid}.union({f.fid for f in input_sflows})
+                        self.action_outputs[aid] = {component_flow.fid}
                     elif input_flow.content == Content.INSTANCE:
                         select_action = SelectAction(input_instance_flow=input_flow, selection_parse=table_expr.selection,
-                                                     activity=cls.activity)
+                                                     activity=self.activity)
                         aid = select_action.action_id
                         component_flow = select_action.output_instance_flow
                         input_sflows = select_action.sflows
-                        cls.action_inputs[aid] = {input_flow.fid}.union({f.fid for f in input_sflows})
-                        cls.action_outputs[aid] = {component_flow.fid}
+                        self.action_inputs[aid] = {input_flow.fid}.union({f.fid for f in input_sflows})
+                        self.action_outputs[aid] = {component_flow.fid}
                     else:
                         raise ActionException
                 if table_expr.projection:
                     # If there is a projection, create the action and obtain its flow id
                     input_flow = component_flow
                     aid, component_flow = ProjectAction.populate(input_nsflow=input_flow,
-                                                                 projection=table_expr.projection, activity=cls.activity)
-                    cls.action_inputs[aid] = {input_flow.fid}
-                    cls.action_outputs[aid] = {component_flow.fid}
-                        pass
+                                                                 projection=table_expr.projection, activity=self.activity)
+                    self.action_inputs[aid] = {input_flow.fid}
+                    self.action_outputs[aid] = {component_flow.fid}
+                pass
         return component_flow

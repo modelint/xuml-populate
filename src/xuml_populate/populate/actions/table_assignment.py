@@ -67,7 +67,9 @@ class TableAssignment:
         xi_flow = Flow_ap(fid=activity.xiflow.fid, content=Content.INSTANCE, tname=activity.class_name,
                           max_mult=MaxMult.ONE)
 
-        bactions, output_flow = TableExpr.process(tuple_output=table_assign_parse.assign_tuple, rhs=rhs, activity=activity, input_instance_flow=xi_flow)
+        te = TableExpr(tuple_output=table_assign_parse.assign_tuple, parse=rhs, activity=activity,
+                       input_instance_flow=xi_flow)
+        bactions, output_flow = te.process()
 
         case_prefix = '' if not case_name else f"{case_name}_"
         output_flow_label = case_prefix + lhs
