@@ -5,5 +5,10 @@ Cabin.Estimate delay( calling floor : Floor name, call dir : Direction ) : Durat
 calling floor name, calling height = Floor( Name: ^calling floor ).(Name, Height)
 cabin floor name, cabin height = /R43/R28/Floor.(Name, Height)
 
-calling floor name == cabin floor name?
-    =>> Duration[0]
+calling floor name != cabin floor name?
+{
+    all serviceable floors #= /R2/R28/Shaft Level/R3/Accessible Shaft Level ## Floor[Name >> Floor]
+    top floor height = all serviceable floors(1, ^+Height).Height
+    bottom floor height = all serviceable floors(1, ^-Height).Height
+    floor gap = Building(1).Average floor gap
+}

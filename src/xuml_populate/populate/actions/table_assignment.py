@@ -19,6 +19,9 @@ from xuml_populate.populate.mmclass_nt import Labeled_Flow_i
 from xuml_populate.populate.actions.expressions.table_expr import TableExpr
 from xuml_populate.populate.actions.aparse_types import (Flow_ap, MaxMult, Content, Boundary_Actions, Labeled_Flow)
 
+if __debug__:
+    from xuml_populate.utility import print_mmdb
+
 _logger = logging.getLogger(__name__)
 
 # Transactions
