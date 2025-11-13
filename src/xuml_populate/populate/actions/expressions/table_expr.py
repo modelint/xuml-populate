@@ -165,10 +165,10 @@ class TableExpr:
                         case 'Rename_a':
                             # Populate a rename relational action
                             input_flow = component_flow
-                            aid, component_flow = RenameAction.populate(input_nsflow=input_flow,
-                                                                        from_attr=header_op.from_name,
-                                                                        to_attr=header_op.to_name,
-                                                                        activity=self.activity)
+                            ra = RenameAction(input_nsflow=input_flow,
+                                              from_attr=header_op.from_name, to_attr=header_op.to_name,
+                                              activity=self.activity)
+                            aid, component_flow = ra.populate()
                             self.action_inputs[aid] = {input_flow.fid}
                             self.action_outputs[aid] = {component_flow.fid}
                         case 'Extend':
