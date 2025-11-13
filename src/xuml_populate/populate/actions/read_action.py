@@ -41,6 +41,7 @@ class ReadAction:
             anum: The activity number
             domain: The domain name
         """
+        # TODO: Extend Read Action so it can read a tuple flow
         assert input_single_instance_flow.content == Content.INSTANCE
         assert input_single_instance_flow.max_mult == MaxMult.ONE
 
