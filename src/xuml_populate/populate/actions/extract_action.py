@@ -21,6 +21,7 @@ from xuml_populate.populate.mm_class import MMclass
 from xuml_populate.populate.ns_flow import NonScalarFlow
 from xuml_populate.populate.flow import Flow
 from xuml_populate.populate.mmclass_nt import Relational_Action_i, Extract_Action_i
+from xuml_populate.exceptions.action_exceptions import *
 
 _logger = logging.getLogger(__name__)
 
@@ -31,35 +32,55 @@ class ExtractAction:
     """
     Create all relations for an Extract Action
     """
-    def __init__(self, tuple_flow: Flow_ap, attr: str, anum: str,
-                 domain: str, activity: 'Activity', label: str = None):
+    def __init__(self, tuple_flow: Flow_ap, attr: str, activity: 'Activity', label: str = None):
         """
         Populate the Extract Action
 
-        :param tuple_flow: The input Non Scalar Flow
-        :param attr: Name of attribute to extract
-        :param anum: Activity number
-        :param domain: Domain
-        :param activity:
-        :param label:  Name (label) of the output Scalar Flow
+        Args:
+            tuple_flow: The input Non Scalar Flow
+            attr: Name of attribute to extract
+            activity: The enclosing Activity object
+            label:  Name (label) of the output Scalar Flow
         """
         # Save attribute values that we will need when creating the various select subsystem
         # classes
+        if tuple_flow.max_mult != MaxMult.ONE:
+            msg = (f"Cannot extract attribute values from non-tuple relation: {tuple_flow} "
+                   f"at {self.activity.path}")
+            _logger.error(msg)
+            raise ActionException(msg)
+        self.anum = activity.anum
+        self.domain = activity.domain
+        self.activity = activity
 
-        tuple_header = NonScalarFlow.header(ns_flow=tuple_flow, domain=domain)
+        self.attr = attr
+        self.tuple_flow = tuple_flow
+        self.tuple_header = NonScalarFlow.header(ns_flow=tuple_flow, domain=activity.domain)
+        self.label = label
 
+    def populate(self) -> tuple[str, Flow_ap]:
+        """
+        Populate the Extract Action
+
+        Returns:
+            Action ID and the output scalar flow with the extracted attribute value
+        """
         Transaction.open(db=mmdb, name=tr_Extract)
-        self.action_id = Action.populate(tr=tr_Extract, anum=anum, domain=domain, action_type="extract")
+        action_id = Action.populate(tr=tr_Extract, anum=self.anum, domain=self.domain, action_type="extract")
 
         # Create the labeled Scalar Flow
-        self.output_sflow = Flow.populate_scalar_flow(label=label, scalar_type=tuple_header[attr], anum=anum,
-                                                      domain=domain)
+        output_sflow = Flow.populate_scalar_flow(
+            label=self.label, scalar_type=self.tuple_header[self.attr],
+            anum=self.anum, domain=self.domain
+        )
 
         Relvar.insert(db=mmdb, tr=tr_Extract, relvar='Relational_Action', tuples=[
-            Relational_Action_i(ID=self.action_id, Activity=anum, Domain=domain)
+            Relational_Action_i(ID=action_id, Activity=self.anum, Domain=self.domain)
         ])
         Relvar.insert(db=mmdb, tr=tr_Extract, relvar='Extract_Action', tuples=[
-            Extract_Action_i(ID=self.action_id, Activity=anum, Domain=domain, Input_tuple=tuple_flow.fid,
-                             Table=tuple_flow.tname, Attribute=attr, Output_scalar=self.output_sflow.fid)
+            Extract_Action_i(ID=action_id, Activity=self.anum, Domain=self.domain, Input_tuple=self.tuple_flow.fid,
+                             Table=self.tuple_flow.tname, Attribute=self.attr, Output_scalar=output_sflow.fid)
         ])
         Transaction.execute(db=mmdb, name=tr_Extract)
+
+        return action_id, output_sflow

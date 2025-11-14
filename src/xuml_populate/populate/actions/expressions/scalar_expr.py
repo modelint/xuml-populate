@@ -217,9 +217,24 @@ class ScalarExpr:
                                 self.action_outputs[final_aid] = {self.component_flow.fid}
                         action_input = self.component_flow
                         project_attrs = tuple([a.name for a in sexpr.projection.attrs])
-                        ra = ReadAction(input_single_instance_flow=action_input, attrs=project_attrs,
-                                        anum=self.anum, domain=self.domain)
-                        aid, sflows = ra.populate()
+                        # We are either reading the attributes of an instance or a tuple
+                        if action_input.content == Content.INSTANCE:
+                            ra = ReadAction(input_single_instance_flow=action_input, attrs=project_attrs,
+                                            anum=self.anum, domain=self.domain)
+                            aid, sflows = ra.populate()
+                        elif action_input.content == Content.RELATION:
+                            # We can extract only one attribute per action
+                            sflows = []
+                            for attr in project_attrs:
+                                ea = ExtractAction(tuple_flow=action_input, attr=attr, activity=self.activity)
+                                aid, sflow = ea.populate()
+                                sflows.append(sflow)
+                        else:
+                            # Can't read attributes from a Scalar flow
+                            msg = (f"Non Scalar flow reauired to read or extract attribute values, "
+                                   f"but input flow is: {action_input} in {self.activity.activity_path}")
+                            _logger.error(msg)
+                            raise ActionException(msg)
                         self.action_inputs[aid] = {action_input.fid}
                         self.action_outputs[aid] = {s.fid for s in sflows}
 
