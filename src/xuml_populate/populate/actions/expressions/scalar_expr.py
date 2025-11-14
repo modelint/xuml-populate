@@ -178,13 +178,11 @@ class ScalarExpr:
                                     # For attribute comparison, there can only be one extracted attribute
                                     raise ActionException
                                 attr_to_extract = sexpr.projection.attrs[0].name
-                                xa = ExtractAction(
-                                    tuple_flow=input_iflow, attr=attr_to_extract, anum=self.anum,
-                                    domain=self.domain, activity=self.activity
-                                )  # Select Action transaction is open
-                                sflows = [xa.output_sflow]  # Extract outputs only a single flow
-                                self.action_inputs[xa.action_id] = {input_iflow.fid}
-                                self.action_outputs[xa.action_id] = {s.fid for s in sflows}
+                                xa = ExtractAction(tuple_flow=input_iflow, attr=attr_to_extract, activity=self.activity)
+                                xa_aid, xa_sflow = xa.populate()
+                                sflows = [xa_sflow]  # Extract outputs only a single flow
+                                self.action_inputs[xa_aid] = {input_iflow.fid}
+                                self.action_outputs[xa_aid] = {s.fid for s in sflows}
                                 # TODO: Might want to change extract to make it output multiple like read
                                 # TODO: For now, let's just make it single flow list for consistency with read output
                             elif input_iflow.content == Content.INSTANCE:
@@ -226,8 +224,8 @@ class ScalarExpr:
                             # We can extract only one attribute per action
                             sflows = []
                             for attr in project_attrs:
-                                ea = ExtractAction(tuple_flow=action_input, attr=attr, activity=self.activity)
-                                aid, sflow = ea.populate()
+                                xa = ExtractAction(tuple_flow=action_input, attr=attr, activity=self.activity)
+                                aid, sflow = xa.populate()
                                 sflows.append(sflow)
                         else:
                             # Can't read attributes from a Scalar flow

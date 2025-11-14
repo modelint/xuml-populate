@@ -42,13 +42,13 @@ class ExtractAction:
             activity: The enclosing Activity object
             label:  Name (label) of the output Scalar Flow
         """
-        # Save attribute values that we will need when creating the various select subsystem
-        # classes
-        if tuple_flow.max_mult != MaxMult.ONE:
-            msg = (f"Cannot extract attribute values from non-tuple relation: {tuple_flow} "
-                   f"at {self.activity.path}")
+        # Verify that we have an input Tuple Flow
+        if tuple_flow.max_mult != MaxMult.ONE or tuple_flow.content != Content.RELATION:
+            msg = (f"Cannot extract attribute values from non-tuple flow: {tuple_flow} "
+                   f"at {activity.activity_path}")
             _logger.error(msg)
             raise ActionException(msg)
+
         self.anum = activity.anum
         self.domain = activity.domain
         self.activity = activity
