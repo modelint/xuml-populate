@@ -78,15 +78,16 @@ class RestrictCondition:
         # The implication is that we are selecting on: Stop requested == true
         # So elaborate the parse elminating our shorthand
         self.cardinality = selection_parse.card
-        if type(criteria).__name__ == 'N_a':
-            self.expression = self.walk_criteria(operands=[criteria])
-            pass
-            # criteria = BOOL_a(op='==', operands=[criteria, N_a(name='true')])
-            # Name only (no explicit operator or operand)
-        else:
-            self.expression = self.walk_criteria(operands=criteria.operands, operator=criteria.op)
-            pass
-        # Walk the parse tree and save all attributes, ops, values, and input scalar flows
+        if criteria:
+            if type(criteria).__name__ == 'N_a':
+                self.expression = self.walk_criteria(operands=[criteria])
+                pass
+                # criteria = BOOL_a(op='==', operands=[criteria, N_a(name='true')])
+                # Name only (no explicit operator or operand)
+            else:
+                self.expression = self.walk_criteria(operands=criteria.operands, operator=criteria.op)
+                pass
+            # Walk the parse tree and save all attributes, ops, values, and input scalar flows
         # Populate the Restriction Condition class
         Relvar.insert(db=mmdb, tr=tr, relvar='Restriction Condition', tuples=[
             Restriction_Condition_i(Action=self.action_id, Activity=self.anum, Domain=self.domain,

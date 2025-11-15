@@ -13,7 +13,6 @@ from pyral.transaction import Transaction
 # xUML Populate
 if TYPE_CHECKING:
     from xuml_populate.populate.activity import Activity
-from xuml_populate.utility import print_mmdb
 from xuml_populate.config import mmdb
 from xuml_populate.populate.actions.aparse_types import Flow_ap, MaxMult, Attribute_Comparison
 from xuml_populate.populate.actions.action import Action
@@ -24,6 +23,9 @@ from xuml_populate.populate.mmclass_nt import (Select_Action_i, Single_Select_i,
                                                Zero_One_Cardinality_Select_i, Many_Select_i,
                                                Class_Restriction_Condition_i, Instance_Action_i)
 _logger = logging.getLogger(__name__)
+
+if __debug__:
+    from xuml_populate.utility import print_mmdb
 
 # Transactions
 tr_Select = "Select Action"

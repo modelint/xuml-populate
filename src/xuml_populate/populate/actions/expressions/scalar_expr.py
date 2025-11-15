@@ -105,7 +105,8 @@ class ScalarExpr:
                 return [svalue_output]
             case 'INST_PROJ_a':
                 action_input = self.component_flow
-                match type(sexpr.iset).__name__:
+                iset_type = type(sexpr.iset).__name__
+                match iset_type:
                     case 'N_a':
                         # There are no other iset components and since we project, this can't be a type name
                         # So there are only two possibilities and in case of a shadowing conflict, we must proceed
