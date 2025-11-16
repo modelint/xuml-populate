@@ -11,4 +11,10 @@ calling floor name != cabin floor name?
     top floor height = all serviceable floors(1, ^+Height).Height
     bottom floor height = all serviceable floors(1, ^-Height).Height
     floor gap = Building(1).Average floor gap
+
+    calling up = ^call dir == up
+    calling down = not calling up
+
+    calling up, calling down = ^call dir == _up
+    cabin high, cabin low = cabin height > calling height
 }
