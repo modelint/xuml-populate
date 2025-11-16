@@ -103,8 +103,8 @@ class DecisionAction:
                         raise ActionException(msg)
             case 'BOOL_a':
                 ca = ComputationAction(expr=decision_input, activity=self.activity)
-                ba, self.decision_input_flow = ca.populate()
-                pass
+                ba, sflows = ca.populate()
+                self.decision_input_flow = sflows[0]
                 # input_init_aids.add(aid)  # The input is whatever action initializes the computation
             case _:
                 pass

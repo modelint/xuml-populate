@@ -19,8 +19,10 @@ from collections import namedtuple
 
 
 # Computation subsystem
-Computation_Action_i = namedtuple('Computation_Action_i', 'ID Activity Domain Expression Output_flow')
+Boolean_Partition_i = namedtuple('Boolean_Partition_i', 'ID Activity Domain True_flow False_flow')
+Computation_Action_i = namedtuple('Computation_Action_i', 'ID Activity Domain Expression')
 Computation_Input_i = namedtuple('Computation_Input_i', 'Computation Activity Domain Input_flow')
+General_Computation_i = namedtuple('General_Computation_i', 'ID Activity Domain Result_flow')
 
 # Class And Attribute subsystem
 Alias_i = namedtuple('Alias_i', 'Name Class Domain')

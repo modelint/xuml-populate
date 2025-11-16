@@ -42,15 +42,17 @@ class ScalarExpr:
     building instance sets.
     """
     def __init__(self, expr: INST_PROJ_a | BOOL_a | N_a | IN_a | Op_chain_a, input_instance_flow: Flow_ap | None,
-                 activity: 'Activity'):
+                 activity: 'Activity', bpart: bool = False):
         """
+        Gather data required to process a scalar expression
 
         Args:
             expr: A parsed scalar expression
-            input_instance_flow:
-            activity:
+            input_instance_flow: The executing instance, if any
+            activity: The enclosing activity object
         """
         self.expr = expr
+        self.bpart = bpart
         self.activity = activity
         self.input_instance_flow = input_instance_flow
         self.anum = activity.anum
@@ -271,11 +273,11 @@ class ScalarExpr:
                 return sflows
 
             case 'BOOL_a':
-                ca = ComputationAction(expr=sexpr, activity=self.activity)
-                b, sflow = ca.populate()
+                ca = ComputationAction(expr=sexpr, activity=self.activity, bpart=self.bpart)
+                b, sflows = ca.populate()
                 self.action_inputs = {aid: {} for aid in b.ain}
                 self.action_outputs = {aid: {} for aid in b.aout}
-                return [sflow]
+                return sflows
             case 'MATH_a':
                 action_input = self.component_flow
                 operand_flows = []

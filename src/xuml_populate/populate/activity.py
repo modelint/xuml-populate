@@ -66,7 +66,7 @@ class UsageAttrs(NamedTuple):
 flow_attrs = [
     UsageAttrs(cname='Supplied Parameter Value', id_attr='Action', in_attr='Data_flow', out_attr=None),
     UsageAttrs(cname='Computation Input', id_attr='Computation', in_attr='Input_flow', out_attr=None),
-    UsageAttrs(cname='Computation Action', id_attr='ID', in_attr=None, out_attr='Output_flow'),
+    UsageAttrs(cname='General Computation', id_attr='ID', in_attr=None, out_attr='Result_flow'),
     UsageAttrs(cname='Type Action', id_attr='ID', in_attr=None, out_attr='Output_flow'),
     UsageAttrs(cname='Type Operation', id_attr='ID', in_attr='Input_flow', out_attr=None),
     UsageAttrs(cname='Pass Action', id_attr='ID', in_attr='Input_flow', out_attr='Output_flow'),

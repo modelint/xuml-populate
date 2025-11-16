@@ -85,7 +85,11 @@ class ScalarAssignment:
         else:
             raise ActionException
 
-        se = ScalarExpr(expr=rhs.expr, input_instance_flow=self.input_instance_flow, activity=self.activity)
+        boolean_partition = True if len(lhs) == 2 and type(rhs.expr).__name__ == 'BOOL_a' else False
+        # If there are two labeled flows on the LHS receiving the result of a boolean expression
+        # We need a Boolean Partition computation action
+        se = ScalarExpr(expr=rhs.expr, input_instance_flow=self.input_instance_flow, activity=self.activity,
+                        bpart=boolean_partition)
         bactions, scalar_flows = se.process()
 
         # Where any actions populated for the RHS?

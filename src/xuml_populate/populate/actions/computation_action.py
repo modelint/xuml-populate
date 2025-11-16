@@ -23,7 +23,10 @@ from xuml_populate.config import mmdb
 from xuml_populate.populate.actions.aparse_types import Flow_ap, MaxMult, Content, Boundary_Actions
 from xuml_populate.populate.actions.action import Action
 from xuml_populate.populate.flow import Flow
-from xuml_populate.populate.mmclass_nt import Computation_Action_i, Computation_Input_i, Instance_Action_i
+from xuml_populate.populate.mmclass_nt import (
+    Computation_Action_i, Computation_Input_i, Instance_Action_i,
+    General_Computation_i, Boolean_Partition_i
+)
 
 if __debug__:
     from xuml_populate.utility import print_mmdb
@@ -38,7 +41,7 @@ class ComputationAction:
     Populate a Compute Action
     """
 
-    def __init__(self, expr: BOOL_a | MATH_a, activity: 'Activity'):
+    def __init__(self, expr: BOOL_a | MATH_a, activity: 'Activity', bpart: bool = False):
         """
         Collect all data required to populate a Computation Action
 
@@ -47,6 +50,7 @@ class ComputationAction:
             activity: The enclosing Activity
         """
         self.expr = expr
+        self.bpart = bpart
 
         self.anum = activity.anum
         self.domain = activity.domain
@@ -56,7 +60,6 @@ class ComputationAction:
         self.operand_flows: list[str] = []
         self.expr_text = ''  # String will be filled out during population
         self.output_type = None
-        self.output_flow = None
 
         # self.input_aids - input action ids
         # --
@@ -223,34 +226,59 @@ class ComputationAction:
                 pass  # TODO: Raise exception
         pass
 
-    def populate(self) -> tuple[Boundary_Actions, Flow_ap]:
+    def populate(self) -> tuple[Boundary_Actions, list[Flow_ap]]:
         """
         Populate the Compute Action
 
         Returns:
-            The computation's action id and result output flow
+            The computation's action id and either a single output scalar flow in the case of a General Computation
+             or a pair of boolean scalar output flows in the case of a Boolean Partition
         """
         # At this point I don't have a good enough example to think this thing through
         # so this is just a placeholder.
         self.walk(self.expr)
 
         Transaction.open(db=mmdb, name=tr_Compute)
-        self.output_flow = Flow.populate_scalar_flow(scalar_type=self.output_type, anum=self.anum, domain=self.domain,
-                                                     label=f"_{self.expr_text.strip()}", activity_tr=tr_Compute)
+
+        # Get action id and Populate the Computation Action superclass and Computation Inputs
         self.action_id = Action.populate(tr=tr_Compute, anum=self.anum, domain=self.domain, action_type="computation")
         Relvar.insert(db=mmdb, tr=tr_Compute, relvar='Instance Action', tuples=[
             Instance_Action_i(ID=self.action_id, Activity=self.anum, Domain=self.domain)
         ])
         Relvar.insert(db=mmdb, tr=tr_Compute, relvar='Computation Action', tuples=[
-            Computation_Action_i(ID=self.action_id, Activity=self.anum, Domain=self.domain,
-                                 Output_flow=self.output_flow.fid, Expression=self.expr_text)
+            Computation_Action_i(ID=self.action_id, Activity=self.anum, Domain=self.domain, Expression=self.expr_text)
         ])
         for f in self.operand_flows:
             Relvar.insert(db=mmdb, tr=tr_Compute, relvar='Computation Input', tuples=[
                 Computation_Input_i(Computation=self.action_id, Activity=self.anum, Domain=self.domain, Input_flow=f)
             ])
 
+        if self.bpart:
+            # We don't label the flows since we know there is an assignment to labeled flows
+            # In other words, the flow names must be in the RHS of the expression
+            if self.output_type != 'Boolean':
+                msg = f"Output flow must be Boolean for a Boolean Partition at {self.activity.activity_path}"
+                _logger.error(msg)
+                raise ActionException(msg)
+            True_flow = Flow.populate_scalar_flow(
+                scalar_type=self.output_type, anum=self.anum, domain=self.domain, activity_tr=tr_Compute)
+            False_flow = Flow.populate_scalar_flow(
+                scalar_type=self.output_type, anum=self.anum, domain=self.domain, activity_tr=tr_Compute)
+            Relvar.insert(db=mmdb, tr=tr_Compute, relvar='Boolean Partition', tuples=[
+                Boolean_Partition_i(ID=self.action_id, Activity=self.anum, Domain=self.domain,
+                                    True_flow=True_flow.fid, False_flow=False_flow.fid)
+            ])
+            output_flows = [True_flow, False_flow]
+        else:
+            output_flow = Flow.populate_scalar_flow(scalar_type=self.output_type, anum=self.anum, domain=self.domain,
+                                                    label=f"_{self.expr_text.strip()}", activity_tr=tr_Compute)
+            Relvar.insert(db=mmdb, tr=tr_Compute, relvar='General Computation', tuples=[
+                General_Computation_i(ID=self.action_id, Activity=self.anum, Domain=self.domain,
+                                      Result_flow=output_flow.fid)
+            ])
+            output_flows = [output_flow]
+
         Transaction.execute(db=mmdb, name=tr_Compute)
 
         boundary_actions = Boundary_Actions(ain=self.input_aids, aout={self.action_id})
-        return boundary_actions, self.output_flow
+        return boundary_actions, output_flows
