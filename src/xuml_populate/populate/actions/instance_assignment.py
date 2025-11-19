@@ -118,11 +118,12 @@ class InstanceAssignment:
             # Attempt to cast it to an instance flow
             ipa = IdentifierProjection(relation_flow=iset_instance_flow, class_name=lhs.exp_type.name, activity=activity)
             cast = ipa.populate()
-            if not cast:
+            if cast is None:
                 msg = (f"Cannot cast table flow {iset_instance_flow} to instance flow for class {lhs.exp_type.name}"
                        f" at {activity.activity_path}")
                 _logger.error(msg)
                 raise AssignmentOperatorMismatch
+            ipa_aid, iflow = ipa.populate()
             pass
         elif lhs.exp_type and lhs.exp_type != iset_instance_flow.tname:
             msg = (f"Instance assigment type mismatch: {lhs.exp_type} assigned {iset_instance_flow.tname} in"

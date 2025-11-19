@@ -291,12 +291,59 @@ class Flow:
         return flow_id
 
     @classmethod
-    def populate_table_flow_from_class(cls, cname: str, anum: str, domain: str) -> Flow_ap:
+    def populate_table_flow_from_class(cls, class_name: str, anum: str, domain: str) -> Flow_ap:
         """
+        Args:
+            class_name:
+            anum:
+            domain:
 
-        :return:
+        Returns:
         """
         pass
+
+    @classmethod
+    def table_to_instance_compatible(cls, class_name: str, table: str, domain: str) -> bool:
+        """
+        Given a Table, determine if a corresponding instance flow can be created.
+        This is the case only if a subset of the Table Attributes in the Table
+        is equal to the set of Identifier Attributes of one Identifier of the supplied Class.
+
+        Args:
+            class_name: Create an Instance Flow for this Class if possible
+            table: The type name of a Relation Flow
+            domain: Name of Domain that Instance Flow will belong to, if created
+
+        Returns:
+            True if the table flow can be cast to an instance flow for the specified Class
+        """
+        # Extract the table attributes
+        parts = table.split('_')
+        # Optional: sanity check
+        if len(parts) % 2 != 0:
+            raise ValueError(f"Expected an even number of name/type pairs in table header: [{table}]")
+        table_attrs = {name: type_ for name, type_ in zip(parts[0::2], parts[1::2])}
+
+        # Get identifiers for class
+        R = f"Class:<{class_name}>, Domain:<{domain}>"
+        id_s = Relation.restrict(db=mmdb, relation="Identifier", restriction=R)
+        id_count = len(id_s.body)
+        # IDs in the model are numbered starting at 1
+        # Try to match any ID working from I, I2, ...
+        for idnum in range(1, id_count+1):
+            R = f"Identifier:<{idnum}>, Class:<{class_name}>, Domain:<{domain}>"
+            Relation.restrict(db=mmdb, relation="Identifier Attribute", restriction=R)
+            id_attr_types = Relation.semijoin(db=mmdb, rname2='Attribute', attrs={"Attribute": "Name",
+                                                                                  "Class": "Class",
+                                                                                  "Domain": "Domain"})
+            # Create a dictionary of name-type pairs for the current Identifier
+            id_attrs = {i['Name']: i['Scalar'] for i in id_attr_types.body}
+            # Now check to see if this is a subset of the table header
+            if set(id_attrs.items()) < set(table_attrs.items()):
+                return True
+        # Break didn't occur, so there was no match
+        # Do not create an instance flow, just return
+        return False
 
     @classmethod
     def flow_type(cls, fid: str, anum: str, domain: str) -> str:

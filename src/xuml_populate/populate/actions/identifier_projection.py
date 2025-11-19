@@ -64,23 +64,26 @@ class IdentifierProjection:
         Returns:
             The action id and output Instance Flow
         """
-        pass
-        #
-        # Transaction.open(db=mmdb, name=tr_ID_Project)
-        # aid = Action.populate(tr=tr_ID_Project, anum=self.anum, domain=self.domain, action_type="idproject")
-        #
-        #
-        # Relvar.insert(db=mmdb, tr=tr_ID_Project, relvar='Instance Action', tuples=[
-        #     Instance_Action_i(ID=aid, Activity=self.anum, Domain=self.domain)
-        # ])
-        # Relvar.insert(db=mmdb, tr=tr_ID_Project, relvar='Flow Connector', tuples=[
-        #     Flow_Connector_i(ID=aid, Activity=self.anum, Domain=self.domain)
-        # ])
-        # # Relvar.insert(db=mmdb, tr=tr_ID_Project, relvar='Pass Action', tuples=[
-        # #     Pass_Action_i(ID=aid, Activity=self.anum, Domain=self.domain, Input_flow=self.input_fid,
-        # #                   Output_flow=pass_output_flow.fid)
-        # # ])
-        # Transaction.execute(db=mmdb, name=tr_ID_Project)
-        #
-        #
-        # return aid, iflow
+        # First check to see if the Relation Flow can be cast to an Instance Flow
+        if not Flow.table_to_instance_compatible(
+                class_name=self.class_name, table=self.relation_flow.tname, domain=self.domain):
+            return None
+
+        cast_iflow = Flow.populate_instance_flow(cname=self.class_name, anum=self.anum, domain=self.domain)
+
+        Transaction.open(db=mmdb, name=tr_ID_Project)
+        aid = Action.populate(tr=tr_ID_Project, anum=self.anum, domain=self.domain, action_type="idproject")
+
+        Relvar.insert(db=mmdb, tr=tr_ID_Project, relvar='Instance Action', tuples=[
+            Instance_Action_i(ID=aid, Activity=self.anum, Domain=self.domain)
+        ])
+        Relvar.insert(db=mmdb, tr=tr_ID_Project, relvar='Flow Connector', tuples=[
+            Flow_Connector_i(ID=aid, Activity=self.anum, Domain=self.domain)
+        ])
+        Relvar.insert(db=mmdb, tr=tr_ID_Project, relvar='Identifier Projection', tuples=[
+            Identifier_Projection_i(ID=aid, Activity=self.anum, Domain=self.domain, Instance_flow=cast_iflow.fid,
+                                    Relation_flow=self.relation_flow.fid)
+        ])
+        Transaction.execute(db=mmdb, name=tr_ID_Project)
+
+        return aid, cast_iflow
