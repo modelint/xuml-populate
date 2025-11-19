@@ -16,15 +16,16 @@ from pyral.relvar import Relvar
 if TYPE_CHECKING:
     from xuml_populate.populate.activity import Activity
 from xuml_populate.config import mmdb
-from xuml_populate.utility import print_mmdb
 from xuml_populate.populate.mmclass_nt import Labeled_Flow_i
 from xuml_populate.populate.flow import Flow
-from xuml_populate.populate.actions.pass_action import PassAction
+from xuml_populate.populate.actions.identifier_projection import IdentifierProjection
 from xuml_populate.populate.actions.expressions.instance_set import InstanceSet
 from xuml_populate.exceptions.action_exceptions import *
 from xuml_populate.populate.actions.aparse_types import (Flow_ap, MaxMult, Content, MethodActivityAP, StateActivityAP,
                                                          ActivityAP, Boundary_Actions, Labeled_Flow, SMType,
                                                          ActivityType)
+if __debug__:
+    from xuml_populate.utility import print_mmdb
 
 _logger = logging.getLogger(__name__)
 
@@ -112,7 +113,18 @@ class InstanceAssignment:
         output_flow_label = case_prefix + lhs.name.name
         if case_name:
             case_outputs.add(Labeled_Flow(label=output_flow_label, flow=iset_instance_flow))
-        if lhs.exp_type and lhs.exp_type != iset_instance_flow.tname:
+        if iset_instance_flow.content == Content.RELATION:
+            # The RHS is a relation flow
+            # Attempt to cast it to an instance flow
+            ipa = IdentifierProjection(relation_flow=iset_instance_flow, class_name=lhs.exp_type.name, activity=activity)
+            cast = ipa.populate()
+            if not cast:
+                msg = (f"Cannot cast table flow {iset_instance_flow} to instance flow for class {lhs.exp_type.name}"
+                       f" at {activity.activity_path}")
+                _logger.error(msg)
+                raise AssignmentOperatorMismatch
+            pass
+        elif lhs.exp_type and lhs.exp_type != iset_instance_flow.tname:
             msg = (f"Instance assigment type mismatch: {lhs.exp_type} assigned {iset_instance_flow.tname} in"
                    f" {activity.activity_path}")
             _logger.error(msg)
