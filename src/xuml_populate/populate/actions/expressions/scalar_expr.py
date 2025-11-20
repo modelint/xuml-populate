@@ -90,6 +90,38 @@ class ScalarExpr:
     def resolve_iset(self, iset: INST_a, op_chain: Op_chain_a = None, projection: Projection_a = None) -> list[Flow_ap]:
         pass
 
+    def resolve_name(self, name: str) -> Flow_ap:
+        """
+        Args:
+            name:
+
+        Returns:
+
+        """
+        # There are no other iset components and since we project, this can't be a type name
+        # So there are only two possibilities and in case of a shadowing conflict, we must proceed
+        # in the order of conflict resolution precedence.
+        # 1. Check for an attribute name on the component flow class
+        # 2. Check for a scalar flow with this name
+        # Just in case there's another possibility, leave a placeholder for anything else
+
+        # Attribute check
+        R = f"Name:<{name}>, Class:<{self.component_flow.tname}>, Domain:<{self.domain}>"
+        attribute_r = Relation.restrict(db=mmdb, relation="Attribute", restriction=R)
+        if attribute_r.body:
+            # Create a read action to obtain the value
+            ra = ReadAction(input_single_instance_flow=self.component_flow, attrs=(name,),
+                            anum=self.anum, domain=self.domain)
+            aid, sflows = ra.populate()
+            return sflows[0]
+
+        # Scalar flow check
+        sflows = Flow.find_labeled_scalar_flow(name=name, anum=self.anum,
+                                               domain=self.domain)
+        input_sflow = sflows[0] if sflows else None
+        return input_sflow
+
+
     def walk(self, sexpr: str | INST_PROJ_a | MATH_a | BOOL_a | N_a | IN_a, input_flow: Flow_ap) -> list[Flow_ap]:
         """
 
@@ -283,7 +315,11 @@ class ScalarExpr:
                 operand_flows = []
                 op_name = sexpr.op
                 for o in sexpr.operands:
-                    match type(o).__name__:
+                    o_type = type(o).__name__
+                    match o_type:
+                        case 'N_a' | 'IN_a':
+                            sflow = self.resolve_name(name=o.name)
+                            pass
                         case 'INST_PROJ_a':
                             iset = InstanceSet(input_instance_flow=action_input, iset_components=o.iset.components,
                                                activity=self.activity)

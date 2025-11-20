@@ -1,5 +1,5 @@
 """
-identifier_projection.py – Attempt to populate an identifier projection
+cast_to_instance.py – Attempt to populate a Cast To Instance action
 """
 
 # System
@@ -19,7 +19,7 @@ from xuml_populate.config import mmdb
 from xuml_populate.populate.actions.aparse_types import Flow_ap, MaxMult, Content
 from xuml_populate.populate.actions.action import Action
 from xuml_populate.populate.flow import Flow
-from xuml_populate.populate.mmclass_nt import Identifier_Projection_i, Flow_Connector_i, Instance_Action_i
+from xuml_populate.populate.mmclass_nt import Cast_To_Instance_i, Flow_Connector_i, Instance_Action_i
 
 if __debug__:
     from xuml_populate.utility import print_mmdb
@@ -27,21 +27,21 @@ if __debug__:
 _logger = logging.getLogger(__name__)
 
 # Transactions
-tr_ID_Project = "Identifier Projection"
+tr_CastToInstance = "Cast To Instance"
 
-class IdentifierProjection:
+class CastToInstance:
     """
-    We populate an Identifier Projection if a subset of the supplied Table Attributes matches the identifier
+    We populate a Cast To Instance if a subset of the supplied Table Attributes matches the identifier
     of the specified Class.
 
     An additional constraint, checked during model execution, is that the corresponding Relation Flow
     must be a subset of the target Class population.
 
-    See the Identifier Projection class and relationship descriptions for more details.
+    See the Cast To Instance class and relationship descriptions for more details.
     """
     def __init__(self, relation_flow: Flow_ap, class_name: str, activity: 'Activity'):
         """
-        Collect the data necessary to populate an Identifier Projection action
+        Collect the data necessary to populate an Cast To Instance action
 
         Args:
             relation_flow: A Relation Flow
@@ -59,7 +59,7 @@ class IdentifierProjection:
 
     def populate(self) -> Optional[tuple[str, Flow_ap]]:
         """
-        Populate the Identifier Project Action
+        Populate the Cast To Instance action
 
         Returns:
             The action id and output Instance Flow
@@ -71,19 +71,19 @@ class IdentifierProjection:
 
         cast_iflow = Flow.populate_instance_flow(cname=self.class_name, anum=self.anum, domain=self.domain)
 
-        Transaction.open(db=mmdb, name=tr_ID_Project)
-        aid = Action.populate(tr=tr_ID_Project, anum=self.anum, domain=self.domain, action_type="idproject")
+        Transaction.open(db=mmdb, name=tr_CastToInstance)
+        aid = Action.populate(tr=tr_CastToInstance, anum=self.anum, domain=self.domain, action_type="cast to instance")
 
-        Relvar.insert(db=mmdb, tr=tr_ID_Project, relvar='Instance Action', tuples=[
+        Relvar.insert(db=mmdb, tr=tr_CastToInstance, relvar='Instance Action', tuples=[
             Instance_Action_i(ID=aid, Activity=self.anum, Domain=self.domain)
         ])
-        Relvar.insert(db=mmdb, tr=tr_ID_Project, relvar='Flow Connector', tuples=[
+        Relvar.insert(db=mmdb, tr=tr_CastToInstance, relvar='Flow Connector', tuples=[
             Flow_Connector_i(ID=aid, Activity=self.anum, Domain=self.domain)
         ])
-        Relvar.insert(db=mmdb, tr=tr_ID_Project, relvar='Identifier Projection', tuples=[
-            Identifier_Projection_i(ID=aid, Activity=self.anum, Domain=self.domain, Instance_flow=cast_iflow.fid,
-                                    Relation_flow=self.relation_flow.fid)
+        Relvar.insert(db=mmdb, tr=tr_CastToInstance, relvar='Cast To Instance', tuples=[
+            Cast_To_Instance_i(ID=aid, Activity=self.anum, Domain=self.domain, Instance_flow=cast_iflow.fid,
+                               Relation_flow=self.relation_flow.fid)
         ])
-        Transaction.execute(db=mmdb, name=tr_ID_Project)
+        Transaction.execute(db=mmdb, name=tr_CastToInstance)
 
         return aid, cast_iflow

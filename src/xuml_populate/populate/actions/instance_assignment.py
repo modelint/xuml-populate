@@ -18,7 +18,7 @@ if TYPE_CHECKING:
 from xuml_populate.config import mmdb
 from xuml_populate.populate.mmclass_nt import Labeled_Flow_i
 from xuml_populate.populate.flow import Flow
-from xuml_populate.populate.actions.identifier_projection import IdentifierProjection
+from xuml_populate.populate.actions.cast_to_instance import CastToInstance
 from xuml_populate.populate.actions.pass_action import PassAction
 from xuml_populate.populate.actions.expressions.instance_set import InstanceSet
 from xuml_populate.exceptions.action_exceptions import *
@@ -122,17 +122,17 @@ class InstanceAssignment:
         if cast_rhs_from_relation:
             # The RHS is a relation flow
             # Attempt to cast it to an instance flow
-            ipa = IdentifierProjection(relation_flow=iset_instance_flow, class_name=lhs.exp_type.name, activity=activity)
-            ipa_result = ipa.populate()
-            if ipa_result is None:
+            cinst = CastToInstance(relation_flow=iset_instance_flow, class_name=lhs.exp_type.name, activity=activity)
+            cinst_result = cinst.populate()
+            if cinst_result is None:
                 msg = (f"Cannot cast table flow {iset_instance_flow} to instance flow for class {lhs.exp_type.name}"
                        f" at {activity.activity_path}")
                 _logger.error(msg)
                 raise AssignmentOperatorMismatch
-            ipa_aid, ipa_flow = ipa_result
-            rhs_fid = ipa_flow.fid
-            rhs_tname = ipa_flow.tname
-            final_aid = ipa_aid
+            cinst_aid, cinst_flow = cinst_result
+            rhs_fid = cinst_flow.fid
+            rhs_tname = cinst_flow.tname
+            final_aid = cinst_aid
 
         if lhs.exp_type and lhs.exp_type.name != rhs_tname:
             # Cast, or no cast, RHS yields an instance flow which must match
