@@ -19,6 +19,7 @@ from xuml_populate.config import mmdb
 from xuml_populate.populate.mmclass_nt import Labeled_Flow_i
 from xuml_populate.populate.flow import Flow
 from xuml_populate.populate.actions.identifier_projection import IdentifierProjection
+from xuml_populate.populate.actions.pass_action import PassAction
 from xuml_populate.populate.actions.expressions.instance_set import InstanceSet
 from xuml_populate.exceptions.action_exceptions import *
 from xuml_populate.populate.actions.aparse_types import (Flow_ap, MaxMult, Content, MethodActivityAP, StateActivityAP,
@@ -113,20 +114,29 @@ class InstanceAssignment:
         output_flow_label = case_prefix + lhs.name.name
         if case_name:
             case_outputs.add(Labeled_Flow(label=output_flow_label, flow=iset_instance_flow))
-        if iset_instance_flow.content == Content.RELATION:
+
+        # Handle cast if RHS outputs a relation flow
+        rhs_fid = iset_instance_flow.fid   # Default assumption that the RHS produces an instance flow
+        rhs_tname = iset_instance_flow.tname
+        cast_rhs_from_relation = iset_instance_flow.content == Content.RELATION
+        if cast_rhs_from_relation:
             # The RHS is a relation flow
             # Attempt to cast it to an instance flow
             ipa = IdentifierProjection(relation_flow=iset_instance_flow, class_name=lhs.exp_type.name, activity=activity)
-            cast = ipa.populate()
-            if cast is None:
+            ipa_result = ipa.populate()
+            if ipa_result is None:
                 msg = (f"Cannot cast table flow {iset_instance_flow} to instance flow for class {lhs.exp_type.name}"
                        f" at {activity.activity_path}")
                 _logger.error(msg)
                 raise AssignmentOperatorMismatch
-            ipa_aid, iflow = ipa.populate()
-            pass
-        elif lhs.exp_type and lhs.exp_type != iset_instance_flow.tname:
-            msg = (f"Instance assigment type mismatch: {lhs.exp_type} assigned {iset_instance_flow.tname} in"
+            ipa_aid, ipa_flow = ipa_result
+            rhs_fid = ipa_flow.fid
+            rhs_tname = ipa_flow.tname
+            final_aid = ipa_aid
+
+        if lhs.exp_type and lhs.exp_type.name != rhs_tname:
+            # Cast, or no cast, RHS yields an instance flow which must match
+            msg = (f"Instance assigment type mismatch: {lhs.exp_type} assigned {rhs_tname} in"
                    f" {activity.activity_path}")
             _logger.error(msg)
             raise AssignmentOperatorMismatch
@@ -135,7 +145,7 @@ class InstanceAssignment:
         # This will be the case the Instance Set doesn't populate any Action
         if initial_aid is None and final_aid is None:
             # RHS must be a flow
-            pa = PassAction(input_fid=iset_instance_flow.fid, output_flow_label=output_flow_label, activity=activity)
+            pa = PassAction(input_fid=rhs_fid, output_flow_label=output_flow_label, activity=activity)
             aid, pass_output_flow = pa.populate()
             initial_aid = aid
             final_aid = aid
@@ -143,8 +153,8 @@ class InstanceAssignment:
             activity.labeled_outputs[pass_output_flow.fid] = aid
         else:
             # Label the RHS output flow
-            Flow.label_flow(label=output_flow_label, fid=iset_instance_flow.fid, anum=activity.anum, domain=activity.domain)
+            Flow.label_flow(label=output_flow_label, fid=rhs_fid, anum=activity.anum, domain=activity.domain)
             # Register the labeled output flow in case we need to merge it into a gate
-            activity.labeled_outputs[iset_instance_flow.fid] = final_aid
+            activity.labeled_outputs[rhs_fid] = final_aid
 
         return Boundary_Actions(ain={initial_aid}, aout={final_aid})
