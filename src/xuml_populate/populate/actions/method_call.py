@@ -155,7 +155,7 @@ class MethodCall:
                     aid, sflows = ra.populate()
                     sval_flow = sflows[0]
                 else:
-                    sval_flows = Flow.find_labeled_scalar_flow(name=sval_name, anum=self.anum, domain=self.domain)
+                    sval_flows = Flow.find_labeled_flow_summaries(name=sval_name, anum=self.anum, domain=self.domain)
                     sval_flow = sval_flows[0] if sval_flows else None
                     # TODO: Check for case where multiple are returned
             else:

@@ -148,6 +148,26 @@ class Flow:
         return True
 
     @classmethod
+    def find_labeled_flow_summaries(cls, name: str, anum: str, domain: str) -> List[Flow_ap]:
+        """
+        Given a name, find any Data Flows labeled with that name and return their summaries
+
+        Args:
+            name: A name that should match a Labeled Flow
+            anum: The activity number
+            domain: The domain name
+
+        Returns:
+            A possibly empty list of Flow summaries
+        """
+        scalar_flows = Flow.find_labeled_scalar_flow(name=name, anum=anum, domain=domain)
+        if scalar_flows:
+            return scalar_flows
+        return Flow.find_labeled_ns_flow(name=name, anum=anum, domain=domain)
+
+
+
+    @classmethod
     def find_labeled_ns_flow(cls, name: str, anum: str, domain: str) -> List[Flow_ap]:
         """
         Given a name, find any Non Scalar Flows labeled with that name and return their summaries

@@ -14,11 +14,8 @@ calling up, calling down = ^call dir == _up
 cabin high, cabin low = cabin height > calling height
 
 behind the call arrow = ( cabin low AND calling up ) OR ( cabin high AND calling down )
-dir match = Travel direction == ^call dir
-
-countable aslevs::Accessible Shaft Level ..= all serviceable floors(Height < calling height AND Height > cabin height)
-distance = cabin height - calling height
-
-//dir match AND behind the call arrow? {
-    //    num stops = .Count stops oneway( aslevs: countable aslevs, search dir: Travel direction )
-//}
+dir match = Travel direction == ^call dir {
+    countable aslevs::Accessible Shaft Level ..= all serviceable floors(Height < calling height AND Height > cabin height)
+    num stops = .Count stops oneway( aslevs: countable aslevs, search dir: Travel direction )
+    distance = cabin height - calling height
+}
