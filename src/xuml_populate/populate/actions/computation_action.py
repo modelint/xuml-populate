@@ -112,8 +112,10 @@ class ComputationAction:
         operands = []
         comp_expr_type = type(comp_expr).__name__
         match comp_expr_type:
-            case 'BOOL_a':
-                self.output_type = 'Boolean'
+            case 'BOOL_a' | 'MATH_a':
+                # Set the output type if this is a boolean expression
+                # With a math expression, we'll defer until the input operands are all processed
+                self.output_type = 'Boolean' if comp_expr_type == 'BOOL_a' else None
                 op = comp_expr.op
                 if op == 'NOT':
                     match type(comp_expr.operands).__name__:
@@ -207,6 +209,12 @@ class ComputationAction:
                                     raise ActionException(msg)
                                 if labeled_flow_ids:
                                     expr_fid = labeled_flow_ids[0]
+                                    if self.output_type != 'Boolean':
+                                        # TODO: Support varied scalar input types castign to output flow type
+                                        # For now, we'll just use the output type of the last encountered operand
+                                        # to determine the type of the output flow.
+                                        operand_type = Flow.flow_type(fid=expr_fid, anum=self.anum, domain=self.domain)
+                                        self.output_type = operand_type
                                     self.operand_flows.append(expr_fid)
                                     # Append the flow and op to the expression text
                                     op_text = f"{op.lower()} " if count + 1 < len(comp_expr.operands) else ""
@@ -243,8 +251,6 @@ class ComputationAction:
                                 op_text = f" {op.lower()} " if count+1 < len(comp_expr.operands) else ""
                                 sub_expr = f"{sub_expr}<{expr_fid}>{op_text}"
                         pass
-            case 'MATH_a':
-                pass  # TODO: Fill out
             case _:
                 pass  # TODO: Raise exception
         return f"{sub_expr} )"

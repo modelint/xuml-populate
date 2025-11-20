@@ -131,7 +131,8 @@ class ScalarExpr:
             :return:  Output scalar flow
         """
         self.component_flow = input_flow
-        match type(sexpr).__name__:
+        sexpr_type = type(sexpr).__name__
+        match sexpr_type:
             case 'str':  # TRUE or FALSE string
                 # we are assigining either true or false to the lhs, component flow will be scalar
                 svalue_output = Flow.populate_scalar_flow(scalar_type="Boolean", anum=self.anum, domain=self.domain,
@@ -304,40 +305,12 @@ class ScalarExpr:
                     raise ActionException(msg)
                 return sflows
 
-            case 'BOOL_a':
+            case 'BOOL_a' | 'MATH_a':
                 ca = ComputationAction(expr=sexpr, activity=self.activity, bpart=self.bpart)
                 b, sflows = ca.populate()
                 self.action_inputs = {aid: {} for aid in b.ain}
                 self.action_outputs = {aid: {} for aid in b.aout}
                 return sflows
-            case 'MATH_a':
-                action_input = self.component_flow
-                operand_flows = []
-                op_name = sexpr.op
-                for o in sexpr.operands:
-                    o_type = type(o).__name__
-                    match o_type:
-                        case 'N_a' | 'IN_a':
-                            sflow = self.resolve_name(name=o.name)
-                            pass
-                        case 'INST_PROJ_a':
-                            iset = InstanceSet(input_instance_flow=action_input, iset_components=o.iset.components,
-                                               activity=self.activity)
-                            self.component_flow = iset.process()
-
-                            if o.iset.select:
-                                pass
-                            if o.projection:
-                                tflow = ProjectAction.populate(projection=o.projection,
-                                                               input_nsflow=action_input,
-                                                               activity=self.activity)
-                                pass
-                            pass
-                        case _:
-                            pass
-
-                    operand_flows.append(self.walk(sexpr=o, input_flow=self.component_flow))
-                pass
             case 'Op_chain_a':
                 pass
             case _:
