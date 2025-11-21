@@ -4,6 +4,7 @@ scalar_assignment.py – Populate elements of a scalar assignment
 # System
 import logging
 from typing import TYPE_CHECKING
+from collections import namedtuple
 
 # Model Integration
 from scrall.parse.visitor import Scalar_Assignment_a
@@ -15,19 +16,21 @@ from pyral.transaction import Transaction
 if TYPE_CHECKING:
     from xuml_populate.populate.activity import Activity
 from xuml_populate.config import mmdb
-from xuml_populate.utility import print_mmdb  # Debug
 from xuml_populate.populate.mmclass_nt import Labeled_Flow_i
 from xuml_populate.populate.actions.extract_action import ExtractAction
 from xuml_populate.populate.ns_flow import NonScalarFlow
 from xuml_populate.populate.flow import Flow
-from xuml_populate.populate.actions.aparse_types import (Flow_ap, MaxMult, Content, SMType,
-                                                         Boundary_Actions, ActivityType)
+from xuml_populate.populate.actions.aparse_types import ( Flow_ap, MaxMult, Content, SMType,
+                                                          Boundary_Actions, ActivityType )
 from xuml_populate.populate.actions.expressions.scalar_expr import ScalarExpr
-from xuml_populate.exceptions.action_exceptions import ScalarAssignmentFlowMismatch, ScalarAssignmentfromMultipleTuples, \
-    ActionException
+from xuml_populate.exceptions.action_exceptions import *
 from xuml_populate.populate.actions.write_action import WriteAction
+if __debug__:
+    from xuml_populate.utility import print_mmdb
 
 _logger = logging.getLogger(__name__)
+
+Expr_Result = namedtuple("Expr_Result", "actions output")
 
 # Transactions
 tr_Migrate = "Migrate to Label"
@@ -68,9 +71,11 @@ class ScalarAssignment:
         Returns:
             boundary actions
         """
+        # Split of the left and right and sides of the assignment
         lhs = self.scalar_assign_parse.lhs
         rhs = self.scalar_assign_parse.rhs
 
+        # Set the executing or partitioning instance flow
         if self.activity.atype == ActivityType.STATE:
             match self.activity.smtype:
                 case SMType.LIFECYCLE:
@@ -85,43 +90,82 @@ class ScalarAssignment:
         else:
             raise ActionException
 
-        boolean_partition = True if len(lhs) == 2 and type(rhs.expr).__name__ == 'BOOL_a' else False
         # If there are two labeled flows on the LHS receiving the result of a boolean expression
         # We need a Boolean Partition computation action
-        se = ScalarExpr(expr=rhs.expr, input_instance_flow=self.input_instance_flow, activity=self.activity,
-                        bpart=boolean_partition)
-        bactions, scalar_flows = se.process()
+        boolean_partition = True if len(lhs) == 2 and type(rhs.expr).__name__ == 'BOOL_a' else False
 
-        # Where any actions populated for the RHS?
-        if not bactions.ain and not bactions.aout:
-            # There is always at least one Scalar Flow emanating from the RHS, but there is a case where
-            # the Scalar Flow isn't produced by any Action. And that happens when the value is explicitly written
-            # into the action language. We call this a Scalar Value (you can think of it as a constant) like
-            # TRUE, FALSE, or an enum value like _up or _down.
-            # For example: Stop requested = TRUE
-            if not scalar_flows:
-                # It's not an assigment if there is nothing to assign!
-                msg = f"No flow to assign in Scalar Assigment in: {self.activity.activity_path}"
+        # There may be multiple expressions, each producing one or more scalar flows on the RHS
+        # We will later ensure that there are an equal number of flow outputs on the LHS so they match up
+        rhs_results = []  # List of expressions on the RHS, each producing one or more scalar outputs
+        for rhs_expr in rhs:
+            se = ScalarExpr(expr=rhs_expr, input_instance_flow=self.input_instance_flow, activity=self.activity,
+                            bpart=boolean_partition)
+            bactions, scalar_flows = se.process()
+
+            # Where any actions populated for the RHS?
+            if not bactions.ain and not bactions.aout:
+                # There is always at least one Scalar Flow emanating from the RHS, but there is a case where
+                # the Scalar Flow isn't produced by any Action. And that happens when the value is explicitly written
+                # into the action language. We call this a Scalar Value (you can think of it as a constant) like
+                # TRUE, FALSE, or an enum value like _up or _down.
+                # For example: Stop requested = TRUE
+                if not scalar_flows:
+                    # It's not an assigment if there is nothing to assign!
+                    msg = f"No flow to assign in Scalar Assigment in: {self.activity.activity_path}"
+                    _logger.error(msg)
+                    raise ActionException(msg)
+
+            rhs_results.append(Expr_Result(actions=bactions, output=scalar_flows))
+
+        # Now we deal with the LHS expressions
+        # Each is an output to either an attribute write action or a labeled flow
+
+        # If we output to a write action, there can only be (for now) a single attribute write destination
+        # Which means we can have only one RHS output flow
+
+        if type(lhs[0]).__name__ == 'Qualified_Name_a':
+            if len(lhs) > 1:
+                msg = (f"Scalar expr writing to an attribute has more than one LHS output in scalar assignment"
+                       f" at {self.activity.activity_path}")
                 _logger.error(msg)
                 raise ActionException(msg)
+            if len(rhs) != 1:
+                msg = (f"Scalar expr writing to an attribute requires one RHS input in scalar assignment"
+                       f" at {self.activity.activity_path}")
+                _logger.error(msg)
+                raise ActionException(msg)
+            attr_name = lhs[0].aname  # We are writing to this attribute
+            qname_iset = lhs[0].iset  # Might be qualified by an iset expression /R4/R7/Cursor.X, for example
+            if qname_iset:
+                # TODO: Need to handle iset as qualifier in attribute write destination
+                msg = (f"Under construction - Need to handle iset as qualifier in attribute write destination"
+                       f" at {self.activity.activity_path}")
+                _logger.error(msg)
+                raise IncompleteActionException(msg)
+            else:
+                # Qualified by a labeled single instance flow with the target instance of the attribute write action
+                si_flow_label = lhs[0].cname  # unfortunate choice of field name, its not a class name
+                # See if there is a labeled flow
+                si_flows = Flow.find_labeled_ns_flow(name=si_flow_label, anum=self.anum, domain=self.domain)
+                if len(si_flows) != 1:
+                    msg = (f"Input to attribute write action in scalar assignment must be a single scalar flow"
+                           f" at {self.activity.activity_path}")
+                    _logger.error(msg)
+                    raise ActionException(msg)
+                target_si_flow = si_flows[0]
+                rhs_input = rhs_results[0].scalar_flows[0]
+                rhs_actions = rhs_results[0].actions
+                wa = WriteAction(write_to_instance_flow=target_si_flow, value_to_write_flow=rhs_input,
+                                 attr_name=attr_name, activity=self.activity)
+                write_aid = wa.populate()  # returns the write action id (not used)
+                write_out = {write_aid}
+                old_ain = rhs_actions.ain
+                # If the scalar expression had no actions, the initial_pseudo_state action is also the final action
+                write_in = {write_aid} if not old_ain else old_ain
+                bactions = Boundary_Actions(ain=write_in, aout=write_out)
+                return bactions
 
-        # Extract flow label names from the left hand side (flow names become label names)
-        if type(lhs[0]).__name__ == 'Qualified_Name_a':
-            instance_flow_label = lhs[0].cname
-            attr_name = lhs[0].aname
-            # Lookup the instance flow
-            wti_flows = Flow.find_labeled_ns_flow(name=instance_flow_label, anum=self.anum, domain=self.domain)
-            wti_flow = wti_flows[0]
-            # TODO: Check case where multiple wti_flows are returned
-            wa = WriteAction(write_to_instance_flow=wti_flow, value_to_write_flow=scalar_flows[0],
-                             attr_name=attr_name, activity=self.activity)
-            write_aid = wa.populate()  # returns the write action id (not used)
-            write_out = {write_aid}
-            old_ain = bactions.ain
-            # If the scalar expression had no actions, the initial_pseudo_state action is also the final action
-            write_in = {write_aid} if not old_ain else old_ain
-            bactions = Boundary_Actions(ain=write_in, aout=write_out)
-            return bactions
+        lhs_outputs = []
 
         # We are outputting to one or more scalar flows
         scalar_flow_labels = [n.name.name for n in lhs]

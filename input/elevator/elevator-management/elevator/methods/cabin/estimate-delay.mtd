@@ -21,3 +21,6 @@ dir match AND behind the call arrow? {
     num stops = .Count stops oneway( aslevs: countable aslevs, search dir: Travel direction )
     distance = cabin height - calling height
 }
+//
+//cabin high ? turn1, turn2 = top floor height, bottom floor height :
+//    turn1, turn2 = bottom floor height, top floor height

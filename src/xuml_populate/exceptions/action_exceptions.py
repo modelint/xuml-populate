@@ -11,6 +11,9 @@ post = " --"
 class ActionException(Exception):
     pass
 
+class IncompleteActionException(ActionException):
+    pass
+
 class UnexpectedParsePattern(ActionException):
     pass
 
