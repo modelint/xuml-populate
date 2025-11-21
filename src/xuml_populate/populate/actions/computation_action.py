@@ -88,8 +88,6 @@ class ComputationAction:
         self.operand_flows: list[str] = []
         self.output_type = None
 
-        # self.input_aids - input action ids
-        # --
         # Each operand may or may not be have a scalar expression that requires the population of actions
         # to get the required input. An operand representing an attribute, for example, will require the
         # population of a Read Action to get the value.
@@ -310,5 +308,7 @@ class ComputationAction:
 
         Transaction.execute(db=mmdb, name=tr_Compute)
 
+        if not self.input_aids:
+            self.input_aids = {self.action_id}
         boundary_actions = Boundary_Actions(ain=self.input_aids, aout={self.action_id})
         return boundary_actions, output_flows
