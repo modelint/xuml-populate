@@ -9,22 +9,4 @@ Cabin.Count stops oneway( aslevs : Accessible Shaft Level, search dir : Directio
 // Count all aslevs with a stop requested AND
 // all aslevs without a stop requested and a floor call in the search direction
 //
-//=>> ??^aslevs(Stop requested) +
-//        ??^aslevs(!Stop requested)/R49/Floor Service( Direction: ^search dir)
-
-// Scrall Notes:
-//
-// If we did this with a join operation, it looks like this:
-// + (
-//     ??in.aslevs(!Stop requested) ## Floor Service(Direction : in.search dir).(*I) )
-//
-//
-// The ?? inspection operator returns cardinality when placed before an
-// instance reference set
-//
-// In a projection predicate *I is shorthand for "select all primary ID attrs"
-//
-// We count all input aslevs:
-//     Requesting a stop and
-//     Not requesting a stop, but requesting service in the search direction
-// 
+//=>> ??^aslevs(Stop requested) + ??^aslevs(NOT Stop requested)/R49/Floor Service( Direction: ^search dir)
