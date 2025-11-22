@@ -156,7 +156,7 @@ class ScalarAssignment:
                     _logger.error(msg)
                     raise ActionException(msg)
                 target_si_flow = si_flows[0]
-                rhs_input = rhs[0].name
+                rhs_input = self.input_flows[0]
                 wa = WriteAction(write_to_instance_flow=target_si_flow, value_to_write_flow=rhs_input,
                                  attr_name=attr_name, activity=self.activity)
                 write_aid = wa.populate()  # returns the write action id (not used)
