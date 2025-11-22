@@ -30,7 +30,7 @@ class WriteAction:
     """
 
     def __init__(self, write_to_instance_flow: Flow_ap, value_to_write_flow: Flow_ap, attr_name: str,
-                 activity='Activity'):
+                 activity:'Activity'):
         """
 
         Args:
