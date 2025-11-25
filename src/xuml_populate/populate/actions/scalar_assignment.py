@@ -116,7 +116,7 @@ class ScalarAssignment:
                 rhs_input_flows.extend([(f, False) for f in scalar_flows])
 
         # If we output to a write action, there can only be (for now) a single attribute write destination
-        # Which means we can have only one RHS output flow
+        # Which means we can have only one rhs output flow
 
         # Write to a qualified attribute (flow.attr = input_flow)
         if type(lhs[0]).__name__ == 'Qualified_Name_a':
@@ -202,6 +202,8 @@ class ScalarAssignment:
             # The lhs_label is a labeled output flow
 
             # Pass flow evaluation
+            # If an rhs flow is being assigned to an lhs flow, we need to pass action
+            # so that that we can change the label name (one labeled flow in, the other labeled flow out)
             pass_aid = None  # Pass Action id
             if rhs_action:
                 # No pass action required since rhs_expr is an action generated flow
@@ -231,6 +233,7 @@ class ScalarAssignment:
                     _logger.error(msg)
                     raise ActionException(msg)
                 # Use comma to extract one element from the set
+                # (will fail if there are multiple final actions, so we check above)
                 self.activity.labeled_outputs[rhs_flow.fid], = self.final_actions
 
         return Boundary_Actions(ain=self.initial_actions, aout=self.final_actions)
