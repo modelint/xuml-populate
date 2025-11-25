@@ -13,6 +13,8 @@ from pyral.relvar import Relvar
 from pyral.relation import Relation
 from pyral.transaction import Transaction
 
+from xuml_populate.exceptions.action_exceptions import IncompleteActionException
+
 # xUML populate
 if TYPE_CHECKING:
     from xuml_populate.populate.activity import Activity
@@ -99,9 +101,12 @@ class PassAction:
             # an underscore prefix followed by the action number and another underscore
             # in front of the output label name.
             pass_name_pattern = re.compile(rf'_([1-9]\d*)_{re.escape(self.output_flow_label)}$')
-            gate_input_labels = [n['Name'] for n in lf_r.body if pass_name_pattern.search(n)]
-            # TODO: Look up flows for each name and add to self.flow_to_existing_gate
-            pass
+            gate_input_labels = [n['Name'] for n in lf_r.body if pass_name_pattern.search(n['Name'])]
+            if gate_input_labels:
+                # TODO: Look up flows for each name and add to self.flow_to_existing_gate
+                msg = f"Handle existing gate found while populating Pass Action at {self.activity.activity_path}"
+                _logger.error(msg)
+                raise IncompleteActionException(msg)
 
         Transaction.open(db=mmdb, name=tr_Pass)
         pass_aid = Action.populate(tr=tr_Pass, anum=self.anum, domain=self.domain, action_type="pass")

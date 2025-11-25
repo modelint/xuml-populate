@@ -17,6 +17,7 @@ if TYPE_CHECKING:
     from xuml_populate.populate.activity import Activity
 from xuml_populate.config import mmdb
 from xuml_populate.populate.mmclass_nt import Labeled_Flow_i
+from xuml_populate.populate.actions.pass_action import PassAction
 from xuml_populate.populate.actions.extract_action import ExtractAction
 from xuml_populate.populate.ns_flow import NonScalarFlow
 from xuml_populate.populate.flow import Flow
@@ -59,16 +60,15 @@ class ScalarAssignment:
 
         self.initial_actions: set[str] = set()  # Actions that initiate some RHS expression
         self.final_actions: set[str] = set()  # Actions that terminate some RHS expression
-        self.input_flows: list[Flow_ap] = []  # Left to right sequence of input flows passing output to the LHS
 
     def process(self) -> Boundary_Actions:
         """
         Given a parsed scalar assignment consisting of an LHS and an RHS, populate each component action
         and return the boundary actions.
 
-        We'll need an initial_pseudo_state flow and we'll need to create intermediate instance flows to connect the components.
-        The final output flow must be a scalar flow. The associated Scalar determines the type of the
-        assignment.
+        We'll need an initial flow, and we'll need to create intermediate instance flows to
+        connect the components. The final output flow must be a scalar flow. The associated Scalar determines
+        the type of the assignment.
 
         Returns:
             boundary actions
@@ -98,34 +98,32 @@ class ScalarAssignment:
 
         # There may be multiple expressions, each producing one or more scalar flows on the RHS
         # We will later ensure that there are an equal number of flow outputs on the LHS so they match up
+        # no_action_flows = {}
+        rhs_input_flows = []
         for rhs_expr in rhs:
             se = ScalarExpr(expr=rhs_expr, input_instance_flow=self.input_instance_flow, activity=self.activity,
                             bpart=boolean_partition)
             bactions, scalar_flows = se.process()
-            self.input_flows.extend(scalar_flows)
+            pass
+            # if not bactions.ain and not bactions.aout:
+            #     passing_flows.update(scalar_flows)
+            #     pass  # TODO: my direction = Travel direction (read local attribute)  WHY no read action in bactions?
+            # self.input_flows.extend(scalar_flows)
             self.initial_actions.update(bactions.ain)
             self.final_actions.update(bactions.aout)
 
-            # Where any actions populated for the RHS?
-            if not bactions.ain and not bactions.aout:
-                # There is always at least one Scalar Flow emanating from the RHS, but there is a case where
-                # the Scalar Flow isn't produced by any Action. And that happens when the value is explicitly written
-                # into the action language. We call this a Scalar Value (you can think of it as a constant) like
-                # TRUE, FALSE, or an enum value like _up or _down.
-                # For example: Stop requested = TRUE
-                if not scalar_flows:
-                    # It's not an assigment if there is nothing to assign!
-                    msg = f"No flow to assign in Scalar Assigment in: {self.activity.activity_path}"
-                    _logger.error(msg)
-                    raise ActionException(msg)
-
-        # Now we deal with the LHS expressions
-        # Each is an output to either an attribute write action or a labeled flow
+            # Were any actions populated for the RHS?
+            if bactions.ain or bactions.aout:
+                # save tuple input_flow and True if action generated
+                rhs_input_flows.extend([(f, True) for f in scalar_flows])
+            else:
+                # Non action generated (flow labels or values (enum/TRUE/FALSE) only)
+                rhs_input_flows.extend([(f, False) for f in scalar_flows])
 
         # If we output to a write action, there can only be (for now) a single attribute write destination
         # Which means we can have only one RHS output flow
 
-        # Write to an attribute
+        # Write to a qualified attribute
         if type(lhs[0]).__name__ == 'Qualified_Name_a':
             if len(lhs) > 1:
                 msg = (f"Scalar expr writing to an attribute has more than one LHS output in scalar assignment"
@@ -156,7 +154,7 @@ class ScalarAssignment:
                     _logger.error(msg)
                     raise ActionException(msg)
                 target_si_flow = si_flows[0]
-                rhs_input = self.input_flows[0]
+                rhs_input = rhs_input_flows[0][0]
                 wa = WriteAction(write_to_instance_flow=target_si_flow, value_to_write_flow=rhs_input,
                                  attr_name=attr_name, activity=self.activity)
                 write_aid = wa.populate()  # returns the write action id (not used)
@@ -168,12 +166,12 @@ class ScalarAssignment:
                 return bactions
 
         # Pass input from one or more RHS flows to one or more labeled LHS flows
-        lhs_outputs = []
-        scalar_flow_labels = [n.name.name for n in lhs]
+        lhs_output_flow_labels = [n.name.name for n in lhs]
 
         # There must be a label on the LHS for each scalar output flow
-        if len(self.input_flows) != len(scalar_flow_labels):
-            _logger.error(f"LHS provides {len(scalar_flow_labels)} labels, but RHS outputs {len(self.input_flows)} flows")
+        if len(rhs_input_flows) != len(lhs_output_flow_labels):
+            _logger.error(f"LHS provides {len(lhs_output_flow_labels)} labels, but RHS "
+                          f"outputs {len(rhs_input_flows)} flows")
             raise ScalarAssignmentFlowMismatch
 
         # TODO: For each LHS label that explicity specifies a type, verify match with corresponding attribute in flow
@@ -185,10 +183,11 @@ class ScalarAssignment:
         # flow with the same number of attributes as the LHS. For now let's ignore explicit typing on the LHS
         # but we need to check that later.
         writing_to_attribute = False  # We use this later when registering the output label
-        for count, label in enumerate(scalar_flow_labels):
+        pass_flows: dict[str, str] = {}
+        for count, lhs_label in enumerate(lhs_output_flow_labels):
             # Get the corresponding input_flow and actions
-            rhs_input = self.input_flows[count]
-            # If the label is the unqualified name of an attribute of the executing instance, we need to write
+            rhs_flow, rhs_action = rhs_input_flows[count]
+            # If the lhs label is the unqualified name of an attribute of the executing instance, we need to write
             # to that attribute and in this case, there is no need for a Labeled Flow
             class_name = None
 
@@ -197,13 +196,13 @@ class ScalarAssignment:
             elif self.activity.atype == ActivityType.METHOD:
                 class_name = self.activity.class_name
             if class_name:
-                R = f"Name:<{label}>, Class:<{class_name}>, Domain:<{self.activity.domain}>"
+                R = f"Name:<{lhs_label}>, Class:<{class_name}>, Domain:<{self.activity.domain}>"
                 attribute_r = Relation.restrict(db=mmdb, relation="Attribute", restriction=R)
                 if attribute_r.body:
                     writing_to_attribute = True
                     wa = WriteAction(write_to_instance_flow=self.input_instance_flow,
-                                     value_to_write_flow=rhs_input,
-                                     attr_name=label, activity=self.activity)
+                                     value_to_write_flow=rhs_flow,
+                                     attr_name=lhs_label, activity=self.activity)
                     write_aid = wa.populate()  # returns the write action id (not used)
                     # Since the write action is on the lhs it is the one and only final boundary action
                     # So we replace whatever action ids might have been assigned to the set
@@ -211,27 +210,38 @@ class ScalarAssignment:
                     self.initial_actions = {write_aid} if not self.initial_actions else self.initial_actions
                     continue
 
-            # Relabel or migrate sflow to a labeled flow matching the LHS flow name
-            pre_labeled_sflow = Flow.lookup_label(fid=rhs_input.fid, anum=self.anum, domain=self.domain)
-            if pre_labeled_sflow:
-                Flow.relabel_flow(new_label=label, fid=rhs_input.fid, anum=self.anum, domain=self.domain)
-            else:
-                # Migrate the scalar_flow to a labeled flow
-                Flow.label_flow(label=label, fid=rhs_input.fid, anum=self.anum, domain=self.domain)
+            # The lhs_label is a labeled output flow
 
-        if not writing_to_attribute and self.final_actions:
-            pass
-            # TODO: Figure out what we need down here
-            # If we aren't writing an attr value and an action generated the output scalar
-            # we register the output
-            for f in self.input_flows:
-                # Ensure there is exacly one source action id
+            # Pass flow evaluation
+            pass_aid = None  # Pass Action id
+            if rhs_action:
+                # No pass action required since rhs_expr is an action generated flow
+                # Relabel or migrate sflow to a labeled flow matching the LHS flow name
+                pre_labeled_sflow = Flow.lookup_label(fid=rhs_flow.fid, anum=self.anum, domain=self.domain)
+                if pre_labeled_sflow:
+                    Flow.relabel_flow(new_label=lhs_label, fid=rhs_flow.fid, anum=self.anum, domain=self.domain)
+                else:
+                    # Migrate the scalar_flow to a labeled flow
+                    Flow.label_flow(label=lhs_label, fid=rhs_flow.fid, anum=self.anum, domain=self.domain)
+            else:
+                # rhs_flow must be a label or a value
+                pa = PassAction(input_fid=rhs_flow.fid, output_flow_label=lhs_label, activity=self.activity)
+                pass_aid, pass_output_flow = pa.populate()
+                self.initial_actions.add(pass_aid)
+                self.final_actions.add(pass_aid)
+                # Register the labeled output flow in case we need to merge it into a gate
+                self.activity.labeled_outputs[pass_output_flow.fid] = pass_aid
+                return Boundary_Actions(ain=self.initial_actions, aout=self.final_actions)
+
+            if not writing_to_attribute and self.final_actions and not pass_aid:
+                # If we aren't writing an attr value and an action generated the output scalar
+                # we register the output
                 if len(self.final_actions) != 1:
                     msg = (f"Expected only one action id as input to flow in scalar assignment for"
                            f"LHS {lhs} in: {self.activity.activity_path}")
                     _logger.error(msg)
                     raise ActionException(msg)
                 # Use comma to extract one element from the set
-                self.activity.labeled_outputs[f.fid], = self.final_actions
+                self.activity.labeled_outputs[rhs_flow.fid], = self.final_actions
 
         return Boundary_Actions(ain=self.initial_actions, aout=self.final_actions)
