@@ -222,7 +222,6 @@ class ScalarAssignment:
                 self.final_actions.add(pass_aid)
                 # Register the labeled output flow in case we need to merge it into a gate
                 self.activity.labeled_outputs[pass_output_flow.fid] = pass_aid
-                return Boundary_Actions(ain=self.initial_actions, aout=self.final_actions)
 
             if not writing_to_attribute and self.final_actions and not pass_aid:
                 # If we aren't writing an attr value and an action generated the output scalar
