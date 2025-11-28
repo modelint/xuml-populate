@@ -23,6 +23,7 @@ from xuml_populate.config import mmdb
 from xuml_populate.populate.actions.aparse_types import Flow_ap, MaxMult, Content, Boundary_Actions
 from xuml_populate.populate.actions.action import Action
 from xuml_populate.populate.flow import Flow
+from xuml_populate.populate.actions.type_selector import TypeSelector
 from xuml_populate.populate.mmclass_nt import (
     Computation_Action_i, Computation_Input_i, Instance_Action_i,
     General_Computation_i, Boolean_Partition_i
@@ -191,6 +192,13 @@ class ComputationAction:
                     for count, o_expr in enumerate(comp_expr.operands):
                         o_expr_type = type(o_expr).__name__
                         match o_expr_type:
+                            case 'Type_expr_a':
+                                pass
+                                ta = TypeSelector(scalar=o_expr.type.name, value=o_expr.selector, activity=self.activity)
+                                ain, aout, output_flow = ta.populate()
+                                op_text = f"{op.lower()}" if count + 1 < len(comp_expr.operands) else ""
+                                sub_expr = f"{sub_expr} <{output_flow.fid}> {op_text}"
+                                pass
                             case 'Enum_a':
                                 op_text = f"{op.lower()}" if count + 1 < len(comp_expr.operands) else ""
                                 sub_expr = f"{sub_expr}<{o_expr.value.name}> {op_text}"
@@ -216,7 +224,7 @@ class ComputationAction:
                                     self.operand_flows.append(expr_fid)
                                     # Append the flow and op to the expression text
                                     op_text = f"{op.lower()} " if count + 1 < len(comp_expr.operands) else ""
-                                    sub_expr = f"{sub_expr}<{expr_fid}> {op_text}"
+                                    sub_expr = f"{sub_expr} <{expr_fid}> {op_text}"
                                 else:
                                     # Process as a scalar expression
                                     se = ScalarExpr(expr=o_expr, input_instance_flow=self.input_instance_flow,

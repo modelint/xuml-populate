@@ -14,7 +14,6 @@ from pyral.relvar import Relation  # For debugging
 
 # xUML Populate
 from xuml_populate.config import mmdb
-from xuml_populate.utility import print_mmdb
 from xuml_populate.populate.actions.aparse_types import Method_Output_Type
 from xuml_populate.populate.attribute import Attribute
 from xuml_populate.populate.mm_class import MMclass
@@ -26,6 +25,8 @@ from xuml_populate.populate.state_model import StateModel
 from xuml_populate.populate.external_service import ExternalService
 from xuml_populate.populate.mmclass_nt import Domain_i, Modeled_Domain_i, Domain_Partition_i, Subsystem_i
 
+if __debug__:
+    from xuml_populate.utility import print_mmdb
 
 _logger = logging.getLogger(__name__)
 

@@ -2,12 +2,20 @@
 mm_type.py – Pouplate (metamodel) Type instance
 """
 
+# System
 import logging
-from xuml_populate.config import mmdb
-from xuml_populate.populate.mmclass_nt import Type_i, Scalar_i, Table_i, Table_Attribute_i
+
+# Model Integration
 from pyral.relvar import Relvar
 from pyral.relation import Relation
 from pyral.transaction import Transaction
+
+# xUML Populate
+from xuml_populate.config import mmdb
+from xuml_populate.populate.mmclass_nt import Type_i, Scalar_i, Table_i, Table_Attribute_i
+
+if __debug__:
+    from xuml_populate.utility import print_mmdb
 
 _logger = logging.getLogger(__name__)
 
@@ -36,15 +44,16 @@ class MMtype:
         """
         # TODO: For now Table types are not supported
         if name not in cls.class_names:
-            cls.populate_scalar(name, domain)
+            cls.populate_scalar(name=name, domain=domain)
 
     @classmethod
     def populate_scalar(cls, name: str, domain: str):
         """
-        Populate a class type given a class name and domain
+        Populate a Scalar (type) given a name and domain and just returns if the Scalar was already populated.
 
-        :param name:  Name of a Scalar Type
-        :param domain:  Name of its domain
+        Args:
+            name: Name of a Scalar (Type)
+            domain: Name of its domain
         """
         cls.domain = domain
         cls.name = name
@@ -62,14 +71,14 @@ class MMtype:
 
         _logger.info(f"Populating Type for scalar [{cls.name}]")
 
-        Transaction.open(mmdb, tr_Scalar)
-        Relvar.insert(mmdb, tr=tr_Scalar, relvar='Type', tuples=[
+        Transaction.open(db=mmdb, name=tr_Scalar)
+        Relvar.insert(db=mmdb, tr=tr_Scalar, relvar='Type', tuples=[
             Type_i(Name=cls.name, Domain=cls.domain)
         ])
-        Relvar.insert(mmdb, tr=tr_Scalar, relvar='Scalar', tuples=[
+        Relvar.insert(db=mmdb, tr=tr_Scalar, relvar='Scalar', tuples=[
             Scalar_i(Name=cls.name, Domain=cls.domain)
         ])
-        Transaction.execute(mmdb, tr_Scalar)
+        Transaction.execute(db=mmdb, name=tr_Scalar)
 
 
     @classmethod
@@ -88,7 +97,7 @@ class MMtype:
         cls.class_names.add(cname)
 
         _logger.info(f"Populating Type for class [{cls.name}]")
-        Relvar.insert(mmdb, tr=tr, relvar='Type', tuples=[
+        Relvar.insert(db=mmdb, tr=tr, relvar='Type', tuples=[
             Type_i(Name=cls.name, Domain=cls.domain)
         ])
 
@@ -106,12 +115,12 @@ class MMtype:
         """
         # Verify that the scalar exists
         R = f"Name:<{name}>, Domain:<{domain}>"
-        result = Relation.restrict(mmdb, restriction=R, relation="Type").body
+        result = Relation.restrict(db=mmdb, restriction=R, relation="Type").body
         if not result:
             # TODO: This is happening for some reason, but doesn't seem to be an error
             _logger.error("Scalar dummy UNRESOLVED not found during depopulate")
         # Depopulate scalar
-        Transaction.open(mmdb, tr_Scalar_Delete)
-        Relvar.deleteone(mmdb, tr=tr_Scalar_Delete, relvar_name='Type', tid={'Name': name, 'Domain': domain})
-        Relvar.deleteone(mmdb, tr=tr_Scalar_Delete, relvar_name='Scalar', tid={'Name': name, 'Domain': domain})
-        Transaction.execute(mmdb, tr_Scalar_Delete)
+        Transaction.open(db=mmdb, name=tr_Scalar_Delete)
+        Relvar.deleteone(db=mmdb, tr=tr_Scalar_Delete, relvar_name='Type', tid={'Name': name, 'Domain': domain})
+        Relvar.deleteone(db=mmdb, tr=tr_Scalar_Delete, relvar_name='Scalar', tid={'Name': name, 'Domain': domain})
+        Transaction.execute(db=mmdb, name=tr_Scalar_Delete)

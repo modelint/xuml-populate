@@ -14,6 +14,7 @@ from xuml_populate.populate.actions.expressions.instance_set import InstanceSet
 from xuml_populate.populate.actions.read_action import ReadAction
 from xuml_populate.populate.actions.extract_action import ExtractAction
 from xuml_populate.populate.actions.expressions.op_chain import OpChain
+from xuml_populate.populate.actions.type_selector import TypeSelector
 from xuml_populate.populate.actions.computation_action import ComputationAction
 from xuml_populate.exceptions.action_exceptions import *
 from xuml_populate.populate.flow import Flow
@@ -121,14 +122,14 @@ class ScalarExpr:
         input_sflow = sflows[0] if sflows else None
         return input_sflow
 
-
     def walk(self, sexpr: str | INST_PROJ_a | MATH_a | BOOL_a | N_a | IN_a, input_flow: Flow_ap) -> list[Flow_ap]:
         """
-
         Args
             sexpr:  Parsed scalar expression
-            :param input_flow:
-            :return:  Output scalar flow
+            input_flow:
+
+        Returns
+            List of output scalar flows
         """
         self.component_flow = input_flow
         sexpr_type = type(sexpr).__name__

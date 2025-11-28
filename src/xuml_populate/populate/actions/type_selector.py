@@ -18,6 +18,7 @@ from xuml_populate.populate.flow import Flow
 from xuml_populate.populate.actions.action import Action
 from xuml_populate.exceptions.action_exceptions import *
 from xuml_populate.populate.actions.aparse_types import ActivityAP, Boundary_Actions, Flow_ap
+from xuml_populate.populate.mm_type import MMtype
 from xuml_populate.populate.mmclass_nt import Type_Action_i, Type_Operation_i, Selector_i
 
 if __debug__:
@@ -58,6 +59,10 @@ class TypeSelector:
         """
         # Open transaction to populate the Type Selector Action
         Transaction.open(db=mmdb, name=tr_Selector)
+
+        # If Scalar is not defined, it must be appearing only in the action language (not on the class
+        # diagram or state/method signatures). Probably a base type like Integer[0], for example.
+        MMtype.populate_scalar(name=self.scalar, domain=self.domain)  # Does nothing if Scalar previously populated
 
         # Populate the action superclass and obtain our action id
         self.action_id = Action.populate(tr=tr_Selector, anum=self.anum, domain=self.domain, action_type="type action")
