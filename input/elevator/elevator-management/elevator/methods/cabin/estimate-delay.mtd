@@ -34,5 +34,5 @@ dir match AND NOT behind the call arrow? {
     // 2b> From the nearest accessible shaft level to the calling floor
     countable aslevs to calling floor reverse::Accessible Shaft Level ..= all serviceable floors(Height > cabin height AND Height <= calling height )
     num reverse to calling floor stops = .Count stops oneway( aslevs: countable aslevs to calling floor reverse, search dir: Travel direction.opposite )
-//    distance to calling floor reverse = cabin height.separation(calling height)
+    distance to calling floor reverse = cabin height.separation(calling height)
 }

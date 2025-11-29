@@ -22,6 +22,7 @@ from xuml_populate.populate.flow import Flow
 from xuml_populate.populate.actions.select_action import SelectAction
 from xuml_populate.populate.actions.restrict_action import RestrictAction
 from xuml_populate.populate.actions.rank_restrict_action import RankRestrictAction
+from xuml_populate.populate.actions.type_action import TypeAction
 from xuml_populate.populate.actions.aparse_types import Flow_ap, MaxMult, Content, SMType, ActivityType
 from xuml_populate.exceptions.action_exceptions import *
 
@@ -194,10 +195,8 @@ class InstanceSet:
                         # For the last component, there can be no dflow output to another action
                         self.final_action = aid
                 case 'Op_a':
-                    # The only kind of operation that can return an instance set is a Method
-                    # Type operations and external services cannot do this
-                    # So we need to validate that we have a proper method invocation statement and then
-                    # populate the Method Call
+                    # By exampining the owner component we can determine whether the operation is a Method or
+                    # a type operation on a Scalar ipnut
                     if comp.owner == '_external':
                         # TODO: Process external services
                         # At may return a scalar expression depending on external service definition
@@ -221,7 +220,7 @@ class InstanceSet:
                             pass
                     elif comp.owner == '_implicit':
                         # We use the component flow as input if there is one
-                        method_name = comp.op_name  # op_name must be a Method name
+                        op_name = comp.op_name  # op_name must be a Method name
 
                         # Verify that the input flow is a single instance flow
                         if self.component_flow.max_mult != MaxMult.ONE:
@@ -231,10 +230,10 @@ class InstanceSet:
                             raise ActionException(msg)
 
                         # Verify that the method is defined on the component flow class
-                        R = f"Name:<{method_name}>, Class:<{self.component_flow.tname}>, Domain:<{self.activity.domain}>"
+                        R = f"Name:<{op_name}>, Class:<{self.component_flow.tname}>, Domain:<{self.activity.domain}>"
                         method_r = Relation.restrict(db=mmdb, relation='Method', restriction=R)
                         if not method_r:
-                            msg = (f"Called method [{method_name}] not defined on [{self.component_flow.tname}] in "
+                            msg = (f"Called method [{op_name}] not defined on [{self.component_flow.tname}] in "
                                    f"{self.activity.activity_path}")
                             _logger.error(msg)
                             raise ActionException(msg)
@@ -243,7 +242,7 @@ class InstanceSet:
                         method_t = method_r.body[0]
                         from xuml_populate.populate.actions.method_call import MethodCall
                         mcall = MethodCall(
-                            method_name=method_name, method_anum=method_t["Anum"],
+                            method_name=op_name, method_anum=method_t["Anum"],
                             caller_flow=self.component_flow,
                             parse=comp, activity=self.activity
                         )
@@ -253,53 +252,71 @@ class InstanceSet:
                         self.final_action = aout
                         pass
                     else:
-                        single_inst_flow_label = comp.owner if comp.owner != '_implicit' else 'me'
+                        target_flow_label = comp.owner if comp.owner != '_implicit' else 'me'
                         # Name on a flow delivering a single instance method target
-                        method_name = comp.op_name  # op_name must be a Method name
+                        op_name = comp.op_name
 
                         # Validate the single instance flow
-                        R = (f"Name:<{single_inst_flow_label}>, Activity:<{self.activity.anum}>, "
+                        R = (f"Name:<{target_flow_label}>, Activity:<{self.activity.anum}>, "
                              f"Domain:<{self.activity.domain}>")
-                        labeled_flow_r = Relation.restrict(db=mmdb, relation='Labeled Flow', restriction=R)
+                        sv_labeled_flow = 'sv_lflow'  # Result used in two semijoins below
+                        labeled_flow_r = Relation.restrict(db=mmdb, relation='Labeled Flow', restriction=R,
+                                                           svar_name=sv_labeled_flow)
                         if not labeled_flow_r:
-                            msg = f"No labeled flow named {single_inst_flow_label} in {self.activity.activity_path}"
+                            msg = f"No labeled flow named {target_flow_label} in {self.activity.activity_path}"
                             _logger.error(msg)
                             raise ActionException(msg)
 
-                        # It must be a single instance flow
+                        # Is it a single instance flow?
                         single_inst_flow_r = Relation.semijoin(db=mmdb, rname2='Single Instance Flow')
-                        if not single_inst_flow_r:
-                            msg = (f"Method call target [{single_inst_flow_label}] in {self.activity.activity_path} "
-                                   f"must be a single instance flow")
-                            _logger.error(msg)
-                            raise ActionException(msg)
+                        if single_inst_flow_r.body:
+                            # Get the class name
+                            inst_flow_r = Relation.semijoin(db=mmdb, rname2='Instance Flow')
+                            inst_class_name = inst_flow_r.body[0]['Class']
 
-                        # Get the class name
-                        inst_flow_r = Relation.semijoin(db=mmdb, rname2='Instance Flow')
-                        inst_class_name = inst_flow_r.body[0]['Class']
+                            # Verify that the method is defined on this class
+                            R = f"Name:<{op_name}>, Class:<{inst_class_name}>, Domain:<{self.activity.domain}>"
+                            method_r = Relation.restrict(db=mmdb, relation='Method', restriction=R)
+                            if not method_r:
+                                msg = (f"Called method [{op_name}] not defined on [{inst_class_name}] in "
+                                       f"{self.activity.activity_path}")
+                                _logger.error(msg)
+                                raise ActionException(msg)
 
-                        # Verify that the method is defined on this class
-                        R = f"Name:<{method_name}>, Class:<{inst_class_name}>, Domain:<{self.activity.domain}>"
-                        method_r = Relation.restrict(db=mmdb, relation='Method', restriction=R)
-                        if not method_r:
-                            msg = (f"Called method [{method_name}] not defined on [{inst_class_name}] in "
-                                   f"{self.activity.activity_path}")
-                            _logger.error(msg)
-                            raise ActionException(msg)
+                            # Method and instance target valid
+                            inst_flow_t = inst_flow_r.body[0]
+                            method_t = method_r.body[0]
+                            from xuml_populate.populate.actions.method_call import MethodCall
+                            mcall = MethodCall(method_name=op_name, method_anum=method_t["Anum"], caller_flow=
+                                               Flow_ap( fid=inst_flow_t["ID"], content=Content.INSTANCE,
+                                                        tname=inst_class_name, max_mult=MaxMult.ONE),
+                                               parse=comp,
+                                               activity=self.activity)
+                            ain, aout, self.component_flow = mcall.process()
+                            if first_action:
+                                self.initial_action = ain
+                            self.final_action = aout
+                        else:
+                            # This must be a scalar input, and therefore a type operation, so we
+                            # populate a type operation with supplied params
+                            scalar_input_flows = Flow.find_labeled_scalar_flow(
+                                name=target_flow_label, anum=self.activity.anum, domain=self.activity.domain)
+                            if not scalar_input_flows:
+                                msg = f"No flow found for label {target_flow_label} at {self.activity.activity_path}"
+                                _logger.error(msg)
+                                raise ActionException(msg)
+                            if len(scalar_input_flows) != 1:
+                                msg = (f"Duplicate flows found for label {target_flow_label} "
+                                       f"at {self.activity.activity_path}")
+                                _logger.error(msg)
+                                raise ActionException(msg)
 
-                        # Method and instance target valid
-                        inst_flow_t = inst_flow_r.body[0]
-                        method_t = method_r.body[0]
-                        from xuml_populate.populate.actions.method_call import MethodCall
-                        mcall = MethodCall(method_name=method_name, method_anum=method_t["Anum"], caller_flow=
-                                           Flow_ap( fid=inst_flow_t["ID"], content=Content.INSTANCE,
-                                                    tname=inst_class_name, max_mult=MaxMult.ONE),
-                                           parse=comp,
-                                           activity=self.activity)
-                        ain, aout, self.component_flow = mcall.process()
-                        if first_action:
-                            self.initial_action = ain
-                        self.final_action = aout
+                            ta = TypeAction(op_name=op_name, anum=self.activity.anum, domain=self.activity.domain,
+                                            input_flow=scalar_input_flows[0],
+                                            params=comp.supplied_params)
+                            self.initial_action, self.final_action, self.component_flow = ta.populate()
+                            pass
+
                 case 'New_inst_a':
                     # A New instance
                     pass
