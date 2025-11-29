@@ -115,5 +115,4 @@ class StateActivity:
         activity_obj = Activity(activity_data=state_activity_data)
         activity_obj.pop_actions()
         activity_obj.prep_for_execution()
-        print_mmdb()
         pass

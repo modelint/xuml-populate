@@ -193,12 +193,10 @@ class ComputationAction:
                         o_expr_type = type(o_expr).__name__
                         match o_expr_type:
                             case 'Type_expr_a':
-                                pass
                                 ta = TypeSelector(scalar=o_expr.type.name, value=o_expr.selector, activity=self.activity)
                                 ain, aout, output_flow = ta.populate()
                                 op_text = f"{op.lower()}" if count + 1 < len(comp_expr.operands) else ""
                                 sub_expr = f"{sub_expr} <{output_flow.fid}> {op_text}"
-                                pass
                             case 'Enum_a':
                                 op_text = f"{op.lower()}" if count + 1 < len(comp_expr.operands) else ""
                                 sub_expr = f"{sub_expr}<{o_expr.value.name}> {op_text}"

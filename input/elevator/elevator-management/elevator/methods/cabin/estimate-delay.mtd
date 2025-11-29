@@ -26,8 +26,13 @@ dir match AND NOT behind the call arrow? {
     cabin high ? turn1, turn2 = top floor height, bottom floor height :
         turn1, turn2 = bottom floor height, top floor height
 
-    countable aslevs to turn1::Accessible Shaft Level ..= all serviceable floors(Height < cabin height AND Height > turn1)
+    // 2a> Toward turn 1
+    countable aslevs to turn1::Accessible Shaft Level ..= all serviceable floors(Height < cabin height AND Height >= turn1)
     num turn1 stops = .Count stops roundtrip( aslevs: countable aslevs to turn1 )
-
     turn1 roundtrip distance = (cabin height - turn1) * Integer[2] + floor gap
+
+    // 2b> From the nearest accessible shaft level to the calling floor
+    countable aslevs to calling floor reverse::Accessible Shaft Level ..= all serviceable floors(Height > cabin height AND Height <= calling height )
+    num reverse to calling floor stops = .Count stops oneway( aslevs: countable aslevs to calling floor reverse, search dir: Travel direction.opposite )
+//    distance to calling floor reverse = cabin height.separation(calling height)
 }

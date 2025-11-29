@@ -145,7 +145,7 @@ class MethodCall:
                     pass
 
             # Populate parameter data flows
-            if sval_name is not None:
+            if not sval_flow and sval_name is not None:
                 # We have either a flow label or an attribute name
                 R = f"Name:<{sval_name}>, Class:<{self.caller_flow.tname}>, Domain:<{self.domain}>"
                 attr_r = Relation.restrict(db=mmdb, relation="Attribute", restriction=R)
@@ -158,7 +158,7 @@ class MethodCall:
                     sval_flows = Flow.find_labeled_flow_summaries(name=sval_name, anum=self.anum, domain=self.domain)
                     sval_flow = sval_flows[0] if sval_flows else None
                     # TODO: Check for case where multiple are returned
-            else:
+            elif not sval_flow:
                 msg = f"Cannot find method call {self.action_id} input source for param {pname}"
                 _logger.error(msg)
                 raise ActionException(msg)

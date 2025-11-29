@@ -152,20 +152,26 @@ class ScalarExpr:
                         # Just in case there's another possibility, leave a placeholder for anything else
 
                         # Attribute check
+                        read_sflows = None
                         R = f"Name:<{sexpr.iset.name}>, Class:<{self.component_flow.tname}>, Domain:<{self.domain}>"
                         attribute_r = Relation.restrict(db=mmdb, relation="Attribute", restriction=R)
                         if attribute_r.body:
                             # Create a read action to obtain the value
                             ra = ReadAction(input_single_instance_flow=self.component_flow, attrs=(sexpr.iset.name,),
                                             anum=self.anum, domain=self.domain)
-                            aid, sflows = ra.populate()
-                            return sflows
+                            aid, read_sflows = ra.populate()
+                            self.action_inputs[aid] = {f.fid for f in read_sflows}
+                            if not sexpr.projection and not sexpr.op_chain:
+                                return read_sflows
 
                         # Scalar flow check
-                        sflows = Flow.find_labeled_scalar_flow(name=sexpr.iset.name, anum=self.anum,
-                                                               domain=self.domain)
-                        input_sflow = sflows[0] if sflows else None
-                        # TODO: Check for case where multiple flows are returned
+                        if read_sflows and len(read_sflows) == 1:
+                            input_sflow = read_sflows[0]
+                        else:
+                            sflows = Flow.find_labeled_scalar_flow(name=sexpr.iset.name, anum=self.anum,
+                                                                   domain=self.domain)
+                            input_sflow = sflows[0] if sflows else None
+                            # TODO: Check for case where multiple flows are returned
 
                         if input_sflow:
                             if sexpr.projection:
@@ -176,10 +182,11 @@ class ScalarExpr:
                                     ta = TypeAction(op_name=a.name, anum=self.anum, domain=self.domain,
                                                     input_flow=component_flow)
                                     ain, aout, component_flow = ta.populate()
+                                    # self.action_inputs[ain] = {input_sflow.fid}
                                     if first_action:
-                                        self.action_inputs[ain] = {component_flow.fid}
+                                        # Now the Component flow has been updated to the output of the Type Action
                                         first_action = False
-                                self.action_outputs[aout] = {component_flow.fid}
+                                    self.action_outputs[aout] = {component_flow.fid}
                                 # If the parameter flow
                                 return [component_flow]
                             else:
