@@ -172,6 +172,9 @@ class DecisionAction:
         if false_result:
             f_boundary_actions = ExecutionUnit.process_statement_set(activity=self.activity, content=false_result)
             false_init_actions = f_boundary_actions.ain
+            if not false_init_actions:
+                # TODO: Add pass logic for flow to flow transfer when false_init_actions just like the true case
+                pass
             d_final_aids = t_boundary_actions.aout | f_boundary_actions.aout
         else:
             d_final_aids = t_boundary_actions.aout
@@ -179,8 +182,6 @@ class DecisionAction:
         Transaction.open(db=mmdb, name=tr_Decision)
         # Populate Action / Decision Action
         self.action_id = Action.populate(tr=tr_Decision, anum=self.anum, domain=self.domain, action_type="decision")
-
-
 
         # input_init_aids.add(self.action_id)
         Relvar.insert(db=mmdb, tr=tr_Decision, relvar='Decision Action', tuples=[
