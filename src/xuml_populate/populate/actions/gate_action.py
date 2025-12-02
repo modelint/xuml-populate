@@ -4,11 +4,12 @@ gate_action.py – Populate a Gate Action instance
 
 # System
 import logging
-from typing import Sequence, TYPE_CHECKING
+from typing import Sequence, TYPE_CHECKING, Optional
 import re
 
 # Model Integration
 from pyral.relvar import Relvar
+from pyral.relation import Relation
 from pyral.transaction import Transaction
 
 from xuml_populate.exceptions.action_exceptions import ActionException
@@ -43,6 +44,69 @@ class GateAction:
 
         If the input flows are mutliple instance flows, the output is a multiple instance flow.
     """
+    @classmethod
+    def gate_duplicate_labeled_nsflow(cls, aid: str, fid: str, label: str, activity: 'Activity'):
+        """
+        Given the flow label name, check to see if there is another Labeled Flow with the same name
+        in the Activity. If so, populate a Gate, name the output of the gate using the duplicate label,
+        and then change the name of each input flow to the format _aid_label, where aid is the
+        action id of the gate input flow source, and the label is the duplicate flow label name.
+
+        For example, if aid=ACTN23 and fid=F32 and we see that F32 is labeled with the name 'countable aslevs',
+        and we find a duplicate labeled flow with fid=F34,
+        we should have gate inputs labeled '_32_countable aslevs' and '_34_countable aslevs' with a gate output labeled
+        'countable aslevs'.
+
+        If there is no duplicate, we save the fid and its source in the dictionary for possible later comparison.
+
+        Args:
+            aid: The id of the Action that is the source of the fid flow
+            fid: The Flow ID of a labeled flow
+            label: The name of the flow label
+            activity:  The enclosing Activity object
+        """
+        # Find all matching labeled Non Scalar Flows
+        ns_flows = Flow.find_labeled_ns_flow(name=label, anum=activity.anum, domain=activity.domain)
+
+        # This method requires an input labeled flow, so we fail if none are found
+        if not ns_flows:
+            msg = f"No Labeled Non Scalar Flow for {fid} in {activity.activity_path}"
+            _logger.error(msg)
+            raise ActionException(msg)
+
+        # If there is no duplicate, we don't need a gate and just return
+        if len(ns_flows) == 1:
+            return
+
+        # There should never be more than two since we rename the inputs as we attache
+        # each to a new or existing gate
+        if len(ns_flows) > 2:
+            msg = f"Extra duplicate Labeled Non Scalar Flow for {fid} in {activity.activity_path}"
+            _logger.error(msg)
+            raise ActionException(msg)
+
+        # We have the specified fid, and another Flow with a duplicate label name
+        # That duplicate is either the output of an existing Gate Action or we need to populate
+        # a Gate Action with both the fids as input. Figure out which of the two found flows is which
+        f0, f1 = ns_flows
+        if f0.fid == fid:
+            supplied_flow, duplicate_flow = f0, f1
+        else:
+            supplied_flow, duplicate_flow = f1, f0
+
+        # Check for existing gate
+        # That gate will use the label name as its output
+        R = f"Output_flow:<{duplicate_flow.fid}>, Activity:<{activity.anum}>, Domain:<{activity.domain}>"
+        gate_action_r = Relation.restrict(db=mmdb, relation="Gate Action", restriction=R)
+        if gate_action_r.body:
+            # We need to attach the specified input as a gate input and relabel it
+            pass
+        else:
+            # We need to create a new Gate Action
+            ga = cls(input_fids=[supplied_flow.fid, duplicate_flow.fid], output_flow_label=label, activity=activity)
+            gate_aid, gate_output_flow = ga.populate()
+        return
+
 
     def __init__(self, input_fids: list[str], output_flow_label: str, activity: 'Activity'):
         """

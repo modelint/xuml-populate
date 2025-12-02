@@ -20,6 +20,7 @@ from xuml_populate.populate.mmclass_nt import Labeled_Flow_i
 from xuml_populate.populate.flow import Flow
 from xuml_populate.populate.actions.cast_to_instance import CastToInstance
 from xuml_populate.populate.actions.pass_action import PassAction
+from xuml_populate.populate.actions.gate_action import GateAction
 from xuml_populate.populate.actions.expressions.instance_set import InstanceSet
 from xuml_populate.exceptions.action_exceptions import *
 from xuml_populate.populate.actions.aparse_types import (Flow_ap, MaxMult, Content, MethodActivityAP, StateActivityAP,
@@ -156,5 +157,7 @@ class InstanceAssignment:
             Flow.label_flow(label=output_flow_label, fid=rhs_fid, anum=activity.anum, domain=activity.domain)
             # Register the labeled output flow in case we need to merge it into a gate
             activity.labeled_outputs[rhs_fid] = final_aid
+
+        GateAction.gate_duplicate_labeled_nsflow(aid=final_aid, fid=rhs_fid, label=output_flow_label, activity=activity)
 
         return Boundary_Actions(ain={initial_aid}, aout={final_aid})
