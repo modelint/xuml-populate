@@ -63,7 +63,7 @@ class InstanceAssignment:
 
     @classmethod
     def process(cls, activity: 'Activity', inst_assign: Inst_Assignment_a,
-                case_name: str, case_outputs: Set[Labeled_Flow]) -> Boundary_Actions:
+                case_name: str) -> Boundary_Actions:
         """
         Given a parsed instance set expression, populate each component action
         and return the resultant Class Type name
@@ -113,8 +113,6 @@ class InstanceAssignment:
 
         case_prefix = '' if not case_name else f"{case_name}_"
         output_flow_label = case_prefix + lhs.name.name
-        if case_name:
-            case_outputs.add(Labeled_Flow(label=output_flow_label, flow=iset_instance_flow))
 
         # Handle cast if RHS outputs a relation flow
         rhs_fid = iset_instance_flow.fid   # Default assumption that the RHS produces an instance flow

@@ -61,14 +61,13 @@ class Statement:
                 boundary_actions = InstanceAssignment.process(activity=activity,
                                                               inst_assign=statement_parse,
                                                               case_name=case_name,
-                                                              case_outputs=case_outputs,
                                                               )
                 pass
             case 'Table_Assignment_a':
                 boundary_actions = TableAssignment.process(activity=activity,
                                                            table_assign_parse=statement_parse,
                                                            case_name=case_name,
-                                                           case_outputs=case_outputs)
+                                                           )
                 pass
             case 'Scalar_Assignment_a':
                 scalar_assignment_s = ScalarAssignment(activity=activity, scalar_assign_parse=statement_parse)

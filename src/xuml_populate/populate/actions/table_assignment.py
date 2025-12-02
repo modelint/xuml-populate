@@ -11,11 +11,14 @@ from pyral.relvar import Relvar
 from pyral.relation import Relation  # Keep for debugging
 from pyral.transaction import Transaction
 
+
 # xUML Populate
 if TYPE_CHECKING:
     from xuml_populate.populate.activity import Activity
+from xuml_populate.exceptions.action_exceptions import *
 from xuml_populate.config import mmdb
 from xuml_populate.populate.mmclass_nt import Labeled_Flow_i
+from xuml_populate.populate.actions.gate_action import GateAction
 from xuml_populate.populate.actions.expressions.table_expr import TableExpr
 from xuml_populate.populate.actions.aparse_types import (Flow_ap, MaxMult, Content, Boundary_Actions, Labeled_Flow)
 
@@ -43,8 +46,7 @@ class TableAssignment:
     scrall_text = None
 
     @classmethod
-    def process(cls, activity: 'Activity', table_assign_parse: Table_Assignment_a,
-                case_name: str, case_outputs: Set[Labeled_Flow] = None) -> Boundary_Actions:
+    def process(cls, activity: 'Activity', table_assign_parse: Table_Assignment_a, case_name: str) -> Boundary_Actions:
         """
         Given a parsed table assignment consisting of an LHS and an RHS, populate each component action
         and return the resultant table flow
@@ -56,7 +58,6 @@ class TableAssignment:
         :param activity:
         :param table_assign_parse: A parsed table assignment
         :param case_name:
-        :param case_outputs:
         """
 
         lhs = table_assign_parse.lhs
@@ -70,11 +71,22 @@ class TableAssignment:
         te = TableExpr(tuple_output=table_assign_parse.assign_tuple, parse=rhs, activity=activity,
                        input_instance_flow=xi_flow)
         bactions, output_flow = te.process()
+        # Verify that theref is a single output action and extract it for later use
+        if not len(bactions.aout):
+            # TODO: Check for non-action pass through
+            msg = f"Table assignment needs pass action at {activity.activity_path}"
+            _logger.error(msg)
+            raise IncompleteActionException
+        if len(bactions.aout) > 1:
+            msg = f"Expected only one Action output in Table assignment at {activity.activity_path}"
+            _logger.error(msg)
+            raise ActionException
+        # Save the final output action
+        (final_output_aid,) = bactions.aout
+        activity.labeled_outputs[output_flow.fid] = final_output_aid
 
         case_prefix = '' if not case_name else f"{case_name}_"
         output_flow_label = case_prefix + lhs
-        if case_name:
-            case_outputs.add(Labeled_Flow(label=lhs, flow=output_flow))
         # TODO: handle case where lhs is an explicit table assignment
 
         # Migrate the output_flow to a labeled flow
@@ -89,4 +101,8 @@ class TableAssignment:
                            Name=output_flow_label)
         ])
         Transaction.execute(db=mmdb, name=tr_Migrate)
+
+        pass
+        GateAction.gate_duplicate_labeled_nsflow(aid=final_output_aid, fid=output_flow.fid, label=output_flow_label, activity=activity)
+
         return bactions
