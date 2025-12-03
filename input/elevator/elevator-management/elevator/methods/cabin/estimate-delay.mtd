@@ -104,5 +104,4 @@ NOT dir match AND NOT behind the call arrow? {
         stop delay::Duration = num stops4 * /R2/R1/Bank.Average stop duration
 }
 
-result = transit delay + stop delay
-=>> result
+=>> transit delay + stop delay

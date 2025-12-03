@@ -103,6 +103,19 @@ class ExecutionUnit:
             case 'Type_expr_a':
                 ta = TypeSelector(scalar=synch_output.output.type.name, value=synch_output.output.selector, activity=activity)
                 ain, aout, output_flow = ta.populate()
+            case 'MATH_a' | 'BOOL_a':
+                se = ScalarExpr(expr=synch_output.output, input_instance_flow=activity.xiflow, activity=activity)
+                bactions, scalar_flows = se.process()
+                if not scalar_flows:
+                    msg = f"Synch output scalar flow not found in scalar expression at {activity.activity_path}"
+                    _logger.error(msg)
+                    raise ActionException(msg)
+                if len(scalar_flows) > 1:
+                    # TODO: Handle multiple scalar flows in synch output from scalar expression
+                    msg = f"Synch output multiple scalar flows not yet handled {activity.activity_path}"
+                    _logger.error(msg)
+                    raise IncompleteActionException(msg)
+                output_flow = scalar_flows[0]
             case _:
                 # Unexpected or unimplemented synch output case
                 msg = f"No case for synch output exec unit type: [{type(synch_output.output).__name__}]"
