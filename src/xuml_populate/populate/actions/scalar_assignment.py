@@ -21,11 +21,12 @@ from xuml_populate.populate.actions.pass_action import PassAction
 from xuml_populate.populate.actions.extract_action import ExtractAction
 from xuml_populate.populate.ns_flow import NonScalarFlow
 from xuml_populate.populate.flow import Flow
-from xuml_populate.populate.actions.aparse_types import ( Flow_ap, MaxMult, Content, SMType,
-                                                          Boundary_Actions, ActivityType )
+from xuml_populate.populate.actions.aparse_types import (Flow_ap, MaxMult, Content, SMType,
+                                                         Boundary_Actions, ActivityType)
 from xuml_populate.populate.actions.expressions.scalar_expr import ScalarExpr
 from xuml_populate.exceptions.action_exceptions import *
 from xuml_populate.populate.actions.write_action import WriteAction
+
 if __debug__:
     from xuml_populate.utility import print_mmdb
 
@@ -33,6 +34,7 @@ _logger = logging.getLogger(__name__)
 
 # Transactions
 tr_Migrate = "Migrate to Label"
+
 
 class ScalarAssignment:
     """
@@ -89,7 +91,11 @@ class ScalarAssignment:
         # Split of the left and right and sides of the assignment
         lhs = self.scalar_assign_parse.lhs
         rhs = self.scalar_assign_parse.rhs
-
+        cast_type = None
+        if type(lhs[0]).__name__ == 'Flow_Output_a':
+            fo_type = type(lhs[0].name).__name__
+            if fo_type in {'N_a', 'IN_a'} and lhs[0].exp_type:
+                cast_type = lhs[0].exp_type.name
 
         # If there are two labeled flows on the LHS receiving the result of a boolean expression
         # We need a Boolean Partition computation action and later pass it into the Computation Action population
@@ -101,7 +107,7 @@ class ScalarAssignment:
         for rhs_expr in rhs:
             # Populate the expression and obtain the boundary actions and one or more output scalar flows
             se = ScalarExpr(expr=rhs_expr, input_instance_flow=self.input_instance_flow, activity=self.activity,
-                            bpart=boolean_partition)
+                            cast_type=cast_type, bpart=boolean_partition)
             bactions, scalar_flows = se.process()
             self.initial_actions.update(bactions.ain)
             self.final_actions.update(bactions.aout)

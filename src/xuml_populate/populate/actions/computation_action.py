@@ -4,7 +4,7 @@ computation_action.py – Populate a computation action instance in PyRAL
 
 # System
 import logging
-from typing import Sequence, TYPE_CHECKING
+from typing import Sequence, TYPE_CHECKING, Optional
 
 # Model Integration
 from pyral.relvar import Relvar
@@ -70,7 +70,8 @@ class ComputationAction:
     Populate a Compute Action
     """
 
-    def __init__(self, expr: BOOL_a | MATH_a, activity: 'Activity', bpart: bool = False):
+    def __init__(self, expr: BOOL_a | MATH_a, activity: 'Activity', cast_type: Optional[str] = None,
+                 bpart: bool = False):
         """
         Collect all data required to populate a Computation Action
 
@@ -88,6 +89,7 @@ class ComputationAction:
         self.action_id = None
         self.operand_flows: list[str] = []
         self.output_type = None
+        self.cast_type = cast_type
 
         # Each operand may or may not be have a scalar expression that requires the population of actions
         # to get the required input. An operand representing an attribute, for example, will require the
@@ -304,7 +306,9 @@ class ComputationAction:
             ])
             output_flows = [True_flow, False_flow]
         else:
-            output_flow = Flow.populate_scalar_flow(scalar_type=self.output_type, anum=self.anum, domain=self.domain,
+            # Set output flow type to cast type if one has been specified
+            scalar_type = self.cast_type if self.cast_type else self.output_type
+            output_flow = Flow.populate_scalar_flow(scalar_type=scalar_type, anum=self.anum, domain=self.domain,
                                                     label=f"_{walk_expr}", activity_tr=tr_Compute)
             Relvar.insert(db=mmdb, tr=tr_Compute, relvar='General Computation', tuples=[
                 General_Computation_i(ID=self.action_id, Activity=self.anum, Domain=self.domain,

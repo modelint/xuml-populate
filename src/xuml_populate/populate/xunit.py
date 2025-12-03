@@ -17,6 +17,7 @@ from xuml_populate.config import mmdb
 from xuml_populate.populate.actions.aparse_types import Flow_ap, Content, MaxMult
 from xuml_populate.populate.statement import Statement
 from xuml_populate.populate.actions.aparse_types import ActivityAP, Boundary_Actions
+from xuml_populate.populate.actions.scalar_assignment import ScalarExpr
 from xuml_populate.populate.actions.expressions.instance_set import InstanceSet
 from xuml_populate.populate.mmclass_nt import Synchronous_Output_i
 from xuml_populate.populate.actions.type_selector import TypeSelector
@@ -80,6 +81,25 @@ class ExecutionUnit:
                 iset = InstanceSet(iset_components=[synch_output.output],
                                    activity=activity)
                 ain, aout, output_flow = iset.process()
+                if not output_flow:
+                    # Must be a scalar flow
+                    se = ScalarExpr(expr=synch_output.output, input_instance_flow=activity.xiflow,
+                                    activity=activity)
+                    _, sflows = se.process()
+                    if not sflows:
+                        msg = (f"No output flow found for synch output {synch_output} in scalar expression"
+                               f" at {activity.activity_path}")
+                        _logger.error(msg)
+                        raise ActionException(msg)
+                    if len(sflows) == 1:
+                        output_flow = sflows[0]
+                    else:
+                        # TODO: Handle case where a method outputs multiple scalar flows
+                        msg = (f"Multiple scalar output flows in synch output {synch_output} in scalar expression"
+                               f" at {activity.activity_path}")
+                        _logger.error(msg)
+                        raise IncompleteActionException(msg)
+                    pass
             case 'Type_expr_a':
                 ta = TypeSelector(scalar=synch_output.output.type.name, value=synch_output.output.selector, activity=activity)
                 ain, aout, output_flow = ta.populate()

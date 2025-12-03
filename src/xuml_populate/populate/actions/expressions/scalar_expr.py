@@ -2,7 +2,7 @@
 
 # System
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 # Model Integration
 from scrall.parse.visitor import MATH_a, BOOL_a, INST_a, IN_a, N_a, Projection_a, Op_chain_a, INST_PROJ_a
@@ -43,7 +43,7 @@ class ScalarExpr:
     building instance sets.
     """
     def __init__(self, expr: INST_PROJ_a | BOOL_a | N_a | IN_a | Op_chain_a, input_instance_flow: Flow_ap | None,
-                 activity: 'Activity', bpart: bool = False):
+                 activity: 'Activity', cast_type: Optional[str] = None, bpart: bool = False):
         """
         Gather data required to process a scalar expression
 
@@ -52,6 +52,7 @@ class ScalarExpr:
             input_instance_flow: The executing instance, if any
             activity: The enclosing activity object
         """
+        self.cast_type = cast_type
         self.expr = expr
         self.bpart = bpart
         self.activity = activity
@@ -314,13 +315,14 @@ class ScalarExpr:
                 # Not an attribute flow, look for a labeled scalar flow
                 sflows = Flow.find_labeled_scalar_flow(name=sexpr.name, anum=self.anum, domain=self.domain)
                 if not sflows:
-                    msg = f"Name N_a in scalar expr must be an attribute or a labeled scalar flow"
+                    msg = (f"Name N_a [{sexpr.name}] in scalar expr must be an attribute or a labeled scalar flow "
+                           f"at {self.activity.activity_path}")
                     _logger.error(msg)
                     raise ActionException(msg)
                 return sflows
 
             case 'BOOL_a' | 'MATH_a':
-                ca = ComputationAction(expr=sexpr, activity=self.activity, bpart=self.bpart)
+                ca = ComputationAction(expr=sexpr, activity=self.activity, cast_type=self.cast_type, bpart=self.bpart)
                 b, sflows = ca.populate()
                 self.action_inputs = {aid: {} for aid in b.ain}
                 self.action_outputs = {aid: {} for aid in b.aout}
