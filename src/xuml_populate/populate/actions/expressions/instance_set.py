@@ -126,7 +126,7 @@ class InstanceSet:
                     if count == len(self.iset_components) - 1:
                         # For the last component, there can be no dflow output to another action
                         self.final_action = aid
-                case 'N_a':
+                case 'N_a' | 'IN_a':
                     # Name component
                     # Is it a class name?  If so, we'll need a Class Accessor populated if we don't have one already
                     class_flow = ClassAccessor.populate(name=comp.name, anum=anum, domain=domain)

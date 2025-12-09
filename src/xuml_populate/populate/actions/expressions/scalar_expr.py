@@ -21,6 +21,7 @@ from xuml_populate.populate.flow import Flow
 from xuml_populate.populate.actions.aparse_types import Flow_ap, MaxMult, Content, Boundary_Actions
 from xuml_populate.populate.actions.project_action import ProjectAction
 from xuml_populate.populate.actions.type_action import TypeAction
+from xuml_populate.populate.actions.cardinality import CardinalityAction
 
 if __debug__:
     from xuml_populate.utility import print_mmdb  # Debugging
@@ -199,6 +200,13 @@ class ScalarExpr:
                         input_iflow = input_iflows[0] if len(input_iflows) == 1 else None
 
                         if input_iflow:
+                            if sexpr.qty:
+                                # We aren't projecting, just returning the cardinality of the flow
+                                ca = CardinalityAction(anum=self.anum, domain=self.domain, ns_flow=input_iflow)
+                                caid, sflow = ca.populate()
+                                self.action_outputs[caid] = {sflow.fid}
+                                return [sflow]
+                                pass
                             # Verify that we are projecting on a single attribute
                             if not sexpr.projection:
                                 msg = f"Instance flow in scalar expr has no projection"
@@ -259,6 +267,19 @@ class ScalarExpr:
                             if final_aid:
                                 self.action_outputs[final_aid] = {self.component_flow.fid}
                         action_input = self.component_flow
+
+                        # Are we counting the instances?
+                        if sexpr.qty:
+                            ca = CardinalityAction(anum=self.anum, domain=self.domain, ns_flow=self.component_flow)
+                            caid, self.component_flow = ca.populate()
+                            if sexpr.projection:
+                                # Projection outside of a select statement has no utility here
+                                # When you are counting instances, no projected attribute values will be output
+                                msg = f"Incompatible cardinality instance set projection at {self.activity.activity_path}"
+                                _logger.error(msg)
+                                raise ActionException(msg)
+                            self.action_outputs[final_aid] = caid
+
                         if sexpr.projection:
                             project_attrs = tuple([a.name for a in sexpr.projection.attrs])
 

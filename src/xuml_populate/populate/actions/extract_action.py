@@ -14,14 +14,15 @@ from pyral.transaction import Transaction
 from xuml_populate.config import mmdb
 from xuml_populate.populate.actions.table import Table
 from xuml_populate.populate.actions.aparse_types import Flow_ap, MaxMult, Content
-from xuml_populate.exceptions.action_exceptions import (ProductForbidsCommonAttributes, UnjoinableHeaders,
-                                                        SetOpRequiresSameHeaders)
 from xuml_populate.populate.actions.action import Action
 from xuml_populate.populate.mm_class import MMclass
 from xuml_populate.populate.ns_flow import NonScalarFlow
 from xuml_populate.populate.flow import Flow
 from xuml_populate.populate.mmclass_nt import Relational_Action_i, Extract_Action_i
 from xuml_populate.exceptions.action_exceptions import *
+
+if __debug__:
+    from xuml_populate.utility import print_mmdb
 
 _logger = logging.getLogger(__name__)
 

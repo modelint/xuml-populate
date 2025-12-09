@@ -9,4 +9,6 @@ Cabin.Count stops oneway( aslevs : Accessible Shaft Level, search dir : Directio
 // Count all aslevs with a stop requested AND
 // all aslevs without a stop requested and a floor call in the search direction
 //
-//=>> ??^aslevs(Stop requested) + ??^aslevs(NOT Stop requested)/R49/Floor Service( Direction: ^search dir)
+requested stop count = ??^aslevs(Stop requested)
+floor call count = ??^aslevs(NOT Stop requested)/R49/Floor Service( Direction: ^search dir)
+=>> requested stop count + floor call count

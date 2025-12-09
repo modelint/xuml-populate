@@ -245,6 +245,7 @@ Reference_Initialization_i = namedtuple('Reference_Initialization_i', 'Create_ac
 Reference_Value_Input_i = namedtuple('Reference_Value_Input_i', 'Flow Activity Domain Create_action Attribute Class')
 
 # Relational Action subsystem
+Cardinality_Action_i = namedtuple('Cardinality_Action_i', 'ID Activity Domain Non_scalar_input_flow Output_cardinality_flow')
 Class_Restriction_Condition_i = namedtuple('Class_Restriction_Condition_i', 'Select_action Activity Domain')
 Criterion_i = namedtuple('Criterion_i', 'ID Action Activity Domain Attribute Non_scalar_type')
 Comparison_Criterion_i = namedtuple('Comparison_Criterion_i', 'ID Action Activity Attribute Domain Value Comparison')

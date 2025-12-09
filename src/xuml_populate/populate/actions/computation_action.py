@@ -216,7 +216,7 @@ class ComputationAction:
                                 if labeled_flow_ids:
                                     expr_fid = labeled_flow_ids[0]
                                     if self.output_type != 'Boolean':
-                                        # TODO: Support varied scalar input types castign to output flow type
+                                        # TODO: Support varied scalar input types casting to output flow type
                                         # For now, we'll just use the output type of the last encountered operand
                                         # to determine the type of the output flow.
                                         operand_type = Flow.flow_type(fid=expr_fid, anum=self.anum, domain=self.domain)
@@ -251,8 +251,13 @@ class ComputationAction:
                                            f"{self.activity.activity_path}")
                                     _logger.error(msg)
                                     raise ActionException(msg)
+                                if not sflows:
+                                    msg = f"No scalar flow resolved at {self.activity.activity_path}"
+                                    _logger.error(msg)
+                                    raise ActionException(msg)
                                 expr_fid = sflows[0].fid
                                 self.operand_flows.append(expr_fid)
+                                self.output_type = sflows[0].tname
                                 # Append the flow and op to the expression text
                                 op_text = f" {op.lower()} " if count+1 < len(comp_expr.operands) else ""
                                 sub_expr = f"{sub_expr}<{expr_fid}>{op_text}"

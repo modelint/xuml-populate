@@ -69,7 +69,7 @@ class SetAction:
             case 'UNION' | 'INTERSECT' | 'MINUS':
                 _logger.info(f"Populating {setop} action")
                 # a/b Types must match (same table or same class)
-                if not NonScalarFlow.same_headers(a_input, b_input, domain):
+                if not NonScalarFlow.same_headers(a_flow=a_input, b_flow=b_input, domain=domain):
                     raise SetOpRequiresSameHeaders
                 # Table header can be taken from a or b since they are the same
                 if a_input.content == Content.INSTANCE:

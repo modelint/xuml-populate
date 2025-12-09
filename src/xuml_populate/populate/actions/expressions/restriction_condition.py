@@ -85,7 +85,9 @@ class RestrictCondition:
                 # criteria = BOOL_a(op='==', operands=[criteria, N_a(name='true')])
                 # Name only (no explicit operator or operand)
             else:
-                self.expression = self.walk_criteria(operands=criteria.operands, operator=criteria.op)
+                operands = criteria.operands if isinstance(criteria.operands, list) else [criteria.operands]
+                # A boolean NOT expression with a single operand might not have been packed in a list
+                self.expression = self.walk_criteria(operands=operands, operator=criteria.op)
                 pass
             # Walk the parse tree and save all attributes, ops, values, and input scalar flows
         # Populate the Restriction Condition class

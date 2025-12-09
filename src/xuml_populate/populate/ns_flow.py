@@ -85,10 +85,13 @@ class NonScalarFlow:
         """
         Ensure that each ns_flow shares the same headers
 
-        :param a_flow:
-        :param b_flow:
-        :param domain:
-        :return: True if all headers share the same set of attr/type pairs
+        Args:
+            a_flow: Either a table or a class header
+            b_flow: Either a table or a class header
+            domain: Defined in this domain (domain name)
+
+        Returns:
+            True if all headers share the same set of attr/type pairs
         """
         # Create a list of headers, one per ns_flow
         headers = []
@@ -98,8 +101,4 @@ class NonScalarFlow:
             else:
                 headers.append(Table.header(tname=f.tname, domain=domain))
 
-        # We need to freeze the list before we can do a set operation on it
-        # Convert headers from a list of dictionaries to a list of tuples to a tuple of tuples
-        headers = tuple([(tuple(a.items())) for a in headers])
-        # If all headers are the same, there will be only one set element
-        return len(set(headers)) == 1
+        return headers[0] == headers[1]

@@ -64,6 +64,8 @@ class UsageAttrs(NamedTuple):
 # out_attr - The name of a required output attr, again a Flow ID type
 
 flow_attrs = [
+    UsageAttrs(cname='Cardinality Action', id_attr='ID', in_attr='Non_scalar_input_flow',
+               out_attr='Output_cardinality_flow'),
     UsageAttrs(cname='Cast To Instance', id_attr='ID', in_attr='Relation_flow', out_attr='Instance_flow'),
     UsageAttrs(cname='Supplied Parameter Value', id_attr='Action', in_attr='Data_flow', out_attr=None),
     UsageAttrs(cname='Computation Input', id_attr='Computation', in_attr='Input_flow', out_attr=None),
