@@ -13,32 +13,32 @@ from pyral.relvar import Relvar
 
 # TODO: Add spanning element support
 
-_signum_counters = {}  # A separate counter per domain
 _logger = logging.getLogger(__name__)
 
 class Element:
     """
     Create a State Model relation
     """
-    _num_counters = {}  # A separate number counter per domain
+    _num_counters: dict[str, dict[str, int]] = {}
 
     @classmethod
-    def init_counter(cls, key: str) -> int:
+    def init_counter(cls, prefix: str, key: str) -> int:
         """
         Create a new counter using the supplied key if it does not already exist in the num counter dict
 
         Args:
+            prefix: Label prefix (e.g. 'A', 'SIG')
             key:  Usually the domain name but could be subsys:domain or something else
 
         Returns:
             The next available number
         """
-        # Should refactor this into an Element population numbering method
-        if key not in cls._num_counters:
-            cls._num_counters[key] = 1
-        else:
-            cls._num_counters[key] += 1
-        return cls._num_counters[key]
+        # Get or create the dict for this key
+        per_key = cls._num_counters.setdefault(key, {})
+
+        # Increment the counter for this prefix within this key
+        per_key[prefix] = per_key.get(prefix, 0) + 1
+        return per_key[prefix]
 
     @classmethod
     def populate_unlabeled_spanning_element(cls, tr: str, prefix: str, domain: str) -> str:
@@ -48,13 +48,13 @@ class Element:
         Args:
             tr: An open transaction name
             prefix: Prefixed to counter to create unique string label
-            subsystem: The name of the subsystem since these are Subsystem Elements
             domain: The element belongs to this domain
 
         Returns:
             generated label such as SIG12, A47, etc
         """
-        label = f'{prefix}{cls.init_counter(key=domain)}'
+        next_num = cls.init_counter(prefix=prefix, key=domain)
+        label = f'{prefix}{next_num}'
         Relvar.insert(db=mmdb, tr=tr, relvar='Element', tuples=[
             Element_i(Label=label, Domain=domain)
         ])
