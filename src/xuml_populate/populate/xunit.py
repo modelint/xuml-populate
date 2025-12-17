@@ -75,7 +75,7 @@ class ExecutionUnit:
                 pass
             case 'INST_PROJ_a':
                 iset = InstanceSet(iset_components=synch_output.output.iset.components,
-                                   activity=activity)
+                                   activity=activity, input_instance_flow=activity.xiflow)
                 ain, aout, output_flow = iset.process()
             case 'N_a':
                 iset = InstanceSet(iset_components=[synch_output.output],

@@ -182,10 +182,10 @@ class InstanceSet:
                         # For the last component, there can be no dflow output to another action
                         self.final_action = aid
                 case 'Rank_Selection_a':
-                    ranksel = RankRestrictAction(input_relation_flow=self.component_flow, selection_parse=comp,
-                                                 activity=self.activity)
-                    aid = ranksel.action_id
-                    self.component_flow = ranksel.output_relation_flow
+                    rr_action = RankRestrictAction(input_flow=self.component_flow, selection_parse=comp,
+                                                   activity=self.activity)
+                    aid, output_rflow = rr_action.populate()
+                    self.component_flow = output_rflow
                     # Data flow to/from actions within the instance_set
                     if first_action:
                         # For the first component, there can be dflow input from another action

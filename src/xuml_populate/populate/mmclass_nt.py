@@ -122,6 +122,18 @@ Operation_Call_i = namedtuple('Operation_Call_i', 'ID Activity Domain Operation'
 Operation_Call_Output_i = namedtuple('Operation_Call_Output_i', 'Operation_call Activity Domain Operation_name Flow')
 Operation_Call_Parameter_i = namedtuple('Operation_Call_Parameter_i', 'Operation_call Activity Parameter Signature Domain Flow')
 
+# Iteration subsystem
+Extender_i = namedtuple('Extender_i', 'ID Activity Domain Attribute_flow Table_output')
+Iterated_Instance_Flow_i = namedtuple('Iterated_Instance_Flow_i', 'Iterator Activity Domain Flow')
+Iterator_i = namedtuple('Iterator_i', 'ID Activity Domain Input_flow')
+Method_Extender_i = namedtuple('Method_Extender_i', 'ID Activity Domain Method_call')
+Ordinal_Sequencer_i = namedtuple('Ordinal_Sequencer_i', 'ID Activity Domain Ordinal_relationship Ascending')
+Reflexive_Sequencer_i = namedtuple('Reflexive_Sequencer_i', 'ID Activity Domain Reflexive_perspective Side')
+Selection_Sequencer_i = namedtuple('Selection_Sequencer_i', 'ID Activity Domain')
+Sequencer_i = namedtuple('Sequencer_i', 'ID Activity Domain')
+Sorting_Attribute_i = namedtuple('Sorting_Attribute_i', 'Sort_order Attribute Class Sequencer Activity Domain Ascending')
+Type_Operation_Extender_i = namedtuple('Type_Operation_Extender_i', 'ID Activity Domain Type_operation')
+
 # Method Call subsystem
 Method_Call_i = namedtuple('Method_Call_i', 'ID Activity Domain Method Instance_flow')
 Method_Call_Output_i = namedtuple('Method_Call_Output_i', 'Method_call Activity Domain Target_method Flow')
