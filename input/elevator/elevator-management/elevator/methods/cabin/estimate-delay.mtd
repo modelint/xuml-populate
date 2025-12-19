@@ -1,5 +1,5 @@
 --
-Cabin.Estimate delay( calling floor : Floor name, call dir : Direction ) : Duration
+Cabin.Estimate delay( calling floor : Level Name, call dir : Direction ) : Duration
 --
 
 calling floor name, calling height = Floor( Name: ^calling floor ).(Name, Height)

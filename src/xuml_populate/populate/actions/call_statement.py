@@ -45,7 +45,7 @@ class CallStatement:
     Only the statement 1. in the example above will result in a Call Statement.
     """
 
-    def __init__(self, call_parse: Call_a, activity: 'Activity'):
+    def __init__(self, call_parse: Call_a, activity: 'Activity', input_iflow: Optional[Flow_ap] = None):
         """
 
         Args:
@@ -56,6 +56,7 @@ class CallStatement:
         self.activity = activity
         self.anum = activity.anum
         self.domain = activity.domain
+        self.input_iflow = input_iflow
 
         # These two are set if a type action is writing its output back into an attribute
         # Close attempts.reset, for example, where the reset type action writes 0 to the Door.Close attempts attr
@@ -251,8 +252,9 @@ class CallStatement:
                             raise ActionException(msg)  # Last possibility for first position
 
             case 'INST_a':
+                component_iflow = self.input_iflow if self.input_iflow else self.activity.xiflow
                 ie = InstanceSet(iset_components=call_source.components, activity=self.activity,
-                                 input_instance_flow=self.activity.xiflow)
+                                 input_instance_flow=component_iflow)
                 self.ain, self.aout, ie_output_flow = ie.process(write_to_attr=True)
                 active_sflow = None
                 if ie_output_flow:

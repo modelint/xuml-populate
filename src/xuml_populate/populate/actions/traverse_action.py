@@ -454,7 +454,11 @@ class TraverseAction:
                     if not persp_r.body:
                         # TODO: raise exception
                         return False
-                    self.mult = MaxMult.ONE if persp_r.body[0]['Multiplicity'] == '1' else MaxMult.MANY
+                    if self.mult == MaxMult.ONE:
+                        # If we are a 1 mult, we might change that to M mult
+                        # But if we are M mult, we don't change it (even if we are traversing to 1, EACH of the M
+                        # set will get 1 leaving us with M)
+                        self.mult = MaxMult.ONE if persp_r.body[0]['Multiplicity'] == '1' else MaxMult.MANY
                     self.hops.append(
                         Hop(hoptype=self.straight_hop, to_class=self.class_cursor, rnum=self.rel_cursor)
                     )

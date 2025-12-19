@@ -195,7 +195,7 @@ class InstanceSet:
                         # For the last component, there can be no dflow output to another action
                         self.final_action = aid
                 case 'Op_a':
-                    # By exampining the owner component we can determine whether the operation is a Method or
+                    # By examining the owner component we can determine whether the operation is a Method or
                     # a type operation on a Scalar ipnut
                     if comp.owner == '_external':
                         # TODO: Process external services

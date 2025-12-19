@@ -9,7 +9,7 @@ from typing import Set, TYPE_CHECKING, Optional
 from pyral.relvar import Relvar
 from pyral.relation import Relation  # Here for debugging
 from pyral.transaction import Transaction
-from scrall.parse.visitor import Criteria_Selection_a, Rank_Selection_a
+from scrall.parse.visitor import Criteria_Selection_a, Rank_Selection_a, Rank_Criterion_a
 
 # xUML Populate
 if TYPE_CHECKING:
@@ -19,6 +19,9 @@ from xuml_populate.populate.actions.aparse_types import Flow_ap
 from xuml_populate.populate.actions.action import Action
 from xuml_populate.populate.actions.expressions.restriction_condition import RestrictCondition
 from xuml_populate.populate.flow import Flow
+from xuml_populate.populate.actions.iterator import IteratorAction
+from xuml_populate.populate.actions.method_extender import MethodExtender
+# from xuml_populate.populate.actions.type_operation_extender import TypeOperationExtender
 from xuml_populate.populate.mmclass_nt import Relational_Action_i, Table_Action_i, Rank_Restrict_Action_i
 
 if __debug__:
@@ -28,14 +31,15 @@ _logger = logging.getLogger(__name__)
 
 # Transactions
 tr_Rank_Restrict_Action = "Rank Restrict Action"
+tr_TypeOp_Extender = "Type Operation Extender"
+
 
 class RankRestrictAction:
     """
     Create all relations for a Restrict Action
     """
 
-    def __init__(self, input_flow: Flow_ap, selection_parse: Rank_Selection_a,
-                 activity: 'Activity'):
+    def __init__(self, input_flow: Flow_ap, selection_parse: Rank_Selection_a, activity: 'Activity'):
         """
         Populate the Rank Restrict Action
          -> (str, Flow_ap, Set[Flow_ap])
@@ -56,21 +60,30 @@ class RankRestrictAction:
         self.action_id = None
 
     def populate(self) -> Optional[tuple[str, Flow_ap]]:
-        return self.populate_ranked_attr() if self.rr_parse.attr else self.populate_ranked_call()
+        for c in self.rr_parse.criteria:
+            self.populate_ranked_attr(c) if c.attr else self.populate_ranked_call(c)
 
-    def populate_ranked_call(self) -> Optional[tuple[str, Flow_ap]]:
+    def populate_ranked_call(self, c: Rank_Criterion_a) -> Optional[tuple[str, Flow_ap]]:
         """
         Populate a ranked type operation( on an attribute ) or method
 
         Returns:
             The action id and output Relation Flow
         """
-        from xuml_populate.populate.actions.call_statement import CallStatement
-        cs = CallStatement(call_parse=self.rr_parse.call, activity=self.activity)
-        ba = cs.process()
+        # Examine the call parse to determine what kind of Extender we are populating
+        call_expr = c.call.call.components[0]
+        if type(call_expr).__name__ == 'Op_a':
+            # We are invoking an unqualified operation (.some method)
+            method_ex = MethodExtender(op_parse=call_expr, input_iflow=self.input_flow, activity=self.activity)
+            method_ex.populate()
+            pass
+        else:
+            # We have some kind of scalar expression like an attribute name or maybe some math
+            pass
+
         pass
 
-    def populate_ranked_attr(self) -> Optional[tuple[str, Flow_ap]]:
+    def populate_ranked_attr(self, c: Rank_Criterion_a) -> Optional[tuple[str, Flow_ap]]:
         """
         Populate the a ranked attribute or scalar flow
 
