@@ -9,7 +9,7 @@ from typing import Set, TYPE_CHECKING, Optional
 from pyral.relvar import Relvar
 from pyral.relation import Relation  # Here for debugging
 from pyral.transaction import Transaction
-from scrall.parse.visitor import Criteria_Selection_a, Rank_Selection_a, Rank_Criterion_a
+from scrall.parse.visitor import Criteria_Selection_a, Rank_Selection_a
 
 # xUML Populate
 if TYPE_CHECKING:
@@ -58,47 +58,46 @@ class RankRestrictAction:
         self.input_flow = input_flow
         self.output_relation_flow = None
         self.action_id = None
+        self.ranked_attr_name = None
+        self.ain = None
+        self.aout = None
+        self.tflow = None
 
     def populate(self) -> Optional[tuple[str, Flow_ap]]:
-        for c in self.rr_parse.criteria:
-            self.populate_ranked_attr(c) if c.attr else self.populate_ranked_call(c)
-
-    def populate_ranked_call(self, c: Rank_Criterion_a) -> Optional[tuple[str, Flow_ap]]:
         """
-        Populate a ranked type operation( on an attribute ) or method
+        Populate the Rank Restrict Action
 
         Returns:
             The action id and output Relation Flow
         """
-        # Examine the call parse to determine what kind of Extender we are populating
-        call_expr = c.call.call.components[0]
-        if type(call_expr).__name__ == 'Op_a':
-            # We are invoking an unqualified operation (.some method)
-            method_ex = MethodExtender(op_parse=call_expr, input_iflow=self.input_flow, activity=self.activity)
-            method_ex.populate()
-            pass
-        else:
-            # We have some kind of scalar expression like an attribute name or maybe some math
-            pass
+        # Resolve the attribute to be ranked
 
-        pass
+        if self.rr_parse.attr:
+            # We are soing a simple ordering by attribute
+            # Just grab the attribute name from the parse
+            self.ranked_attr_name = self.rr_parse.attr
+            # Populate the output Table Flow using same Table as input flow
+            # If Rank cardinality is one, a tuple flow is specified
+            self.output_relation_flow = Flow.populate_relation_flow_by_reference(
+                ref_flow=self.input_flow, anum=self.anum, domain=self.domain, tuple_flow=self.rr_parse.card == 'ONE')
+        elif self.rr_parse.call:
+            # We are calling a method repeatedly to extend the class table
+            # Populate a method extender action and set the name of the extended attribute
+            self.populate_method_extender()
+            # Populate the output Table Flow using same Table as input flow
+            # If Rank cardinality is one, a tuple flow is specified
+            self.output_relation_flow = Flow.populate_relation_flow_by_reference(
+                ref_flow=self.tflow, anum=self.anum, domain=self.domain, tuple_flow=self.rr_parse.card == 'ONE')
+        elif self.rr_parse.attr_expr:
+            # We have a scalar expression associated with some ordered attribute
+            # so process the scalar expression, extending any type operations along the way
+            # TODO: Figure this out since we can handle only one extended attribute for now
+            self.resolve_attr_expr()
 
-    def populate_ranked_attr(self, c: Rank_Criterion_a) -> Optional[tuple[str, Flow_ap]]:
-        """
-        Populate the a ranked attribute or scalar flow
-
-        Returns:
-            The action id and output Relation Flow
-        """
         # Populate the Action superclass instance and obtain its action_id
         Transaction.open(db=mmdb, name=tr_Rank_Restrict_Action)
         self.action_id = Action.populate(tr=tr_Rank_Restrict_Action, anum=self.anum, domain=self.domain,
                                          action_type="rank restrict")
-
-        # Populate the output Table Flow using same Table as input flow
-        # TODO: This is a tuple flow if the cardinality is one
-        self.output_relation_flow = Flow.populate_relation_flow_by_reference(
-            ref_flow=self.input_flow, anum=self.anum, domain=self.domain, tuple_flow=self.rr_parse.card == 'ONE')
 
         Relvar.insert(db=mmdb, tr=tr_Rank_Restrict_Action, relvar='Relational_Action', tuples=[
             Relational_Action_i(ID=self.action_id, Activity=self.anum, Domain=self.domain)
@@ -109,8 +108,31 @@ class RankRestrictAction:
         ])
         Relvar.insert(db=mmdb, tr=tr_Rank_Restrict_Action, relvar='Rank_Restrict_Action', tuples=[
             Rank_Restrict_Action_i(ID=self.action_id, Activity=self.anum, Domain=self.domain,
-                                   Attribute=self.self.rr_parse.attr, Non_scalar_type=self.input_flow.tname,
-                                   Selection_cardinality=self.self.rr_parse.card, Extent=self.self.rr_parse.rankr)
+                                   Attribute=self.ranked_attr_name, Non_scalar_type=self.input_flow.tname,
+                                   Selection_cardinality=self.rr_parse.card, Extent=self.rr_parse.rankr)
         ])
         # We now have a transaction with all select-action instances, enter into the metamodel db
         Transaction.execute(db=mmdb, name=tr_Rank_Restrict_Action)  # Restrict Action
+
+    def populate_method_extender(self):
+        """
+        Populate a ranked type operation( on an attribute ) or method
+        """
+        # Examine the call parse to determine what kind of Extender we are populating
+        call_expr = self.rr_parse.call.call.components[0]
+        if type(call_expr).__name__ == 'Op_a':
+            # We are invoking an unqualified operation (.some method)
+            method_ex = MethodExtender(op_parse=call_expr, input_iflow=self.input_flow, activity=self.activity)
+            self.ain, self.aout, self.tflow, self.ranked_attr_name = method_ex.populate()
+        else:
+            # We have some kind of scalar expression like an attribute name or maybe some math
+            pass
+
+        pass
+
+    def resolve_attr_expr(self):
+        """
+        Resolves a scalar expression into an attribute ordering
+        """
+        pass
+        # TODO: Implement this

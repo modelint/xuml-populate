@@ -59,12 +59,14 @@ class MethodExtender:
         self.domain = activity.domain
         self.activity = activity
 
-
-    def populate(self):
+    def populate(self) -> tuple[str, str, Flow_ap, str]:
         """
+        Populate a Method Extender action
 
         Returns:
-
+            The ain and aout action ids
+            The output table flow
+            The name of the extended attribute (based on the called method name)
         """
         # Validate the op_parse
         # Owner must be implicit (local / unqualified)
@@ -126,7 +128,8 @@ class MethodExtender:
         ])
 
         Transaction.execute(db=mmdb, name=tr_Method_Extender)
-        pass
+
+        return ain, method_call_id, output_tflow, extend_attr_name
 
 
 
