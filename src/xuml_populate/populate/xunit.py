@@ -111,21 +111,20 @@ class ExecutionUnit:
                                 _logger.error(msg)
                                 raise ActionException(msg)
                             xa = ExtractAction(tuple_flow=output_flow, attr=p.attrs[0].name, activity=activity)
-                            aout, xa_flow = xa.populate()
-                            pass
+                            aout, output_flow = xa.populate()
                         else:
                             # must be an instance flow
                             ra = ReadAction(input_single_instance_flow=output_flow, attrs=(p.attrs[0].name,),
                                             anum=activity.anum, domain=activity.domain)
-                            ra_id, ra_flow = ra.populate()
-                            pass
-
-                    # and that we output a single value
-                    #If we output a table, we just do a project and output the table
-                    # If we output an instance ref, we should first do an instance assignment in a prior statement
-                    # before returning
-                    pass
-                pass
+                            aout, output_flow = ra.populate()
+                    else:
+                        # TODO: Handle projection when method output is nonscalar
+                        # If we output a table, we just do a project and output the table
+                        # If we output an instance ref, we should first do an instance assignment in a prior statement
+                        # before returning
+                        msg = f"Method output is nonscalar and the synch output is projected {activity.activity_path}"
+                        _logger.error(msg)
+                        raise IncompleteActionException(msg)
             case 'N_a':
                 iset = InstanceSet(iset_components=[synch_output.output],
                                    activity=activity)
