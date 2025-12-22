@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING, List
 # Model Integration
 from scrall.parse.visitor import Output_Flow_a, Seq_Statement_Set_a, Comp_Statement_Set_a
 from pyral.relvar import Relvar
+from pyral.relation import Relation
 
 # Xuml Populate
 if TYPE_CHECKING:
@@ -18,6 +19,8 @@ from xuml_populate.populate.actions.aparse_types import Flow_ap, Content, MaxMul
 from xuml_populate.populate.statement import Statement
 from xuml_populate.populate.actions.aparse_types import ActivityAP, Boundary_Actions
 from xuml_populate.populate.actions.scalar_assignment import ScalarExpr
+from xuml_populate.populate.actions.extract_action import ExtractAction
+from xuml_populate.populate.actions.read_action import ReadAction
 from xuml_populate.populate.actions.expressions.instance_set import InstanceSet
 from xuml_populate.populate.mmclass_nt import Synchronous_Output_i
 from xuml_populate.populate.actions.type_selector import TypeSelector
@@ -77,6 +80,52 @@ class ExecutionUnit:
                 iset = InstanceSet(iset_components=synch_output.output.iset.components,
                                    activity=activity, input_instance_flow=activity.xiflow)
                 ain, aout, output_flow = iset.process()
+                if synch_output.output.projection:
+                    p = synch_output.output.projection
+                    # Get the type of this method's output
+                    method_output_type = activity.domain_method_output_types[activity.anum]
+                    # If it is scalar, verify that we have a tuple or a single instance before the projection
+                    R = f"Name:<{method_output_type.name}>, Domain:<{activity.domain}>"
+                    scalar_r = Relation.restrict(db=mmdb, relation="Scalar", restriction=R)
+                    if scalar_r.body:
+                        if output_flow.content == Content.SCALAR:
+                            msg = (f"Cannot project on a scalar flow {output_flow} outputing from method"
+                                   f" {activity.activity_path}")
+                            _logger.error(msg)
+                            raise ActionException(msg)
+                        if output_flow.max_mult != MaxMult.ONE:
+                            msg = f"Cannot project on many inst/tuple flow at {activity.activity_path}"
+                            _logger.error(msg)
+                            raise ActionException(msg)
+                        if output_flow.content == Content.RELATION:
+                            # Make sure there aren't zero projected attrs
+                            if not p.attrs:
+                                msg = (f"Projection requires at least one attribute to output a scalar value at"
+                                       f" {activity.activity_path}")
+                                _logger.error(msg)
+                                raise ActionException(msg)
+                            # Make sure there is exactly one, in fact
+                            if len(p.attrs) > 1:
+                                msg = (f"Projecting on multiple attributes but there is only one scalar output value at"
+                                       f" {activity.activity_path}")
+                                _logger.error(msg)
+                                raise ActionException(msg)
+                            xa = ExtractAction(tuple_flow=output_flow, attr=p.attrs[0].name, activity=activity)
+                            aout, xa_flow = xa.populate()
+                            pass
+                        else:
+                            # must be an instance flow
+                            ra = ReadAction(input_single_instance_flow=output_flow, attrs=(p.attrs[0].name,),
+                                            anum=activity.anum, domain=activity.domain)
+                            ra_id, ra_flow = ra.populate()
+                            pass
+
+                    # and that we output a single value
+                    #If we output a table, we just do a project and output the table
+                    # If we output an instance ref, we should first do an instance assignment in a prior statement
+                    # before returning
+                    pass
+                pass
             case 'N_a':
                 iset = InstanceSet(iset_components=[synch_output.output],
                                    activity=activity)

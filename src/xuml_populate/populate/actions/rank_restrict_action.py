@@ -77,17 +77,10 @@ class RankRestrictAction:
             # Just grab the attribute name from the parse
             self.ranked_attr_name = self.rr_parse.attr
             # Populate the output Table Flow using same Table as input flow
-            # If Rank cardinality is one, a tuple flow is specified
-            self.output_relation_flow = Flow.populate_relation_flow_by_reference(
-                ref_flow=self.input_flow, anum=self.anum, domain=self.domain, tuple_flow=self.rr_parse.card == 'ONE')
         elif self.rr_parse.call:
             # We are calling a method repeatedly to extend the class table
             # Populate a method extender action and set the name of the extended attribute
             self.populate_method_extender()
-            # Populate the output Table Flow using same Table as input flow
-            # If Rank cardinality is one, a tuple flow is specified
-            self.output_relation_flow = Flow.populate_relation_flow_by_reference(
-                ref_flow=self.tflow, anum=self.anum, domain=self.domain, tuple_flow=self.rr_parse.card == 'ONE')
         elif self.rr_parse.attr_expr:
             # We have a scalar expression associated with some ordered attribute
             # so process the scalar expression, extending any type operations along the way
@@ -98,6 +91,10 @@ class RankRestrictAction:
         Transaction.open(db=mmdb, name=tr_Rank_Restrict_Action)
         self.action_id = Action.populate(tr=tr_Rank_Restrict_Action, anum=self.anum, domain=self.domain,
                                          action_type="rank restrict")
+
+        # If Rank cardinality is one, a tuple flow is specified
+        self.output_relation_flow = Flow.populate_relation_flow_by_reference(
+            ref_flow=self.input_flow, anum=self.anum, domain=self.domain, tuple_flow=self.rr_parse.card == 'ONE')
 
         Relvar.insert(db=mmdb, tr=tr_Rank_Restrict_Action, relvar='Relational_Action', tuples=[
             Relational_Action_i(ID=self.action_id, Activity=self.anum, Domain=self.domain)
@@ -113,6 +110,8 @@ class RankRestrictAction:
         ])
         # We now have a transaction with all select-action instances, enter into the metamodel db
         Transaction.execute(db=mmdb, name=tr_Rank_Restrict_Action)  # Restrict Action
+        return self.action_id, self.output_relation_flow
+        pass
 
     def populate_method_extender(self):
         """
@@ -123,7 +122,8 @@ class RankRestrictAction:
         if type(call_expr).__name__ == 'Op_a':
             # We are invoking an unqualified operation (.some method)
             method_ex = MethodExtender(op_parse=call_expr, input_iflow=self.input_flow, activity=self.activity)
-            self.ain, self.aout, self.tflow, self.ranked_attr_name = method_ex.populate()
+            self.ain, self.aout, self.input_flow, self.ranked_attr_name = method_ex.populate()
+            pass
         else:
             # We have some kind of scalar expression like an attribute name or maybe some math
             pass

@@ -23,6 +23,9 @@ from xuml_populate.populate.mmclass_nt import (
 )
 from xuml_populate.populate.actions.aparse_types import Flow_ap, MaxMult, Content
 
+if __debug__:
+    from xuml_populate.utility import print_mmdb
+
 # TODO: Add Table and Control Flow population
 
 _logger = logging.getLogger(__name__)

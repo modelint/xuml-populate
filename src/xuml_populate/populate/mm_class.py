@@ -2,18 +2,21 @@
 mm_class.py – Process parsed class to populate the metamodel db
 """
 
+# System
+from typing import Dict
 import logging
-from xuml_populate.config import mmdb
+
+# Model Integration
 from pyral.transaction import Transaction
 from pyral.relvar import Relvar
+from pyral.relation import Relation
+
+# xUML Populate
+from xuml_populate.config import mmdb
 from xuml_populate.populate.element import Element
 from xuml_populate.populate.attribute import Attribute
 from xuml_populate.populate.mm_type import MMtype
 from xuml_populate.populate.mmclass_nt import Class_i, Alias_i
-
-from pyral.relation import Relation
-
-from typing import Dict
 
 _logger = logging.getLogger(__name__)
 
@@ -45,7 +48,7 @@ class MMclass:
         :return: The header as a dictionary of attr;type key value pairs
         """
         R = f"Class:<{cname}>, Domain:<{domain}>"
-        attrs = Relation.restrict(mmdb, relation='Attribute', restriction=R)
+        attrs = Relation.restrict(db=mmdb, relation='Attribute', restriction=R)
         h = {a['Name']: a['Scalar'] for a in attrs.body}
         return h
 
@@ -58,10 +61,8 @@ class MMclass:
         :return: True if the class has been populated into this domain
         """
         R = f"Name:<{cname}>, Domain:<{domain}>"
-        result = Relation.restrict(mmdb, relation='Class', restriction=R)
+        result = Relation.restrict(db=mmdb, relation='Class', restriction=R)
         return bool(result.body)
-
-
 
     @classmethod
     def populate(cls, domain: str, subsystem, record):
@@ -88,18 +89,18 @@ class MMclass:
         # Populate class
         _logger.info(f"Populating class [{cls.name}]")
         _logger.info("Transaction open: Populate class")
-        Transaction.open(mmdb, "Class")  # Class, Class Type and Attributes
+        Transaction.open(db=mmdb, name="Class")  # Class, Class Type and Attributes
 
         # Populate the corresponding Type superclass
         MMtype.populate_class(tr=_tr_Class, cname=cls.name, domain=domain)
 
         Element.populate_labeled_subys_element(tr=_tr_Class, label=cls.cnum,
                                                subsystem=subsystem.name, domain=domain)
-        Relvar.insert(mmdb, tr=_tr_Class, relvar='Class', tuples=[
+        Relvar.insert(db=mmdb, tr=_tr_Class, relvar='Class', tuples=[
             Class_i(Name=cls.name, Cnum=cls.cnum, Domain=domain)
         ])
         if cls.alias:
-            Relvar.insert(mmdb, tr=_tr_Class, relvar='Alias', tuples=[
+            Relvar.insert(db=mmdb, tr=_tr_Class, relvar='Alias', tuples=[
                 Alias_i(Name=cls.name, Class=cls.name, Domain=domain)
             ])
 
@@ -109,5 +110,5 @@ class MMclass:
             Attribute.populate(tr=_tr_Class, domain=domain, cname=cls.name,
                                class_identifiers=cls.identifiers, record=a)
 
-        Transaction.execute(mmdb, _tr_Class)  # Class, Class Type, and Attributes
+        Transaction.execute(db=mmdb, name=_tr_Class)  # Class, Class Type, and Attributes
         _logger.info("Transaction closed: Populate class")

@@ -107,7 +107,6 @@ class GateAction:
             gate_aid, gate_output_flow = ga.populate()
         return
 
-
     def __init__(self, input_fids: list[str], output_flow_label: str, activity: 'Activity'):
         """
         Collect the data necessary to populate a Gate Action
