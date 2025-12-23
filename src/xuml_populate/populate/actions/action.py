@@ -14,7 +14,7 @@ from pyral.transaction import Transaction
 
 # xUML Populate
 from xuml_populate.config import mmdb
-from xuml_populate.populate.mmclass_nt import Action_i, Wave_i
+from xuml_populate.populate.mmclass_nt import Action_i
 
 _logger = logging.getLogger(__name__)
 
