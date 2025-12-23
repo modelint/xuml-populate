@@ -20,8 +20,11 @@ from xuml_populate.populate.signature import Signature
 from xuml_populate.populate.activity import Activity
 from xuml_populate.populate.mm_type import MMtype
 from xuml_populate.populate.actions.aparse_types import Method_Output_Type
-from xuml_populate.populate.mmclass_nt import Method_Signature_i, Method_i, Parameter_i
+from xuml_populate.populate.mmclass_nt import Method_Signature_i, Method_i, Parameter_i, Synchronous_Output_i
 from xuml_populate.populate.actions.aparse_types import MethodActivityAP
+
+if __debug__:
+    from xuml_populate.utility import print_mmdb
 
 _logger = logging.getLogger(__name__)
 
@@ -80,6 +83,10 @@ class Method:
         Relvar.insert(db=mmdb, tr=tr_Method, relvar='Method', tuples=[
             Method_i(Anum=self.anum, Name=self.name, Class=self.class_name, Domain=self.domain,
                      Executing_instance_flow=self.xi_flow.fid)
+        ])
+        pass
+        Relvar.insert(db=mmdb, relvar='Synchronous Output', tuples=[
+            Synchronous_Output_i(Anum=self.anum, Domain=self.domain, Type=m_parse.flow_out)
         ])
 
         Transaction.execute(db=mmdb, name=tr_Method)  # Populate empty method
