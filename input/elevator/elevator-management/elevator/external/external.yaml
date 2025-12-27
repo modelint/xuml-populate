@@ -7,6 +7,14 @@ Cabin:
       output:
         name: stopping
         type: Boolean
+    - name: Clear floor request
+      parameters:
+        - name: bank
+          type: Bank Name
+        - name: floor
+          type: Level Name
+        - name: dir
+          type: Direction
   external events:
     - name: Stop at nearest floor
 

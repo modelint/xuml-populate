@@ -59,6 +59,7 @@ class ExternalOperation:
 
         self.action_id = None
         self.signum = None
+        self.ain = None
 
     def populate(self) -> tuple[str, str, Optional[Flow_ap]]:
         """
@@ -70,6 +71,7 @@ class ExternalOperation:
         Transaction.open(db=mmdb, name=tr_ExtOp)
         # Populate the action superclass and obtain our action id
         self.action_id = Action.populate(tr=tr_ExtOp, anum=self.anum, domain=self.domain, action_type="operation call")
+        self.ain = self.action_id
         # Insert the Operation Call instance
         Relvar.insert(db=mmdb, tr=tr_ExtOp, relvar='Instance Action', tuples=[
             Instance_Action_i(ID=self.action_id, Activity=self.anum, Domain=self.domain)
@@ -97,7 +99,7 @@ class ExternalOperation:
         for sp in self.params:
 
             # Set the supplied parameter name
-            pname = sp.pname
+            pname = sp.pname.lower()
             sp_pnames.add(pname)
 
             # Resolve the supplied value to a flow or constant value
@@ -106,6 +108,16 @@ class ExternalOperation:
             sval_flow = None
             match sval_type:
                 case 'N_a' | 'IN_a':
+                    # from xuml_populate.populate.actions.expressions.S
+                    se = ScalarExpr(expr=sp.sval, input_instance_flow=self.activity.xiflow, activity=self.activity)
+                    ba, sflows = se.process()
+                    if not sflows:
+                        msg = (f"Scalar flow not found for parameter {sp.sval.name} in scalar expression"
+                               f" at {self.activity.activity_path}")
+                        _logger.error(msg)
+                        raise ActionException(msg)
+                    sval_flow = sflows[0]
+                    self.ain = ba.ain
                     sval_name = sp.sval.name
                 case 'INST_PROJ_a':
                     se = ScalarExpr(expr=sp.sval, input_instance_flow=self.activity.xiflow, activity=self.activity)

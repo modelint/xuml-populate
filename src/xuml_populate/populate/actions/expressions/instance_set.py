@@ -207,17 +207,16 @@ class InstanceSet:
                             msg = f"Undefined external service {comp.op_name} in: {self.activity.activity_path}"
                             _logger.error(msg)
                             raise ActionException(msg)
-                        ext_op_output_r = Relation.semijoin(db=mmdb, rname2='External Operation Output', attrs={
-                            'Name': 'Operation', 'Domain':'Domain'
-                        })
-                        if ext_op_output_r.body:
-                            eop = ExternalOperation(parse=comp, activity=self.activity)
-                            ain, aout, output_flow = eop.populate()
-                            self.initial_action = ain
-                            self.final_action = aout
-                            self.component_flow = output_flow
-                        else:
-                            pass
+                        # ext_op_output_r = Relation.semijoin(db=mmdb, rname2='External Operation Output', attrs={
+                        #     'Name': 'Operation', 'Domain':'Domain'
+                        # })
+                        eop = ExternalOperation(parse=comp, activity=self.activity)
+                        ain, aout, output_flow = eop.populate()
+                        self.initial_action = ain
+                        self.final_action = aout
+                        self.component_flow = output_flow
+                        # else:
+                        #     pass
                     elif comp.owner == '_implicit':
                         # We use the component flow as input if there is one
                         op_name = comp.op_name  # op_name must be a Method name
