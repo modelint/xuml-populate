@@ -234,7 +234,8 @@ class Activity:
         if len(self.synch_output_flows) == 1:
             single_output_flow = self.synch_output_flows.pop()
             Relvar.insert(db=mmdb, relvar='Synchronous Output', tuples=[
-                Synchronous_Output_i(Anum=self.anum, Domain=self.domain, Type=single_output_flow.tname)
+                Synchronous_Output_i(Anum=self.anum, Domain=self.domain, Type=single_output_flow.tname,
+                                     Output_flow=single_output_flow.fid)
             ])
             _logger.info(f"INSERT Synchronous operation output flow): ["
                          f"{self.activity_path}:^{single_output_flow.fid}]")
@@ -321,7 +322,8 @@ class Activity:
         # Now we can populate the Synchronous Output with the gate output flow
         # (no transaction required since it's just one relvar)
         Relvar.insert(db=mmdb, relvar='Synchronous Output', tuples=[
-            Synchronous_Output_i(Anum=self.anum, Domain=self.domain, Type=gate_output_flow.tname)
+            Synchronous_Output_i(Anum=self.anum, Domain=self.domain, Type=gate_output_flow.tname,
+                                 Output_flow=gate_output_flow.fid)
         ])
         pass
 

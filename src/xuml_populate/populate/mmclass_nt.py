@@ -240,7 +240,7 @@ Signature_i = namedtuple('Signature_i', 'SIGnum Domain')
 Single_Assigner_Activity_i = namedtuple('Single_Assigner_Activity_i', 'Anum Domain')
 Signaled_Creation_i = namedtuple('Signaled_Creation_i', 'Signal_action Signal_activity Domain Creation_activity')
 State_Activity_i = namedtuple('State_Activity_i', 'Anum Domain')
-Synchronous_Output_i = namedtuple('Synchronous_Output_i', 'Anum Domain Type')
+Synchronous_Output_i = namedtuple('Synchronous_Output_i', 'Anum Domain Type Output_flow')
 
 # Creation Deletion subsystem
 Attribute_Initialization_i = namedtuple('Attribute_Initialization_i', 'Create_action Activity Attribute Class Domain')
