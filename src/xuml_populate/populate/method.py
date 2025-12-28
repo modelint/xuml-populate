@@ -84,10 +84,6 @@ class Method:
             Method_i(Anum=self.anum, Name=self.name, Class=self.class_name, Domain=self.domain,
                      Executing_instance_flow=self.xi_flow.fid)
         ])
-        pass
-        Relvar.insert(db=mmdb, relvar='Synchronous Output', tuples=[
-            Synchronous_Output_i(Anum=self.anum, Domain=self.domain, Type=m_parse.flow_out)
-        ])
 
         Transaction.execute(db=mmdb, name=tr_Method)  # Populate empty method
         _logger.info("Transaction closed: Populating method")
@@ -147,6 +143,9 @@ class Method:
     def post_process(self):
         """
         """
+        # Finally, we can populate Method Call Outputs
+        from xuml_populate.populate.actions.method_call import MethodCall
+        MethodCall.complete_output_transaction()
         self.activity_obj.prep_for_execution()
 
 

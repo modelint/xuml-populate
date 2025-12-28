@@ -232,6 +232,12 @@ class Activity:
 
         # If there is only one output flow, just populate it as the method's synchronous output
         if len(self.synch_output_flows) == 1:
+            single_output_flow = self.synch_output_flows.pop()
+            Relvar.insert(db=mmdb, relvar='Synchronous Output', tuples=[
+                Synchronous_Output_i(Anum=self.anum, Domain=self.domain, Type=single_output_flow.tname)
+            ])
+            _logger.info(f"INSERT Synchronous operation output flow): ["
+                         f"{self.activity_path}:^{single_output_flow.fid}]")
             return
 
         # There are multiple output flows and we need to funnel them into a single flow
@@ -312,9 +318,16 @@ class Activity:
         Transaction.execute(db=mmdb, name=tr_Gate)
         pass
 
-        # Finally, we can populate Method Call Outputs
-        from xuml_populate.populate.actions.method_call import MethodCall
-        MethodCall.complete_output_transaction()
+        # Now we can populate the Synchronous Output with the gate output flow
+        # (no transaction required since it's just one relvar)
+        Relvar.insert(db=mmdb, relvar='Synchronous Output', tuples=[
+            Synchronous_Output_i(Anum=self.anum, Domain=self.domain, Type=gate_output_flow.tname)
+        ])
+        pass
+
+        # # Finally, we can populate Method Call Outputs
+        # from xuml_populate.populate.actions.method_call import MethodCall
+        # MethodCall.complete_output_transaction()
 
     def pop_xunits(self):
         """
