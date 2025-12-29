@@ -29,7 +29,7 @@ from xuml_populate.populate.mmclass_nt import (State_Model_i, Lifecycle_i, Non_D
                                                Initial_Transition_i, Event_Response_i, Transition_i, Non_Transition_i,
                                                Event_Specification_i, Monomorphic_Event_Specification_i,
                                                Monomorphic_Event_i, Effective_Event_i, Event_i, Parameter_i, Assigner_i,
-                                               Multiple_Assigner_i, Single_Assigner_i)
+                                               Multiple_Assigner_i, Single_Assigner_i, Activity_Input_i)
 
 if __debug__:
     from xuml_populate.utility import print_mmdb
@@ -138,6 +138,10 @@ class StateModel:
                 input_fid = Flow.populate_data_flow_by_type(mm_type=p.type, anum=anum,
                                                             domain=sm.domain, label=p.name,
                                                             activity_tr=tr_SM).fid
+                Relvar.insert(db=mmdb, tr=tr_SM, relvar='Activity Input', tuples=[
+                    Activity_Input_i(Parameter=p.name, Signature=signum, Domain=sm.domain,
+                                     Input_flow=input_fid, Activity=anum)
+                ])
             Relvar.insert(db=mmdb, tr=tr_SM, relvar='Real State', tuples=[
                 Real_State_i(Name=s.state.name, State_model=self.sm_name, Domain=sm.domain, Signature=signum,
                              Activity=anum)

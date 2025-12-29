@@ -227,6 +227,7 @@ Switch_Action_i = namedtuple('Switch_Action_i', 'ID Activity Domain')
 
 # Activity subsystem
 Activity_i = namedtuple('Activity_i', 'Anum Domain')
+Activity_Input_i = namedtuple('Activity_Input_i', 'Parameter Signature Activity Domain Input_flow')
 Delegated_Creation_Activity_i = namedtuple('Delegated_Creation_Activity_i', 'Anum Domain')
 External_Signature_i = namedtuple('External_Signature_i', 'SIGnum Domain')
 Initialization_Source_i = namedtuple('Initialization_Source_i', 'Signal_action Signal_activity Domain Creation_activity Source_flow Local_flow')
