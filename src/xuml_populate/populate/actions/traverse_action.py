@@ -25,7 +25,7 @@ from xuml_populate.exceptions.action_exceptions import (UndefinedRelationship, I
                                                         SubclassNotInGeneralization, PerspectiveNotDefined,
                                                         UndefinedAssociation, NeedPerspectiveOrClassToHop,
                                                         NeedPerspectiveToHop, UnexpectedClassOrPerspectiveInPath,
-                                                        ActionException)
+                                                        ActionException, IncompleteActionException)
 from xuml_populate.populate.actions.aparse_types import Flow_ap, MaxMult, Content
 from xuml_populate.populate.mmclass_nt import (Action_i, Traverse_Action_i, Path_i, Hop_i, Association_Class_Hop_i,
                                                Circular_Hop_i, Symmetric_Hop_i, Asymmetric_Circular_Hop_i,
@@ -452,8 +452,9 @@ class TraverseAction:
                     R = f"Rnum:<{self.rel_cursor}>, Domain:<{self.domain}>, Viewed_class:<{self.class_cursor}>"
                     persp_r = Relation.restrict(db=mmdb, relation='Perspective', restriction=R)
                     if not persp_r.body:
-                        # TODO: raise exception
-                        return False
+                        msg = f"Hopping R association with no perspective at {self.activity.activity_path}"
+                        _logger.error(msg)
+                        raise IncompleteActionException(msg)
                     if self.mult == MaxMult.ONE:
                         # If we are a 1 mult, we might change that to M mult
                         # But if we are M mult, we don't change it (even if we are traversing to 1, EACH of the M
@@ -490,8 +491,9 @@ class TraverseAction:
                     R = f"Rnum:<{self.rel_cursor}>, Domain:<{self.domain}>, Side:<{ref}>"
                     persp_r = Relation.restrict(db=mmdb, relation='Perspective', restriction=R)
                     if not persp_r.body:
-                        # TODO: raise exception
-                        return False
+                        msg = f"Hopping T/P association with no perspective at {self.activity.activity_path}"
+                        _logger.error(msg)
+                        raise IncompleteActionException(msg)
 
                     # Save the multiplicity going into the hop before we make adjustments
                     # We'll need this input_mult value when we consider any hop to an association class
@@ -505,8 +507,9 @@ class TraverseAction:
                     R = f"Rnum:<{self.rel_cursor}>, Domain:<{self.domain}>, Class:<{self.class_cursor}>"
                     assoc_class_r = Relation.restrict(db=mmdb, relation='Association Class', restriction=R)
                     if not assoc_class_r.body:
-                        # TODO: raise exception
-                        return False
+                        msg = f"Hopping T/P with no aclass at {self.activity.activity_path}"
+                        _logger.error(msg)
+                        raise IncompleteActionException(msg)
                     associative_mult = assoc_class_r.body[0]['Multiplicity']
                     # Associative mult of M overrides a single mult
                     self.mult = MaxMult.MANY if associative_mult == 'M' else self.mult

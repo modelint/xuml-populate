@@ -46,7 +46,6 @@ class DelegatedCreationActivity:
         (See the Activity Subsystem class model)
 
         Args:
-            tr: Name of the outer transaction
             signal_action: ID of the Action sending the signal to create
             signal_activity: The activity obj where the delegating signal emanates
             class_name: We are creating an instance of this class
@@ -137,6 +136,5 @@ class DelegatedCreationActivity:
 
         # Now populate the creation action
         ca = CreateAction.from_delegated(new_inst=new_inst, activity=self.activity)
-        b = ca.process()
+        b = ca.process()  # TODO: Use for b?
         pass
-

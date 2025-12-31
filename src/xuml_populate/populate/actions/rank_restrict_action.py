@@ -11,6 +11,8 @@ from pyral.relation import Relation  # Here for debugging
 from pyral.transaction import Transaction
 from scrall.parse.visitor import Criteria_Selection_a, Rank_Selection_a
 
+from xuml_populate.exceptions.action_exceptions import IncompleteActionException
+
 # xUML Populate
 if TYPE_CHECKING:
     from xuml_populate.populate.activity import Activity
@@ -82,6 +84,11 @@ class RankRestrictAction:
             # Populate a method extender action and set the name of the extended attribute
             self.populate_method_extender()
         elif self.rr_parse.attr_expr:
+            msg = (f"Figure this out since we can handle only one "
+                   f"extended attribute for now {self.rr_parse.attr_expr} in rank restrict "
+                   f"expression at {self.activity.activity_path}")
+            _logger.error(msg)
+            raise IncompleteActionException(msg)
             # We have a scalar expression associated with some ordered attribute
             # so process the scalar expression, extending any type operations along the way
             # TODO: Figure this out since we can handle only one extended attribute for now

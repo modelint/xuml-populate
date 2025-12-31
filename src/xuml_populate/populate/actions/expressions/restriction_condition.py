@@ -15,7 +15,7 @@ from scrall.parse.visitor import N_a, BOOL_a, Op_a, Criteria_Selection_a
 if TYPE_CHECKING:
     from xuml_populate.populate.activity import Activity
 from xuml_populate.config import mmdb
-from xuml_populate.exceptions.action_exceptions import ActionException
+from xuml_populate.exceptions.action_exceptions import ActionException, IncompleteActionException
 from xuml_populate.populate.attribute import Attribute
 from xuml_populate.populate.actions.validation.parameter_validation import validate_param
 from xuml_populate.populate.actions.table_attribute import TableAttribute
@@ -214,7 +214,9 @@ class RestrictCondition:
                     criterion_id = self.walk_criteria(operands=o.operands, operator=o.op, attr=attr_set)
                     text += f" {criterion_id}"
                 case 'UNARY_a':
-                    pass # TODO: tbd
+                    msg = f"Unary expression not handled yet in restriction condition at {self.activity.activity_path}"
+                    _logger.error(msg)
+                    raise IncompleteActionException(msg)
                 case 'INST_PROJ_a':
                     from xuml_populate.populate.actions.expressions.scalar_expr import ScalarExpr
                     se = ScalarExpr(expr=o, input_instance_flow=self.activity.xiflow, activity=self.activity)

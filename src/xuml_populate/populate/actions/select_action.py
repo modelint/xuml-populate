@@ -84,10 +84,10 @@ class SelectAction:
         # Walk through the criteria parse tree storing any attributes or input flows
         # Also check to see if we are selecting on an identifier
         self.rcond = RestrictCondition(tr=tr_Select, action_id=self.action_id,
-                                  input_nsflow=self.input_instance_flow,
-                                  selection_parse=self.selection_parse,
-                                  activity=self.activity,
-                                  )
+                                       input_nsflow=self.input_instance_flow,
+                                       selection_parse=self.selection_parse,
+                                       activity=self.activity,
+                                       )
         self.ain = self.rcond.ain  # If any input actions were created this is the outermost input action
         # TODO Consolidate the four lines below, self.rcond is probably all we need
         # id_attrs_in_selection = rcond.identifier_attrs

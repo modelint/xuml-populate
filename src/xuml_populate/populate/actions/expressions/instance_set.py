@@ -172,7 +172,9 @@ class InstanceSet:
                         self.component_flow = ra.output_relation_flow
                         sflows = ra.sflows
                     else:
-                        pass  # TODO: Exception (can't be scalar)
+                        msg = f"Cannot select on a Scalar flow in instance set at {self.activity.activity_path}"
+                        _logger.error(msg)
+                        raise ActionException(msg)
                     # Data flow to/from actions within the instance_set
                     if first_action:
                         # For the first component, there can be dflow input from another action
@@ -207,16 +209,11 @@ class InstanceSet:
                             msg = f"Undefined external service {comp.op_name} in: {self.activity.activity_path}"
                             _logger.error(msg)
                             raise ActionException(msg)
-                        # ext_op_output_r = Relation.semijoin(db=mmdb, rname2='External Operation Output', attrs={
-                        #     'Name': 'Operation', 'Domain':'Domain'
-                        # })
                         eop = ExternalOperation(parse=comp, activity=self.activity)
                         ain, aout, output_flow = eop.populate()
                         self.initial_action = ain
                         self.final_action = aout
                         self.component_flow = output_flow
-                        # else:
-                        #     pass
                     elif comp.owner == '_implicit':
                         # We use the component flow as input if there is one
                         op_name = comp.op_name  # op_name must be a Method name

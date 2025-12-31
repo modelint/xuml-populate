@@ -365,7 +365,9 @@ class Activity:
                 # The statement has set an output_token (it cannot set more than one)
                 # Register the new out_token
                 if out_token in self.seq_tokens:
-                    pass  # TODO: raise exception -- token can ony be set by one statement
+                    msg = f"token can ony be set by one statement in activity at {self.activity.activity_path}"
+                    _logger.error(msg)
+                    raise ActionException(msg)
                 self.seq_tokens[out_token.name] = set()
                 for a in boundary_actions.aout:
                     # Each output_action is the source of a control dependency named by that output token

@@ -132,10 +132,11 @@ class TableExpr:
                         component_flow = Flow_ap(fid=class_flow, content=Content.INSTANCE,
                                                  tname=table_term.name, max_mult=MaxMult.MANY)
                     else:
+                        msg = f"Name [{table_term.name}] does not label any flow"
                         # Neither labeled flow or class
                         # TODO: check for other possible cases
-                        _logger.error(f"Name [{table_term.name}] does not label any flow")
-                        raise FlowException
+                        _logger.error(msg)
+                        raise FlowException(msg)
 
             case 'INST_a':
                 # Process the instance set and obtain its flow id

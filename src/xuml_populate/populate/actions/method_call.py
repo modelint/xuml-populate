@@ -223,7 +223,6 @@ class MethodCall:
                     msg = "Unimplemented case: table output from called method"
                     _logger.exception(msg)
                     # TODO: Construct table name from method signature (need an example)
-                pass
 
         Transaction.execute(db=mmdb, name=tr_Call)
 

@@ -82,9 +82,11 @@ class DecisionAction:
                 # input_init_aids.add(aid)
                 # The final aids will result from the true or true/false results
                 if self.statement_parse.input.projection:
-                    # We have an attribute value to extract and test as a scalar value most likely
+                    msg = (f"Decision input projection: We have an attribute value to extract and test as a scalar "
+                           f"value most likely in scalar expression at {self.activity.activity_path}")
+                    _logger.error(msg)
+                    raise IncompleteActionException(msg)
                     # TODO: Handle decision input projection
-                    pass
             case 'N_a':
                 # We have the name of a flow, verify it exists
                 iset = InstanceSet(iset_components=[decision_input], activity=self.activity)
@@ -173,8 +175,11 @@ class DecisionAction:
             f_boundary_actions = ExecutionUnit.process_statement_set(activity=self.activity, content=false_result)
             false_init_actions = f_boundary_actions.ain
             if not false_init_actions:
+                msg = (f"Add pass logic for flow to flow transfer when false_init_actions just like the true case "
+                       f"in decision action at {self.activity.activity_path}")
+                _logger.error(msg)
+                raise ActionException(msg)
                 # TODO: Add pass logic for flow to flow transfer when false_init_actions just like the true case
-                pass
             d_final_aids = t_boundary_actions.aout | f_boundary_actions.aout
         else:
             d_final_aids = t_boundary_actions.aout

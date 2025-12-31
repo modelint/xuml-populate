@@ -12,7 +12,7 @@ from pyral.relation import Relation
 
 # xUML Populate
 from xuml_populate.config import mmdb
-from xuml_populate.exceptions.action_exceptions import UndefinedAttribute
+from xuml_populate.exceptions.action_exceptions import UndefinedAttribute, IncompleteActionException
 from xuml_populate.populate.mm_type import MMtype
 from xuml_populate.populate.mmclass_nt import (
     Attribute_i, Non_Derived_Attribute_i, Model_Attribute_i,
@@ -112,8 +112,9 @@ class Attribute:
                 ])
 
         else:
-            # TODO: Handle derived attribute population later
-            pass
+            msg = f"Handle derived attribute population later in Attribute"
+            _logger.error(msg)
+            raise IncompleteActionException(msg)
 
         for i in participating_ids:
             # Add Identifier if it is not already in the population

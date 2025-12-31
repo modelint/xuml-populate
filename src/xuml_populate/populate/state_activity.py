@@ -4,7 +4,6 @@ state_activity.py – Populates a State's activity
 # System
 import logging
 from typing import TYPE_CHECKING
-
 if TYPE_CHECKING:
     from xuml_populate.populate.state_model import StateModel
 
@@ -12,6 +11,7 @@ if TYPE_CHECKING:
 from pyral.relation import Relation  # For debugging
 
 # xUML Populate
+from xuml_populate.exceptions.action_exceptions import *
 from xuml_populate.config import mmdb
 from xuml_populate.names import IPS_name
 from xuml_populate.utility import print_mmdb
@@ -71,8 +71,9 @@ class StateActivity:
         R = f"Name:<{self.name}>, State_model:<{self.sm_name}>, Domain:<{self.domain}>"
         real_state_r = Relation.restrict(db=mmdb, relation='Real State', restriction=R)
         if not real_state_r.body:
-            # TODO: raise exception here
-            pass
+            msg = f"Real State not defined for {R} in state activity"
+            _logger.error(msg)
+            raise IncompleteActionException(msg)
         self.signum = real_state_r.body[0]['Signature']
 
         match self.sm_type:
@@ -81,8 +82,9 @@ class StateActivity:
                 R = f"Anum:<{self.anum}>, Domain:<{self.domain}>"
                 lifecycle_activity_r = Relation.restrict(db=mmdb, relation='Lifecycle Activity', restriction=R)
                 if not lifecycle_activity_r.body:
-                    # TODO: raise exception here
-                    pass
+                    msg = f"No lifecyle activity found for {R} in StateActivity"
+                    _logger.error(msg)
+                    raise ActionException(msg)
                 self.xi_flow_id = lifecycle_activity_r.body[0]['Executing_instance_flow']
                 self.xi_flow = Flow_ap(fid=self.xi_flow_id, content=Content.INSTANCE, tname=self.sm_name,
                                        max_mult=MaxMult.ONE)
@@ -91,16 +93,18 @@ class StateActivity:
                 R = f"Anum:<{self.anum}>, Domain:<{self.domain}>"
                 ma_activity_r = Relation.restrict(db=mmdb, relation='Multiple Assigner Activity', restriction=R)
                 if not ma_activity_r.body:
-                    # TODO: raise exception here
-                    pass
+                    msg = f"No multiple assigner activity found for {R} in StateActivity"
+                    _logger.error(msg)
+                    raise ActionException(msg)
                 self.pi_flow_id = ma_activity_r.body[0]['Partitioning_instance_flow']
                 self.pi_flow = Flow_ap(fid=self.pi_flow_id, content=Content.INSTANCE, tname=self.state_model.pclass,
                                        max_mult=MaxMult.ONE)
                 R = f"Rnum:<{self.sm_name}>, Domain:<{self.domain}>"
                 ma_r = Relation.restrict(db=mmdb, relation='Multiple Assigner', restriction=R)
                 if not ma_r.body:
-                    # TODO: raise exception here
-                    pass
+                    msg = f"No multiple assigner found for {R} in StateActivity"
+                    _logger.error(msg)
+                    raise ActionException(msg)
                 self.pclass = ma_r.body[0]['Partitioning_class']
             case SMType.SA:
                 pass  # No xi or pi flow (rnum only, no associated instance)

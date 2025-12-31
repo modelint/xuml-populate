@@ -12,7 +12,7 @@ from pyral.relvar import Relvar
 from pyral.relation import Relation
 from pyral.transaction import Transaction
 
-from xuml_populate.exceptions.action_exceptions import ActionException
+from xuml_populate.exceptions.action_exceptions import ActionException, IncompleteActionException
 
 # xUML populate
 if __debug__:
@@ -385,7 +385,11 @@ class SignalAction:
         # It's a safe assumption that we're signaling an assigner from a lifecycle state machine or a method
         # So we should have an xi flow
         if not self.activity.xiflow:
-            pass  # TODO: Handle case where an assigner is sending a signal to another assigner
+            msg = (f"Handle case where an assigner is sending a signal to another assigner "
+                   f"at {self.activity.activity_path}")
+            _logger.error(msg)
+            raise IncompleteActionException(msg)
+            # TODO: Handle case where an assigner is sending a signal to another assigner
 
         iset = InstanceSet(input_instance_flow=self.activity.xiflow,
                            iset_components=self.statement_parse.dest.assigner_dest.partition.components,

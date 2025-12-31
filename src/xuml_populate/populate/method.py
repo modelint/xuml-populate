@@ -13,6 +13,8 @@ from mtd_parser.method_visitor import Method_a
 from scrall.parse.parser import ScrallParser
 
 # xUML Populate
+from xuml_populate.exceptions import *
+from xuml_populate.exceptions.action_exceptions import IncompleteActionException
 from xuml_populate.populate.xunit import ExecutionUnit
 from xuml_populate.config import mmdb
 from xuml_populate.populate.flow import Flow
@@ -125,16 +127,18 @@ class Method:
         R = f"Method:<{self.name}>, Class:<{self.class_name}>, Domain:<{self.domain}>"
         method_sig_r = Relation.restrict(db=mmdb, relation='Method Signature', restriction=R)
         if not method_sig_r.body:
-            # TODO: raise exception here
-            pass
+            msg = f"No signature found for {R} while processing execution units"
+            _logger.error(msg)
+            raise IncompleteActionException(msg)
         self.signum = method_sig_r.body[0]['SIGnum']
 
         # Look up xi flow
         R = f"Name:<{self.name}>, Class:<{self.class_name}>, Domain:<{self.domain}>"
         method_r = Relation.restrict(db=mmdb, relation='Method', restriction=R)
         if not method_r.body:
-            # TODO: raise exception here
-            pass
+            msg = f"No Method found for {R} while processing execution units"
+            _logger.error(msg)
+            raise IncompleteActionException(msg)
         self.xi_flow_id = method_r.body[0]['Executing_instance_flow']
 
         method_data = MethodActivityAP(

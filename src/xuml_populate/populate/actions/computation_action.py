@@ -16,7 +16,7 @@ from scrall.parse.visitor import BOOL_a, MATH_a, IN_a, N_a
 # xUML populate
 if TYPE_CHECKING:
     from xuml_populate.populate.activity import Activity
-from xuml_populate.exceptions.action_exceptions import ActionException
+from xuml_populate.exceptions.action_exceptions import ActionException, IncompleteActionException
 from xuml_populate.populate.actions.expressions.instance_set import InstanceSet
 from xuml_populate.populate.actions.expressions.table_expr import TableExpr
 from xuml_populate.config import mmdb
@@ -263,7 +263,10 @@ class ComputationAction:
                                 sub_expr = f"{sub_expr}<{expr_fid}>{op_text}"
                         pass
             case _:
-                pass  # TODO: Raise exception
+                msg = f"Unhandled computation expression {comp_expr} at {self.activity.activity_path}"
+                _logger.error(msg)
+                raise IncompleteActionException(msg)
+
         return f"{sub_expr} )"
 
     def populate(self) -> tuple[Boundary_Actions, list[Flow_ap]]:
