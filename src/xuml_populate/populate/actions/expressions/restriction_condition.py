@@ -105,7 +105,7 @@ class RestrictCondition:
         in the metamodel.
 
         Args:
-            operands: One or two operands (depending on the operator)
+            operands: One or more operands (depending on the operator)
             operator: A boolean, math or unary operator
             attr: If not None, an attribute is in the process of being compared to an expression
 
@@ -114,7 +114,6 @@ class RestrictCondition:
         """
         attr_set = attr  # Has an attribute been set for this invocation?
         text = ""
-        assert len(operands) <= 2
         # We'll keep count since we prepend the operator (AND, for example) before the 2nd operand
         for count, o in enumerate(operands):
             match type(o).__name__:
