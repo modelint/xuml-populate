@@ -174,6 +174,13 @@ class RestrictCondition:
                         # The criterion is populated when the second operand is processed, so all we need to do
                         # now is to remember the Attribute name
                         attr_set = Attribute_ap(o.name, scalar)
+                        if scalar == 'Boolean' and attr_set:
+                            comparison_op = 'ne' if operator == 'NOT' else 'eq'
+                            criterion_id = self.pop_equivalence_criterion(attr=attr_set.name, op=comparison_op,
+                                                                          value='true',
+                                                                          scalar=attr_set.scalar)
+                            text += f" {criterion_id}"
+                            pass
                         # Is this an identifier attribute combined with the == operator?
                         if operator == '==':
                             R = f"Attribute:<{o.name}>, Class:<{self.input_nsflow.tname}>, Domain:<{self.domain}>"
@@ -297,10 +304,11 @@ class RestrictCondition:
         """
         Populates either a boolean or enum equivalence
 
-        :param attr: Attribute name
-        :param op: Either eq or ne (== !=)
-        :param value: Enum value or true
-        :param scalar: Scalar name
+        Args:
+            attr: Attribute name
+            op: Either eq or ne (== !=)
+            value: Enum value or true
+            scalar: Scalar name
         """
         # Populate the Restriction Criterion superclass
         criterion_id = self.pop_criterion(attr=attr)
