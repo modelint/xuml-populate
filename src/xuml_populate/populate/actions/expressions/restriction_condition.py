@@ -91,9 +91,10 @@ class RestrictCondition:
                 pass
             # Walk the parse tree and save all attributes, ops, values, and input scalar flows
         # Populate the Restriction Condition class
+        clean_expr = " ".join(self.expression.split())  # Clears out consecutive whitespace
         Relvar.insert(db=mmdb, tr=tr, relvar='Restriction Condition', tuples=[
             Restriction_Condition_i(Action=self.action_id, Activity=self.anum, Domain=self.domain,
-                                    Expression=self.expression.strip(), Selection_cardinality=self.cardinality
+                                    Expression=clean_expr, Selection_cardinality=self.cardinality
                                     )
         ])
         # return cardinality, self.comparison_criteria, self.input_scalar_flows
@@ -130,10 +131,11 @@ class RestrictCondition:
                         # We know this is not an Attribute since it is a scalar flow label coming in as a Parameter
                         criterion_id = self.pop_comparison_criterion(attr=attr_set.name, op=operator,
                                                                      scalar_flow_label=o.name)
-                    text += f" {criterion_id}"
+                    xop = f"{operator}" if len(operands) > 2 and count > 0 else ""
+                    text += f" {xop} {criterion_id}"
                 case 'N_a':
                     if not operator or operator in {'AND', 'OR'}:
-                        if operator in {'AND', 'OR'}:
+                        if operator in {'AND', 'OR'} and len(operands) < 3:
                             text += f" {operator}"
                         # This covers shorthand cases like:
                         #     ( Inservice ) -> Boolean equivalence: ( Inservice == True )
@@ -159,7 +161,8 @@ class RestrictCondition:
                         else:
                             # Populate a comparison
                             criterion_id = self.pop_xi_comparison_criterion(attr=o.name)
-                        text += f" {criterion_id}"
+                        xop = f"{operator}" if len(operands) > 2 and count > 0 else ""
+                        text += f" {xop} {criterion_id}"
                     elif not attr_set:
                         # We know that the operator is a comparison op (==, >=, etc) which means that
                         # the first operand is an Attribute and the second is a scalar expression
@@ -207,7 +210,7 @@ class RestrictCondition:
 
                 case 'BOOL_a':
                     criterion_id = self.walk_criteria(operands=o.operands, operator=o.op, attr=attr_set)
-                    prepend_op = operator if count == 1 else ""
+                    prepend_op = operator if count > 0 else ""
                     text += f" {prepend_op}{criterion_id}"
                 case 'MATH_a':
                     criterion_id = self.walk_criteria(operands=o.operands, operator=o.op, attr=attr_set)
