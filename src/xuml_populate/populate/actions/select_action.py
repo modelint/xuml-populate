@@ -83,21 +83,26 @@ class SelectAction:
         ])
         # Walk through the criteria parse tree storing any attributes or input flows
         # Also check to see if we are selecting on an identifier
-        self.rcond = RestrictCondition(tr=tr_Select, action_id=self.action_id,
-                                       input_nsflow=self.input_instance_flow,
-                                       selection_parse=self.selection_parse,
-                                       activity=self.activity,
-                                       )
-        self.ain = self.rcond.ain  # If any input actions were created this is the outermost input action
-        # TODO Consolidate the four lines below, self.rcond is probably all we need
-        # id_attrs_in_selection = rcond.identifier_attrs
-        self.attr_comparisons = self.rcond.comparison_criteria
-        self.selection_cardinality = self.rcond.cardinality
-        self.sflows = self.rcond.input_scalar_flows
+        if selection_parse.criteria:
+            self.rcond = RestrictCondition(tr=tr_Select, action_id=self.action_id,
+                                           input_nsflow=self.input_instance_flow,
+                                           selection_parse=self.selection_parse,
+                                           activity=self.activity,
+                                           )
+            self.ain = self.rcond.ain  # If any input actions were created this is the outermost input action
+            # TODO Consolidate the four lines below, self.rcond is probably all we need
+            # id_attrs_in_selection = rcond.identifier_attrs
+            self.attr_comparisons = self.rcond.comparison_criteria
+            self.selection_cardinality = self.rcond.cardinality
+            self.sflows = self.rcond.input_scalar_flows
 
-        Relvar.insert(db=mmdb, tr=tr_Select, relvar='Class Restriction Condition', tuples=[
-            Class_Restriction_Condition_i(Select_action=self.action_id, Activity=self.anum, Domain=self.domain)
-        ])
+            Relvar.insert(db=mmdb, tr=tr_Select, relvar='Class Restriction Condition', tuples=[
+                Class_Restriction_Condition_i(Select_action=self.action_id, Activity=self.anum, Domain=self.domain)
+            ])
+        else:
+            # We do not create a Restrict Condition
+            self.ain = self.action_id
+            self.selection_cardinality = self.selection_parse.card
         # Create output flows
         self.max_mult, self.output_instance_flow = self.populate_multiplicity_subclasses()
 
@@ -239,7 +244,7 @@ class SelectAction:
         Determine multiplicity of output and populate the relevant Select Action subclasses
         """
         # Determine if this should be an Identifier Select subclass that yields at most one instance
-        selection_idnum = self.identifier_selection()
+        selection_idnum = self.identifier_selection() if self.selection_parse.criteria else 0
         if selection_idnum or self.selection_cardinality == 'ONE':
             max_mult = MaxMult.ONE
             # Populate a single instance flow for the selection output

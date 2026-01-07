@@ -162,7 +162,6 @@ class InstanceSet:
                             self.initial_action = sa.ain
                         aid = sa.action_id if not sa.ain else sa.ain
                         self.component_flow = sa.output_instance_flow
-                        sflows = sa.sflows
                     elif self.component_flow.content == Content.RELATION:
                         ra = RestrictAction(
                             input_relation_flow=self.component_flow, selection_parse=comp,
@@ -170,7 +169,6 @@ class InstanceSet:
                         )
                         aid = ra.action_id
                         self.component_flow = ra.output_relation_flow
-                        sflows = ra.sflows
                     else:
                         msg = f"Cannot select on a Scalar flow in instance set at {self.activity.activity_path}"
                         _logger.error(msg)

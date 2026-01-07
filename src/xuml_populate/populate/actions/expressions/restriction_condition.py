@@ -78,18 +78,15 @@ class RestrictCondition:
         # The implication is that we are selecting on: Stop requested == true
         # So elaborate the parse elminating our shorthand
         self.cardinality = selection_parse.card
-        if criteria:
-            if type(criteria).__name__ == 'N_a':
-                self.expression = self.walk_criteria(operands=[criteria])
-                pass
-                # criteria = BOOL_a(op='==', operands=[criteria, N_a(name='true')])
-                # Name only (no explicit operator or operand)
-            else:
-                operands = criteria.operands if isinstance(criteria.operands, list) else [criteria.operands]
-                # A boolean NOT expression with a single operand might not have been packed in a list
-                self.expression = self.walk_criteria(operands=operands, operator=criteria.op)
-                pass
-            # Walk the parse tree and save all attributes, ops, values, and input scalar flows
+        if type(criteria).__name__ == 'N_a':
+            self.expression = self.walk_criteria(operands=[criteria])
+            # criteria = BOOL_a(op='==', operands=[criteria, N_a(name='true')])
+            # Name only (no explicit operator or operand)
+        else:
+            operands = criteria.operands if isinstance(criteria.operands, list) else [criteria.operands]
+            # A boolean NOT expression with a single operand might not have been packed in a list
+            self.expression = self.walk_criteria(operands=operands, operator=criteria.op)
+        # Walk the parse tree and save all attributes, ops, values, and input scalar flows
         # Populate the Restriction Condition class
         clean_expr = " ".join(self.expression.split())  # Clears out consecutive whitespace
         Relvar.insert(db=mmdb, tr=tr, relvar='Restriction Condition', tuples=[
@@ -180,7 +177,6 @@ class RestrictCondition:
                                                                           value='true',
                                                                           scalar=attr_set.scalar)
                             text += f" {criterion_id}"
-                            pass
                         # Is this an identifier attribute combined with the == operator?
                         if operator == '==':
                             R = f"Attribute:<{o.name}>, Class:<{self.input_nsflow.tname}>, Domain:<{self.domain}>"
