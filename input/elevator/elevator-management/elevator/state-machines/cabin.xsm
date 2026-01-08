@@ -2,8 +2,8 @@ metadata
     Title : Cabin State Machine Diagram
     Author : Leon Starr
     Document ID : mint.elevator3.td.6
-    Modification date : October 20, 2025
-    Version : 3.3.1
+    Modification date : January 8, 2026
+    Version : 3.4.0
     Organization : Model Integration, LLC
     Copyright notice > MIT
     Organization logo > mint
@@ -22,13 +22,20 @@ events
     Transport unavailable
     Transport in progress
     Go
+    Transfer notified
+    Destination update
 --
-state Changing destination( new dest: Level Name )
+state Notify transfer( new dest: Level Name )
 activity
-    ~.Go to floor( dest floor: ^new dest )? {
-        Cabin redirected( updated dest: ^new dest ) -> /R53/Transfer
-        Change requested -> me
-    }
+    Cabin redirected( updated dest: ^new dest ) -> /R53/Transfer
+    Transfer notified -> me
+transitions
+    Transfer notified > MOVING
+--
+state Request destination( new dest: Level Name )
+activity
+    Go to floor( dest floor: ^new dest ) -> ~
+    Change requested -> me
 transitions
     Change requested > MOVING
 --
@@ -87,7 +94,8 @@ activity
 transitions
     Take out of service > EMERGENCY BRAKING
     Arrived at floor > PICKUP DROPOFF
-    Try redirect > Changing destination
+    Try redirect > Request destination
+    Destination update > Notify transfer
 --
 state Requesting transport
 activity
