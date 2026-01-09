@@ -16,7 +16,7 @@ nodes
     Set emergency stop 6,4-5
     OUT OF SERVICE 100% 4,5
     EMERGENCY BRAKING 8-9,4-5
-    MOVING 50% [C2]50% 11,2
+    MOVING 100% [C1]100% 11,2
     Request destination 12,4
     Requesting transport 30% 13,2-3
 connectors
@@ -34,6 +34,6 @@ connectors
     -Arrived at floor-2 : b|MOVING : t*|PICKUP DROPOFF
     +Try redirect.2-1 : t+2|MOVING : l|Request destination
     +Change requested.2-2 : b-1|Request destination : r+1|MOVING
-    +Transport unavailable.2 : r|Requesting transport : t+2|OUT OF SERVICE
+    +Transport unavailable.2 : r|MOVING : t+2|OUT OF SERVICE
     -Transport in progress.2 : b*|Requesting transport : t|MOVING
     +Go.2 : t-2|READY TO GO : l|Requesting transport

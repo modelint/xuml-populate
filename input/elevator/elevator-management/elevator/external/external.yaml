@@ -1,12 +1,5 @@
 Cabin:
   external operations:
-    - name: Go to floor
-      parameters:
-        - name: dest floor
-          type: Level Name
-      output:
-        name: stopping
-        type: Boolean
     - name: Clear floor request
       parameters:
         - name: bank
@@ -17,6 +10,10 @@ Cabin:
           type: Direction
   external events:
     - name: Stop at nearest floor
+    - name: Go to floor
+      parameters:
+        - name: dest floor
+          type: Level Name
 
 Transfer:
   external events:

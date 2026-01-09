@@ -2,8 +2,8 @@ metadata
     Title : Cabin State Machine Diagram
     Author : Leon Starr
     Document ID : mint.elevator3.td.6
-    Modification date : January 8, 2026
-    Version : 3.4.0
+    Modification date : January 9, 2026
+    Version : 3.4.1
     Organization : Model Integration, LLC
     Copyright notice > MIT
     Organization logo > mint
@@ -90,18 +90,17 @@ transitions
 --
 state MOVING
 activity
-    // Cabin in motion
 transitions
     Take out of service > EMERGENCY BRAKING
     Arrived at floor > PICKUP DROPOFF
     Try redirect > Request destination
     Destination update > Notify transfer
+    Transport unavailable > OUT OF SERVICE
 --
 state Requesting transport
 activity
-    ~.Go to floor( dest floor: /R53/Transfer.Destination floor ) ?
-        Transport in progress -> : Transport unavailable -> me
+    Go to floor( dest floor: /R53/Transfer.Destination floor ) -> ~
+    Transport in progress -> me
 transitions
-    Transport unavailable > OUT OF SERVICE
     Transport in progress > MOVING
 --
