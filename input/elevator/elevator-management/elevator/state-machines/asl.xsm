@@ -71,7 +71,7 @@ transitions
 --
 state Clear floor request( dir: Direction )
 activity
-    /R49/Bank Level.Clear floor request( ^dir )
+    Clear floor request( ^dir ) -> /R49/Bank Level
     !* /R49/Floor Service( Direction: ^dir )
     Check stop request -> me
 transitions
