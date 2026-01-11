@@ -110,15 +110,17 @@ T_Perspective_i = namedtuple('T_Perspective_i', 'Side Rnum Domain')
 Unary_Association_i = namedtuple('Unary_Association_i', 'Rnum Domain')
 
 # External Service subsystem
+External_Entity_i = namedtuple('External_Entity_i', 'Name Domain')
 External_Event_i = namedtuple('External_Event_i', 'Name Domain')
 External_Operation_i = namedtuple('External_Operation_i', 'Name Domain')
 External_Operation_Output_i = namedtuple('External_Operation_Output_i', 'Operation Domain Type Name')
-External_Service_i = namedtuple('External_Service_i', 'Name Domain Signature Class')
+External_Service_i = namedtuple('External_Service_i', 'Name Domain Signature EE')
 External_Signal_Action_i = namedtuple('External_Signal_Action_i', 'ID Activity Domain External_event')
 External_Signal_Parameter_i = namedtuple('External_Signal_Parameter_i', 'Signal_action Activity Domain Parameter Signature Flow')
 Operation_Call_i = namedtuple('Operation_Call_i', 'ID Activity Domain Operation')
 Operation_Call_Output_i = namedtuple('Operation_Call_Output_i', 'Operation_call Activity Domain Operation_name Flow')
 Operation_Call_Parameter_i = namedtuple('Operation_Call_Parameter_i', 'Operation_call Activity Parameter Signature Domain Flow')
+Service_Response_i = namedtuple('Service_Response_i', 'External_event Response_event State_model Domain')
 
 # Iteration subsystem
 Extender_i = namedtuple('Extender_i', 'ID Activity Domain Attribute_flow Table_output')

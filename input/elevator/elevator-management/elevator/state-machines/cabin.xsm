@@ -34,7 +34,7 @@ transitions
 --
 state Request destination( new dest: Level Name )
 activity
-    Go to floor( dest floor: ^new dest ) -> ~
+    Go to floor( dest floor: ^new dest ) -> ~TRANS
     Change requested -> me
 transitions
     Change requested > MOVING
@@ -84,7 +84,7 @@ activity
 --
 state EMERGENCY BRAKING
 activity
-    Stop at nearest floor -> ~
+    Stop at nearest floor -> ~TRANS
 transitions
     Cabin stopping > Set emergency stop
 --
@@ -99,7 +99,7 @@ transitions
 --
 state Requesting transport
 activity
-    Go to floor( dest floor: /R53/Transfer.Destination floor ) -> ~
+    Go to floor( dest floor: /R53/Transfer.Destination floor ) -> ~TRANS
     Transport in progress -> me
 transitions
     Transport in progress > MOVING

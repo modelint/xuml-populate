@@ -132,7 +132,7 @@ class System:
                 if ext_path.is_dir():
                     with open(ext_path/_external_fname, 'r') as file:
                         edata = yaml.safe_load(file)
-                    self.content[domain_name]['subsystems'][subsys_name]['external'] = edata
+                    self.content[domain_name]['external'] = edata
                 else:
                     _logger.info("No external dir")
 

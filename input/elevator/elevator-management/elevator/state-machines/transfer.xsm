@@ -90,7 +90,7 @@ transitions
 --
 state Check for active floor service
 activity
-        Cabin arrived( Shaft, direction: /R53/Cabin.Travel direction ) -> ~
+        Cabin arrived( Shaft, direction: /R53/Cabin.Travel direction ) -> ~UI
         pending floor service .= /R53/Accessible Shaft Level/R49/Floor Service(1, Direction: /R53/Cabin.Travel direction )
 
         pending floor service? {

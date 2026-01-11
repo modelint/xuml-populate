@@ -58,7 +58,7 @@ activity
             }
     }
 
-    ~.Clear floor request( Bank, Floor, ^dir )
+    ~UI.Clear floor request( Bank, Floor, ^dir )
 transitions
     Request cleared > WAITING FOR CALL
 --
