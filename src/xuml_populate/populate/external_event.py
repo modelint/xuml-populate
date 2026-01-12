@@ -54,7 +54,7 @@ class ExternalEvent:
         # Populate External Event
         ev_name = parse["name"]
         Relvar.insert(db=mmdb, tr=tr, relvar='External Event', tuples=[
-            External_Event_i(Name=ev_name, Domain=domain)
+            External_Event_i(Name=ev_name, EE=ee, Domain=domain)
         ])
 
         # Populate the External Signature
@@ -69,7 +69,7 @@ class ExternalEvent:
         for r in responses:
             Relvar.insert(db=mmdb, tr=tr, relvar='Service Response', tuples=[
                 Service_Response_i(External_event=ev_name, Response_event=r["name"], State_model=r["state model"],
-                                   Domain=domain)
+                                   EE=ee, Domain=domain)
             ])
 
         Transaction.execute(db=mmdb, name=tr)
