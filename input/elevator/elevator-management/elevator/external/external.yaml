@@ -17,6 +17,12 @@ External Entities:
             type: Direction
 
   TRANS:
+    external operations:
+      - name: Get eta
+        parameters:
+          - name: dest floor
+            type: Level Name
+        type: Duration
     external events:
       - name: Stop at nearest floor
       - name: Go to floor

@@ -16,8 +16,9 @@ from xuml_populate.populate.signature import Signature
 from xuml_populate.populate.activity import Activity
 from xuml_populate.populate.mm_type import MMtype
 from xuml_populate.populate.ee import EE
+from xuml_populate.populate.external_signature import ExternalSignature
 from xuml_populate.populate.mmclass_nt import (
-    External_Operation_i, External_Operation_Output_i, External_Service_i, External_Signature_i, Parameter_i
+    External_Operation_i, External_Operation_Output_i, External_Service_i, External_Signature_i
 )
 
 if __debug__:
@@ -31,79 +32,39 @@ class ExternalOperation:
     Create an operation relation
     """
     @classmethod
-    def populate(cls, domain: str, parse: dict[str, dict]):
+    def populate(cls, ee: str, domain: str, parse: dict[str, dict], ee_populated: bool):
         """
         Populate an External Operation
 
         Args:
+            ee: Name of the EE
             domain: Name of the domain
             parse: Dictionary obtained from parse of external services file
+            ee_populated: True if this service's EE has been populate
         """
-        for class_name, services in parse.items():
+        if ee_populated:
+            # EE is already populated, so we start a new transaction for this service
+            tr = 'External Operation'
+            Transaction.open(db=mmdb, name=tr)
+        else:
+            # EE requires at least one service and it has not yet been populated, so we use the open EE transaction
+            tr = EE.tr
 
-            # Populate all external operations for this class, if any
-            ops_parse = services.get('external operations', [])
-            for op in ops_parse:
-                Transaction.open(db=mmdb, name=EE.tr)
-                # Populate the External Operation
-                Relvar.insert(db=mmdb, tr=EE.tr, relvar='External Operation', tuples=[
-                    External_Operation_i(Name=op["name"], Domain=domain)
-                ])
-                # Populate the External Signature
-                op_params = op.get('parameters', [])
-                signum = cls.populate_sig(tr=tr_ExternalOperation, params=op_params, domain=domain)
-                Relvar.insert(db=mmdb, tr=tr_ExternalOperation, relvar='External Service', tuples=[
-                    External_Service_i(Name=op["name"], Signature=signum, Domain=domain, Class=class_name)
-                ])
-
-                # If the operation returns a value, populate the External Operation Output
-                rtype = op.get('output')
-                if rtype is not None:
-                    Relvar.insert(db=mmdb, tr=tr_ExternalOperation, relvar='External Operation Output', tuples=[
-                        External_Operation_Output_i(Operation=op["name"], Domain=domain,
-                                                    Type=rtype['type'], Name=rtype['name'])
-                    ])
-                Transaction.execute(db=mmdb, name=tr_ExternalOperation)
-
-            # Populate all external events for this class, if any
-            event_parse = services.get('external events', [])
-            for e in event_parse:
-                Transaction.open(db=mmdb, name=tr_ExternalEvent)
-                # Populate External Event
-                Relvar.insert(db=mmdb, tr=tr_ExternalEvent, relvar='External Event', tuples=[
-                    External_Event_i(Name=e["name"], Domain=domain)
-                ])
-                # Populate the External Signature
-                event_params = e.get('parameters', [])
-                signum = cls.populate_sig(tr=tr_ExternalEvent, params=event_params, domain=domain)
-                Relvar.insert(db=mmdb, tr=tr_ExternalEvent, relvar='External Service', tuples=[
-                    External_Service_i(Name=e["name"], Signature=signum, Domain=domain, Class=class_name)
-                ])
-                Transaction.execute(db=mmdb, name=tr_ExternalEvent)
-
-    @classmethod
-    def populate_sig(cls, tr: str, params: list[dict[str, str]], domain: str) -> str:
-        """
-        Populate an External Signature instance in the current traansaction
-
-        Args:
-            tr: The current transaction name (op/event)
-            params: A dictionary of parameter name : type name pairs
-            domain: The domain name
-
-        Returns:
-            The assigned signature number
-        """
-        signum = Signature.populate(tr=tr, domain=domain)
-        Relvar.insert(db=mmdb, tr=tr, relvar='External Signature', tuples=[
-            External_Signature_i(SIGnum=signum, Domain=domain)
-        ])
-        for p in params:
-            # TODO: Consider supporting table type output (not classes)
-            # Populate the type if it is not already populated
-            MMtype.populate_scalar(name=p['type'], domain=domain)
-            # Populate the Parameter
-            Relvar.insert(db=mmdb, tr=tr, relvar='Parameter', tuples=[
-                Parameter_i(Name=p['name'], Signature=signum, Domain=domain, Type=p['type'])
+            # Populate the External Operation
+            op_name = parse["name"]
+            Relvar.insert(db=mmdb, tr=tr, relvar='External Operation', tuples=[
+                External_Operation_i(Name=op_name, EE=ee, Domain=domain)
             ])
-        return signum
+            # Populate the External Signature
+            op_params = parse.get('parameters', [])
+            signum = ExternalSignature.populate(tr=tr, params=op_params, domain=domain)
+            Relvar.insert(db=mmdb, tr=tr, relvar='External Service', tuples=[
+                External_Service_i(Name=op_name, Signature=signum, Domain=domain, EE=ee)
+            ])
+
+            # If the operation returns a value, populate the External Operation Output
+            rtype = parse.get('type')
+            Relvar.insert(db=mmdb, tr=tr, relvar='External Operation Output', tuples=[
+                External_Operation_Output_i(Operation=op_name, EE=ee, Domain=domain, Type=rtype)
+            ])
+            Transaction.execute(db=mmdb, name=tr)

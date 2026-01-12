@@ -24,6 +24,7 @@ from xuml_populate.populate.subsystem import Subsystem
 from xuml_populate.populate.state_model import StateModel
 from xuml_populate.populate.ee import EE
 from xuml_populate.populate.external_event import ExternalEvent
+from xuml_populate.populate.external_operation import ExternalOperation
 from xuml_populate.populate.mmclass_nt import Domain_i, Modeled_Domain_i, Domain_Partition_i, Subsystem_i
 
 if __debug__:
@@ -130,18 +131,21 @@ class Domain:
 
         # Populate all external entities and services
         for ee, services in content['external']['External Entities'].items():
+
+            if not services:
+                # EE doesn't serve any function, so we skip it
+                # We should probably log it as a warning as well
+                msg = f"No services defined in external file for EE: {ee} in domain: {self.name}"
+                _logger.error(msg)
+                raise KeyError(msg)
+
             first_service = True
             events = services.get('external events', [])
             ops = services.get('external operations', [])
-            if events or ops:
-                # Open a new EE transaction and insert the EE instance
-                EE.populate(name=ee, domain=self.name)
-            else:
-                # EE doesn't serve any function, so we skip it
-                # We should probably log it as a warning as well
-                continue
+            # Open a new EE transaction and insert the EE instance
+            EE.populate(name=ee, domain=self.name)
             for op in ops:
-                pass
+                ExternalOperation.populate(ee=ee, domain=self.name, parse=op, ee_populated=not first_service)
                 first_service = False
             for e in events:
                 ExternalEvent.populate(ee=ee, domain=self.name, parse=e, ee_populated=not first_service)
