@@ -25,6 +25,6 @@ class EE:
     def populate(cls, name: str, domain: str):
         # Open a transaction for this EE and insert the EE instance
         Transaction.open(db=mmdb, name=cls.tr)
-        Relvar.insert(db=mmdb, relvar='External Entity', tuples=[
+        Relvar.insert(db=mmdb, tr=cls.tr, relvar='External Entity', tuples=[
             External_Entity_i(Name=name, Domain=domain)
         ])

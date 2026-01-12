@@ -33,7 +33,7 @@ class ExternalEvent:
     Populate an External Event
     """
     @classmethod
-    def populate(cls, ee: str, domain: str, parse: dict[str, dict], first_service: bool = False):
+    def populate(cls, ee: str, domain: str, parse: dict[str, dict], ee_populated: bool):
         """
         Populate an External Event
 
@@ -41,17 +41,19 @@ class ExternalEvent:
             ee: Name of the EE
             domain: Name of the domain
             parse: Event dictionary obtained from parse of external services file
-            first_service: True if this is the first External Service set for the EE
+            ee_populated: True if this service's EE has been populate
         """
-        if first_service:
+        if ee_populated:
+            # EE is already populated, so we start a new transaction for this service
             tr = 'External Event'
             Transaction.open(db=mmdb, name=tr)
         else:
-            tr = EE.tr  # EE transaction is already open
+            # EE requires at least one service and it has not yet been populated, so we use the open EE transaction
+            tr = EE.tr
 
         # Populate External Event
         ev_name = parse["name"]
-        Relvar.insert(db=mmdb, tr=EE.tr, relvar='External Event', tuples=[
+        Relvar.insert(db=mmdb, tr=tr, relvar='External Event', tuples=[
             External_Event_i(Name=ev_name, Domain=domain)
         ])
 
@@ -66,7 +68,8 @@ class ExternalEvent:
         responses = parse.get('responses', [])
         for r in responses:
             Relvar.insert(db=mmdb, tr=tr, relvar='Service Response', tuples=[
-                Service_Response_i(External_event=ev_name, Response_event=r["name"], State_model=r["state model"])
+                Service_Response_i(External_event=ev_name, Response_event=r["name"], State_model=r["state model"],
+                                   Domain=domain)
             ])
 
         Transaction.execute(db=mmdb, name=tr)

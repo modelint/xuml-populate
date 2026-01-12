@@ -23,6 +23,7 @@ from xuml_populate.populate.lineage import Lineage
 from xuml_populate.populate.subsystem import Subsystem
 from xuml_populate.populate.state_model import StateModel
 from xuml_populate.populate.ee import EE
+from xuml_populate.populate.external_event import ExternalEvent
 from xuml_populate.populate.mmclass_nt import Domain_i, Modeled_Domain_i, Domain_Partition_i, Subsystem_i
 
 if __debug__:
@@ -129,6 +130,7 @@ class Domain:
 
         # Populate all external entities and services
         for ee, services in content['external']['External Entities'].items():
+            first_service = True
             events = services.get('external events', [])
             ops = services.get('external operations', [])
             if events or ops:
@@ -140,9 +142,10 @@ class Domain:
                 continue
             for op in ops:
                 pass
+                first_service = False
             for e in events:
-                pass
-            pass
+                ExternalEvent.populate(ee=ee, domain=self.name, parse=e, ee_populated=not first_service)
+                first_service = False
 
         # First pass: Method action population
         # Here we populate everything except the Method Call Action parameter inputs
