@@ -176,8 +176,9 @@ class SignalAction:
         Populate an External Event
         (will be mapped to an external service in some other Domain through implicit bridging)
         """
+        ee = self.statement_parse.ee
         # Validate the External Event and lookup the signature
-        R = f"Name:<{self.event_name}>, Domain:<{self.domain}>"
+        R = f"Name:<{self.event_name}>, EE:<{ee}>, Domain:<{self.domain}>"
         external_event_r = Relation.restrict(db=mmdb, relation="External Event", restriction=R)
         if not external_event_r.body:
             msg = f"External Event {self.domain}::{self.event_name} not defined in: {self.activity.activity_path}"
@@ -185,17 +186,16 @@ class SignalAction:
             raise ActionException(msg)
         # We need the External Signature number so we can populate any supplied params
         external_service_r = Relation.semijoin(db=mmdb, rname2='External Service')
-        signum = external_service_r.body[0]['Signature']
         Relvar.insert(db=mmdb, tr=tr_Signal, relvar='External Signal Action', tuples=[
                 External_Signal_Action_i(ID=self.action_id, Activity=self.anum, Domain=self.domain,
-                                         External_event=self.event_name)
+                                         External_event=self.event_name, EE=ee)
             ])
 
         # Populate any parameters in the External Signature
         param_r = Relation.semijoin(db=mmdb, rname2='Parameter', attrs={'Signature': 'Signature', 'Domain': 'Domain'})
         sig_params = {t["Name"]: t["Type"] for t in param_r.body}
         if sig_params:
-            self.populate_ext_sig_params()
+            self.populate_ext_sig_params(ee=ee)
 
         Relvar.insert(db=mmdb, tr=tr_Signal, relvar='Instance Action', tuples=[
             Instance_Action_i(ID=self.action_id, Activity=self.anum, Domain=self.domain)
@@ -456,12 +456,12 @@ class SignalAction:
 
         Transaction.execute(db=mmdb, name=tr_Signal)
 
-    def populate_ext_sig_params(self):
+    def populate_ext_sig_params(self, ee: str):
         """
         Populate any External Signal Parameters
         """
         # Validate Operation Call params (ensure that the call matches the Operation's populated signature
-        R = f"Name:<{self.event_name}>, Domain:<{self.domain}>"
+        R = f"Name:<{self.event_name}>, EE:<{ee}>, Domain:<{self.domain}>"
         ext_service_sv = 'ext_service_sv'
         ext_service_r = Relation.restrict(db=mmdb, relation='External Service', restriction=R,
                                           svar_name=ext_service_sv)
@@ -537,7 +537,7 @@ class SignalAction:
 
             Relvar.insert(db=mmdb, tr=tr_Signal, relvar='External Signal Parameter', tuples=[
                 External_Signal_Parameter_i(
-                    Signal_action=self.action_id, Activity=self.anum, Parameter=pname,
+                    Signal_action=self.action_id, Activity=self.anum, EE=ee, Parameter=pname,
                     Signature=signum, Domain=self.domain, Flow=sval_flow.fid)
             ])
 
