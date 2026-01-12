@@ -138,6 +138,8 @@ class Domain:
                 # EE doesn't serve any function, so we skip it
                 # We should probably log it as a warning as well
                 continue
+            for op in ops:
+                pass
             for e in events:
                 pass
             pass

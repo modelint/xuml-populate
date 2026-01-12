@@ -19,13 +19,15 @@ External Entities:
   TRANS:
     external events:
       - name: Stop at nearest floor
-      - name: Go to floor
+      - event: Go to floor
         parameters:
           - name: dest floor
             type: Level Name
         responses:
-          - event: Arrived at floor
-          - event: Transport unavailable
+          - state model: Cabin
+            name: Arrived at floor
+          - state model: Cabin
+          - name: Transport unavailable
 
 Implicit:
   Door:

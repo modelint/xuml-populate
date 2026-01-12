@@ -1,5 +1,5 @@
 """
-external_operation.py – Populate an External Operation
+external_event.py – Populate an External Operation
 """
 
 # System
@@ -15,8 +15,10 @@ from xuml_populate.populate.flow import Flow
 from xuml_populate.populate.signature import Signature
 from xuml_populate.populate.activity import Activity
 from xuml_populate.populate.mm_type import MMtype
-from xuml_populate.populate.mmclass_nt import (External_Operation_i, External_Operation_Output_i, External_Service_i,
-                                               External_Signature_i, Parameter_i)
+from xuml_populate.populate.ee import EE
+from xuml_populate.populate.mmclass_nt import (
+    External_Operation_i, External_Operation_Output_i, External_Service_i, External_Signature_i, Parameter_i
+)
 
 if __debug__:
     from xuml_populate.utility import print_mmdb
@@ -24,14 +26,14 @@ if __debug__:
 
 _logger = logging.getLogger(__name__)
 
-class ExternalService:
+class ExternalOperation:
     """
-    Create a operation relation
+    Create an operation relation
     """
     @classmethod
-    def populate_all(cls, domain: str, parse: dict[str, dict]):
+    def populate(cls, domain: str, parse: dict[str, dict]):
         """
-        For each class in the parse, populate any delegated External Services
+        Populate an External Operation
 
         Args:
             domain: Name of the domain
@@ -42,9 +44,9 @@ class ExternalService:
             # Populate all external operations for this class, if any
             ops_parse = services.get('external operations', [])
             for op in ops_parse:
-                Transaction.open(db=mmdb, name=tr_ExternalOperation)
+                Transaction.open(db=mmdb, name=EE.tr)
                 # Populate the External Operation
-                Relvar.insert(db=mmdb, tr=tr_ExternalOperation, relvar='External Operation', tuples=[
+                Relvar.insert(db=mmdb, tr=EE.tr, relvar='External Operation', tuples=[
                     External_Operation_i(Name=op["name"], Domain=domain)
                 ])
                 # Populate the External Signature
