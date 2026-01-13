@@ -17,12 +17,13 @@ External Entities:
             type: Direction
 
   TRANS:
-    external operations:
-      - name: Get eta
-        parameters:
-          - name: target
-            type: Level Name
-        type: Duration
+# Below ext op for reference only since there are currently one in the elevator
+#    external operations:
+#      - name: Get eta
+#        parameters:
+#          - name: target
+#            type: Level Name
+#        type: Duration
     external events:
       - name: Stop at nearest floor
       - name: Go to floor
