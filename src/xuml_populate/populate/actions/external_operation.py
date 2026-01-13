@@ -54,6 +54,7 @@ class ExternalOperation:
         self.anum = activity.anum
         self.domain = activity.domain
         self.class_name = activity.xiflow.tname
+        self.ee = parse.owner
         self.op_name = parse.op_name
         self.params = parse.supplied_params
 
@@ -77,7 +78,8 @@ class ExternalOperation:
             Instance_Action_i(ID=self.action_id, Activity=self.anum, Domain=self.domain)
         ])
         Relvar.insert(db=mmdb, tr=tr_ExtOp, relvar='Operation Call', tuples=[
-            Operation_Call_i(ID=self.action_id, Activity=self.anum, Domain=self.domain, Operation=self.op_name)
+            Operation_Call_i(ID=self.action_id, Activity=self.anum, Domain=self.domain,
+                             Operation=self.op_name, EE=self.ee)
         ])
 
         # Validate Operation Call params (ensure that the call matches the Operation's populated signature
@@ -160,24 +162,21 @@ class ExternalOperation:
             Relvar.insert(db=mmdb, tr=tr_ExtOp, relvar='Operation Call Parameter', tuples=[
                 Operation_Call_Parameter_i(
                     Operation_call=self.action_id, Activity=self.anum, Parameter=pname,
-                    Signature=self.signum, Domain=self.domain, Flow=sval_flow.fid)
+                    Signature=self.signum, EE=self.ee, Domain=self.domain, Flow=sval_flow.fid)
             ])
 
         # Populate the Operation Call Output if an output flow is specified
         output_r = Relation.semijoin(db=mmdb, rname1=ext_service_sv, rname2='External Operation Output', attrs={
-            'Name': 'Operation', 'Domain': 'Domain'
+            'Name': 'Operation', 'Domain': 'Domain', 'EE': 'EE'
         })
         sflow = None
         if output_r.body:
             # There is an output defined
             output_scalar = output_r.body[0]['Type']
-            flow_name = output_r.body[0]['Name']
-            sflow_label = f"_{self.action_id[4:]}_{flow_name}"
-            sflow = Flow.populate_scalar_flow(scalar_type=output_scalar, anum=self.anum, domain=self.domain,
-                                              label=sflow_label)
+            sflow = Flow.populate_scalar_flow(scalar_type=output_scalar, anum=self.anum, domain=self.domain)
             Relvar.insert(db=mmdb, tr=tr_ExtOp, relvar='Operation Call Output', tuples=[
                 Operation_Call_Output_i(
-                    Operation_call=self.action_id, Activity=self.anum, Domain=self.domain,
+                    Operation_call=self.action_id, Activity=self.anum, EE=self.ee, Domain=self.domain,
                     Operation_name=self.op_name, Flow=sflow.fid)
             ])
 

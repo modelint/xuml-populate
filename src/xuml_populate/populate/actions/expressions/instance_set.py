@@ -195,16 +195,12 @@ class InstanceSet:
                         # For the last component, there can be no dflow output to another action
                         self.final_action = aid
                 case 'Op_a':
-                    # By examining the owner component we can determine whether the operation is a Method or
-                    # a type operation on a Scalar ipnut
-                    if comp.owner == '_external':
-                        # TODO: Process external services
-                        # At may return a scalar expression depending on external service definition
-                        # So we look up the type External Operation Output
-                        R = f"Name:<{comp.op_name}>, Domain:<{domain}>"
-                        ext_service_r = Relation.restrict(db=mmdb, relation="External Service", restriction=R)
-                        if not ext_service_r.body:
-                            msg = f"Undefined external service {comp.op_name} in: {self.activity.activity_path}"
+                    if comp.ee:
+                        # The owner is an External Entity, so we need to populate an External Operation
+                        R = f"Name:<{comp.op_name}>, EE:<{comp.owner}>, Domain:<{domain}>"
+                        ext_op_r = Relation.restrict(db=mmdb, relation="External Operation", restriction=R)
+                        if not ext_op_r.body:
+                            msg = f"Undefined external operation {comp.op_name} in: {self.activity.activity_path}"
                             _logger.error(msg)
                             raise ActionException(msg)
                         eop = ExternalOperation(parse=comp, activity=self.activity)

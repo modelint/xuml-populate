@@ -34,6 +34,7 @@ transitions
 --
 state Request destination( new dest: Level Name )
 activity
+    t = ~TRANS.Get eta( target: ^new dest )
     Go to floor( dest floor: ^new dest ) -> ~TRANS
     Change requested -> me
 transitions
