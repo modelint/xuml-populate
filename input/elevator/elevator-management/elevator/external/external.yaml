@@ -1,5 +1,7 @@
+Domains:
 External Entities:
   UI:
+    service domain: User Interface
     external events:
       - name: Clear floor request
         parameters:
@@ -17,6 +19,7 @@ External Entities:
             type: Direction
 
   TRANS:
+    service domain: Transport
 # Below ext op for reference only since there are currently one in the elevator
 #    external operations:
 #      - name: Get eta

@@ -12,14 +12,20 @@ from xsm_parser.state_model_parser import StateModelParser
 from op2_parser.op_parser import OpParser
 from mtd_parser.method_parser import MethodParser
 from pyral.relvar import Relvar
+from pyral.transaction import Transaction
 
 # xUML Populate
 from xuml_populate.config import mmdb
 from xuml_populate.populate.domain import Domain
-from xuml_populate.populate.mmclass_nt import System_i
+from xuml_populate.populate.mmclass_nt import System_i, Domain_i, Realized_Domain_i
+
+if __debug__:
+    from xuml_populate.utility import print_mmdb
 
 _mmdb_fname = f"{mmdb}.ral"
 _external_fname = "external.yaml"
+_system_fname = "system.yaml"
+
 
 _logger = logging.getLogger(__name__)
 
@@ -32,6 +38,7 @@ class System:
 
     We then proceed to populate each modeled domain in the repository.
     """
+    tr_Realized = 'Realized Domain'
 
     def __init__(self, name: str, system_path: Path, parse_actions: bool = False, verbose: bool = False):
         """
@@ -51,6 +58,10 @@ class System:
         self.system_name = system_path.stem.title()
         self.verbose = verbose
         self.domains: dict[str, Domain] = {}  # Domain objects keyed by name
+
+        # Load the system.yaml file
+        with open(system_path / _system_fname, 'r') as file:
+            self.system_data = yaml.safe_load(file)
 
         # Process each domain folder in the system package
         for domain_path in system_path.iterdir():
@@ -154,6 +165,20 @@ class System:
         Relvar.insert(db=mmdb, relvar='System', tuples=[
             System_i(Name=self.system_name),
         ])
+
+        # Populate all the Domains as Realized by default (we'll migrate the Modeled Domains as we populate them)
+        Transaction.open(db=mmdb, name=System.tr_Realized)
+        for d in self.system_data['Domains']:
+            name, alias = [s.strip() for s in d.split(",")]
+            Relvar.insert(db=mmdb, tr=System.tr_Realized, relvar='Domain', tuples=[
+                Domain_i(Name=name, Alias=alias)
+            ])
+            Relvar.insert(db=mmdb, tr=System.tr_Realized, relvar='Realized Domain', tuples=[
+                Realized_Domain_i(Name=name)
+            ])
+        Transaction.execute(db=mmdb, name=System.tr_Realized)
+
+        # By default we populate each domain
 
         # Populate each domain into the metamodel db
         for domain_name, domain_parse in self.content.items():

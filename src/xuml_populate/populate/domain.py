@@ -58,10 +58,9 @@ class Domain:
         _logger.info(f"Transaction open: domain and subsystems [{domain}]")
         Transaction.open(db=mmdb, name=tr_Modeled_Domain)
 
-        Relvar.insert(db=mmdb, tr=tr_Modeled_Domain, relvar='Domain', tuples=[
-            Domain_i(Name=domain, Alias=content['alias']),
-        ])
-        # TODO: For now assume this is always a modeled domain, but need a way to specify a realized domain
+        # System should already have populated the Domain as a Realized Domain by default
+        # So in this transaction we are migrating it to a Modeled Domain
+        Relvar.deleteone(db=mmdb, relvar_name='Realized Domain', tid={'Name': domain}, tr=tr_Modeled_Domain)
         Relvar.insert(db=mmdb, tr=tr_Modeled_Domain, relvar='Modeled_Domain', tuples=[
             Modeled_Domain_i(Name=domain),
             ])
@@ -142,8 +141,9 @@ class Domain:
             first_service = True
             events = services.get('external events', [])
             ops = services.get('external operations', [])
+            service_domain = services.get('service domain')
             # Open a new EE transaction and insert the EE instance
-            EE.populate(name=ee, domain=self.name)
+            EE.populate(name=ee, domain=self.name, service_domain=service_domain)
             for op in ops:
                 ExternalOperation.populate(ee=ee, domain=self.name, parse=op, ee_populated=not first_service)
                 first_service = False
