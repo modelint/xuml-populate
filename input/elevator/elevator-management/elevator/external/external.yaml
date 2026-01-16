@@ -17,6 +17,10 @@ External Entities:
             type: Shaft ID
           - name: direction
             type: Direction
+      - name: New location
+        parameters:
+          - name: floor
+            type: Level Name
 
   TRANS:
     service domain: Transport

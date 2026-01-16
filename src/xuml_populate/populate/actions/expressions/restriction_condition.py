@@ -78,7 +78,7 @@ class RestrictCondition:
         # The implication is that we are selecting on: Stop requested == true
         # So elaborate the parse elminating our shorthand
         self.cardinality = selection_parse.card
-        if type(criteria).__name__ == 'N_a':
+        if type(criteria).__name__ in {'N_a', 'IN_a'}:
             self.expression = self.walk_criteria(operands=[criteria])
             # criteria = BOOL_a(op='==', operands=[criteria, N_a(name='true')])
             # Name only (no explicit operator or operand)
@@ -116,14 +116,19 @@ class RestrictCondition:
         for count, o in enumerate(operands):
             match type(o).__name__:
                 case 'IN_a':
-                    # Verify that this input is defined on the enclosing Activity
-                    validate_param(name=o.name, activity=self.activity)
+                    # We have an input parameter specified so we validate it and get its type
+                    param_type = validate_param(name=o.name, activity=self.activity)
                     if not attr_set:
-                        # The Attribute has the same name as the Parameter
-                        # We assume that attribute names are capitalized so the name doubling shorthand for
-                        # params only works if this convention is followed.
-                        Attribute.scalar(name=o.name.capitalize(), tname=self.input_nsflow.tname, domain=self.domain)
-                        criterion_id = self.pop_xi_comparison_criterion(attr=o.name)
+                        # No attribute has been set, so it must be implicit from the parameter name
+                        # Parameter names are lower case, so we capitalize it to match the attribute name
+                        attr_name = o.name.capitalize()
+                        # Now we verify that an attribute exists and the type matches
+                        attr_type = Attribute.scalar(name=attr_name, tname=self.input_nsflow.tname, domain=self.domain)
+                        if param_type != attr_type:
+                            msg = f"Parameter type {param_type} and matching implict attribute {attr_name}'s type {attr_type} on input instance flow do not matchat {self.activity.activity_path}"
+                            _logger.error(msg)
+                            raise ActionException(msg)
+                        criterion_id = self.pop_comparison_criterion(attr=attr_name, op='==', scalar_flow_label=o.name)
                     else:
                         # We know this is not an Attribute since it is a scalar flow label coming in as a Parameter
                         criterion_id = self.pop_comparison_criterion(attr=attr_set.name, op=operator,

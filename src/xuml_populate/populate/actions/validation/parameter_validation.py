@@ -18,15 +18,20 @@ from xuml_populate.populate.actions.aparse_types import ActivityAP
 
 _logger = logging.getLogger(__name__)
 
-def validate_param(name: str, activity: 'Activity'):
+def validate_param(name: str, activity: 'Activity') -> str:
     """
     Raise an exception if the specified Parameter is not defined
 
-    :param name:  Parameter name
-    :param activity:  Activity context
+    Args:
+        name: Parameter name
+        activity: The enclosing activity object
+
+    Returns:
+        They type of the parameter
     """
     # Verify that there is a populated instance of Parameter
     R = f"Name:<{name}>, Signature:<{activity.signum}>, Domain:<{activity.domain}>"
     param_r = Relation.restrict(db=mmdb, relation='Parameter', restriction=R)
     if not param_r.body:
         raise UndefinedParameter
+    return param_r.body[0]['Type']
