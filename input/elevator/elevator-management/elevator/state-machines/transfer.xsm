@@ -2,8 +2,8 @@ metadata
     Title : Transfer State Machine Diagram
     Author : Leon Starr
     Document ID : mint.elevator3.td.5
-    Modification date : November 2, 2025
-    Version : 3.5.0
+    Modification date : January 21, 2026
+    Version : 3.5.1
     Organization : Model Integration, LLC
     Copyright notice > MIT
     Organization logo > mint
@@ -30,7 +30,7 @@ initial transitions
 --
 state WAITING FOR CABIN
 activity
-    // Cabin enroute
+    New transfer -> /R53/Cabin
 transitions
     Ready to go > Dispatching cabin
     Dest change request > Changing destination before cabin moves
