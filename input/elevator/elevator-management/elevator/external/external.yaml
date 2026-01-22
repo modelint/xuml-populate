@@ -2,7 +2,11 @@ Domains:
 External Entities:
   UI:
     service domain: User Interface
-    external events:
+    external events: # Events explicitly directed at the UI External Entity
+      - name: Set destination
+        parameters:
+        - name: dest
+          type: Level Name
       - name: Clear floor request
         parameters:
           - name: bank
@@ -44,27 +48,32 @@ External Entities:
             name: Transport unavailable
 
 Implicit:
-  Door:
-    bridgeable conditions:
-      state entry:
-        OPENING:
-          - SIO
-          - UI
-        OPEN:
-          - UI
-        CLOSING:
-          - SIO
-          - UI
-        CLOSED:
-          - UI
-      external event:
-        Cabin arrived: UI
-        Stop at nearest floor: TRANS
-
-    model operations:
-      event dispatch:
-        Door closed: SIO
-        Door opened: SIO
-        Door blocked: SIO
-        Passenger open: UI
-        Passenger close: UI
+  state entry:  # Bridgeable condition
+    lifecycles:
+      - Accessible Shaft Level:  # Lifecycle state model name
+        - Clear stop request:  # State name
+           external events:
+           - Clear stop request:  # External Event name and possible parameters
+               to: UI
+               # params:  (none required if the instance identifier is adequate, shaft + floor in this case)
+      - Door:
+        - OPENING:
+          external events:
+            - Open door:
+                to: SIO
+            - Door opening:
+                to: UI
+        - OPEN:
+          external events:
+            - Door opened:
+                to: UI
+        - CLOSING:
+          external events:
+            - Close door:
+                to: SIO
+            - Door closing:
+                to: UI
+        - CLOSING:
+          external events:
+            - Door closed:
+                to: UI
