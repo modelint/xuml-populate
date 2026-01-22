@@ -48,32 +48,50 @@ External Entities:
             name: Transport unavailable
 
 Implicit:
-  state entry:  # Bridgeable condition
-    lifecycles:
-      - Accessible Shaft Level:  # Lifecycle state model name
-        - Clear stop request:  # State name
-           external events:
-           - Clear stop request:  # External Event name and possible parameters
-               to: UI
-               # params:  (none required if the instance identifier is adequate, shaft + floor in this case)
-      - Door:
-        - OPENING:
-          external events:
-            - Open door:
-                to: SIO
-            - Door opening:
-                to: UI
-        - OPEN:
-          external events:
-            - Door opened:
-                to: UI
-        - CLOSING:
-          external events:
-            - Close door:
-                to: SIO
-            - Door closing:
-                to: UI
-        - CLOSING:
-          external events:
-            - Door closed:
-                to: UI
+  UI:
+    external events:  # Asynchronous requests issued when bridgeable condition occurs
+      Clear stop request:
+        bridgeable conditions:
+          state entry:
+            lifecycle: Accessible Shaft Level
+            states:
+              - Clear stop request
+        # params:  (none required if the instance identifier is adequate, shaft + floor in this case)
+      Door opening:
+        bridgeable conditions:
+          state entry:
+            lifecycle: Door
+            states:
+              - OPENING
+      Door opened:
+        bridgeable conditions:
+          state entry:
+            lifecycle: Door
+            states:
+              - OPEN
+      Door closing:
+        bridgeable conditions:
+          state entry:
+            lifecycle: Door
+            states:
+              - CLOSING
+      Door closed:
+        bridgeable conditions:
+          state entry:
+            lifecycle: Door
+            states:
+              - CLOSED
+  SIO:
+    external events:
+      Open door:
+        bridgeable conditions:
+          state entry:
+            lifecycle: Door
+            states:
+              - OPENING
+      Close door:
+        bridgeable conditions:
+          state entry:
+            lifecycle: Door
+            states:
+              - CLOSING
