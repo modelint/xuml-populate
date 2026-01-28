@@ -1,0 +1,26 @@
+Implicit:
+  attribute to attribute:
+    # Local attribute mapped to attribute in external domain
+    # Each holds the same value
+    class: Cabin
+    attr: Curent height
+    to: SIO
+    external class: Input Point
+    external attr: Value
+  state entry to event:
+    # Local entry into state causes event in external domain
+    - class: Accessible Shaft Level
+      state: Clear stop request
+      to: UI
+    - class: Door
+      state: OPENING
+      to: UI
+    - class: Door
+      state: OPEN
+      to: [UI, SIO]  # Can cause event in more than one external domain
+    - class: Door
+      state: CLOSING
+      to: [UI]
+    - class: Door
+      state: CLOSED
+      to: [UI, SIO]

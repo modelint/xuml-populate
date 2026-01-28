@@ -1,12 +1,12 @@
-Domains:
 External Entities:
+  # Specify each External Entity
   UI:
-    service domain: User Interface
-    external events: # Events explicitly directed at the UI External Entity
-      - name: Set destination
-        parameters:
-        - name: dest
-          type: Level Name
+    service domain: User Interface  # EE is a proxy for interaction with this Domain
+    external events: # Events explicitly directed at the External Entity
+      - name: Set destination  # Name of Event
+        parameters:  # Event parameters
+        - name: dest  # Parameter name
+          type: Level Name  # Parameter type
       - name: Clear floor request
         parameters:
           - name: bank
@@ -28,13 +28,13 @@ External Entities:
 
   TRANS:
     service domain: Transport
-# Below ext op for reference only since there are currently one in the elevator
-#    external operations:
-#      - name: Get eta
-#        parameters:
-#          - name: target
-#            type: Level Name
-#        type: Duration
+    # Below ext op for reference only since there are currently one in the elevator
+    #    external operations:
+    #      - name: Get eta
+    #        parameters:
+    #          - name: target
+    #            type: Level Name
+    #        type: Duration
     external events:
       - name: Stop at nearest floor
       - name: Go to floor
@@ -46,52 +46,3 @@ External Entities:
             name: Arrived at floor
           - state model: Cabin
             name: Transport unavailable
-
-Implicit:
-  UI:
-    external events:  # Asynchronous requests issued when bridgeable condition occurs
-      Clear stop request:
-        bridgeable conditions:
-          state entry:
-            lifecycle: Accessible Shaft Level
-            states:
-              - Clear stop request
-        # params:  (none required if the instance identifier is adequate, shaft + floor in this case)
-      Door opening:
-        bridgeable conditions:
-          state entry:
-            lifecycle: Door
-            states:
-              - OPENING
-      Door opened:
-        bridgeable conditions:
-          state entry:
-            lifecycle: Door
-            states:
-              - OPEN
-      Door closing:
-        bridgeable conditions:
-          state entry:
-            lifecycle: Door
-            states:
-              - CLOSING
-      Door closed:
-        bridgeable conditions:
-          state entry:
-            lifecycle: Door
-            states:
-              - CLOSED
-  SIO:
-    external events:
-      Open door:
-        bridgeable conditions:
-          state entry:
-            lifecycle: Door
-            states:
-              - OPENING
-      Close door:
-        bridgeable conditions:
-          state entry:
-            lifecycle: Door
-            states:
-              - CLOSING
