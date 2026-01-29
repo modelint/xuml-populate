@@ -129,7 +129,7 @@ class DelegatedCreationActivity:
                                             Domain=self.domain, Creation_activity=self.anum, Source_flow=ref,
                                             Local_flow=local_ref_flow.fid)
                 ])
-            rnum_refs.append(Flow_refs(rnum=rel, ref_flow1=refs[0], ref_flow2=None if len(refs) != 2 else refs[1]))
+            rnum_refs.append(Flow_refs(rnum=rel, ref_flow1=local_ref_flows[0], ref_flow2=None if len(refs) != 2 else local_ref_flows[1]))
         new_inst = New_delegated_inst(cname=self.class_name, attr_flows=local_attr_flows, ref_flows=rnum_refs)
 
         Transaction.execute(db=mmdb, name=tr_DelCreate)
