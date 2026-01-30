@@ -254,8 +254,7 @@ Delete_Action_i = namedtuple('Delete_Action_i', 'ID Activity Domain Flow')
 Explicit_Initialization_i = namedtuple('Explicit_Initialization_i', 'Create_action Activity Attribute Class Domain Initial_value_flow')
 Instance_Initialization_i = namedtuple('Instance_Initialization_i', 'Create_action Activity Class Domain')
 Local_Create_Action_i = namedtuple('Local_Create_Action_i', 'ID Activity Domain New_instance_flow')
-Reference_Initialization_i = namedtuple('Reference_Initialization_i', 'Create_action Activity Attribute Class Domain')
-Reference_Value_Input_i = namedtuple('Reference_Value_Input_i', 'Flow Activity Domain Create_action Attribute Class')
+Reference_Initialization_i = namedtuple('Reference_Initialization_i', 'Create_action Activity Attribute Class Domain Initial_value_flow')
 
 # Relational Action subsystem
 Cardinality_Action_i = namedtuple('Cardinality_Action_i', 'ID Activity Domain Non_scalar_input_flow Output_cardinality_flow')

@@ -24,7 +24,7 @@ from xuml_populate.exceptions.action_exceptions import *
 from xuml_populate.populate.mmclass_nt import (Create_Action_i, Instance_Initialization_i, Attribute_Initialization_i,
                                                Explicit_Initialization_i, Reference_Initialization_i,
                                                Default_Initialization_i, Local_Create_Action_i,
-                                               Reference_Value_Input_i, Instance_Action_i, Delegated_Create_Action_i)
+                                               Instance_Action_i, Delegated_Create_Action_i)
 
 if __debug__:
     from xuml_populate.utility import print_mmdb
@@ -158,11 +158,11 @@ class CreateAction:
             ])
 
         # Populate Referential Initializations
-        for r in ref_attr_names:
-            Relvar.insert(db=mmdb, tr=tr_Create, relvar='Reference Initialization', tuples=[
-                Reference_Initialization_i(Create_action=self.action_id, Attribute=r, Class=self.class_name,
-                                           Activity=self.anum, Domain=self.domain)
-            ])
+        # for r in ref_attr_names:
+        #     Relvar.insert(db=mmdb, tr=tr_Create, relvar='Reference Initialization', tuples=[
+        #         Reference_Initialization_i(Create_action=self.action_id, Attribute=r, Class=self.class_name,
+        #                                    Activity=self.anum, Domain=self.domain)
+        #     ])
 
         # Obtain initial_pseudo_state values for each non-referential attribute as follows:
         # --
@@ -248,7 +248,10 @@ class CreateAction:
                 _logger.error(msg2)
                 raise ActionException(msg2)
 
-
+        # Relvar.insert(db=mmdb, tr=tr_Create, relvar='Reference Initialization', tuples=[
+        #     Reference_Initialization_i(Create_action=self.action_id, Attribute=r, Class=self.class_name,
+        #                                Activity=self.anum, Domain=self.domain)
+        # ])
         # Now we need to obtain an input tuple flow for each linked relationship
         # So that all of the referential attributes can be initialized during model execution
         if self.is_delegated:
@@ -262,10 +265,10 @@ class CreateAction:
                     )
                     tuple_fid, ref_attr_names = ref_action.populate()
                     for n in ref_attr_names:
-                        Relvar.insert(db=mmdb, tr=tr_Create, relvar='Reference Value Input', tuples=[
-                            Reference_Value_Input_i(Flow=tuple_fid, Create_action=self.action_id, Attribute=n,
-                                                    Class=self.class_name,
-                                                    Activity=self.anum, Domain=self.domain,
+                        Relvar.insert(db=mmdb, tr=tr_Create, relvar='Reference Initialization', tuples=[
+                            Reference_Initialization_i(Create_action=self.action_id, Attribute=n, Class=self.class_name,
+                                                       Activity=self.anum, Domain=self.domain,
+                                                       Initial_value_flow=tuple_fid
                                                     )
                         ])
 
@@ -283,11 +286,11 @@ class CreateAction:
                     )
                     tuple_fid, ref_attr_names = ref_action.populate()
                     for n in ref_attr_names:
-                        Relvar.insert(db=mmdb, tr=tr_Create, relvar='Reference Value Input', tuples=[
-                            Reference_Value_Input_i(Flow=tuple_fid, Create_action=self.action_id, Attribute=n,
-                                                    Class=self.class_name,
-                                                    Activity=self.anum, Domain=self.domain,
-                                                    )
+                        Relvar.insert(db=mmdb, tr=tr_Create, relvar='Reference Initialization', tuples=[
+                            Reference_Initialization_i(Create_action=self.action_id, Attribute=n, Class=self.class_name,
+                                                       Activity=self.anum, Domain=self.domain,
+                                                       Initial_value_flow=tuple_fid
+                                                       )
                         ])
                 else:
                     pass
