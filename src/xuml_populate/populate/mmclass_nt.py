@@ -41,7 +41,6 @@ Subclass_Classification_Value_i = namedtuple('Subclass_Classification_Value_i', 
 Super_Identifier_i = namedtuple('Super_Identifier_i', 'Number Class Domain')
 
 # Reference Action subsystem
-From_Ref_Instance_i = namedtuple('From_Ref_Instance_i', 'Flow Activity Domain')
 New_Associative_Reference_Action_i = namedtuple('New_Associative_Reference_Action_i', 'ID Activity Domain T_instance P_instance')
 New_Reference_Action_i = namedtuple('New_Reference_Action_i', 'ID Activity Domain Create_action Ref_attr_values')
 New_Simple_Reference_Action_i = namedtuple('New_Simple_Reference_Action_i', 'ID Activity Domain Target_instance')

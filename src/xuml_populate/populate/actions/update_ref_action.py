@@ -23,7 +23,7 @@ from xuml_populate.populate.flow import Flow
 from xuml_populate.exceptions.action_exceptions import *
 from xuml_populate.populate.mmclass_nt import (
     Instance_Action_i, Reference_Action_i, Update_Reference_Action_i,
-    From_Ref_Instance_i, To_Ref_Instance_i, Referenced_Instance_i
+    To_Ref_Instance_i, Referenced_Instance_i
 )
 
 if __debug__:
@@ -90,16 +90,6 @@ class UpdateReferenceAction:
             )
         ])
 
-        Relvar.insert(db=mmdb, tr=tr_Update, relvar='Referenced Instance', tuples=[
-            Referenced_Instance_i(
-                Flow=from_ref_iflow.fid, Activity=self.anum, Domain=self.domain
-            )
-        ])
-        Relvar.insert(db=mmdb, tr=tr_Update, relvar='From Ref Instance', tuples=[
-            Referenced_Instance_i(
-                Flow=from_ref_iflow.fid, Activity=self.anum, Domain=self.domain
-            )
-        ])
         Relvar.insert(db=mmdb, tr=tr_Update, relvar='Referenced Instance', tuples=[
             Referenced_Instance_i(
                 Flow=to_ref_iflow.fid, Activity=self.anum, Domain=self.domain
