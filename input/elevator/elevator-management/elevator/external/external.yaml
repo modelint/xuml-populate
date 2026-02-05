@@ -21,7 +21,7 @@ External Entities:
             type: Shaft ID
           - name: direction
             type: Direction
-      - name: New destination
+      - name: Passing floor
         parameters:
           - name: floor
             type: Level Name

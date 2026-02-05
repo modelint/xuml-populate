@@ -2,8 +2,8 @@ metadata
     Title : Cabin State Machine Diagram
     Author : Leon Starr
     Document ID : mint.elevator3.td.6
-    Modification date : January 16, 2026
-    Version : 3.5.1
+    Modification date : February 5, 2026
+    Version : 3.5.2
     Organization : Model Integration, LLC
     Copyright notice > MIT
     Organization logo > mint
@@ -30,7 +30,7 @@ events
 state Update location( floor: Level Name )
 activity
     &R43 /R2/R28/Shaft Level(1, ^floor )
-    New destination( ^floor) -> ~UI
+    Passing floor( ^floor) -> ~UI
     Location updated -> me
 transitions
     Location updated > MOVING
