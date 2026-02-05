@@ -30,7 +30,7 @@ events
 state Update location( floor: Level Name )
 activity
     &R43 /R2/R28/Shaft Level(1, ^floor )
-    New location( ^floor) -> ~UI
+    New destination( ^floor) -> ~UI
     Location updated -> me
 transitions
     Location updated > MOVING
