@@ -88,6 +88,10 @@ class ScalarExpr:
             init_aids = {a for a in self.action_inputs.keys()}
             final_aids = {a for a in self.action_outputs.keys()}
 
+        # If there is only one boundary action on the output, it must also be the input action
+        if not init_aids and len(final_aids) == 1:
+            init_aids = final_aids
+
         return Boundary_Actions(ain=init_aids, aout=final_aids), expr_sflows
 
     def resolve_iset(self, iset: INST_a, op_chain: Op_chain_a = None, projection: Projection_a = None) -> list[Flow_ap]:
