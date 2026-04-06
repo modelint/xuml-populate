@@ -142,8 +142,9 @@ class ScalarExpr:
         match sexpr_type:
             case 'str':  # TRUE or FALSE string
                 # we are assigining either true or false to the lhs, component flow will be scalar
+                # The user may have supplied True/TRUE/true False/FALSE/false so we conver to all uppercase
                 svalue_output = Flow.populate_scalar_flow(scalar_type="Boolean", anum=self.anum, domain=self.domain,
-                                                          value=sexpr, label=None)
+                                                          value=sexpr.upper(), label=None)
                 return [svalue_output]
             case 'INST_PROJ_a':
                 action_input = self.component_flow
