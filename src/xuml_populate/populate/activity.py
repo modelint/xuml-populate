@@ -16,10 +16,8 @@ from pyral.rtypes import JoinCmd, ProjectCmd, SetCompareCmd, SetOp, Attribute, S
 from scrall.parse.parser import ScrallParser
 
 # xUML Populate
-from xuml_populate.utility import print_mmdb
-from xuml_populate.populate.actions.aparse_types import SMType, Method_Output_Type
+from xuml_populate.populate.signature import Signature
 from xuml_populate.exceptions.action_exceptions import *
-from xuml_populate.utility import print_mmdb
 from xuml_populate.populate.actions.sequence_flow import SequenceFlow
 from xuml_populate.populate.xunit import ExecutionUnit
 from xuml_populate.populate.mmclass_nt import Flow_Dependency_i, Delegated_Creation_Activity_i, Real_State_Activity_i
@@ -27,11 +25,16 @@ from xuml_populate.config import mmdb
 from xuml_populate.populate.flow import Flow, Flow_ap
 from xuml_populate.populate.actions.action import Action
 from xuml_populate.populate.element import Element
-from xuml_populate.populate.actions.aparse_types import (ActivityAP, SMType, ActivityType, Boundary_Actions)
-from xuml_populate.populate.mmclass_nt import (Activity_i, State_Activity_i, Lifecycle_Activity_i,
-                                               Multiple_Assigner_Activity_i, Single_Assigner_Activity_i,
-                                               Synchronous_Output_i, Flow_Connector_i, Pass_Action_i,
-                                               Instance_Action_i, Gate_Action_i, Gate_Input_i, Real_State_Activity_i)
+from xuml_populate.populate.actions.aparse_types import (ActivityAP, SMType, ActivityType, Boundary_Actions,
+                                                         SMType, Method_Output_Type)
+from xuml_populate.populate.mmclass_nt import (
+    Activity_i, State_Activity_i, Lifecycle_Activity_i, Multiple_Assigner_Activity_i, Single_Assigner_Activity_i,
+    Synchronous_Output_i, Flow_Connector_i, Pass_Action_i, Instance_Action_i, Gate_Action_i, Gate_Input_i,
+    Real_State_Activity_i, Creation_Signature_i
+)
+
+if __debug__:
+    from xuml_populate.utility import print_mmdb
 
 _logger = logging.getLogger(__name__)
 
@@ -438,8 +441,13 @@ class Activity:
             State_Activity_i(Anum=Anum, Domain=domain)
         ])
         if initial_pseudo_state:
+            # Insert the Creation Signature
+            creation_signum = Signature.populate(tr=tr, domain=domain)
+            Relvar.insert(db=mmdb, tr=tr, relvar='Creation Signature', tuples=[
+                Creation_Signature_i(SIGnum=creation_signum, Domain=domain)
+            ])
             Relvar.insert(db=mmdb, tr=tr, relvar='Delegated Creation Activity', tuples=[
-                Delegated_Creation_Activity_i(Anum=Anum, Domain=domain)
+                Delegated_Creation_Activity_i(Anum=Anum, Domain=domain, Signature=creation_signum)
             ])
         else:
             Relvar.insert(db=mmdb, tr=tr, relvar='Real State Activity', tuples=[
