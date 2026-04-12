@@ -66,6 +66,8 @@ class DelegatedCreationActivity:
         self.activity: str = ""
 
         self.populate()
+        self.activity.pop_flow_dependencies()
+        pass
 
     def populate(self):
         """

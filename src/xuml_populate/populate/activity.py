@@ -66,6 +66,11 @@ class UsageAttrs(NamedTuple):
 # out_attr - The name of a required output attr, again a Flow ID type
 
 flow_attrs = [
+    UsageAttrs(cname='Reference Initialization', id_attr='Create_action', in_attr='Initial_value_flow', out_attr=None),
+    UsageAttrs(cname='Local Create Action', id_attr='ID', in_attr=None, out_attr='New_instance_flow'),
+    UsageAttrs(cname='New Reference Action', id_attr='ID', in_attr=None, out_attr='Ref_attr_values'),
+    UsageAttrs(cname='New Associative Reference Action', id_attr='ID', in_attr='T_instance', in_attr2='P_instance',
+               out_attr=None),
     UsageAttrs(cname='Iterated Instance Flow', id_attr='Iterator', in_attr=None, out_attr='Flow'),
     UsageAttrs(cname='Iterator', id_attr='ID', in_attr='Input_flow', out_attr=None),
     UsageAttrs(cname='Extender', id_attr='ID', in_attr='Attribute_flow', out_attr='Table_output'),
@@ -87,11 +92,7 @@ flow_attrs = [
     UsageAttrs(cname='Decision Action', id_attr='ID', in_attr='Boolean_input', out_attr=None),
     UsageAttrs(cname='Result', id_attr='Decision_action', in_attr=None, out_attr='Flow'),
     UsageAttrs(cname='Explicit Initialization', id_attr='Create_action', in_attr='Initial_value_flow', out_attr=None),
-    UsageAttrs(cname='Reference Initialization', id_attr='Create_action', in_attr='Initial_value_flow', out_attr=None),
     UsageAttrs(cname='Local Create Action', id_attr='ID', in_attr=None, out_attr='New_instance_flow'),
-    UsageAttrs(cname='New Reference Action', id_attr='ID', in_attr=None, out_attr='Ref_attr_values'),
-    UsageAttrs(cname='New Associative Reference Action', id_attr='ID', in_attr='T_instance', in_attr2='P_instance',
-               out_attr=None),
     UsageAttrs(cname='Multiple Assigner Partition Instance', id_attr='Action', in_attr='Partition', out_attr=None),
     UsageAttrs(cname='Signal Instance Action', id_attr='ID', in_attr='Instance_flow', out_attr=None),
     UsageAttrs(cname='Write Action', id_attr='ID', in_attr='Instance_flow', out_attr=None),
@@ -197,9 +198,6 @@ class Activity:
         self.seq_flows: dict[str, set[str]] = {}
         # seq_token: output_action_ids
         self.seq_tokens: dict[str, set[str]] = {}
-
-        self.wave_ctr = 1  # Initialize wave counter
-        self.waves: dict[int, list[str]] = {}
 
     def pop_actions(self):
         """
@@ -598,8 +596,7 @@ class Activity:
                     if output_flow in self.flow_path[output_flow]['source']:
                         pass  # Source added previously
                     self.flow_path[output_flow]['source'].add(flow_usage[flow_header.id_attr])
-
-        # Mark all flows in Activity that are available in the first wave of execution
+        pass
 
         # The single executing instance flow is available
         if self.xiflow:
@@ -635,7 +632,8 @@ class Activity:
                 continue
             for source_action in p['source']:
                 for dest_action in p['dest']:
-                    Relvar.insert(db=mmdb, relvar='Flow_Dependency', tuples=[
+                    Relvar.insert(db=mmdb, relvar='Flow Dependency', tuples=[
                         Flow_Dependency_i(From_action=source_action, To_action=dest_action,
                                           Activity=self.anum, Domain=self.domain, Flow=f)
                     ])
+        pass
