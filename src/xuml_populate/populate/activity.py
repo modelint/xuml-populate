@@ -66,6 +66,7 @@ class UsageAttrs(NamedTuple):
 # out_attr - The name of a required output attr, again a Flow ID type
 
 flow_attrs = [
+    UsageAttrs(cname='External Signal Parameter', id_attr='Signal_action', in_attr='Flow', out_attr=None),
     UsageAttrs(cname='Reference Initialization', id_attr='Create_action', in_attr='Initial_value_flow', out_attr=None),
     UsageAttrs(cname='Local Create Action', id_attr='ID', in_attr=None, out_attr='New_instance_flow'),
     UsageAttrs(cname='New Reference Action', id_attr='ID', in_attr=None, out_attr='Ref_attr_values'),
