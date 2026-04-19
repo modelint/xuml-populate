@@ -112,7 +112,8 @@ class SignalAction:
         Transaction.open(db=mmdb, name=tr_Signal)
 
         # Populate the Action superclass instance and obtain its action_id
-        self.action_id = Action.populate(tr=tr_Signal, anum=self.anum, domain=self.domain, action_type="signal")
+        action_type = "signal" if not self.external_dest else "ext signal"  # Ext signal is a distinct action type
+        self.action_id = Action.populate(tr=tr_Signal, anum=self.anum, domain=self.domain, action_type=action_type)
 
         self.populate_subclass()
 
