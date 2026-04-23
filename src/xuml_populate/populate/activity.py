@@ -51,8 +51,8 @@ slogger.propagate = False
 class UsageAttrs(NamedTuple):
     cname: str
     id_attr: str | None
-    in_attr: str | None
-    out_attr: str | None
+    in_attr: str | None = None
+    out_attr: str | None = None
     in_attr2: str | None = None  # New Associative Reference Action for example
 
 # We use the following list of tuples to extract the required input and output flows of each Action type
@@ -70,6 +70,7 @@ flow_attrs = [
     UsageAttrs(cname='Reference Initialization', id_attr='Create_action', in_attr='Initial_value_flow', out_attr=None),
     UsageAttrs(cname='Local Create Action', id_attr='ID', in_attr=None, out_attr='New_instance_flow'),
     UsageAttrs(cname='New Reference Action', id_attr='ID', in_attr=None, out_attr='Ref_attr_values'),
+    UsageAttrs(cname='Update Reference Action', id_attr='ID', in_attr='From_instance', in_attr2='To_instance'),
     UsageAttrs(cname='New Associative Reference Action', id_attr='ID', in_attr='T_instance', in_attr2='P_instance',
                out_attr=None),
     UsageAttrs(cname='Iterated Instance Flow', id_attr='Iterator', in_attr=None, out_attr='Flow'),
