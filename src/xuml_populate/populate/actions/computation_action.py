@@ -121,6 +121,7 @@ class ComputationAction:
                 if op == 'NOT':
                     match type(comp_expr.operands).__name__:
                         case 'INST_PROJ_a':
+                            sub_expr = f"{sub_expr} {op.lower()}"
                             se = ScalarExpr(expr=comp_expr.operands, input_instance_flow=self.input_instance_flow,
                                             activity=self.activity)
                             b, sflows = se.process()
