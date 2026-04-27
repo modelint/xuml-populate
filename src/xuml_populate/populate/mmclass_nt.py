@@ -153,6 +153,7 @@ System_i = namedtuple('System_i', 'Name')
 Identifier_Select_i = namedtuple('Identifier_Select_i', 'ID Activity Domain Identifier Class')
 Many_Select_i = namedtuple('Many_Select_i', 'ID Activity Domain Output_flow')
 Select_Action_i = namedtuple('Select_Action_i', 'ID Activity Domain Input_flow')
+Select_None_i = namedtuple('Select_None_i', 'ID Activity Domain')
 Single_Select_i = namedtuple('Single_Select_i', 'ID Activity Domain Output_flow')
 Zero_One_Cardinality_Select_i = namedtuple('Zero_One_Cardinality_Select_i', 'ID Activity Domain')
 

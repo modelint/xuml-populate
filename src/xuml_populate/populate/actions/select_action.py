@@ -21,7 +21,7 @@ from xuml_populate.exceptions.action_exceptions import *
 from xuml_populate.populate.actions.expressions.restriction_condition import RestrictCondition
 from xuml_populate.populate.mmclass_nt import (Select_Action_i, Single_Select_i, Identifier_Select_i,
                                                Zero_One_Cardinality_Select_i, Many_Select_i,
-                                               Class_Restriction_Condition_i, Instance_Action_i)
+                                               Class_Restriction_Condition_i, Instance_Action_i, Select_None_i)
 _logger = logging.getLogger(__name__)
 
 if __debug__:
@@ -245,7 +245,7 @@ class SelectAction:
         """
         # Determine if this should be an Identifier Select subclass that yields at most one instance
         selection_idnum = self.identifier_selection() if self.selection_parse.criteria else 0
-        if selection_idnum or self.selection_cardinality == 'ONE':
+        if selection_idnum or self.selection_cardinality in {'ONE', 'ZERO'}:
             max_mult = MaxMult.ONE
             # Populate a single instance flow for the selection output
             output_instance_flow = Flow.populate_instance_flow(
@@ -256,20 +256,24 @@ class SelectAction:
                          f"{self.input_instance_flow.tname}:{self.activity.activity_path.split(':')[-1]}"
                          f":{output_instance_flow}]")
             # Populate the Single Select subclass
-            Relvar.insert(db=mmdb, tr=tr_Select, relvar='Single_Select', tuples=[
+            Relvar.insert(db=mmdb, tr=tr_Select, relvar='Single Select', tuples=[
                 Single_Select_i(ID=self.action_id, Activity=self.anum, Domain=self.domain,
                                 Output_flow=output_instance_flow.fid)
             ])
             if selection_idnum:
                 # Populate an Identifier Select subclass
-                Relvar.insert(db=mmdb, tr=tr_Select, relvar='Identifier_Select', tuples=[
+                Relvar.insert(db=mmdb, tr=tr_Select, relvar='Identifier Select', tuples=[
                     Identifier_Select_i(ID=self.action_id, Activity=self.anum, Domain=self.domain,
                                         Identifier=selection_idnum, Class=self.input_instance_flow.tname)
                 ])
+            elif self.selection_cardinality == 'ZERO':
+                # Populate the Select None subclass
+                Relvar.insert(db=mmdb, tr=tr_Select, relvar='Select None', tuples=[
+                    Select_None_i(ID=self.action_id, Activity=self.anum, Domain=self.domain)
+                ])
             else:
-                # Populate an Identifier Select subclass
                 # Note that if both ONE cardinality specified and identifier select, identifier select takes precedence
-                Relvar.insert(db=mmdb, tr=tr_Select, relvar='Zero_One_Cardinality_Select', tuples=[
+                Relvar.insert(db=mmdb, tr=tr_Select, relvar='Zero One Cardinality Select', tuples=[
                     Zero_One_Cardinality_Select_i(ID=self.action_id, Activity=self.anum, Domain=self.domain)
                 ])
         else:
@@ -283,7 +287,7 @@ class SelectAction:
                          f"{self.input_instance_flow.tname}:{self.activity.activity_path.split(':')[-1]}"
                          f":{output_instance_flow}]")
             # Populate the Many Select subclass
-            Relvar.insert(db=mmdb, tr=tr_Select, relvar='Many_Select', tuples=[
+            Relvar.insert(db=mmdb, tr=tr_Select, relvar='Many Select', tuples=[
                 Many_Select_i(ID=self.action_id, Activity=self.anum, Domain=self.domain,
                               Output_flow=output_instance_flow.fid)
             ])
