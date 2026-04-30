@@ -54,6 +54,7 @@ class Domain:
         self.parse_actions = parse_actions
         self.methods: dict[str, Method] = {}  # Methods keyed by activity number
         self.state_models = []
+        self.unpopulated_ees = {}  # EEs encountered in the external yaml file, but without any explicit ops/services
 
         _logger.info(f"Transaction open: domain and subsystems [{domain}]")
         Transaction.open(db=mmdb, name=tr_Modeled_Domain)
@@ -128,28 +129,47 @@ class Domain:
             for anum, m in self.methods.items()
         }
 
-        # Populate all external entities and services
-        for ee, services in content['external']['External Entities'].items():
-
-            if not services:
-                # EE doesn't serve any function, so we skip it
-                # We should probably log it as a warning as well
-                msg = f"No services defined in external file for EE: {ee} in domain: {self.name}"
-                _logger.error(msg)
-                raise KeyError(msg)
+        # Populate all external entities, explicit external services
+        for ee, ee_info in content['external']['External Entities'].items():
 
             first_service = True
-            events = services.get('external events', [])
-            ops = services.get('external operations', [])
-            service_domain = services.get('service domain')
+            events = ee_info.get('external events', [])
+            ops = ee_info.get('external operations', [])
+            if not events and not ops:
+                # This External Entity appears to have no services and cannot be populated now
+                # However, it may yet offer implicit services such as state entry implicit external events
+                # So we will retain the ee info, but will wait for implicit event/op processing before attempting
+                # to populate it
+                # If there is no implicit usage, the External Entity will not be populated
+                self.unpopulated_ees[ee] = ee_info['service domain']
+                continue
+            service_domain = ee_info.get('service domain')
             # Open a new EE transaction and insert the EE instance
             EE.populate(name=ee, domain=self.name, service_domain=service_domain)
             for op in ops:
-                ExternalOperation.populate(ee=ee, domain=self.name, parse=op, ee_populated=not first_service)
+                # TODO: Populate explicit/implicit external operations
+                ExternalOperation.populate(ee=ee, domain=self.name, parse=op,
+                                           ee_tr=EE.tr if first_service else None)
                 first_service = False
             for e in events:
-                ExternalEvent.populate(ee=ee, domain=self.name, parse=e, ee_populated=not first_service)
+                ExternalEvent.populate_explicit(ee=ee, domain=self.name, ev_name=e['name'],
+                                                params=e.get('parameters', {}),
+                                                responses = e.get('responses', []),
+                                                ee_tr=EE.tr if first_service else None)
                 first_service = False
+
+        # If the marking file specified any implicit external events to be triggered by
+        # entry into certain states, we organize that data into a dictionary that we can reference
+        # when we enter any of the implicitly mapped states
+        implicit_state_entry_events = {}
+        if state_entry_marks := content.get('mark', {}).get('Implicit', {}).get('state entry to event'):
+            for item in state_entry_marks:
+                ees = item['to']
+                if isinstance(ees, str):
+                    ees = [ees]
+                ExternalEvent.populate_implicit_state_entry_ext_event(ees=ees, state_name=item['state'], class_name=item['class'],
+                                                                      domain=self.name, unpopulated_ees=self.unpopulated_ees)
+
 
         # First pass: Method action population
         # Here we populate everything except the Method Call Action parameter inputs

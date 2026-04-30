@@ -3,46 +3,34 @@ External Entities:
   UI:
     service domain: User Interface  # EE is a proxy for interaction with this Domain
     external events: # Events explicitly directed at the External Entity
-      - name: Set destination  # Name of Event
-        parameters:  # Event parameters
-        - name: dest  # Parameter name
-          type: Level Name  # Parameter type
+      - name: Set destination
+        parameters:
+          dest: Level Name
       - name: Clear floor request
         parameters:
-          - name: bank
-            type: Bank Name
-          - name: floor
-            type: Level Name
-          - name: dir
-            type: Direction
+          bank: Bank Name
+          floor: Level Name
+          dir: Direction
       - name: Cabin arrived
         parameters:
-          - name: shaft
-            type: Shaft ID
-          - name: direction
-            type: Direction
+          shaft: Shaft ID
+          direction: Direction
       - name: Passing floor
         parameters:
-          - name: floor
-            type: Level Name
+          floor: Level Name
 
   TRANS:
     service domain: Transport
-    # Below ext op for reference only since there are currently one in the elevator
-    #    external operations:
-    #      - name: Get eta
-    #        parameters:
-    #          - name: target
-    #            type: Level Name
-    #        type: Duration
     external events:
       - name: Stop at nearest floor
       - name: Go to floor
         parameters:
-          - name: dest floor
-            type: Level Name
+          dest floor: Level Name
         responses:
           - state model: Cabin
             name: Arrived at floor
           - state model: Cabin
             name: Transport unavailable
+  SIO:
+    service domain: Signal IO
+    # All interactions are implicit

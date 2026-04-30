@@ -24,6 +24,7 @@ if __debug__:
 
 _mmdb_fname = f"{mmdb}.ral"
 _external_fname = "external.yaml"
+_mark_fname = "mark.yaml"
 _system_fname = "system.yaml"
 
 
@@ -141,9 +142,14 @@ class System:
                 # Load and parse the external services
                 ext_path = subsys_path / "external"
                 if ext_path.is_dir():
+                    # Load external event/operation data
                     with open(ext_path/_external_fname, 'r') as file:
                         edata = yaml.safe_load(file)
                     self.content[domain_name]['external'] = edata
+                    # Load any marking
+                    with open(ext_path/_mark_fname, 'r') as file:
+                        mdata = yaml.safe_load(file)
+                    self.content[domain_name]['mark'] = mdata
                 else:
                     _logger.info("No external dir")
 

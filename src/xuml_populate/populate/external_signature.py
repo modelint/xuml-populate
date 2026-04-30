@@ -29,7 +29,7 @@ class ExternalSignature:
     """
 
     @classmethod
-    def populate(cls, tr: str, params: list[dict[str, str]], domain: str) -> str:
+    def populate(cls, tr: str, params: dict[str, str], domain: str) -> str:
         """
         Populate an External Signature instance in the current traansaction
 
@@ -45,12 +45,12 @@ class ExternalSignature:
         Relvar.insert(db=mmdb, tr=tr, relvar='External Signature', tuples=[
             External_Signature_i(SIGnum=signum, Domain=domain)
         ])
-        for p in params:
+        for pname, ptype in params.items():
             # TODO: Consider supporting table type output (not classes)
             # Populate the type if it is not already populated
-            MMtype.populate_scalar(name=p['type'], domain=domain)
+            MMtype.populate_scalar(name=ptype, domain=domain)
             # Populate the Parameter
             Relvar.insert(db=mmdb, tr=tr, relvar='Parameter', tuples=[
-                Parameter_i(Name=p['name'], Signature=signum, Domain=domain, Type=p['type'])
+                Parameter_i(Name=pname, Signature=signum, Domain=domain, Type=ptype)
             ])
         return signum

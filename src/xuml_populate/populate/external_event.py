@@ -8,6 +8,7 @@ import logging
 # Model Integration
 from pyral.transaction import Transaction
 from pyral.relvar import Relvar
+from pyral.relation import Relation
 
 # xUML Populate
 from xuml_populate.config import mmdb
@@ -33,39 +34,53 @@ class ExternalEvent:
     Populate an External Event
     """
     @classmethod
-    def populate(cls, ee: str, domain: str, parse: dict[str, dict], ee_populated: bool):
+    def populate_implicit_state_entry_ext_event(cls, ees: list[str], state_name: str, class_name: str, domain: str,
+                                                unpopulated_ees: dict[str, str]):
         """
-        Populate an External Event
+        Populate implicit state entry external events
 
         Args:
-            ee: Name of the EE
-            domain: Name of the domain
-            parse: Event dictionary obtained from parse of external services file
-            ee_populated: True if this service's EE has been populate
+            ees: One or more implicit ext event target EEs
+            state_name: Name of the state to be entered
+            class_name: State of this class (state must be in a lifecycle state model)
+            domain: Defined in this domain
+            unpopulated_ees:  Any ees that were defined in the external yaml, but not populated yet
         """
-        if ee_populated:
-            # EE is already populated, so we start a new transaction for this service
-            tr = 'External Event'
-            Transaction.open(db=mmdb, name=tr)
-        else:
-            # EE requires at least one service and it has not yet been populated, so we use the open EE transaction
-            tr = EE.tr
+        # Verify that each EE is populated
+        for ee in ees:
+            pass
+            # Generate an event name based on the state name
+            # Generate the event specification
+            if ee in unpopulated_ees:
+                # Open a new EE transaction and insert the EE instance
+                EE.populate(name=ee, domain=domain, service_domain=unpopulated_ees[ee])
+                tr = EE.tr
+                del unpopulated_ees[ee]  # It will no longer be unpopulated
+            else:
+                # EE is already populated, so we start a new transaction for this service
+                tr = 'External Event'
+                Transaction.open(db=mmdb, name=tr)
 
+            cls.populate(ee=ee, domain=domain, ev_name=state_name, params={}, responses=[], tr=tr)
+            pass
+
+
+    @classmethod
+    def populate(cls, ee: str, domain: str, ev_name: str, params: dict[str, str],
+                 responses: list[dict[str, str]], tr: str):
+        pass
         # Populate External Event
-        ev_name = parse["name"]
         Relvar.insert(db=mmdb, tr=tr, relvar='External Event', tuples=[
             External_Event_i(Name=ev_name, EE=ee, Domain=domain)
         ])
 
         # Populate the External Signature
-        event_params = parse.get('parameters', [])
-        signum = ExternalSignature.populate(tr=tr, params=event_params, domain=domain)
+        signum = ExternalSignature.populate(tr=tr, params=params, domain=domain)
         Relvar.insert(db=mmdb, tr=tr, relvar='External Service', tuples=[
             External_Service_i(Name=ev_name, Signature=signum, Domain=domain, EE=ee)
         ])
 
         # Populate all Service Responses
-        responses = parse.get('responses', [])
         for r in responses:
             Relvar.insert(db=mmdb, tr=tr, relvar='Service Response', tuples=[
                 Service_Response_i(External_event=ev_name, Response_event=r["name"], State_model=r["state model"],
@@ -73,3 +88,27 @@ class ExternalEvent:
             ])
 
         Transaction.execute(db=mmdb, name=tr)
+
+    @classmethod
+    def populate_explicit(cls, ee: str, domain: str, ev_name: str, params: dict[str, str],
+                          responses: list[dict[str, str]], ee_tr: str | None):
+        """
+        Populate an External Event
+
+        Args:
+            ee: Name of the EE
+            domain: Name of the domain
+            ev_name: name of the external event
+            params: dictionary of parameter / type names
+            responses: Optional list of class / event spec names
+            ee_tr: Open EE transaction if we are populating previously undefined EE
+        """
+        if not ee_tr:
+            # EE is already populated, so we start a new transaction for this service
+            tr = 'External Event'
+            Transaction.open(db=mmdb, name=tr)
+        else:
+            # We are populating the EE as well, so just use its already open tr
+            tr = ee_tr
+
+        cls.populate(ee=ee, ev_name=ev_name, params=params, responses=responses, domain=domain, tr=tr)

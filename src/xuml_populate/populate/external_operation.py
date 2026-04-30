@@ -32,7 +32,7 @@ class ExternalOperation:
     Create an operation relation
     """
     @classmethod
-    def populate(cls, ee: str, domain: str, parse: dict[str, dict], ee_populated: bool):
+    def populate(cls, ee: str, domain: str, parse: dict[str, dict], ee_tr: str):
         """
         Populate an External Operation
 
@@ -40,15 +40,15 @@ class ExternalOperation:
             ee: Name of the EE
             domain: Name of the domain
             parse: Dictionary obtained from parse of external services file
-            ee_populated: True if this service's EE has been populate
+            ee_tr: Open EE transaction if we are populating previously undefined EE
         """
-        if ee_populated:
+        if not ee_tr:
             # EE is already populated, so we start a new transaction for this service
             tr = 'External Operation'
             Transaction.open(db=mmdb, name=tr)
         else:
             # EE requires at least one service and it has not yet been populated, so we use the open EE transaction
-            tr = EE.tr
+            tr = ee_tr
 
             # Populate the External Operation
             op_name = parse["name"]

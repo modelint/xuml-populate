@@ -12,6 +12,7 @@ Implicit:
     - class: Accessible Shaft Level
       state: Clear stop request
       to: UI
+      # responses:  You can insert a list of expected responses also
     - class: Door
       state: OPENING
       to: UI
