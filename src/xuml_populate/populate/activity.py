@@ -96,6 +96,7 @@ flow_attrs = [
     UsageAttrs(cname='Explicit Initialization', id_attr='Create_action', in_attr='Initial_value_flow', out_attr=None),
     UsageAttrs(cname='Local Create Action', id_attr='ID', in_attr=None, out_attr='New_instance_flow'),
     UsageAttrs(cname='Multiple Assigner Partition Instance', id_attr='Action', in_attr='Partition', out_attr=None),
+    UsageAttrs(cname='Delivery Time', id_attr='Action', in_attr='Flow', out_attr=None),
     UsageAttrs(cname='Signal Instance Action', id_attr='ID', in_attr='Instance_flow', out_attr=None),
     UsageAttrs(cname='Write Action', id_attr='ID', in_attr='Instance_flow', out_attr=None),
     UsageAttrs(cname='Attribute Write Access', id_attr='Write_action', in_attr='Input_flow', out_attr=None),
