@@ -2,8 +2,8 @@ metadata
     Title : Door State Machine
     Author : Leon Starr
     Document ID : mint.elevator3.td.7
-    Modification date : October 4, 2025
-    Version : 3.4.3
+    Modification date : April 30, 2026
+    Version : 3.4.4
     Organization : Model Integration, LLC
     Copyright notice > MIT
     Organization logo > mint
@@ -31,7 +31,7 @@ transitions
 --
 state OPEN
 activity
-    my Bank .= /R4/R2/Bank
+    my Bank .= /R4/R2/R1/Bank
     Blocked? delay = my Bank.Block clear time :
         delay = my Bank.Passenger load time
     Time to close -> me @delay
