@@ -33,6 +33,8 @@ class ExternalEvent:
     """
     Populate an External Event
     """
+    implicit_state_entry = {}
+
     @classmethod
     def populate_implicit_state_entry_ext_event(cls, ees: list[str], state_name: str, class_name: str, domain: str,
                                                 unpopulated_ees: dict[str, str]):
@@ -61,9 +63,17 @@ class ExternalEvent:
                 tr = 'External Event'
                 Transaction.open(db=mmdb, name=tr)
 
-            cls.populate(ee=ee, domain=domain, ev_name=state_name, params={}, responses=[], tr=tr)
-            pass
+            # To make the generated event names look reasonable, we start with the class name in title case
+            # as it normally is, and then drop the state name to an initial cap on the first word
+            # Door opening or Accessible Shaft Level clear stop request, for example
+            event_name = f"{class_name} {state_name.lower()}"
 
+            # Associate the lifecycle state with the implicit event so that we can
+            # look for it when populating the state activity
+            cls.implicit_state_entry.setdefault(class_name, {})[state_name] = event_name
+
+            cls.populate(ee=ee, domain=domain, ev_name=event_name, params={}, responses=[], tr=tr)
+        pass
 
     @classmethod
     def populate(cls, ee: str, domain: str, ev_name: str, params: dict[str, str],

@@ -206,8 +206,52 @@ class Activity:
         Populate all actions for this Activity
         """
         self.pop_xunits()
+        if self.atype == ActivityType.STATE and self.smtype == SMType.LIFECYCLE:
+            self.check_implicit_state_entry_event()
         if self.atype == ActivityType.METHOD:
             self.resolve_method_outputs()  # Ensure that each method with an output has only one
+
+    def check_implicit_state_entry_event(self):
+        from xuml_populate.populate.external_event import ExternalEvent
+        if self.state_model in ExternalEvent.implicit_state_entry and self.state_name in ExternalEvent.implicit_state_entry[self.state_model]:
+            ext_event = ExternalEvent.implicit_state_entry[self.state_model][self.state_name]
+            from xuml_populate.populate.actions.signal_action import SignalAction
+            self.populate_implicit_external_signal_action(event_name=ext_event)
+            pass
+
+    def populate_implicit_external_signal_action(self, event_name: str):
+        """
+        Populate an implicit External Event
+        """
+        from xuml_populate.populate.mmclass_nt import External_Signal_Action_i
+        # Find the implicit external event
+        R = f"Name:<{event_name}>, Domain:<{self.domain}>"
+        external_event_r = Relation.restrict(db=mmdb, relation="External Event", restriction=R)
+        if not external_event_r.body:
+            msg = f"Implicit external Event {self.domain}::{event_name} not defined in: {self.activity_path}"
+            _logger.error(msg)
+            raise ActionException(msg)
+
+        tr_Implicit = 'Implicit'
+        for t in external_event_r.body:
+            ee = t['EE']
+
+            # TODO: Parameters not yet supported for implicit state entry events
+            Transaction.open(db=mmdb, name=tr_Implicit)
+
+            # Populate the Action superclass instance and obtain its action_id
+            action_id = Action.populate(tr=tr_Implicit, anum=self.anum, domain=self.domain, action_type="ext signal")
+
+            Relvar.insert(db=mmdb, tr=tr_Implicit, relvar='Instance Action', tuples=[
+                Instance_Action_i(ID=action_id, Activity=self.anum, Domain=self.domain)
+            ])
+            Relvar.insert(db=mmdb, tr=tr_Implicit, relvar='External Signal Action', tuples=[
+                External_Signal_Action_i(ID=action_id, Activity=self.anum, Domain=self.domain,
+                                         External_event=event_name, EE=ee)
+            ])
+
+            Transaction.execute(db=mmdb, name=tr_Implicit)
+        pass
 
     def prep_for_execution(self):
         """

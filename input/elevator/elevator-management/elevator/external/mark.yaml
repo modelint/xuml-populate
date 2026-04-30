@@ -15,13 +15,13 @@ Implicit:
       # responses:  You can insert a list of expected responses also
     - class: Door
       state: OPENING
-      to: UI
-    - class: Door
-      state: OPEN
       to: [UI, SIO]  # Can cause event in more than one external domain
     - class: Door
+      state: OPEN
+      to: UI
+    - class: Door
       state: CLOSING
-      to: [UI]
+      to: [UI, SIO]
     - class: Door
       state: CLOSED
-      to: [UI, SIO]
+      to: UI
