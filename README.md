@@ -10,6 +10,13 @@ states and transitions, actions and all other model components.
 
 Here we support the Shlaer-Mellor variant of Executable UML exclusively.
 
+## Environment Setup
+
+* Install the [xcm-parser](https://github.com/modelint/xcm-parser) module 
+* Install pyyaml ```pip install pyyaml```
+* From the root directory install the project ```pip install -e .```
+
+
 ## Command usage
 
 `% modeldb -s elevator-case-study`
