@@ -153,7 +153,7 @@ class Lineage:
         Relation.restrict(mmdb, relation='Subclass', restriction=f"Rnum:<{grel}>, Domain:<{cls.domain}>")
         s = Relation.project(mmdb, attributes=('Class', ))
 
-        return {t['Class'] for t in s}
+        return {t['Class'] for t in s.body}
 
     @classmethod
     def isSubclass(cls, grel: str, cname: str) -> bool:

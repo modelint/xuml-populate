@@ -130,7 +130,7 @@ class Domain:
         }
 
         # Populate all external entities, explicit external services
-        for ee, ee_info in content['external']['External Entities'].items():
+        for ee, ee_info in content.get('external', {}).get('External Entities', {}).items():
 
             first_service = True
             events = ee_info.get('external events', [])
