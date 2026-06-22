@@ -101,7 +101,7 @@ class MMclass:
         ])
         if cls.alias:
             Relvar.insert(db=mmdb, tr=_tr_Class, relvar='Alias', tuples=[
-                Alias_i(Name=cls.name, Class=cls.name, Domain=domain)
+                Alias_i(Name=cls.alias, Class=cls.name, Domain=domain)
             ])
 
         # Populate the attributes
