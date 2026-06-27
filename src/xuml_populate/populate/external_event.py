@@ -36,7 +36,7 @@ class ExternalEvent:
     implicit_state_entry = {}
 
     @classmethod
-    def populate_implicit_state_entry_ext_event(cls, ees: list[str], state_name: str, class_name: str, domain: str,
+    def populate_implicit_state_entry_ext_event(cls, ees: list[str], state_name: str, event_name: str, class_name: str, domain: str,
                                                 unpopulated_ees: dict[str, str]):
         """
         Populate implicit state entry external events
@@ -66,7 +66,7 @@ class ExternalEvent:
             # To make the generated event names look reasonable, we start with the class name in title case
             # as it normally is, and then drop the state name to an initial cap on the first word
             # Door opening or Accessible Shaft Level clear stop request, for example
-            event_name = f"{class_name} {state_name.lower()}"
+            # event_name = f"{class_name} {state_name.lower()}"
 
             # Associate the lifecycle state with the implicit event so that we can
             # look for it when populating the state activity

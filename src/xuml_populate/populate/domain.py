@@ -167,8 +167,10 @@ class Domain:
                 ees = item['to']
                 if isinstance(ees, str):
                     ees = [ees]
-                ExternalEvent.populate_implicit_state_entry_ext_event(ees=ees, state_name=item['state'], class_name=item['class'],
-                                                                      domain=self.name, unpopulated_ees=self.unpopulated_ees)
+                event_name = item.get('event', item['state'])  # if no event name specified, use state name
+                ExternalEvent.populate_implicit_state_entry_ext_event(
+                    ees=ees, state_name=item['state'], event_name=event_name, class_name=item['class'],
+                    domain=self.name, unpopulated_ees=self.unpopulated_ees)
 
 
         # First pass: Method action population
