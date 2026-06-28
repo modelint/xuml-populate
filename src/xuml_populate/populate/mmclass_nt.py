@@ -110,7 +110,7 @@ Unary_Association_i = namedtuple('Unary_Association_i', 'Rnum Domain')
 
 # External Service subsystem
 External_Entity_i = namedtuple('External_Entity_i', 'Name Domain Service_domain')
-External_Event_i = namedtuple('External_Event_i', 'Name EE Domain')
+External_Event_i = namedtuple('External_Event_i', 'Name EE Domain Implicit')
 External_Operation_i = namedtuple('External_Operation_i', 'Name EE Domain')
 External_Operation_Output_i = namedtuple('External_Operation_Output_i', 'Operation EE Domain Type')
 External_Service_i = namedtuple('External_Service_i', 'Name Domain EE Signature')

@@ -72,16 +72,16 @@ class ExternalEvent:
             # look for it when populating the state activity
             cls.implicit_state_entry.setdefault(class_name, {})[state_name] = event_name
 
-            cls.populate(ee=ee, domain=domain, ev_name=event_name, params={}, responses=[], tr=tr)
+            cls.populate(ee=ee, domain=domain, ev_name=event_name, params={}, responses=[], tr=tr, implicit=True)
         pass
 
     @classmethod
     def populate(cls, ee: str, domain: str, ev_name: str, params: dict[str, str],
-                 responses: list[dict[str, str]], tr: str):
+                 responses: list[dict[str, str]], tr: str, implicit: bool = False):
         pass
         # Populate External Event
         Relvar.insert(db=mmdb, tr=tr, relvar='External Event', tuples=[
-            External_Event_i(Name=ev_name, EE=ee, Domain=domain)
+            External_Event_i(Name=ev_name, EE=ee, Domain=domain, Implicit=implicit)
         ])
 
         # Populate the External Signature
