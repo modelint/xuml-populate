@@ -18,6 +18,9 @@ venv/
 # Ignore log and temporary files
 *.swp
 
+# Ignore local Claude Code settings
+.claude/settings.local.json
+
 # Ignore MacOS Finder metadata files
 .DS_store
 
