@@ -1,4 +1,4 @@
-# Blueprint MBSE Repository Populator
+# MBSE Repository Populator
 
 This package transforms human readable text files describing an Executable UML model of a system into
 a populated metamodel database. With your models loaded into this database it is now possible to produce
