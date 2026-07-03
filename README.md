@@ -27,20 +27,23 @@ When you finally succeed, you know that your models are syntatically correct. Th
 
 ### Command line options
 
-| Option | Long form | Description                                                                                                                             |
-| --- | --- |-----------------------------------------------------------------------------------------------------------------------------------------|
-| `-s` | `--system` | Name of the system package to load. The package is a folder in the current working directory with the structure described below.        |
-| `-A` | `--actions` | Do not parse and populate any action language (Scrall) text. With this flag, action text is retained but not parsed into the metamodel. |
-| `-v` | `--verbose` | Print progress and the populated metamodel to the console.                                                                              |
-| `-L` | `--log` | Keep the `modeldb.log` diagnostic log file. By default the log is deleted when the program exits.                                       |
-| `-D` | `--debug` | Run in debug mode.                                                                                                                      |
-| `-V` | `--version` | Print the installed version and exit.                                                                                                   |
+| Option | Long form | Description |
+| --- | --- | --- |
+| `-s` | `--system` | Name of the system package to load. The package is a folder in the current working directory with the structure described below. |
+| `-m` | `--mmdb` | Path to the unpopulated metamodel database (`mmdb.ral`) file. If omitted, an `mmdb.ral` file in the current directory is used. |
+| `-A` | `--actions` | Suppress action language (Scrall) parsing. The model structure is still populated, but the actions within each activity are skipped. |
+| `-v` | `--verbose` | Print progress and the populated metamodel to the console. |
+| `-L` | `--log` | Keep the `modeldb.log` diagnostic log file. By default the log is deleted when the program exits. |
+| `-D` | `--debug` | Run in debug mode. |
+| `-V` | `--version` | Print the installed version and exit. |
 
-If you don't want the action language parsed and populated, you can suppress it with the -A option. You might want to do this if you just want to validate your class and state models without worrying about the action language yet.
-By default, `modeldb` populates the model structure (classes, relationships, states, and so on). Add `-A`
-when you also want the action language parsed and populated, for example when preparing a model for execution:
+By default, `modeldb` parses and populates the action language (Scrall) along with the model structure (classes,
+relationships, states, and so on). If you don't want the action language parsed, suppress it with the `-A` option:
 
-`% modeldb -s elevator-case-study -A`
+`% modeldb -s elevator -A`
+
+You might do this when you just want to validate your class and state models without worrying about the action
+language yet. The models still populate; only the actions within each activity are skipped.
 
 
 ## System structure
