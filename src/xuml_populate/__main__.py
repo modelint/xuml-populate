@@ -35,12 +35,15 @@ def parse(cl_input):
     parser = argparse.ArgumentParser(description=_progname)
     parser.add_argument('-s', '--system', action='store',
                         help='Name of the system package')
+    parser.add_argument('-m', '--mmdb', action='store',
+                        help='Path to the unpopulated metamodel database (mmdb.ral) file. '
+                             'Defaults to mmdb.ral in the current directory')
     parser.add_argument('-D', '--debug', action='store_true',
                         help='Debug mode'),
     parser.add_argument('-L', '--log', action='store_true',
                         help='Generate a diagnostic log file')
     parser.add_argument('-A', '--actions', action='store_true',
-                        help='Parse actions'),
+                        help='Suppress action language parsing'),
     parser.add_argument('-V', '--version', action='store_true',
                         help='Print the current version of the repo populator')
     parser.add_argument('-v', '--verbose', action='store_true',
@@ -68,8 +71,11 @@ def main():
     # System package specified
     if args.system:
         system_pkg_path = Path(args.system).resolve()
-        s = System(name=system_pkg_path.stem, system_path=system_pkg_path, parse_actions=args.actions,
-                   verbose=args.verbose)
+        # Path to the unpopulated metamodel db; if -m is not supplied, assume mmdb.ral in the current directory
+        mmdb_path = Path(args.mmdb).resolve() if args.mmdb else Path("mmdb.ral").resolve()
+        # By default action language is parsed; -A suppresses it
+        s = System(name=system_pkg_path.stem, system_path=system_pkg_path, mmdb_path=mmdb_path,
+                   parse_actions=not args.actions, verbose=args.verbose)
 
     logger.info("No problemo")  # We didn't die on an exception, basically
     if args.verbose:

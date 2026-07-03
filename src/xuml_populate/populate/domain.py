@@ -173,20 +173,22 @@ class Domain:
                     domain=self.name, unpopulated_ees=self.unpopulated_ees)
 
 
-        # First pass: Method action population
-        # Here we populate everything except the Method Call Action parameter inputs
-        # Note that we inject the method output types
-        for anum, m in self.methods.items():
-            m.process_execution_units(method_output_types=method_output_types)
+        # Populate the action language for each Activity, unless action parsing was suppressed.
+        # When suppressed, the model structure (classes, relationships, states, method signatures)
+        # is populated, but the actions within each Activity are not.
+        if self.parse_actions:
+            # First pass: Method action population
+            # Here we populate everything except the Method Call Action parameter inputs
+            # Note that we inject the method output types
+            for anum, m in self.methods.items():
+                m.process_execution_units(method_output_types=method_output_types)
 
-        # Second pass: Compute any Method Call population
-        for anum, m in self.methods.items():
-            m.post_process()
+            # Second pass: Compute any Method Call population
+            for anum, m in self.methods.items():
+                m.post_process()
 
-        for s in self.state_models:
-            s.process_states(method_output_types=method_output_types)
-
-        pass
+            for s in self.state_models:
+                s.process_states(method_output_types=method_output_types)
 
         # Print out the populated metamodel
         if verbose:

@@ -92,3 +92,11 @@ class ModelGrammarFileOpen(MPIOException):
 
     def __str__(self):
         return f'{pre}Parser cannot open this model grammar file: "{self.path}"{post}'
+
+class MetamodelDBFileNotFound(MPIOException):
+    def __init__(self, path):
+        self.path = path
+
+    def __str__(self):
+        return f'{pre}Unpopulated metamodel db file not found: "{self.path}". ' \
+               f'Supply its path with -m, or place an mmdb.ral file in the current directory.{post}'
