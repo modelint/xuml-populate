@@ -27,16 +27,17 @@ When you finally succeed, you know that your models are syntatically correct. Th
 
 ### Command line options
 
-| Option | Long form | Description |
-| --- | --- | --- |
-| `-s` | `--system` | Name of the system package to load. The package is a folder in the current working directory with the structure described below. |
-| `-A` | `--actions` | Parse and populate all action language (Scrall) text. Without this flag, action text is retained but not parsed into the metamodel. |
-| `-v` | `--verbose` | Print progress and the populated metamodel to the console. |
-| `-L` | `--log` | Keep the `modeldb.log` diagnostic log file. By default the log is deleted when the program exits. |
-| `-D` | `--debug` | Run in debug mode. |
-| `-V` | `--version` | Print the installed version and exit. |
+| Option | Long form | Description                                                                                                                             |
+| --- | --- |-----------------------------------------------------------------------------------------------------------------------------------------|
+| `-s` | `--system` | Name of the system package to load. The package is a folder in the current working directory with the structure described below.        |
+| `-A` | `--actions` | Do not parse and populate any action language (Scrall) text. With this flag, action text is retained but not parsed into the metamodel. |
+| `-v` | `--verbose` | Print progress and the populated metamodel to the console.                                                                              |
+| `-L` | `--log` | Keep the `modeldb.log` diagnostic log file. By default the log is deleted when the program exits.                                       |
+| `-D` | `--debug` | Run in debug mode.                                                                                                                      |
+| `-V` | `--version` | Print the installed version and exit.                                                                                                   |
 
-By default, `modeldb` populates only the model structure (classes, relationships, states, and so on). Add `-A`
+If you don't want the action language parsed and populated, you can suppress it with the -A option. You might want to do this if you just want to validate your class and state models without worrying about the action language yet.
+By default, `modeldb` populates the model structure (classes, relationships, states, and so on). Add `-A`
 when you also want the action language parsed and populated, for example when preparing a model for execution:
 
 `% modeldb -s elevator-case-study -A`
@@ -44,21 +45,53 @@ when you also want the action language parsed and populated, for example when pr
 
 ## System structure
 
-This package transforms human readable text files describing an Executable UML model of a system into
-a populated metamodel database. With your models loaded into this database it is now possible to produce
-a variety of useful artifacts to support model execution and verification, code generation and anything else
-that performs detailed analyis on the model components and their relationships.
+Each system is defined in a single package broken down into standard hierarchy of folders.
 
-The text files are expressed in an easy to read markdown format so you can browse through the classes, relationships,
-states and transitions, actions and all other model components.
+Here is a partial layout for The Elevator Case Study as an example:
 
-Here we support the Shlaer-Mellor variant of Executable UML exclusively.
+    elevator // system name
+        elevator-management // domain name
+            elevator // subsystem name (coincidentally matches system name)
+                class-model  // must contain a single .xcm file for the subsystem
+                    elevator.xcm // must exist, and no more than one .xcm file
+                    elevator.pdf // any other files in this folder are not processed
+                    elevator.mls
+                external // external entities, each a proxy for some class, this folder is optional
+                    external.yaml  // defines all external entities, synch and asynch services
+                    mark.yaml // implicit bridging, if any (implicit state entry events, for example)
+                methods // methods for all classes in the subsystem
+                    cabin // methods defined on the 'cabin' class (must be a modeled class name)
+                        count-stops-oneway.mtd
+                        count-stops-roundtrip.mtd
+                        estimate-delay.mtd
+                        ping.mtd
+                        ping-both-ways.mtd
+                    bank-level
+                        choose-shaft.mtd
+                    // no other classes define methods in this subsystem
+                state-machines // lifecycles and assigners for this subsystem
+                    aslev.xsm
+                    blev.xsm
+                    cabin.xsm // lifecycles named by class, assigners by association
+                    door.xsm
+                    floor-service.xsm
+                    R53.xsm
+                    transfer.xsm
+                    class-collaboration-diagram.pdf  // optional and not processed
+                    layouts  // optional subfolder with diagrams and layout sheets, not processed
+            // no other subsystem folders in this example, but there can be, each structured like elevator above
+            // this next types folder is optional for now, but you'll need it in the future
+            // it defines model level data types for the entire domain
+            types
+                // content is not processed by modeldb, but it is processed downstream
+        // more elevator system domain files will be added such as transport and sio (signal i/o)
+        // for now, though, the elevator example only models a single domain
 
-Each system is defined in a single package broken down into standard hierarchy of folders like so:
+Here is a summary of the system skelton:
 
     system
         domain
-            subsystem
+            subsystem1
                 class-model
                     classmodel.xcm
                 types.yaml
@@ -78,55 +111,28 @@ Each system is defined in a single package broken down into standard hierarchy o
                     mark.yaml
             subsystem2
             ...
+            types
+                // content of this folder ignored by this command, but processed downstream
         domain2
         ...
 
+### Notes:
+
 Additional files such as class model PDFs and other documentation can be present in the subfolders. Only the
-needed files (xcm, mtd, etc) will be processed.
+recognized files (xcm, mtd, etc) will be processed.
    
-Here is a partial layout for The Elevator Case Study as an example:
-
-
-    elevator-case-study // system
-        elevator-management // application domain
-            elevator // All defined in one subsystem
-                class-model
-                    elevator.xcm // the class model
-                methods // methods for all classes in subsystem
-                    cabin // methods on 'cabin' class
-                        ping.mtd // the ping method
-                        ...
-                    ...
-                state-machines // lifecycles and assigners for this subsystem
-                    cabin.xsm // lifecycles named by class, assigners by association
-                    transfer.xsm
-                    R53.xsm // assigner state machine on association R53
-                    ...
-                external // external entities, each a proxy for some class
-                    CABIN // proxy for 'cabin' class
-                        arrived-at-floor.op // two ee operations
-                        goto-floor.op
-            types.yaml // data types for all subsystems in domain
-        transport // two more domains (not broken down yet)
-        signal io
-
-Each modeled domain has its own folder. Above we just see one for the Elevator Managment domain.
-
-Each domain requires at least one subsystem folder. Here we see only one and that is the Elevator domain.
+Each modeled domain has its own folder and each domain requires at least one subsystem folder.
 
 Within a subsystem folder there is a class-model subfolder with one class model expressed as an .xcm (executable class model) file.
 
-The following folders are optional:
+The following folders are necessary only if they contain model content:
 
-* external – external entities and their operations, one subfolder per external entity
+* external – you can't wire this domain to any others, or stub it out in the debugger if you don't specify it
 * methods – class methods each in a folder matching the class name with each method in a separate .mtd file
 * state-machines – each state machine, assigner or lifecycle, in its own .xsm (executable state machine) file
 
-Also within a domain you have a types.yaml file which specifies each domain specific type (Pressure, Speed, etc) and selects
-a corresponding system (database) type. This is a stop gap measure as we have not yet provided a more robust typing
-domain, so, for now we settle with what our database has to offer (int, string, float, etc). Unltimately, though,
-a full featured typing facility will support a variety of types and operations on those types as well as a type
-definition system. Note that the typing facility can be, but need not necessarily be a modeled domain.
+The types folder resolves model level types and supported type operations like `Distance`, `Speed`, etc. to base types
+and base type operations. We don't need to process these at this stage, so you can ignore this folder here.
 
 ## Installation
 
