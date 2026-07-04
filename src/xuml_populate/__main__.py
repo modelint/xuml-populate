@@ -67,16 +67,13 @@ def main():
 
     # A system package must be named and must exist
     if not args.system:
-        msg = "No system specified. Use -s to name the system package to populate."
-        logger.error(msg)
-        print(f"Error: {msg}", file=sys.stderr)
+        print("No system specified. Use -s to name the system package to populate.", file=sys.stderr)
         sys.exit(1)
 
     system_pkg_path = Path(args.system).resolve()
     if not (system_pkg_path / 'system.yaml').is_file():
-        msg = f"No system package found at '{system_pkg_path}' (expected a directory containing system.yaml)."
-        logger.error(msg)
-        print(f"Error: {msg}", file=sys.stderr)
+        print(f"No system package found at '{system_pkg_path}' (expected a directory containing system.yaml).",
+              file=sys.stderr)
         sys.exit(1)
 
     # By default action language is parsed; -A suppresses it
