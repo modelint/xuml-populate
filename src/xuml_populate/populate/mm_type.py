@@ -113,12 +113,13 @@ class MMtype:
         :param domain:  The domain name
         :return:
         """
-        # Verify that the scalar exists
+        # Verify that the scalar exists. It may already be absent (e.g. no attributes deferred
+        # resolution), in which case there is nothing to depopulate.
         R = f"Name:<{name}>, Domain:<{domain}>"
         result = Relation.restrict(db=mmdb, restriction=R, relation="Type").body
         if not result:
-            # TODO: This is happening for some reason, but doesn't seem to be an error
-            _logger.error("Scalar dummy UNRESOLVED not found during depopulate")
+            _logger.debug("Scalar dummy UNRESOLVED not found during depopulate -- nothing to remove")
+            return
         # Depopulate scalar
         Transaction.open(db=mmdb, name=tr_Scalar_Delete)
         Relvar.deleteone(db=mmdb, tr=tr_Scalar_Delete, relvar_name='Type', tid={'Name': name, 'Domain': domain})
