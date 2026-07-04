@@ -1,5 +1,5 @@
 [build-system]
-requires      = ["setuptools>=61.0.1", "wheel"]
+requires      = ["setuptools>=61.0.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -15,7 +15,7 @@ classifiers = [
     "Programming Language :: Python :: 3",
 ]
 keywords = ["shlaer-mellor", "metamodel", "executable uml", "mbse", "xuml", "xtuml", "platform independent", "sysml"]
-dependencies = ["pyyaml", "xcm-parser", "xsm-parser", "op-parser", "mtd-parser", "mi-pyral", "scrall", "xuml-metamodel>=1.0.1,<2.0.0"]
+dependencies = ["pyyaml", "xcm-parser", "xsm-parser", "op-parser", "mtd-parser", "mi-pyral", "scrall", "xuml-metamodel>=1.0.0,<2.0.0"]
 requires-python = ">=3.11,<3.14"
 
 [project.optional-dependencies]
