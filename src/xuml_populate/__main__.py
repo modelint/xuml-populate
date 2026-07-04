@@ -65,13 +65,6 @@ def main():
         # If no log file is requested, remove the log file before termination
         atexit.register(clean_up)
 
-    if args.verbose:
-        # Surface INFO-level progress on the console. Without -v the console handler stays at its
-        # configured level (log.conf), so only major problems are shown.
-        for h in logging.getLogger().handlers:
-            if isinstance(h, logging.StreamHandler) and not isinstance(h, logging.FileHandler):
-                h.setLevel(logging.INFO)
-
     # A system package must be named and must exist
     if not args.system:
         msg = "No system specified. Use -s to name the system package to populate."
