@@ -15,7 +15,7 @@ from xuml_populate.system import System
 from xuml_populate import version
 
 _logpath = Path("modeldb.log")
-_progname = 'Blueprint model repository populator'
+_progname = 'Executable UML metamodel repository populator'
 
 def clean_up():
     """Normal and exception exit activities"""
