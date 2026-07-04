@@ -21,7 +21,7 @@ from xuml_populate.config import mmdb
 from xuml_populate.populate.actions.aparse_types import Flow_ap, MaxMult
 from xuml_populate.populate.actions.action import Action
 from xuml_populate.populate.flow import Flow
-from xuml_populate.populate.mmclass_nt import (Instance_Action_i, Iterator_i, Iterated_Instance_Flow_i)
+from xuml_metamodel.mmclass_nt import (Instance_Action_i, Iterator_i, Iterated_Instance_Flow_i)
 
 if __debug__:
     from xuml_populate.utility import print_mmdb

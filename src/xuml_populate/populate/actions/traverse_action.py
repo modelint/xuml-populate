@@ -27,7 +27,7 @@ from xuml_populate.exceptions.action_exceptions import (UndefinedRelationship, I
                                                         NeedPerspectiveToHop, UnexpectedClassOrPerspectiveInPath,
                                                         ActionException, IncompleteActionException)
 from xuml_populate.populate.actions.aparse_types import Flow_ap, MaxMult, Content
-from xuml_populate.populate.mmclass_nt import (Action_i, Traverse_Action_i, Path_i, Hop_i, Association_Class_Hop_i,
+from xuml_metamodel.mmclass_nt import (Action_i, Traverse_Action_i, Path_i, Hop_i, Association_Class_Hop_i,
                                                Circular_Hop_i, Symmetric_Hop_i, Asymmetric_Circular_Hop_i,
                                                Ordinal_Hop_i, Straight_Hop_i,
                                                From_Asymmetric_Association_Class_Hop_i,

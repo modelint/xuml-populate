@@ -22,7 +22,7 @@ from xuml_populate.populate.signature import Signature
 from xuml_populate.populate.activity import Activity
 from xuml_populate.populate.mm_type import MMtype
 from xuml_populate.populate.actions.aparse_types import Method_Output_Type
-from xuml_populate.populate.mmclass_nt import (
+from xuml_metamodel.mmclass_nt import (
     Method_Signature_i, Method_i, Parameter_i, Synchronous_Output_i, Activity_Input_i
 )
 from xuml_populate.populate.actions.aparse_types import MethodActivityAP

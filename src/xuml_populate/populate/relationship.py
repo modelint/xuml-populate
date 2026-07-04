@@ -11,7 +11,7 @@ from xuml_populate.populate.ordinal import Ordinal
 from pyral.transaction import Transaction
 from pyral.relvar import Relvar
 from xuml_populate.exceptions.mp_exceptions import UnknownRelationshipType
-from xuml_populate.populate.mmclass_nt import Relationship_i
+from xuml_metamodel.mmclass_nt import Relationship_i
 
 _logger = logging.getLogger(__name__)
 

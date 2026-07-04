@@ -12,7 +12,7 @@ from pyral.relvar import Relvar
 from xuml_populate.config import mmdb
 from xuml_populate.populate.reference import targetid
 from xuml_populate.exceptions.mp_exceptions import LessThanTwoSubclassesInGeneralization
-from xuml_populate.populate.mmclass_nt import (Generalization_i, Facet_i, Superclass_i, Subclass_i,
+from xuml_metamodel.mmclass_nt import (Generalization_i, Facet_i, Superclass_i, Subclass_i,
                                                Minimal_Partition_i, Reference_i, Generalization_Reference_i,
                                                Formalizing_Class_Role_i, Attribute_Reference_i)
 

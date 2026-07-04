@@ -14,7 +14,7 @@ from scrall.parse.visitor import New_inst_a
 # xUML Populate
 if TYPE_CHECKING:
     from xuml_populate.populate.activity import Activity
-from xuml_populate.populate.mmclass_nt import Initialization_Source_i, Signaled_Creation_i
+from xuml_metamodel.mmclass_nt import Initialization_Source_i, Signaled_Creation_i
 from xuml_populate.populate.actions.create_action import CreateAction
 from xuml_populate.populate.actions.new_assoc_ref_action import NewAssociativeReferenceAction
 from xuml_populate.populate.actions.aparse_types import (DelegatedCreationActivityAP, Boundary_Actions,

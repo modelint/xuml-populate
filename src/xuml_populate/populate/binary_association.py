@@ -12,7 +12,7 @@ from pyral.relation import Relation
 # xUML Populate
 from xuml_populate.config import mmdb
 from xuml_populate.exceptions.class_exceptions import MixedTargetID, ReferenceToNonIdentifier
-from xuml_populate.populate.mmclass_nt import (Association_i, Binary_Association_i, Association_Class_i,
+from xuml_metamodel.mmclass_nt import (Association_i, Binary_Association_i, Association_Class_i,
                                                Perspective_i, Asymmetric_Perspective_i, T_Perspective_i,
                                                P_Perspective_i, Reference_i, Formalizing_Class_Role_i,
                                                Association_Reference_i, Simple_Association_Reference_i,

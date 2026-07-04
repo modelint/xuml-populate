@@ -10,7 +10,7 @@ from pyral.relvar import Relvar
 
 # xUML Populate
 from xuml_populate.config import mmdb
-from xuml_populate.populate.mmclass_nt import Ordinal_Relationship_i
+from xuml_metamodel.mmclass_nt import Ordinal_Relationship_i
 
 _logger = logging.getLogger(__name__)
 

@@ -14,7 +14,7 @@ from pyral.relation import Relation
 from xuml_populate.config import mmdb
 from xuml_populate.exceptions.action_exceptions import UndefinedAttribute, IncompleteActionException
 from xuml_populate.populate.mm_type import MMtype
-from xuml_populate.populate.mmclass_nt import (
+from xuml_metamodel.mmclass_nt import (
     Attribute_i, Non_Derived_Attribute_i, Model_Attribute_i,
     Identifier_i, Irreducible_Identifier_i, Super_Identifier_i, Identifier_Attribute_i,
     Default_Initial_Value_i

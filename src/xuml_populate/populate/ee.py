@@ -6,7 +6,7 @@ import logging
 
 # xUML Populate
 from xuml_populate.config import mmdb
-from xuml_populate.populate.mmclass_nt import External_Entity_i, Domain_i, Realized_Domain_i
+from xuml_metamodel.mmclass_nt import External_Entity_i, Domain_i, Realized_Domain_i
 from xuml_populate.exceptions.domain_exceptions import *
 
 # Model Integration

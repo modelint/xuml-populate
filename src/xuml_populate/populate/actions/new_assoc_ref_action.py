@@ -20,7 +20,7 @@ from xuml_populate.populate.actions.aparse_types import Flow_ap, Content, MaxMul
 from xuml_populate.populate.actions.action import Action
 from xuml_populate.populate.flow import Flow
 from xuml_populate.exceptions.action_exceptions import *
-from xuml_populate.populate.mmclass_nt import (New_Associative_Reference_Action_i, Reference_Action_i,
+from xuml_metamodel.mmclass_nt import (New_Associative_Reference_Action_i, Reference_Action_i,
                                                New_Reference_Action_i, T_Ref_Instance_i, P_Ref_Instance_i,
                                                Referenced_Instance_i, Instance_Action_i)
 _logger = logging.getLogger(__name__)

@@ -21,7 +21,7 @@ from xuml_populate.populate.actions.action import Action
 from xuml_populate.populate.actions.read_action import ReadAction
 from xuml_populate.exceptions.action_exceptions import *
 from xuml_populate.populate.actions.aparse_types import Boundary_Actions, Flow_ap, MaxMult, ActivityType
-from xuml_populate.populate.mmclass_nt import (
+from xuml_metamodel.mmclass_nt import (
     Operation_Call_i, Operation_Call_Parameter_i, Operation_Call_Output_i, Instance_Action_i
 )
 

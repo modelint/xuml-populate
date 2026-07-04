@@ -16,7 +16,7 @@ from xuml_populate.config import mmdb
 from xuml_populate.populate.element import Element
 from xuml_populate.populate.attribute import Attribute
 from xuml_populate.populate.mm_type import MMtype
-from xuml_populate.populate.mmclass_nt import Class_i, Alias_i
+from xuml_metamodel.mmclass_nt import Class_i, Alias_i
 
 _logger = logging.getLogger(__name__)
 

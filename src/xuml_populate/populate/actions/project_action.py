@@ -19,7 +19,7 @@ from xuml_populate.exceptions.action_exceptions import ProjectedAttributeNotDefi
 from xuml_populate.populate.flow import Flow
 from xuml_populate.populate.actions.aparse_types import Flow_ap, Content
 from xuml_populate.populate.actions.action import Action
-from xuml_populate.populate.mmclass_nt import (Relational_Action_i, Table_Action_i, Project_Action_i,
+from xuml_metamodel.mmclass_nt import (Relational_Action_i, Table_Action_i, Project_Action_i,
                                                Projected_Attribute_i)
 
 _logger = logging.getLogger(__name__)

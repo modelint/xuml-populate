@@ -17,7 +17,7 @@ from xuml_populate.populate.actions.aparse_types import Flow_ap, MaxMult, Conten
 from xuml_populate.populate.flow import Flow
 from xuml_populate.populate.ns_flow import NonScalarFlow
 from xuml_populate.populate.actions.action import Action
-from xuml_populate.populate.mmclass_nt import Relational_Action_i, Table_Action_i, Rename_Action_i
+from xuml_metamodel.mmclass_nt import Relational_Action_i, Table_Action_i, Rename_Action_i
 
 if __debug__:
     from xuml_populate.utility import print_mmdb

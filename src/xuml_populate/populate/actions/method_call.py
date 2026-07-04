@@ -22,7 +22,7 @@ from xuml_populate.populate.actions.action import Action
 from xuml_populate.populate.actions.read_action import ReadAction
 from xuml_populate.exceptions.action_exceptions import *
 from xuml_populate.populate.actions.aparse_types import Boundary_Actions, Flow_ap, MaxMult, ActivityType
-from xuml_populate.populate.mmclass_nt import (Method_Call_i, Method_Call_Parameter_i, Method_Call_Output_i,
+from xuml_metamodel.mmclass_nt import (Method_Call_i, Method_Call_Parameter_i, Method_Call_Output_i,
                                                Instance_Action_i)
 
 _logger = logging.getLogger(__name__)

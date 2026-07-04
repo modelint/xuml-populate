@@ -21,7 +21,7 @@ from xuml_populate.config import mmdb
 from xuml_populate.populate.actions.aparse_types import Flow_ap, MaxMult, Content
 from xuml_populate.populate.actions.action import Action
 from xuml_populate.populate.flow import Flow
-from xuml_populate.populate.mmclass_nt import Gate_Input_i, Gate_Action_i, Instance_Action_i, Flow_Connector_i
+from xuml_metamodel.mmclass_nt import Gate_Input_i, Gate_Action_i, Instance_Action_i, Flow_Connector_i
 
 if __debug__:
     from xuml_populate.utility import print_mmdb

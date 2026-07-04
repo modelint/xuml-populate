@@ -15,7 +15,7 @@ from xuml_populate.populate.flow import Flow
 from xuml_populate.populate.signature import Signature
 from xuml_populate.populate.activity import Activity
 from xuml_populate.populate.mm_type import MMtype
-from xuml_populate.populate.mmclass_nt import (External_Operation_i, External_Operation_Output_i, External_Service_i,
+from xuml_metamodel.mmclass_nt import (External_Operation_i, External_Operation_Output_i, External_Service_i,
                                                External_Event_i, External_Signature_i, Parameter_i)
 
 if __debug__:

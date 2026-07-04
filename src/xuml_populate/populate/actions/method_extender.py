@@ -23,7 +23,7 @@ from xuml_populate.populate.actions.action import Action
 from xuml_populate.populate.flow import Flow
 from xuml_populate.populate.mm_class import MMclass
 from xuml_populate.populate.actions.iterator import IteratorAction
-from xuml_populate.populate.mmclass_nt import Method_Extender_i, Extender_i
+from xuml_metamodel.mmclass_nt import Method_Extender_i, Extender_i
 
 if __debug__:
     from xuml_populate.utility import print_mmdb

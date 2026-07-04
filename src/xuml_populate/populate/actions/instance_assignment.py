@@ -16,7 +16,7 @@ from pyral.relvar import Relvar
 if TYPE_CHECKING:
     from xuml_populate.populate.activity import Activity
 from xuml_populate.config import mmdb
-from xuml_populate.populate.mmclass_nt import Labeled_Flow_i
+from xuml_metamodel.mmclass_nt import Labeled_Flow_i
 from xuml_populate.populate.flow import Flow
 from xuml_populate.populate.actions.cast_to_instance import CastToInstance
 from xuml_populate.populate.actions.pass_action import PassAction

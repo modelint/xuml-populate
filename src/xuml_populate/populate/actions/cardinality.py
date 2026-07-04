@@ -17,7 +17,7 @@ from xuml_populate.populate.flow import Flow
 from xuml_populate.populate.actions.action import Action
 from xuml_populate.exceptions.action_exceptions import *
 from xuml_populate.populate.actions.aparse_types import Flow_ap
-from xuml_populate.populate.mmclass_nt import Cardinality_Action_i, Relational_Action_i, Scalar_i, Type_i
+from xuml_metamodel.mmclass_nt import Cardinality_Action_i, Relational_Action_i, Scalar_i, Type_i
 
 if __debug__:
     from xuml_populate.utility import print_mmdb

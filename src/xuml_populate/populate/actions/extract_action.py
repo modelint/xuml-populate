@@ -18,7 +18,7 @@ from xuml_populate.populate.actions.action import Action
 from xuml_populate.populate.mm_class import MMclass
 from xuml_populate.populate.ns_flow import NonScalarFlow
 from xuml_populate.populate.flow import Flow
-from xuml_populate.populate.mmclass_nt import Relational_Action_i, Extract_Action_i
+from xuml_metamodel.mmclass_nt import Relational_Action_i, Extract_Action_i
 from xuml_populate.exceptions.action_exceptions import *
 
 if __debug__:

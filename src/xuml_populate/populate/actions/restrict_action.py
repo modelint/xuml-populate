@@ -20,7 +20,7 @@ from xuml_populate.populate.actions.aparse_types import Flow_ap
 from xuml_populate.populate.actions.action import Action
 from xuml_populate.populate.actions.expressions.restriction_condition import RestrictCondition
 from xuml_populate.populate.flow import Flow
-from xuml_populate.populate.mmclass_nt import (Relational_Action_i, Table_Action_i, Restrict_Action_i,
+from xuml_metamodel.mmclass_nt import (Relational_Action_i, Table_Action_i, Restrict_Action_i,
                                                Table_Restriction_Condition_i)
 
 _logger = logging.getLogger(__name__)

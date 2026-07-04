@@ -6,7 +6,7 @@ from xuml_populate.config import mmdb
 from pyral.transaction import Transaction
 from pyral.relvar import Relvar
 from pyral.relation import Relation
-from xuml_populate.populate.mmclass_nt import Table_i, Type_i, Table_Attribute_i, Model_Attribute_i
+from xuml_metamodel.mmclass_nt import Table_i, Type_i, Table_Attribute_i, Model_Attribute_i
 
 _logger = logging.getLogger(__name__)
 

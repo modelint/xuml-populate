@@ -15,10 +15,10 @@ from pyral.relvar import Relvar
 from pyral.transaction import Transaction
 
 # xUML Populate
+from xuml_metamodel import mmdb_path
+from xuml_metamodel.mmclass_nt import System_i, Domain_i, Realized_Domain_i
 from xuml_populate.config import mmdb
 from xuml_populate.populate.domain import Domain
-from xuml_populate.populate.mmclass_nt import System_i, Domain_i, Realized_Domain_i
-from xuml_populate.exceptions.mp_exceptions import MetamodelDBFileNotFound
 
 if __debug__:
     from xuml_populate.utility import print_mmdb
@@ -41,27 +41,21 @@ class System:
     """
     tr_Realized = 'Realized Domain'
 
-    def __init__(self, name: str, system_path: Path, mmdb_path: Path, parse_actions: bool = False,
+    def __init__(self, name: str, system_path: Path, parse_actions: bool = False,
                  verbose: bool = False):
         """
         Parse and otherwise process the contents of each modeled domain in the system.
         Then populate the content of each domain into the metamodel database.
 
         :param system_path: The path to the system package
-        :param mmdb_path: The path to the unpopulated metamodel database (mmdb.ral) file
         :param parse_actions: If true, all action text is parsed and populated into the metamodel,
         otherwise it is just kept as text
         """
         _logger.info(f"Processing system: [{system_path}]")
 
-        # The unpopulated metamodel db must exist before we can load it
-        if not mmdb_path.is_file():
-            raise MetamodelDBFileNotFound(path=mmdb_path)
-
         self.name = name
         self.parse_actions = parse_actions
         self.content = {}  # Parsed content for all files in the system package
-        self.mmdb_path = mmdb_path  # Path to the unpopulated metamodel repository db
         self.system_name = system_path.stem.title()
         self.verbose = verbose
         self.domains: dict[str, Domain] = {}  # Domain objects keyed by name
@@ -169,9 +163,9 @@ class System:
         _logger.info("Initializing TclRAL database connection")
         Database.open_session(mmdb)
 
-        # Start with an empty metamodel repository
+        # Start with an empty metamodel repository, loaded from the installed xuml-metamodel package
         _logger.info("Loading Blueprint MBSE metamodel repository schema")
-        Database.load(db=mmdb, fname=str(self.mmdb_path))
+        Database.load(db=mmdb, fname=mmdb_path())
 
         # Populate the single instance System class
         Relvar.insert(db=mmdb, relvar='System', tuples=[

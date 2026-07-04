@@ -6,7 +6,7 @@ import logging
 
 # xUML Populate
 from xuml_populate.config import mmdb
-from xuml_populate.populate.mmclass_nt import Element_i, Spanning_Element_i, Subsystem_Element_i
+from xuml_metamodel.mmclass_nt import Element_i, Spanning_Element_i, Subsystem_Element_i
 
 # Model Integration
 from pyral.relvar import Relvar

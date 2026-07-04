@@ -13,7 +13,7 @@ from pyral.transaction import Transaction
 
 # xUML Populate
 from xuml_populate.config import mmdb
-from xuml_populate.populate.mmclass_nt import Class_Accessor_i
+from xuml_metamodel.mmclass_nt import Class_Accessor_i
 from xuml_populate.populate.flow import Flow
 
 _logger = logging.getLogger(__name__)

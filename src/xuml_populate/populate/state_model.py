@@ -24,7 +24,7 @@ from xuml_populate.populate.signature import Signature
 from xuml_populate.populate.activity import Activity
 from xuml_populate.populate.mm_type import MMtype
 from xuml_populate.names import IPS_name
-from xuml_populate.populate.mmclass_nt import (State_Model_i, Lifecycle_i, Non_Deletion_State_i, State_i, Real_State_i,
+from xuml_metamodel.mmclass_nt import (State_Model_i, Lifecycle_i, Non_Deletion_State_i, State_i, Real_State_i,
                                                Deletion_State_i, Initial_Pseudo_State_i, State_Signature_i,
                                                Initial_Transition_i, Event_Response_i, Transition_i, Non_Transition_i,
                                                Event_Specification_i, Monomorphic_Event_Specification_i,

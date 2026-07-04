@@ -22,7 +22,7 @@ from xuml_populate.populate.actions.table_attribute import TableAttribute
 from xuml_populate.populate.actions.aparse_types import (Flow_ap, MaxMult, Content, Attribute_Comparison, Attribute_ap)
 from xuml_populate.populate.actions.read_action import ReadAction
 from xuml_populate.exceptions.action_exceptions import ComparingNonAttributeInSelection, NoInputInstanceFlow
-from xuml_populate.populate.mmclass_nt import (Restriction_Condition_i, Equivalence_Criterion_i,
+from xuml_metamodel.mmclass_nt import (Restriction_Condition_i, Equivalence_Criterion_i,
                                                Comparison_Criterion_i, Criterion_i, Table_Restriction_Condition_i)
 from xuml_populate.populate.flow import Flow
 

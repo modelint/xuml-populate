@@ -12,7 +12,7 @@ from pyral.transaction import Transaction
 
 # xUML Populate
 from xuml_populate.config import mmdb
-from xuml_populate.populate.mmclass_nt import Type_i, Scalar_i, Table_i, Table_Attribute_i
+from xuml_metamodel.mmclass_nt import Type_i, Scalar_i, Table_i, Table_Attribute_i
 
 if __debug__:
     from xuml_populate.utility import print_mmdb

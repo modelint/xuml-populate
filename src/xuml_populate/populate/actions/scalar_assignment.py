@@ -16,7 +16,7 @@ from pyral.transaction import Transaction
 if TYPE_CHECKING:
     from xuml_populate.populate.activity import Activity
 from xuml_populate.config import mmdb
-from xuml_populate.populate.mmclass_nt import Labeled_Flow_i
+from xuml_metamodel.mmclass_nt import Labeled_Flow_i
 from xuml_populate.populate.actions.pass_action import PassAction
 from xuml_populate.populate.actions.extract_action import ExtractAction
 from xuml_populate.populate.ns_flow import NonScalarFlow

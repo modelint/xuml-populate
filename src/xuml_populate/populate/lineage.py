@@ -6,7 +6,7 @@ import logging
 from xuml_populate.config import mmdb
 from typing import List, Set, Optional
 from xuml_populate.tree.tree import extract
-from xuml_populate.populate.mmclass_nt import Element_i, Spanning_Element_i, Lineage_i, Class_In_Lineage_i
+from xuml_metamodel.mmclass_nt import Element_i, Spanning_Element_i, Lineage_i, Class_In_Lineage_i
 from pyral.transaction import Transaction
 from pyral.relvar import Relvar
 from pyral.relation import Relation

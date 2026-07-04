@@ -23,7 +23,7 @@ from xuml_populate.populate.actions.aparse_types import ActivityAP, Boundary_Act
 from xuml_populate.populate.actions.action import Action
 from xuml_populate.populate.flow import Flow
 from xuml_populate.populate.actions.expressions.scalar_expr import ScalarExpr
-from xuml_populate.populate.mmclass_nt import (Result_i, Decision_Action_i,
+from xuml_metamodel.mmclass_nt import (Result_i, Decision_Action_i,
                                                Pass_Action_i, Instance_Action_i, Flow_Connector_i)
 from xuml_populate.exceptions.action_exceptions import *
 

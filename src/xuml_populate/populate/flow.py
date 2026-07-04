@@ -16,7 +16,7 @@ from pyral.rtypes import SetOp
 from xuml_populate.config import mmdb
 from xuml_populate.populate.actions.table import Table
 from xuml_populate.exceptions.action_exceptions import FlowException, ControlFlowHasNoTargetActions, ActionException
-from xuml_populate.populate.mmclass_nt import (
+from xuml_metamodel.mmclass_nt import (
     Data_Flow_i, Flow_i, Multiple_Instance_Flow_i, Single_Instance_Flow_i, Instance_Flow_i,
     Control_Flow_i, Non_Scalar_Flow_i, Scalar_Flow_i, Relation_Flow_i, Labeled_Flow_i, Unlabeled_Flow_i,
     Tuple_Flow_i, Table_Flow_i, Control_Dependency_i, Scalar_Value_i

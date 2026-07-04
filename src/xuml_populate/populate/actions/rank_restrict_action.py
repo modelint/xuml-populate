@@ -24,7 +24,7 @@ from xuml_populate.populate.flow import Flow
 from xuml_populate.populate.actions.iterator import IteratorAction
 from xuml_populate.populate.actions.method_extender import MethodExtender
 # from xuml_populate.populate.actions.type_operation_extender import TypeOperationExtender
-from xuml_populate.populate.mmclass_nt import Relational_Action_i, Table_Action_i, Rank_Restrict_Action_i
+from xuml_metamodel.mmclass_nt import Relational_Action_i, Table_Action_i, Rank_Restrict_Action_i
 
 if __debug__:
     from xuml_populate.utility import print_mmdb

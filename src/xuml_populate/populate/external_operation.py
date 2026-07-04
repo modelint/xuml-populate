@@ -17,7 +17,7 @@ from xuml_populate.populate.activity import Activity
 from xuml_populate.populate.mm_type import MMtype
 from xuml_populate.populate.ee import EE
 from xuml_populate.populate.external_signature import ExternalSignature
-from xuml_populate.populate.mmclass_nt import (
+from xuml_metamodel.mmclass_nt import (
     External_Operation_i, External_Operation_Output_i, External_Service_i, External_Signature_i
 )
 

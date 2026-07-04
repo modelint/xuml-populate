@@ -21,7 +21,7 @@ from xuml_populate.populate.actions.aparse_types import Boundary_Actions, New_de
 from xuml_populate.populate.actions.action import Action
 from xuml_populate.populate.flow import Flow
 from xuml_populate.exceptions.action_exceptions import *
-from xuml_populate.populate.mmclass_nt import (Create_Action_i, Instance_Initialization_i, Attribute_Initialization_i,
+from xuml_metamodel.mmclass_nt import (Create_Action_i, Instance_Initialization_i, Attribute_Initialization_i,
                                                Explicit_Initialization_i, Reference_Initialization_i,
                                                Default_Initialization_i, Local_Create_Action_i,
                                                Instance_Action_i, Delegated_Create_Action_i)

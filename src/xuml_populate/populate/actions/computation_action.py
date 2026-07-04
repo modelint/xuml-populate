@@ -24,7 +24,7 @@ from xuml_populate.populate.actions.aparse_types import Flow_ap, MaxMult, Conten
 from xuml_populate.populate.actions.action import Action
 from xuml_populate.populate.flow import Flow
 from xuml_populate.populate.actions.type_selector import TypeSelector
-from xuml_populate.populate.mmclass_nt import (
+from xuml_metamodel.mmclass_nt import (
     Computation_Action_i, Computation_Input_i, Instance_Action_i,
     General_Computation_i, Boolean_Partition_i
 )

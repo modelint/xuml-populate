@@ -25,7 +25,7 @@ from xuml_populate.populate.state_model import StateModel
 from xuml_populate.populate.ee import EE
 from xuml_populate.populate.external_event import ExternalEvent
 from xuml_populate.populate.external_operation import ExternalOperation
-from xuml_populate.populate.mmclass_nt import Domain_i, Modeled_Domain_i, Domain_Partition_i, Subsystem_i
+from xuml_metamodel.mmclass_nt import Domain_i, Modeled_Domain_i, Domain_Partition_i, Subsystem_i
 
 if __debug__:
     from xuml_populate.utility import print_mmdb

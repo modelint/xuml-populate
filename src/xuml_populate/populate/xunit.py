@@ -22,7 +22,7 @@ from xuml_populate.populate.actions.scalar_assignment import ScalarExpr
 from xuml_populate.populate.actions.extract_action import ExtractAction
 from xuml_populate.populate.actions.read_action import ReadAction
 from xuml_populate.populate.actions.expressions.instance_set import InstanceSet
-from xuml_populate.populate.mmclass_nt import Synchronous_Output_i
+from xuml_metamodel.mmclass_nt import Synchronous_Output_i
 from xuml_populate.populate.actions.type_selector import TypeSelector
 from xuml_populate.exceptions.action_exceptions import *
 

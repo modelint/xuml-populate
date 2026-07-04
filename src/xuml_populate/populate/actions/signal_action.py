@@ -33,7 +33,7 @@ from xuml_populate.populate.flow import Flow_ap
 from xuml_populate.populate.actions.gate_action import GateAction
 from xuml_populate.populate.actions.expressions.scalar_expr import ScalarExpr
 from xuml_populate.populate.actions.expressions.instance_set import InstanceSet
-from xuml_populate.populate.mmclass_nt import (
+from xuml_metamodel.mmclass_nt import (
     Signal_Action_i, Supplied_Parameter_Value_i, Signal_Instance_Action_i, Delivery_Time_i,
     Multiple_Assigner_Partition_Instance_i, Signal_Assigner_Action_i, Instance_Action_i, Initial_Signal_Action_i,
     Signal_Completion_Action_i, Signal_Instance_Action_i, Cancel_Delayed_Signal_Action_i, Signaled_Creation_i,

@@ -21,7 +21,7 @@ from xuml_populate.populate.actions.aparse_types import Boundary_Actions
 from xuml_populate.populate.actions.action import Action
 from xuml_populate.populate.flow import Flow
 from xuml_populate.exceptions.action_exceptions import *
-from xuml_populate.populate.mmclass_nt import (
+from xuml_metamodel.mmclass_nt import (
     Instance_Action_i, Reference_Action_i, Update_Reference_Action_i,
     To_Ref_Instance_i, Referenced_Instance_i
 )

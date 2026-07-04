@@ -20,7 +20,7 @@ from xuml_populate.config import mmdb
 from xuml_populate.populate.actions.aparse_types import Boundary_Actions
 from xuml_populate.populate.actions.action import Action
 from xuml_populate.exceptions.action_exceptions import *
-from xuml_populate.populate.mmclass_nt import Delete_Action_i, Instance_Action_i
+from xuml_metamodel.mmclass_nt import Delete_Action_i, Instance_Action_i
 from xuml_populate.populate.actions.expressions.instance_set import InstanceSet
 
 _logger = logging.getLogger(__name__)

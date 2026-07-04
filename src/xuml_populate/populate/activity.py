@@ -20,14 +20,14 @@ from xuml_populate.populate.signature import Signature
 from xuml_populate.exceptions.action_exceptions import *
 from xuml_populate.populate.actions.sequence_flow import SequenceFlow
 from xuml_populate.populate.xunit import ExecutionUnit
-from xuml_populate.populate.mmclass_nt import Flow_Dependency_i, Delegated_Creation_Activity_i, Real_State_Activity_i
+from xuml_metamodel.mmclass_nt import Flow_Dependency_i, Delegated_Creation_Activity_i, Real_State_Activity_i
 from xuml_populate.config import mmdb
 from xuml_populate.populate.flow import Flow, Flow_ap
 from xuml_populate.populate.actions.action import Action
 from xuml_populate.populate.element import Element
 from xuml_populate.populate.actions.aparse_types import (ActivityAP, SMType, ActivityType, Boundary_Actions,
                                                          SMType, Method_Output_Type)
-from xuml_populate.populate.mmclass_nt import (
+from xuml_metamodel.mmclass_nt import (
     Activity_i, State_Activity_i, Lifecycle_Activity_i, Multiple_Assigner_Activity_i, Single_Assigner_Activity_i,
     Synchronous_Output_i, Flow_Connector_i, Pass_Action_i, Instance_Action_i, Gate_Action_i, Gate_Input_i,
     Real_State_Activity_i, Creation_Signature_i
@@ -224,7 +224,7 @@ class Activity:
         """
         Populate an implicit External Event
         """
-        from xuml_populate.populate.mmclass_nt import External_Signal_Action_i
+        from xuml_metamodel.mmclass_nt import External_Signal_Action_i
         # Find the implicit external event
         R = f"Name:<{event_name}>, Domain:<{self.domain}>"
         external_event_r = Relation.restrict(db=mmdb, relation="External Event", restriction=R)

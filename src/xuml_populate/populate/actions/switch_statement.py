@@ -20,7 +20,7 @@ from xuml_populate.exceptions.action_exceptions import *
 from xuml_populate.populate.actions.aparse_types import ActivityAP, Boundary_Actions
 from xuml_populate.populate.actions.action import Action
 from xuml_populate.populate.flow import Flow
-from xuml_populate.populate.mmclass_nt import (Switch_Action_i, Scalar_Switch_Action_i, Case_i, Match_Value_i,
+from xuml_metamodel.mmclass_nt import (Switch_Action_i, Scalar_Switch_Action_i, Case_i, Match_Value_i,
                                                Sequence_Flow_i, Subclass_Switch_Action_i, Gate_Action_i, Gate_Input_i,
                                                Instance_Action_i, Flow_Connector_i)
 

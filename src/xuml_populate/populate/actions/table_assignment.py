@@ -17,7 +17,7 @@ if TYPE_CHECKING:
     from xuml_populate.populate.activity import Activity
 from xuml_populate.exceptions.action_exceptions import *
 from xuml_populate.config import mmdb
-from xuml_populate.populate.mmclass_nt import Labeled_Flow_i
+from xuml_metamodel.mmclass_nt import Labeled_Flow_i
 from xuml_populate.populate.actions.gate_action import GateAction
 from xuml_populate.populate.actions.expressions.table_expr import TableExpr
 from xuml_populate.populate.actions.aparse_types import (Flow_ap, MaxMult, Content, Boundary_Actions, Labeled_Flow)
