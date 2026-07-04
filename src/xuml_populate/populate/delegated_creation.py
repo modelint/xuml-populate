@@ -86,11 +86,9 @@ class DelegatedCreationActivity:
         R = f"Activity:<{self.anum}>, Domain:<{self.domain}>"
         dc_actions = Relation.restrict(db=mmdb, relation="Action", restriction=R)
         if dc_actions.body:
-            # TODO: replace these
-            print("It's been populated already")
+            _logger.debug("Delegated creation activity already populated")
         else:
-            print("It has not been populated yet")
-        pass
+            _logger.debug("Delegated creation activity not yet populated")
 
         # Gather activity data and create an activity object for our delegated creation activity
         creation_activity_data = DelegatedCreationActivityAP(
