@@ -12,11 +12,11 @@ The core idea: the metamodel is *itself* a class model. Populating a user model 
 
 ```bash
 # Run the populator on a system package (folder must be in cwd)
-modeldb -s elevator                 # populate model structure only
-modeldb -s elevator -A              # -A/--actions: also parse & populate Scrall action text
-modeldb -s elevator -v              # verbose: print full mmdb to stdout
-modeldb -s elevator -L              # keep the modeldb.log diagnostic file (deleted by default)
-modeldb -V                          # print version
+popsystem -s elevator               # populate model structure AND parse/populate Scrall action text (default)
+popsystem -s elevator -A            # -A/--actions: SUPPRESS action language parsing (structure only)
+popsystem -s elevator -v            # verbose: print full mmdb to stdout
+popsystem -s elevator -L            # keep the popsystem.log diagnostic file (deleted by default)
+popsystem -V                        # print version
 
 # Sample systems live under input/ (e.g. input/elevator, input/sequins)
 
@@ -30,7 +30,7 @@ pytest tests/test_parse.py -k goto-floor          # single parametrized case
 bump2version patch      # or minor / major
 ```
 
-The console entry point `modeldb` maps to `xuml_populate.__main__:main`. Running `python -m xuml_populate` works too.
+The console entry point `popsystem` maps to `xuml_populate.__main__:main`. Running `python -m xuml_populate` works too.
 
 ## Input package layout
 
@@ -89,7 +89,7 @@ The largest and most complex area, active only under `-A`. It turns parsed **Scr
 ### Debugging
 
 - `utility.print_mmdb()` dumps the full db to `mmdb_debug.txt`; guarded by `if __debug__` and imported throughout.
-- Logging config is `src/xuml_populate/log.conf`; the log file `modeldb.log` is auto-deleted on exit unless `-L` is passed.
+- Logging config is `src/xuml_populate/log.conf`; the log file `popsystem.log` is auto-deleted on exit unless `-L` is passed.
 - `documentation/technotes/` contains data-flow-diagram PDFs/Graffle files documenting specific model activities (useful reference when reasoning about action population).
 
 ## Conventions

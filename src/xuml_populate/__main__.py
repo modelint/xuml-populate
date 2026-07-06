@@ -14,7 +14,7 @@ import atexit
 from xuml_populate.system import System
 from xuml_populate import version
 
-_logpath = Path("modeldb.log")
+_logpath = Path("popsystem.log")
 _progname = 'Executable UML metamodel repository populator'
 
 def clean_up():

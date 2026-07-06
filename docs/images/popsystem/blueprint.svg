@@ -1,0 +1,247 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xl="http://www.w3.org/1999/xlink" xmlns:dc="http://purl.org/dc/elements/1.1/" version="1.1" viewBox="-650.3743 -293.95124 729.082 406.125" width="729.082" height="406.125">
+  <defs/>
+  <g id="blueprint" fill="none" stroke="none" stroke-opacity="1" stroke-dasharray="none" fill-opacity="1">
+    <title>blueprint</title>
+    <g id="blueprint_Blue_Frame">
+      <title>Blue Frame</title>
+      <g id="Graphic_24">
+        <path d="M -642.3743 -293.95124 L 70.70776 -293.95124 C 75.12604 -293.95124 78.70776 -290.3695 78.70776 -285.95124 L 78.70776 104.17376 C 78.70776 108.59204 75.12604 112.17376 70.70776 112.17376 L -642.3743 112.17376 C -646.79255 112.17376 -650.3743 108.59204 -650.3743 104.17376 L -650.3743 -285.95124 C -650.3743 -290.3695 -646.79255 -293.95124 -642.3743 -293.95124 Z" fill="#004d80"/>
+      </g>
+    </g>
+    <g id="blueprint_Flow">
+      <title>Flow</title>
+      <g id="Graphic_47">
+        <rect x="-423.2071" y="-96.49907" width="86.4" height="86.4" id="path"/>
+        <clipPath id="clip_path">
+          <use xl:href="#path"/>
+        </clipPath>
+        <g clip-path="url(#clip_path)">
+          <image xl:href="image3.png" width="86.4" height="86.4" transform="translate(-423.2071 -96.49907)"/>
+        </g>
+      </g>
+      <g id="Graphic_46">
+        <text transform="translate(-463.18915 -113.97219)" fill="white">
+          <tspan font-family="Verdana" font-weight="bold" font-size="12" fill="white" x="0" y="12" xml:space="preserve">xUML Metamodel Repository</tspan>
+        </text>
+      </g>
+      <g id="Graphic_45">
+        <rect x="-407.53403" y="-17.139825" width="40.98191" height="40.98191" id="path_2"/>
+        <clipPath id="clip_path_2">
+          <use xl:href="#path_2"/>
+        </clipPath>
+        <g clip-path="url(#clip_path_2)">
+          <image xl:href="image4.png" width="86.4" height="86.4" transform="translate(-407.53403 -17.139825) scale(.4743277)"/>
+        </g>
+      </g>
+      <g id="Graphic_43">
+        <text transform="translate(-355.6999 -3.107548)" fill="white">
+          <tspan font-family="Verdana" font-size="13" fill="white" x="0" y="13" xml:space="preserve">mmclass_nt.py</tspan>
+        </text>
+      </g>
+      <g id="Graphic_49">
+        <text transform="translate(-466.07433 44.88052)" fill="white">
+          <tspan font-family="Verdana" font-style="italic" font-size="13" fill="white" x="0" y="13" xml:space="preserve">(install latest </tspan>
+          <tspan font-family="Verdana" font-style="italic" font-size="13" fill="#fffc00" y="13" xml:space="preserve">xuml-metamodel</tspan>
+          <tspan font-family="Verdana" font-style="italic" font-size="13" fill="white" y="13" xml:space="preserve"> package from PyPI )</tspan>
+        </text>
+      </g>
+      <g id="Graphic_50">
+        <path d="M -345.60428 -166.2957 L -345.60428 -187.82315 C -345.60428 -188.92772 -344.70885 -189.82315 -343.60428 -189.82315 L -265.9942 -189.82315 C -264.88965 -189.82315 -263.9942 -190.71858 -263.9942 -191.82315 L -263.9942 -199.03084 C -263.9942 -200.1354 -263.09878 -201.03084 -261.9942 -201.03084 C -261.62785 -201.03084 -261.26852 -200.9302 -260.95544 -200.73992 L -224.80614 -178.7685 C -223.86224 -178.1948 -223.56214 -176.96455 -224.13583 -176.02065 C -224.30232 -175.74672 -224.53222 -175.51683 -224.80614 -175.35034 L -260.95544 -153.37892 C -261.89934 -152.80522 -263.1296 -153.10533 -263.7033 -154.04923 C -263.89358 -154.3623 -263.9942 -154.72163 -263.9942 -155.088 L -263.9942 -162.2957 C -263.9942 -163.40026 -264.88965 -164.2957 -265.9942 -164.2957 L -343.60428 -164.2957 C -344.70885 -164.2957 -345.60428 -165.19112 -345.60428 -166.2957 Z" fill="#0432ff" fill-opacity=".248323"/>
+        <path d="M -345.60428 -166.2957 L -345.60428 -187.82315 C -345.60428 -188.92772 -344.70885 -189.82315 -343.60428 -189.82315 L -265.9942 -189.82315 C -264.88965 -189.82315 -263.9942 -190.71858 -263.9942 -191.82315 L -263.9942 -199.03084 C -263.9942 -200.1354 -263.09878 -201.03084 -261.9942 -201.03084 C -261.62785 -201.03084 -261.26852 -200.9302 -260.95544 -200.73992 L -224.80614 -178.7685 C -223.86224 -178.1948 -223.56214 -176.96455 -224.13583 -176.02065 C -224.30232 -175.74672 -224.53222 -175.51683 -224.80614 -175.35034 L -260.95544 -153.37892 C -261.89934 -152.80522 -263.1296 -153.10533 -263.7033 -154.04923 C -263.89358 -154.3623 -263.9942 -154.72163 -263.9942 -155.088 L -263.9942 -162.2957 C -263.9942 -163.40026 -264.88965 -164.2957 -265.9942 -164.2957 L -343.60428 -164.2957 C -344.70885 -164.2957 -345.60428 -165.19112 -345.60428 -166.2957 Z" stroke="#0096ff" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/>
+        <text transform="translate(-340.60428 -184.55942)" fill="#fffc00">
+          <tspan font-family="Verdana" font-size="12" fill="#fffc00" x="24.109718" y="12" xml:space="preserve">popsystem</tspan>
+        </text>
+      </g>
+      <g id="Graphic_51">
+        <rect x="-182.35622" y="-241.00575" width="86.4" height="86.4" id="path_3"/>
+        <clipPath id="clip_path_3">
+          <use xl:href="#path_3"/>
+        </clipPath>
+        <g clip-path="url(#clip_path_3)">
+          <image xl:href="image3.png" width="86.4" height="86.4" transform="translate(-182.35622 -241.00575)"/>
+        </g>
+      </g>
+      <g id="Graphic_52">
+        <text transform="translate(-227.11195 -256.43454)" fill="white">
+          <tspan font-family="Verdana" font-weight="bold" font-size="12" fill="white" x="0" y="12" xml:space="preserve">Your System Repository</tspan>
+        </text>
+      </g>
+      <g id="Graphic_74">
+        <text transform="translate(-487.09844 -255.16316)" fill="white">
+          <tspan font-family="Verdana" font-weight="bold" font-size="12" fill="white" x="0" y="12" xml:space="preserve">Your System Package</tspan>
+        </text>
+      </g>
+      <g id="Group_135">
+        <g id="Graphic_73">
+          <rect x="-444.96055" y="-219.32715" width="72.04932" height="61.63255" id="path_4"/>
+          <clipPath id="clip_path_4">
+            <use xl:href="#path_4"/>
+          </clipPath>
+          <g clip-path="url(#clip_path_4)">
+            <image xl:href="image7.png" width="59.76" height="51.12" transform="translate(-444.96055 -219.32715) scale(1.2056446)"/>
+          </g>
+        </g>
+        <g id="Graphic_75">
+          <text transform="translate(-434.6799 -193.04378)" fill="white">
+            <tspan font-family="Verdana" font-size="13" fill="white" x="0" y="13" xml:space="preserve">elevator</tspan>
+          </text>
+        </g>
+      </g>
+      <g id="Graphic_76">
+        <text transform="translate(-328.0231 -62.13654)" fill="white">
+          <tspan font-family="Verdana" font-size="13" fill="white" x="0" y="13" xml:space="preserve">mmdb.ral</tspan>
+        </text>
+      </g>
+      <g id="Graphic_77">
+        <path d="M -473.6798 -129.12218 L -251.67978 -129.12218 C -248.36607 -129.12218 -245.67978 -126.43588 -245.67978 -123.12218 L -245.67978 27.596386 C -245.67978 30.910094 -248.36607 33.596386 -251.67978 33.596386 L -473.6798 33.596386 C -476.9935 33.596386 -479.6798 30.910094 -479.6798 27.596386 L -479.6798 -123.12218 C -479.6798 -126.43588 -476.9935 -129.12218 -473.6798 -129.12218 Z" stroke="#00fa00" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/>
+      </g>
+      <g id="Group_132">
+        <g id="Graphic_96">
+          <path d="M -523.1092 50.561544 L -516.4007 53.003287 L -509.5934 50.52575 L -516.3015 48.084007 Z M -516.37135 45.04886 L -509.66324 47.490605 L -502.8555 45.01307 L -509.56405 42.571325 Z" fill="#f7f7f4"/>
+          <path d="M -523.1092 50.561544 L -516.4007 53.003287 L -509.5934 50.52575 L -516.3015 48.084007 Z M -516.37135 45.04886 L -509.66324 47.490605 L -502.8555 45.01307 L -509.56405 42.571325 Z" stroke="#ccc" stroke-linecap="butt" stroke-linejoin="round" stroke-width=".355076"/>
+        </g>
+        <g id="Graphic_97">
+          <path d="M -516.37135 45.04886 L -509.66324 47.490605 L -509.66324 55.37517 L -516.37135 52.933424 Z" fill="#efeeea"/>
+          <path d="M -516.37135 45.04886 L -509.66324 47.490605 L -509.66324 55.37517 L -516.37135 52.933424 Z" stroke="#ccc" stroke-linecap="butt" stroke-linejoin="round" stroke-width=".355076"/>
+        </g>
+        <g id="Graphic_98">
+          <path d="M -529.84665 60.97453 L -523.13854 63.41584 L -516.3308 60.938305 L -523.0389 58.49656 Z" fill="#f7f7f4"/>
+          <path d="M -529.84665 60.97453 L -523.13854 63.41584 L -516.3308 60.938305 L -523.0389 58.49656 Z" stroke="#ccc" stroke-linecap="butt" stroke-linejoin="round" stroke-width=".355076"/>
+        </g>
+        <g id="Graphic_99">
+          <path d="M -529.84665 60.97453 L -523.13854 63.41584 L -523.13854 71.300404 L -529.84665 68.85866 Z" fill="#efeeea"/>
+          <path d="M -529.84665 60.97453 L -523.13854 63.41584 L -523.13854 71.300404 L -529.84665 68.85866 Z" stroke="#ccc" stroke-linecap="butt" stroke-linejoin="round" stroke-width=".355076"/>
+        </g>
+        <g id="Graphic_100">
+          <path d="M -529.84665 49.762004 L -523.13854 52.203316 L -516.3308 49.72578 L -523.0389 47.284036 Z" fill="#f7f7f4"/>
+          <path d="M -529.84665 49.762004 L -523.13854 52.203316 L -516.3308 49.72578 L -523.0389 47.284036 Z" stroke="#ccc" stroke-linecap="butt" stroke-linejoin="round" stroke-width=".355076"/>
+        </g>
+        <g id="Graphic_101">
+          <path d="M -523.13854 52.203316 L -523.13854 60.08788 L -516.3308 57.60991 L -516.3308 49.72578 Z" fill="white"/>
+          <path d="M -523.13854 52.203316 L -523.13854 60.08788 L -516.3308 57.60991 L -516.3308 49.72578 Z" stroke="#ccc" stroke-linecap="butt" stroke-linejoin="round" stroke-width=".355076"/>
+        </g>
+        <g id="Graphic_102">
+          <path d="M -529.84665 49.762004 L -523.13854 52.203316 L -523.13854 60.08788 L -529.84665 57.646135 Z" fill="#efeeea"/>
+          <path d="M -529.84665 49.762004 L -523.13854 52.203316 L -523.13854 60.08788 L -529.84665 57.646135 Z" stroke="#ccc" stroke-linecap="butt" stroke-linejoin="round" stroke-width=".355076"/>
+        </g>
+        <g id="Graphic_105">
+          <path d="M -523.1092 63.42447 L -516.4007 65.86578 L -516.4007 73.75034 L -523.1092 71.3086 Z" fill="#efeeea"/>
+          <path d="M -523.1092 63.42447 L -516.4007 65.86578 L -516.4007 73.75034 L -523.1092 71.3086 Z" stroke="#ccc" stroke-linecap="butt" stroke-linejoin="round" stroke-width=".355076"/>
+        </g>
+        <g id="Graphic_106">
+          <path d="M -523.1092 55.46185 L -516.4007 57.90316 L -509.5934 55.425624 L -516.3015 52.98388 Z" fill="#f7f7f4"/>
+          <path d="M -523.1092 55.46185 L -516.4007 57.90316 L -509.5934 55.425624 L -516.3015 52.98388 Z" stroke="#ccc" stroke-linecap="butt" stroke-linejoin="round" stroke-width=".355076"/>
+        </g>
+        <g id="Graphic_107">
+          <path d="M -523.1092 55.46185 L -516.4007 57.90316 L -516.4007 65.78772 L -523.1092 63.34641 Z" fill="#efeeea"/>
+          <path d="M -523.1092 55.46185 L -516.4007 57.90316 L -516.4007 65.78772 L -523.1092 63.34641 Z" stroke="#ccc" stroke-linecap="butt" stroke-linejoin="round" stroke-width=".355076"/>
+        </g>
+        <g id="Graphic_108">
+          <path d="M -489.4505 60.965905 L -489.4505 68.85047 L -482.6428 66.3725 L -482.6428 58.48837 Z" fill="white"/>
+          <path d="M -489.4505 60.965905 L -489.4505 68.85047 L -482.6428 66.3725 L -482.6428 58.48837 Z" stroke="#ccc" stroke-linecap="butt" stroke-linejoin="round" stroke-width=".355076"/>
+        </g>
+        <g id="Graphic_109">
+          <path d="M -496.1884 63.41584 L -496.1884 71.300404 L -489.3802 68.82244 L -489.3802 60.938305 Z" fill="#ffd242"/>
+          <path d="M -496.1884 63.41584 L -496.1884 71.300404 L -489.3802 68.82244 L -489.3802 60.938305 Z" stroke="#ccc" stroke-linecap="butt" stroke-linejoin="round" stroke-width=".355076"/>
+        </g>
+        <g id="Graphic_110">
+          <path d="M -490.614 65.33836 C -490.61394 65.70741 -490.75167 66.11151 -490.9969 66.46172 C -491.2421 66.81193 -491.57475 67.07955 -491.9216 67.20568 C -492.26835 67.33191 -492.60094 67.30636 -492.84616 67.13466 C -493.0914 66.96295 -493.22914 66.65916 -493.2291 66.29013 C -493.2292 65.92108 -493.0915 65.51698 -492.84626 65.16677 C -492.601 64.81656 -492.2684 64.54894 -491.9216 64.42281 C -491.5748 64.29658 -491.2422 64.32213 -490.997 64.49383 C -490.7518 64.66554 -490.614 64.96933 -490.614 65.33836" fill="white"/>
+        </g>
+        <g id="Graphic_111">
+          <path d="M -502.9254 65.86621 L -502.9254 73.75034 L -496.1181 71.272804 L -496.1181 63.38824 Z" fill="#ffd242"/>
+          <path d="M -502.9254 65.86621 L -502.9254 73.75034 L -496.1181 71.272804 L -496.1181 63.38824 Z" stroke="#ccc" stroke-linecap="butt" stroke-linejoin="round" stroke-width=".355076"/>
+        </g>
+        <g id="Graphic_112">
+          <path d="M -509.66324 68.31615 L -509.66324 76.20028 L -502.8555 73.72274 L -502.8555 65.83818 Z" fill="white"/>
+          <path d="M -509.66324 68.31615 L -509.66324 76.20028 L -502.8555 73.72274 L -502.8555 65.83818 Z" stroke="#ccc" stroke-linecap="butt" stroke-linejoin="round" stroke-width=".355076"/>
+        </g>
+        <g id="Graphic_113">
+          <path d="M -516.37135 65.874404 L -509.66324 68.31615 L -509.66324 76.20028 L -516.37135 73.75897 Z" fill="#efeeea"/>
+          <path d="M -516.37135 65.874404 L -509.66324 68.31615 L -509.66324 76.20028 L -516.37135 73.75897 Z" stroke="#ccc" stroke-linecap="butt" stroke-linejoin="round" stroke-width=".355076"/>
+        </g>
+        <g id="Graphic_114">
+          <path d="M -489.4505 53.003287 L -489.4505 60.88785 L -482.6428 58.40988 L -482.6428 50.52575 Z" fill="#ffd242"/>
+          <path d="M -489.4505 53.003287 L -489.4505 60.88785 L -482.6428 58.40988 L -482.6428 50.52575 Z" stroke="#ccc" stroke-linecap="butt" stroke-linejoin="round" stroke-width=".355076"/>
+        </g>
+        <g id="Graphic_115">
+          <path d="M -496.1586 42.599356 L -489.4505 45.04067 L -482.6428 42.56313 L -489.3513 40.12139 Z" fill="#ffc91d"/>
+          <path d="M -496.1586 42.599356 L -489.4505 45.04067 L -482.6428 42.56313 L -489.3513 40.12139 Z" stroke="#ccc" stroke-linecap="butt" stroke-linejoin="round" stroke-width=".355076"/>
+        </g>
+        <g id="Graphic_116">
+          <path d="M -489.4505 45.04067 L -489.4505 52.92523 L -482.6428 50.44726 L -482.6428 42.56313 Z M -496.1884 55.453224 L -496.1884 63.337786 L -489.3802 60.86025 L -489.3802 52.975255 Z" fill="#ffd242"/>
+          <path d="M -489.4505 45.04067 L -489.4505 52.92523 L -482.6428 50.44726 L -482.6428 42.56313 Z M -496.1884 55.453224 L -496.1884 63.337786 L -489.3802 60.86025 L -489.3802 52.975255 Z" stroke="#ccc" stroke-linecap="butt" stroke-linejoin="round" stroke-width=".355076"/>
+        </g>
+        <g id="Graphic_117">
+          <path d="M -496.1884 47.490605 L -496.1884 55.37517 L -489.3802 52.89763 L -489.3802 45.01307 Z" fill="#3775a9"/>
+          <path d="M -496.1884 47.490605 L -496.1884 55.37517 L -489.3802 52.89763 L -489.3802 45.01307 Z" stroke="#ccc" stroke-linecap="butt" stroke-linejoin="round" stroke-width=".355076"/>
+        </g>
+        <g id="Graphic_118">
+          <path d="M -502.8965 37.086675 L -496.18794 39.527987 L -489.38064 37.05045 L -496.08875 34.608706 Z" fill="#2f6491"/>
+          <path d="M -502.8965 37.086675 L -496.18794 39.527987 L -489.38064 37.05045 L -496.08875 34.608706 Z" stroke="#ccc" stroke-linecap="butt" stroke-linejoin="round" stroke-width=".355076"/>
+        </g>
+        <g id="Graphic_119">
+          <path d="M -496.1884 39.527987 L -496.1884 47.41255 L -489.3802 44.93501 L -489.3802 37.05045 Z" fill="#3775a9"/>
+          <path d="M -496.1884 39.527987 L -496.1884 47.41255 L -489.3802 44.93501 L -489.3802 37.05045 Z" stroke="#ccc" stroke-linecap="butt" stroke-linejoin="round" stroke-width=".355076"/>
+        </g>
+        <g id="Graphic_120">
+          <path d="M -502.9254 57.90359 L -502.9254 65.78772 L -496.1181 63.310186 L -496.1181 55.425624 Z" fill="#ffd242"/>
+          <path d="M -502.9254 57.90359 L -502.9254 65.78772 L -496.1181 63.310186 L -496.1181 55.425624 Z" stroke="#ccc" stroke-linecap="butt" stroke-linejoin="round" stroke-width=".355076"/>
+        </g>
+        <g id="Graphic_121">
+          <path d="M -502.9254 49.940973 L -502.9254 57.825104 L -496.1181 55.34757 L -496.1181 47.463005 Z M -509.66324 60.35353 L -509.66324 68.23766 L -502.8555 65.76012 L -502.8555 57.87556 Z" fill="#3775a9"/>
+          <path d="M -502.9254 49.940973 L -502.9254 57.825104 L -496.1181 55.34757 L -496.1181 47.463005 Z M -509.66324 60.35353 L -509.66324 68.23766 L -502.8555 65.76012 L -502.8555 57.87556 Z" stroke="#ccc" stroke-linecap="butt" stroke-linejoin="round" stroke-width=".355076"/>
+        </g>
+        <g id="Graphic_122">
+          <path d="M -516.37135 57.911786 L -509.66324 60.35353 L -509.66324 68.23766 L -516.37135 65.79635 Z M -516.37135 49.94917 L -509.66324 52.39091 L -502.8555 49.91294 L -509.56405 47.47163 Z" fill="#2f6491"/>
+          <path d="M -516.37135 57.911786 L -509.66324 60.35353 L -509.66324 68.23766 L -516.37135 65.79635 Z M -516.37135 49.94917 L -509.66324 52.39091 L -502.8555 49.91294 L -509.56405 47.47163 Z" stroke="#ccc" stroke-linecap="butt" stroke-linejoin="round" stroke-width=".355076"/>
+        </g>
+        <g id="Graphic_123">
+          <path d="M -509.66324 52.39091 L -509.66324 60.27504 L -502.8555 57.797504 L -502.8555 49.91294 Z" fill="#3775a9"/>
+          <path d="M -509.66324 52.39091 L -509.66324 60.27504 L -502.8555 57.797504 L -502.8555 49.91294 Z" stroke="#ccc" stroke-linecap="butt" stroke-linejoin="round" stroke-width=".355076"/>
+        </g>
+        <g id="Graphic_124">
+          <path d="M -516.37135 49.94917 L -509.66324 52.39091 L -509.66324 60.27504 L -516.37135 57.83373 Z M -509.6339 39.53661 L -502.9254 41.978355 L -496.1181 39.500387 L -502.8262 37.058643 Z" fill="#2f6491"/>
+          <path d="M -516.37135 49.94917 L -509.66324 52.39091 L -509.66324 60.27504 L -516.37135 57.83373 Z M -509.6339 39.53661 L -502.9254 41.978355 L -496.1181 39.500387 L -502.8262 37.058643 Z" stroke="#ccc" stroke-linecap="butt" stroke-linejoin="round" stroke-width=".355076"/>
+        </g>
+        <g id="Graphic_125">
+          <path d="M -502.9254 41.978355 L -502.9254 49.862486 L -496.1181 47.38495 L -496.1181 39.500387 Z" fill="#3775a9"/>
+          <path d="M -502.9254 41.978355 L -502.9254 49.862486 L -496.1181 47.38495 L -496.1181 39.500387 Z" stroke="#ccc" stroke-linecap="butt" stroke-linejoin="round" stroke-width=".355076"/>
+        </g>
+        <g id="Graphic_126">
+          <path d="M -509.6339 39.53661 L -502.9254 41.978355 L -502.9254 49.862486 L -509.6339 47.421174 Z" fill="#2f6491"/>
+          <path d="M -509.6339 39.53661 L -502.9254 41.978355 L -502.9254 49.862486 L -509.6339 47.421174 Z" stroke="#ccc" stroke-linecap="butt" stroke-linejoin="round" stroke-width=".355076"/>
+        </g>
+        <g id="Graphic_127">
+          <path d="M -499.0769 44.51066 C -499.0768 44.87971 -499.21454 45.28381 -499.45976 45.63402 C -499.705 45.984233 -500.0376 46.251853 -500.38444 46.37798 C -501.10634 46.640507 -501.6915 46.23064 -501.69157 45.46243 C -501.6917 45.09345 -501.55404 44.689407 -501.3089 44.339207 C -501.06376 43.989006 -500.7312 43.721343 -500.38444 43.595115 C -500.0377 43.468884 -499.7051 43.49443 -499.45986 43.666134 C -499.21464 43.83784 -499.0769 44.14163 -499.0769 44.51066" fill="white"/>
+        </g>
+      </g>
+      <g id="Graphic_129">
+        <path d="M -517.05266 22.596138 L -516.6154 22.596138 L -516.6154 19.854244 L -515.57994 19.854244 L -515.57994 19.527356 L -518.0885 19.527356 L -518.0885 19.854244 L -517.05266 19.854244 Z M -515.19225 22.596138 L -514.8188 22.596138 L -514.8188 20.091863 L -514.00803 22.595707 L -513.5923 22.595707 L -512.74705 20.100488 L -512.74705 22.596138 L -512.33995 22.596138 L -512.33995 19.527356 L -512.879 19.527356 L -513.8019 22.156262 L -514.58936 19.527356 L -515.19225 19.527356 Z" fill="#646464"/>
+      </g>
+      <g id="Graphic_133">
+        <text transform="translate(-202.98371 -162.54255)" fill="white">
+          <tspan font-family="Verdana" font-size="13" fill="white" x="0" y="13" xml:space="preserve">mmdb_elevator.ral</tspan>
+        </text>
+      </g>
+      <g id="Graphic_134">
+        <text transform="translate(-156.75354 -118.06867)" fill="white">
+          <tspan font-family="Verdana" font-size="13" fill="white" x="0" y="13" xml:space="preserve">mmdb_elevator.txt</tspan>
+        </text>
+      </g>
+      <g id="Graphic_136">
+        <rect x="-517.03875" y="-68.425625" width="64.475586" height="26" fill="#004d80"/>
+        <text transform="translate(-512.03875 -63.425625)" fill="white">
+          <tspan font-family="Verdana" font-style="italic" font-size="13" fill="white" x="0" y="13" xml:space="preserve">installed</tspan>
+        </text>
+      </g>
+      <g id="Graphic_137">
+        <rect x="-179.71007" y="-100.24225" width="171.61768" height="26" fill="#004d80"/>
+        <text transform="translate(-174.71007 -95.24225)" fill="white">
+          <tspan font-family="Verdana" font-style="italic" font-size="13" fill="white" x="0" y="13" xml:space="preserve">(human readable tables)</tspan>
+        </text>
+      </g>
+    </g>
+  </g>
+</svg>
