@@ -2,8 +2,8 @@ metadata
     Title : Cabin State Machine Diagram
     Author : Leon Starr
     Document ID : mint.elevator3.td.6
-    Modification date : February 5, 2026
-    Version : 3.5.2
+    Modification date : August 4, 2026
+    Version : 3.5.3
     Organization : Model Integration, LLC
     Copyright notice > MIT
     Organization logo > mint
@@ -80,6 +80,7 @@ activity
     ! /R2/Shaft.In service ? Take out of service -> me
 transitions
     New transfer > Are we already there?
+    Take out of service > OUT OF SERVICE
 --
 state Set emergency stop( nearest safe stop : Level Name)
 activity
